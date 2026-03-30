@@ -1,5 +1,5 @@
-# Your Project Name
-Project descriptions
+# SmartChiro
+This is a project focus on chiropractor patient management system. The main selling point is to able to draw and annotate on digital X-ray and calculate the distance.
 
 ## Context Files
 Read the following to get the full context of the project:
