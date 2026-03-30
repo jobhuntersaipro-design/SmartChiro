@@ -436,24 +436,25 @@ model PatientDocument {
 
 ## 🎨 UI / UX — Stripe‑Inspired Design System
 
-Design language modeled after the **Stripe Dashboard** — clean, professional, light‑background interface with high information density and accessible color contrast.
+Design language modeled after the **Stripe Dashboard** — clean, professional, light‑background interface with accessible color contrast. All font sizes are 15% larger than Stripe's defaults for improved readability in a clinical setting.
 
 ### Design Tokens
 
 **Typography:**
 
 ```css
---font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-               "Helvetica Neue", Arial, sans-serif;
+--font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, Arial, sans-serif;
 --font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
 
---font-size-xs:    12px;
---font-size-sm:    13px;
---font-size-base:  14px;   /* Dashboard default */
---font-size-md:    16px;
---font-size-lg:    20px;
---font-size-xl:    24px;
---font-size-2xl:   30px;
+/* Base sizes (Stripe defaults + 15% bump) */
+--font-size-xs:    14px;   /* Stripe 12px → 14px — badges, tooltips */
+--font-size-sm:    15px;   /* Stripe 13px → 15px — nav items, labels, secondary text */
+--font-size-base:  16px;   /* Stripe 14px → 16px — body default */
+--font-size-md:    18px;   /* Stripe 16px → 18px */
+--font-size-lg:    23px;   /* Stripe 20px → 23px — page headings */
+--font-size-xl:    28px;   /* Stripe 24px → 28px */
+--font-size-2xl:   34px;   /* Stripe 30px → 34px */
 
 --font-weight-normal:   400;
 --font-weight-medium:   500;   /* Primary for UI labels */
@@ -475,14 +476,13 @@ Design language modeled after the **Stripe Dashboard** — clean, professional, 
 
 /* ─── Backgrounds ─── */
 --color-bg-page:        #F6F9FC;  /* Main page background (light gray‑blue) */
---color-bg-surface:     #FFFFFF;  /* Cards, panels, modals */
---color-bg-sidebar:     #FFFFFF;  /* Sidebar background */
+--color-bg-surface:     #FFFFFF;  /* Cards, panels, modals, sidebar, top bar */
 --color-bg-hover:       #F0F3F7;  /* Row / item hover state */
 --color-bg-selected:    #F0EEFF;  /* Selected / active item */
 
 /* ─── Text ─── */
 --color-text-primary:   #0A2540;  /* Headings, primary labels */
---color-text-secondary: #425466;  /* Body text, descriptions */
+--color-text-secondary: #425466;  /* Body text, descriptions, inactive nav */
 --color-text-muted:     #697386;  /* Placeholder, hints, timestamps */
 --color-text-disabled:  #A3ACB9;
 
@@ -501,7 +501,8 @@ Design language modeled after the **Stripe Dashboard** — clean, professional, 
 **Spacing & Radius:**
 
 ```css
---radius-sm:   4px;    /* Inputs, small buttons */
+/* Stripe uses tight 4px radius — NOT rounded-lg (8px) */
+--radius-sm:   4px;    /* Inputs, buttons, nav items, hover targets */
 --radius-md:   6px;    /* Cards, dropdowns */
 --radius-lg:   8px;    /* Modals, panels */
 --radius-full: 9999px; /* Pill badges, avatars */
@@ -515,29 +516,32 @@ Design language modeled after the **Stripe Dashboard** — clean, professional, 
 --spacing-3xl: 48px;
 ```
 
-**Shadows:**
+**Shadows (Stripe‑grade — ultra‑subtle with blue‑gray tint):**
 
 ```css
---shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
---shadow-md:   0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
---shadow-lg:   0 4px 12px rgba(0, 0, 0, 0.08);
---shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+--shadow-xs:   0 1px 1px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+--shadow-sm:   0 1px 1px rgba(0, 0, 0, 0.03), 0 3px 6px rgba(18, 42, 66, 0.02);
+--shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03), 0 3px 6px rgba(18, 42, 66, 0.02);
+--shadow-md:   0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(18, 42, 66, 0.04);
+--shadow-lg:   0 4px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(18, 42, 66, 0.06);
 ```
 
 ### Design Principles
 
-- **Light mode first** — white surfaces on `#F6F9FC` page background
-- **High information density** — 14px base font, compact rows, efficient use of space
-- **Subtle depth** — borders and faint shadows over bold drop shadows
+- **Light mode first** — white surfaces (`#FFFFFF`) on `#F6F9FC` page background
+- **Readable density** — 16px base font (15% bump from Stripe's 14px), compact rows, efficient use of space
+- **Subtle depth** — borders + faint blue‑gray tinted shadows (`rgba(18, 42, 66, ...)`) over bold drop shadows
+- **Tight radius** — 4px border‑radius on buttons, inputs, nav items (not rounded‑lg)
 - **Accessible contrast** — all text colors pass WCAG 2.0 AA on their respective backgrounds
-- **Consistent iconography** — Lucide icons (matches shadcn/ui defaults)
+- **Consistent iconography** — Lucide icons (matches shadcn/ui defaults), 16px size, strokeWidth 1.5 (2 for active)
 - **Muted color usage** — semantic colors for status only, never decorative
+- **Explicit colors** — use hardcoded hex values (`#0A2540`, `#425466`, `#697386`, `#F0F3F7`) in components, not abstract CSS variable names, for precision control
 
 ### Layout
 
-- **Collapsible sidebar** (left, white bg, border‑right): navigation links with icons, clinic switcher at top, user avatar at bottom
-- **Top bar** (within main area): breadcrumb, search bar, notification bell, quick actions
-- **Main workspace**: patient detail, visit timeline, or annotation canvas
+- **Collapsible sidebar** (220px expanded / 68px collapsed, white bg, `border-r border-[#E3E8EE]`): nav items with icons, clinic branding at top with `border-b`, profile/logout at bottom
+- **Top bar** (52px height, white bg, `border-b`): search input with `#F6F9FC` background, center nav tabs, notification bell, user avatar
+- **Main workspace** (`px-8 py-6`): patient detail, visit timeline, or annotation canvas
 - **Full‑screen annotation mode**: canvas takes over viewport with floating toolbars (dark bg for contrast with X‑ray images)
 - **Split view**: side‑by‑side X‑ray comparison
 
@@ -551,12 +555,13 @@ Design language modeled after the **Stripe Dashboard** — clean, professional, 
 
 ### Component Patterns (Stripe‑Style)
 
-- **Tables**: alternating white rows, no zebra stripes, hover with `--color-bg-hover`, thin `--color-border` horizontal separators
-- **Cards**: white bg, 1px border `--color-border`, `--radius-md`, `--shadow-sm`
-- **Buttons**: primary = solid `--color-primary` + white text; secondary = white bg + `--color-border` border; ghost = no bg/border
-- **Inputs**: 1px border `--color-border`, `--radius-sm`, 36px height, focus ring `--color-border-focus`
-- **Badges/Pills**: small rounded (`--radius-full`), tinted bg with matching text (e.g., success: green bg + green text)
-- **Sidebar nav items**: text + icon, 32px row height, `--color-bg-selected` for active, `--color-text-muted` for inactive
+- **Tables**: white rows, no zebra stripes, hover with `#F0F3F7`, thin `#E3E8EE` horizontal separators
+- **Cards**: white bg, 1px border `#E3E8EE`, `rounded-[6px]`, `--shadow-card`
+- **Buttons**: `rounded-[4px]`; primary = solid `#635BFF` + white text; secondary = white bg + `#E3E8EE` border; ghost = no bg/border
+- **Inputs**: 1px border `#E3E8EE`, `rounded-[4px]`, 32px height, bg `#F6F9FC`, focus ring `#635BFF` with `ring-1`
+- **Badges/Pills**: `rounded-full`, tinted bg with matching text (e.g., success: green bg + green text)
+- **Sidebar nav items**: text + icon, `rounded-[4px]`, 6px vertical padding, active = `#F0EEFF` bg + `#635BFF` text, inactive = `#425466` text, hover = `#F0F3F7` bg + `#0A2540` text
+- **Avatar fallback**: `rounded-full`, `#F0EEFF` bg + `#635BFF` text
 
 ### Responsive
 
