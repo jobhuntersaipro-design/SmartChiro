@@ -2,23 +2,11 @@
 
 ## Status
 
-Completed
+Not Started
 
 ## Goals
 
-Enhanced annotation tools for top-tier editing experience:
-1. Fix undo/redo (Ctrl+Z / Ctrl+Shift+Z) — was broken, now applies changes to canvas
-2. Shape dragging — select and drag shapes to reposition
-3. Copy/paste (Cmd+C / Cmd+V) — copy selected shapes, paste with offset
-4. Arrow key nudging — 1px (10px with Shift) for precise positioning
-5. Undo/redo UI buttons in status bar
-
 ## Notes
-
-- Refactored useUndoRedo to accept setShapes and apply commands directly
-- Shape dragging captures snapshots before move for clean undo
-- Copy/paste uses in-memory clipboard with 20px offset per paste
-- All operations push to undo/redo stack and mark auto-save dirty
 
 ## History
 
@@ -36,3 +24,4 @@ Enhanced annotation tools for top-tier editing experience:
 - 2026-03-31 **X-Ray Annotation API & Export** — X-ray CRUD (GET list/single, PATCH, DELETE archive), annotation CRUD (GET/POST/PUT/DELETE + fork), PNG/PDF export pipeline (sharp SVG compositing + pdf-lib with header/footer/measurement summary), comparison view with linked pan/zoom and draggable divider, auto-save retry with exponential backoff, canvas state size warnings (5MB/10MB), standardized error responses, 21 unit tests (`context/features/xray-annotation-part5-spec.md`)
 - 2026-03-31 **X-Ray Multi-View & Patient Image Sidebar** — ViewModeSwitcher (single/2x2/4x4) at bottom of left toolbar, PatientImageSidebar with thumbnails and metadata (body region, view type, date), MultiViewGrid with independent zoom/pan per viewport cell, click thumbnails to load into active grid slot, single mode navigates to X-ray annotation page
 - 2026-03-31 **X-Ray Annotation UX Improvements** — Reduced zoom sensitivity by 30% (scroll wheel + pinch), moved patient image sidebar from right to left (shown by default), replaced ViewModeSwitcher with dropdown selector limited to 1x1/2x2/4x4 options
+- 2026-03-31 **Annotation Enhancement Tools** — Fixed undo/redo (Ctrl+Z / Ctrl+Shift+Z) to apply changes directly to canvas, shape dragging for repositioning, copy/paste (Cmd+C / Cmd+V) with 20px offset, arrow key nudging (1px / 10px with Shift), undo/redo UI buttons in status bar
