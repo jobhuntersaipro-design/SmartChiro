@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── NextAuth Models ───
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  password      String?
+  image         String?
+  role          GlobalRole @default(USER)
+
+  accounts         Account[]
+  sessions         Session[]
+  clinicMemberships ClinicMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Enums ───
+
+enum GlobalRole {
+  USER
+  ADMIN
+}
+
+enum ClinicRole {
+  OWNER
+  DOCTOR
+  ADMIN
+  VIEWER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CHECKED_IN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ─── Organization ───
+
+model Clinic {
+  id      String  @id @default(cuid())
+  name    String
+  address String?
+  phone   String?
+  email   String?
+  logo    String?
+
+  // X-ray calibration defaults
+  calibrationEnabled  Boolean @default(false)
+  defaultPixelSpacing Float?
+
+  members      ClinicMember[]
+  patients     Patient[]
+  appointments Appointment[]
+  invoices     Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClinicMember {
+  id   String     @id @default(cuid())
+  role ClinicRole @default(DOCTOR)
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, clinicId])
+  @@index([userId])
+  @@index([clinicId])
+}
+
+// ─── Patient & Clinical ───
+
+model Patient {
+  id               String    @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String?
+  phone            String?
+  dateOfBirth      DateTime?
+  gender           String?
+  address          String?
+  emergencyContact String?
+  medicalHistory   String?
+  notes            String?
+
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  visits       Visit[]
+  xrays        Xray[]
+  appointments Appointment[]
+  invoices     Invoice[]
+  documents    PatientDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clinicId])
+  @@index([lastName, firstName])
+}
+
+model Visit {
+  id        String   @id @default(cuid())
+  visitDate DateTime @default(now())
+
+  // SOAP Notes
+  subjective     String?
+  objective      String?
+  assessment     String?
+  plan           String?
+  treatmentNotes String?
+
+  patientId     String
+  patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId      String
+  appointmentId String? @unique
+
+  xrays Xray[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([visitDate])
+}
+
+// ─── X-Ray & Annotations ───
+
+model Xray {
+  id         String  @id @default(cuid())
+  title      String?
+  bodyRegion String?
+  viewType   String?
+
+  // Original upload
+  fileUrl  String
+  fileName String
+  fileSize Int
+  mimeType String
+  width    Int?
+  height   Int?
+
+  // Calibration
+  isCalibrated Boolean @default(false)
+  pixelSpacing Float?
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  visitId String?
+  visit   Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  annotations Annotation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([visitId])
+}
+
+model Annotation {
+  id      String @id @default(cuid())
+  label   String?
+  version Int    @default(1)
+
+  // Full canvas state stored as JSON
+  canvasState Json
+  thumbnail   String?
+
+  // AI analysis results
+  aiLandmarks    Json?
+  aiMeasurements Json?
+
+  xrayId String
+  xray   Xray @relation(fields: [xrayId], references: [id], onDelete: Cascade)
+
+  createdById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([xrayId])
+  @@index([createdById])
+}
+
+// ─── Appointments ───
+
+model Appointment {
+  id       String            @id @default(cuid())
+  dateTime DateTime
+  duration Int               @default(30)
+  status   AppointmentStatus @default(SCHEDULED)
+  notes    String?
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  doctorId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([clinicId])
+  @@index([doctorId])
+  @@index([dateTime])
+  @@index([status])
+}
+
+// ─── Billing ───
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  amount        Decimal
+  currency      String        @default("MYR")
+  status        InvoiceStatus @default(DRAFT)
+  dueDate       DateTime?
+  paidAt        DateTime?
+  notes         String?
+  lineItems     Json
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([clinicId])
+  @@index([status])
+  @@index([invoiceNumber])
+}
+
+// ─── Documents ───
+
+model PatientDocument {
+  id       String  @id @default(cuid())
+  title    String
+  fileUrl  String
+  fileName String
+  fileSize Int
+  mimeType String
+  category String?
+
+  patientId    String
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId])
+  @@index([uploadedById])
+}

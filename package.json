@@ -6,14 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.6.0",
+    "@prisma/client": "^7.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
+    "prisma": "^7.6.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "shadcn": "^4.1.1",
