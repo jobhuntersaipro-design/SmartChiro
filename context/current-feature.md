@@ -1,33 +1,16 @@
-# Current Feature: X-Ray Annotation API & Export
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- X-Ray CRUD endpoints: GET list (paginated, filterable), GET single with annotation summaries, PATCH metadata, DELETE (soft-delete/archive)
-- Annotation CRUD endpoints: GET list, GET single (full canvasState), POST create, PUT update (version increment), POST fork (copy), DELETE (hard-delete)
-- Export endpoint: POST export with PNG/PDF format support, server-side rendering pipeline (load image → apply adjustments → render shapes → encode → upload to R2 → return presigned URL)
-- PDF export: auto-fit page size, header (patient/xray/clinic info), footer, measurement summary table on second page
-- PNG export: full-resolution rasterized output with all visible annotations
-- Comparison view endpoint: GET compare with 2 xray IDs, validate same patient, return both xrays + annotations
-- Client-side comparison: side-by-side canvases with linked pan/zoom, draggable divider
-- Standardized error responses: upload errors, annotation errors, export errors with proper HTTP status codes
-- Client-side error UX: auto-retry with exponential backoff on save failure, canvas state size warnings at 5MB, block save at 10MB
-- Export storage: R2 /exports/ path with 24h TTL auto-expiry
+<!-- Goals will be populated when a feature is loaded -->
 
 ## Notes
 
-- Spec: `context/features/xray-annotation-part5-spec.md`
-- This is Part 5 of 5 in the X-Ray Annotation series
-- Canvas state max size: 10MB (10,485,760 bytes)
-- Export files stored at `/xrays/{clinicId}/{patientId}/{xrayId}/exports/{exportId}.{png|pdf}`
-- PDF DPI: configurable, default 150, max 300
-- Presigned download URLs expire after 24 hours
-- No caching of exports — re-exporting always generates a new file
-- Comparison view: exactly 2 IDs required, both must be READY status and same patient
-- Fork creates a new annotation with copied canvasState, version reset to 1, label appended with "(copy)"
+<!-- Notes will be populated when a feature is loaded -->
 
 ## History
 
@@ -42,3 +25,4 @@ In Progress
 - 2026-03-31 **X-Ray Annotation Canvas Engine** — Canvas layout (dark #1A1F36 canvas + light chrome), viewport with zoom/pan (5%-3200%), tool state machine, undo/redo command pattern (100-cap), image adjustments (brightness/contrast/invert/window-level via CSS filters), auto-save (30s interval + beacon), selection system with transform handles, properties panel with layers tab, annotation API route, X-rays listing page (`context/features/xray-annotation-part2-spec.md`)
 - 2026-03-31 **X-Ray Annotation Drawing Tools** — Shape type system (8 shape types), drawing tool behaviors with pointer events and modifier keys, eraser tool, keyboard shortcuts, default styles and color presets, properties panel, ShapeRenderer with SVG rendering, inline text editor, server-side upload proxy (R2 CORS fix), X-rays page with upload UI, 25 unit tests (`context/features/xray-annotation-part3-spec.md`)
 - 2026-03-31 **X-Ray Annotation Measurement Tools** — Ruler (M), Angle (Shift+M), Cobb Angle (Cmd+Shift+M), Calibration Reference (K) tools, measurement computation library, SVG rendering with end ticks/label pills/arc indicators/perpendicular construction lines, calibration dialog with mm/px conversion, calibrate API endpoint (PUT/DELETE), measurement properties panel with classification badges, measurements summary tab, teal #00D4AA measurement style + yellow #FFCC00 calibration style, 20 unit tests (`context/features/xray-annotation-part4-spec.md`)
+- 2026-03-31 **X-Ray Annotation API & Export** — X-ray CRUD (GET list/single, PATCH, DELETE archive), annotation CRUD (GET/POST/PUT/DELETE + fork), PNG/PDF export pipeline (sharp SVG compositing + pdf-lib with header/footer/measurement summary), comparison view with linked pan/zoom and draggable divider, auto-save retry with exponential backoff, canvas state size warnings (5MB/10MB), standardized error responses, 21 unit tests (`context/features/xray-annotation-part5-spec.md`)
