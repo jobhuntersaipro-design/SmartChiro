@@ -15,16 +15,20 @@ import {
   Ruler,
   TriangleRight,
   GripVertical,
+  Spline,
+  Share2,
 } from "lucide-react";
-import type { BaseShape, ShapeType } from "@/types/annotation";
+import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
+import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotation";
 
 const shapeIcons: Record<ShapeType, React.ReactNode> = {
   line: <Minus size={14} strokeWidth={1.5} />,
-  polyline: <Minus size={14} strokeWidth={1.5} />,
+  polyline: <Share2 size={14} strokeWidth={1.5} />,
   rectangle: <Pentagon size={14} strokeWidth={1.5} />,
   ellipse: <Circle size={14} strokeWidth={1.5} />,
   arrow: <ArrowRight size={14} strokeWidth={1.5} />,
   freehand: <Pencil size={14} strokeWidth={1.5} />,
+  bezier: <Spline size={14} strokeWidth={1.5} />,
   text: <Type size={14} strokeWidth={1.5} />,
   ruler: <Ruler size={14} strokeWidth={1.5} />,
   angle: <TriangleRight size={14} strokeWidth={1.5} />,
@@ -37,12 +41,22 @@ function getShapeDisplayName(shape: BaseShape, index: number): string {
   return `${typeName} ${index + 1}`;
 }
 
+function getDashPatternName(dash: number[]): string {
+  if (dash.length === 0) return "solid";
+  if (dash[0] === 8 && dash[1] === 4) return "dashed";
+  if (dash[0] === 2 && dash[1] === 4) return "dotted";
+  return "solid";
+}
+
 interface PropertiesPanelProps {
   shapes: BaseShape[];
   selectedShapeIds: string[];
   onSelectShape: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onToggleLock: (id: string) => void;
+  onUpdateShape: (id: string, updates: Partial<BaseShape>) => void;
+  currentStyle: ShapeStyle;
+  onStyleChange: (style: ShapeStyle) => void;
   isOpen: boolean;
   onTogglePanel: () => void;
 }
@@ -53,6 +67,9 @@ export function PropertiesPanel({
   onSelectShape,
   onToggleVisibility,
   onToggleLock,
+  onUpdateShape,
+  currentStyle,
+  onStyleChange,
   isOpen,
   onTogglePanel,
 }: PropertiesPanelProps) {
@@ -198,75 +215,19 @@ export function PropertiesPanel({
         {activeTab === "properties" && (
           <div className="p-3">
             {selectedShape ? (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium" style={{ color: "#0A2540" }}>
-                    Type
-                  </label>
-                  <p className="text-xs" style={{ color: "#425466" }}>
-                    {selectedShape.type.charAt(0).toUpperCase() + selectedShape.type.slice(1).replace("_", " ")}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium" style={{ color: "#0A2540" }}>
-                    Position
-                  </label>
-                  <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
-                    X: {Math.round(selectedShape.x)}, Y: {Math.round(selectedShape.y)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium" style={{ color: "#0A2540" }}>
-                    Size
-                  </label>
-                  <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
-                    {Math.round(selectedShape.width)} × {Math.round(selectedShape.height)}
-                  </p>
-                </div>
-                {selectedShape.rotation !== 0 && (
-                  <div>
-                    <label className="text-xs font-medium" style={{ color: "#0A2540" }}>
-                      Rotation
-                    </label>
-                    <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
-                      {Math.round(selectedShape.rotation)}°
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <label className="text-xs font-medium" style={{ color: "#0A2540" }}>
-                    Stroke
-                  </label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span
-                      className="h-4 w-4 rounded-full border"
-                      style={{
-                        backgroundColor: selectedShape.style.strokeColor,
-                        borderColor: "#E3E8EE",
-                      }}
-                    />
-                    <span className="text-xs" style={{ color: "#425466" }}>
-                      {selectedShape.style.strokeColor} · {selectedShape.style.strokeWidth}px
-                    </span>
-                  </div>
-                </div>
-                {selectedShape.measurement && (
-                  <div>
-                    <label className="text-xs font-medium" style={{ color: "#0A2540" }}>
-                      Measurement
-                    </label>
-                    <p className="text-sm font-medium tabular-nums" style={{ color: "#635BFF" }}>
-                      {selectedShape.measurement.label}
-                    </p>
-                  </div>
-                )}
+              <ShapeProperties
+                shape={selectedShape}
+                onUpdate={(updates) => onUpdateShape(selectedShape.id, updates)}
+              />
+            ) : selectedShapeIds.length > 1 ? (
+              <div className="py-6 text-center text-xs" style={{ color: "#697386" }}>
+                {selectedShapeIds.length} shapes selected
               </div>
             ) : (
-              <div className="py-6 text-center text-xs" style={{ color: "#697386" }}>
-                {selectedShapeIds.length > 1
-                  ? `${selectedShapeIds.length} shapes selected`
-                  : "Select a shape to view properties"}
-              </div>
+              <DefaultStyleEditor
+                style={currentStyle}
+                onChange={onStyleChange}
+              />
             )}
           </div>
         )}
@@ -301,6 +262,505 @@ export function PropertiesPanel({
             ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Shape Properties Editor ───
+
+function ShapeProperties({
+  shape,
+  onUpdate,
+}: {
+  shape: BaseShape;
+  onUpdate: (updates: Partial<BaseShape>) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {/* Label */}
+      <PropertyField label="Label">
+        <input
+          type="text"
+          value={shape.label ?? ""}
+          onChange={(e) => onUpdate({ label: e.target.value || null })}
+          placeholder="Add label..."
+          className="w-full text-xs px-2 py-1"
+          style={{
+            border: "1px solid #E3E8EE",
+            borderRadius: 4,
+            backgroundColor: "#F6F9FC",
+            color: "#0A2540",
+          }}
+        />
+      </PropertyField>
+
+      {/* Type (read-only) */}
+      <PropertyField label="Type">
+        <p className="text-xs" style={{ color: "#425466" }}>
+          {shape.type.charAt(0).toUpperCase() + shape.type.slice(1).replace("_", " ")}
+        </p>
+      </PropertyField>
+
+      {/* Stroke Color */}
+      <PropertyField label="Stroke color">
+        <ColorPicker
+          value={shape.style.strokeColor}
+          onChange={(color) =>
+            onUpdate({ style: { ...shape.style, strokeColor: color } })
+          }
+        />
+      </PropertyField>
+
+      {/* Stroke Width */}
+      <PropertyField label="Stroke width">
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0.5}
+            max={20}
+            step={0.5}
+            value={shape.style.strokeWidth}
+            onChange={(e) =>
+              onUpdate({
+                style: { ...shape.style, strokeWidth: parseFloat(e.target.value) },
+              })
+            }
+            className="flex-1"
+          />
+          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+            {shape.style.strokeWidth}px
+          </span>
+        </div>
+      </PropertyField>
+
+      {/* Opacity */}
+      <PropertyField label="Opacity">
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={shape.style.strokeOpacity}
+            onChange={(e) =>
+              onUpdate({
+                style: { ...shape.style, strokeOpacity: parseFloat(e.target.value) },
+              })
+            }
+            className="flex-1"
+          />
+          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+            {Math.round(shape.style.strokeOpacity * 100)}%
+          </span>
+        </div>
+      </PropertyField>
+
+      {/* Fill Color */}
+      <PropertyField label="Fill color">
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <input
+              type="checkbox"
+              checked={shape.style.fillColor !== null}
+              onChange={(e) =>
+                onUpdate({
+                  style: {
+                    ...shape.style,
+                    fillColor: e.target.checked ? shape.style.strokeColor : null,
+                    fillOpacity: e.target.checked ? 0.2 : 0,
+                  },
+                })
+              }
+            />
+            Fill
+          </label>
+          {shape.style.fillColor && (
+            <ColorPicker
+              value={shape.style.fillColor}
+              onChange={(color) =>
+                onUpdate({ style: { ...shape.style, fillColor: color } })
+              }
+            />
+          )}
+        </div>
+      </PropertyField>
+
+      {/* Dash Pattern */}
+      <PropertyField label="Dash pattern">
+        <select
+          value={getDashPatternName(shape.style.lineDash)}
+          onChange={(e) =>
+            onUpdate({
+              style: {
+                ...shape.style,
+                lineDash: DASH_PATTERN_PRESETS[e.target.value] ?? [],
+              },
+            })
+          }
+          className="w-full text-xs px-2 py-1"
+          style={{
+            border: "1px solid #E3E8EE",
+            borderRadius: 4,
+            backgroundColor: "#F6F9FC",
+            color: "#0A2540",
+          }}
+        >
+          <option value="solid">Solid</option>
+          <option value="dashed">Dashed</option>
+          <option value="dotted">Dotted</option>
+        </select>
+      </PropertyField>
+
+      {/* Position */}
+      <PropertyField label="Position">
+        <div className="flex gap-2">
+          <NumberInput
+            label="X"
+            value={Math.round(shape.x)}
+            onChange={(v) => onUpdate({ x: v })}
+          />
+          <NumberInput
+            label="Y"
+            value={Math.round(shape.y)}
+            onChange={(v) => onUpdate({ y: v })}
+          />
+        </div>
+      </PropertyField>
+
+      {/* Size (for rect, text) */}
+      {(shape.type === "rectangle" || shape.type === "text" || shape.type === "ellipse") && (
+        <PropertyField label="Size">
+          <div className="flex gap-2">
+            <NumberInput
+              label="W"
+              value={Math.round(shape.width)}
+              onChange={(v) => onUpdate({ width: Math.max(1, v) })}
+            />
+            <NumberInput
+              label="H"
+              value={Math.round(shape.height)}
+              onChange={(v) => onUpdate({ height: Math.max(1, v) })}
+            />
+          </div>
+        </PropertyField>
+      )}
+
+      {/* Rotation */}
+      <PropertyField label="Rotation">
+        <NumberInput
+          label="°"
+          value={Math.round(shape.rotation)}
+          onChange={(v) => onUpdate({ rotation: v % 360 })}
+        />
+      </PropertyField>
+
+      {/* Locked */}
+      <PropertyField label="Locked">
+        <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+          <input
+            type="checkbox"
+            checked={shape.locked}
+            onChange={(e) => onUpdate({ locked: e.target.checked })}
+          />
+          Lock shape
+        </label>
+      </PropertyField>
+
+      {/* ─── Type-Specific Properties ─── */}
+
+      {/* Arrow */}
+      {shape.type === "arrow" && (
+        <>
+          <PropertyField label="Arrow start">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.arrowStart ?? false}
+                onChange={(e) => onUpdate({ arrowStart: e.target.checked })}
+              />
+              Show arrowhead
+            </label>
+          </PropertyField>
+          <PropertyField label="Arrow end">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.arrowEnd !== false}
+                onChange={(e) => onUpdate({ arrowEnd: e.target.checked })}
+              />
+              Show arrowhead
+            </label>
+          </PropertyField>
+          <PropertyField label="Arrow size">
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={6}
+                max={32}
+                step={1}
+                value={shape.arrowSize ?? 12}
+                onChange={(e) => onUpdate({ arrowSize: parseInt(e.target.value) })}
+                className="flex-1"
+              />
+              <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+                {shape.arrowSize ?? 12}px
+              </span>
+            </div>
+          </PropertyField>
+        </>
+      )}
+
+      {/* Rectangle */}
+      {shape.type === "rectangle" && (
+        <PropertyField label="Corner radius">
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={50}
+              step={1}
+              value={shape.cornerRadius ?? 0}
+              onChange={(e) => onUpdate({ cornerRadius: parseInt(e.target.value) })}
+              className="flex-1"
+            />
+            <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+              {shape.cornerRadius ?? 0}px
+            </span>
+          </div>
+        </PropertyField>
+      )}
+
+      {/* Polyline */}
+      {shape.type === "polyline" && (
+        <PropertyField label="Closed (polygon)">
+          <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <input
+              type="checkbox"
+              checked={shape.closed ?? false}
+              onChange={(e) => onUpdate({ closed: e.target.checked })}
+            />
+            Close path
+          </label>
+        </PropertyField>
+      )}
+
+      {/* Text */}
+      {shape.type === "text" && (
+        <>
+          <PropertyField label="Font size">
+            <NumberInput
+              label="px"
+              value={shape.fontSize ?? 16}
+              onChange={(v) => onUpdate({ fontSize: Math.max(8, Math.min(120, v)) })}
+            />
+          </PropertyField>
+          <PropertyField label="Font weight">
+            <select
+              value={shape.fontWeight ?? 400}
+              onChange={(e) =>
+                onUpdate({ fontWeight: parseInt(e.target.value) as 400 | 500 | 600 | 700 })
+              }
+              className="w-full text-xs px-2 py-1"
+              style={{
+                border: "1px solid #E3E8EE",
+                borderRadius: 4,
+                backgroundColor: "#F6F9FC",
+                color: "#0A2540",
+              }}
+            >
+              <option value={400}>Regular</option>
+              <option value={500}>Medium</option>
+              <option value={600}>Semibold</option>
+              <option value={700}>Bold</option>
+            </select>
+          </PropertyField>
+          <PropertyField label="Font style">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.fontStyle === "italic"}
+                onChange={(e) => onUpdate({ fontStyle: e.target.checked ? "italic" : "normal" })}
+              />
+              Italic
+            </label>
+          </PropertyField>
+          <PropertyField label="Text align">
+            <div className="flex gap-1">
+              {(["left", "center", "right"] as const).map((align) => (
+                <button
+                  key={align}
+                  onClick={() => onUpdate({ textAlign: align })}
+                  className="flex-1 py-1 text-xs capitalize"
+                  style={{
+                    border: "1px solid #E3E8EE",
+                    borderRadius: 4,
+                    backgroundColor: (shape.textAlign ?? "left") === align ? "#F0EEFF" : "#F6F9FC",
+                    color: (shape.textAlign ?? "left") === align ? "#635BFF" : "#425466",
+                  }}
+                >
+                  {align}
+                </button>
+              ))}
+            </div>
+          </PropertyField>
+          <PropertyField label="Background">
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+                <input
+                  type="checkbox"
+                  checked={shape.textBackground !== null && shape.textBackground !== undefined}
+                  onChange={(e) =>
+                    onUpdate({ textBackground: e.target.checked ? "rgba(0,0,0,0.5)" : null })
+                  }
+                />
+                Background
+              </label>
+            </div>
+          </PropertyField>
+        </>
+      )}
+
+      {/* Measurement */}
+      {shape.measurement && (
+        <PropertyField label="Measurement">
+          <p className="text-sm font-medium tabular-nums" style={{ color: "#635BFF" }}>
+            {shape.measurement.label}
+          </p>
+        </PropertyField>
+      )}
+    </div>
+  );
+}
+
+// ─── Default Style Editor (shown when nothing selected) ───
+
+function DefaultStyleEditor({
+  style,
+  onChange,
+}: {
+  style: ShapeStyle;
+  onChange: (style: ShapeStyle) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-medium" style={{ color: "#0A2540" }}>
+        Default Style
+      </p>
+      <p className="text-xs" style={{ color: "#697386" }}>
+        New shapes will use these settings.
+      </p>
+      <PropertyField label="Stroke color">
+        <ColorPicker
+          value={style.strokeColor}
+          onChange={(color) => onChange({ ...style, strokeColor: color })}
+        />
+      </PropertyField>
+      <PropertyField label="Stroke width">
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0.5}
+            max={20}
+            step={0.5}
+            value={style.strokeWidth}
+            onChange={(e) =>
+              onChange({ ...style, strokeWidth: parseFloat(e.target.value) })
+            }
+            className="flex-1"
+          />
+          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+            {style.strokeWidth}px
+          </span>
+        </div>
+      </PropertyField>
+    </div>
+  );
+}
+
+// ─── Reusable Components ───
+
+function PropertyField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-medium block mb-1" style={{ color: "#0A2540" }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function ColorPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (color: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {ANNOTATION_COLOR_PRESETS.map((color) => (
+        <button
+          key={color}
+          onClick={() => onChange(color)}
+          className="flex items-center justify-center"
+          title={color}
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 4,
+            backgroundColor: color,
+            border: value === color ? "2px solid #635BFF" : "1px solid #E3E8EE",
+          }}
+        />
+      ))}
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="cursor-pointer"
+        style={{ width: 24, height: 24, padding: 0, border: "none" }}
+        title="Custom color"
+      />
+    </div>
+  );
+}
+
+function NumberInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-xs" style={{ color: "#697386" }}>
+        {label}
+      </span>
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => {
+          const n = parseFloat(e.target.value);
+          if (!isNaN(n)) onChange(n);
+        }}
+        className="w-16 text-xs px-1.5 py-1 tabular-nums"
+        style={{
+          border: "1px solid #E3E8EE",
+          borderRadius: 4,
+          backgroundColor: "#F6F9FC",
+          color: "#0A2540",
+        }}
+      />
     </div>
   );
 }

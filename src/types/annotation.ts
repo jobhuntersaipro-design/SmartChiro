@@ -7,6 +7,7 @@ export type ShapeType =
   | "ellipse"
   | "arrow"
   | "freehand"
+  | "bezier"
   | "text"
   | "ruler"
   | "angle"
@@ -24,6 +25,13 @@ export interface ShapeStyle {
 export interface Point {
   x: number;
   y: number;
+}
+
+export interface BezierControlPoint {
+  cp1x: number;
+  cp1y: number;
+  cp2x: number;
+  cp2y: number;
 }
 
 export interface BaseShape {
@@ -46,6 +54,37 @@ export interface BaseShape {
   fontSize: number | null;
   // Measurement data (for ruler, angle, cobb_angle shapes)
   measurement: ShapeMeasurement | null;
+
+  // ─── Extended shape-specific fields ───
+
+  // Line / Polyline / Arrow
+  lineCap?: "round" | "butt" | "square";
+
+  // Polyline
+  closed?: boolean;
+
+  // Arrow
+  arrowStart?: boolean;
+  arrowEnd?: boolean;
+  arrowSize?: number;
+
+  // Rectangle
+  cornerRadius?: number;
+
+  // Freehand
+  tension?: number;
+  simplify?: boolean;
+
+  // Bezier
+  controlPoints?: BezierControlPoint[];
+
+  // Text (extended)
+  fontFamily?: string;
+  fontWeight?: 400 | 500 | 600 | 700;
+  fontStyle?: "normal" | "italic";
+  textAlign?: "left" | "center" | "right";
+  textPadding?: number;
+  textBackground?: string | null;
 }
 
 export interface ShapeMeasurement {
@@ -127,7 +166,9 @@ export type ToolId =
   | "ellipse"
   | "arrow"
   | "freehand"
+  | "bezier"
   | "text"
+  | "eraser"
   | "ruler"
   | "angle"
   | "cobb_angle";
@@ -165,12 +206,33 @@ export const CANVAS_PADDING = 24; // px padding for fit-to-viewport
 // ─── Default Shape Style ───
 
 export const DEFAULT_SHAPE_STYLE: ShapeStyle = {
-  strokeColor: "#635BFF",
+  strokeColor: "#FF3B30",  // red — high contrast on dark X-ray canvas
   strokeWidth: 2,
   strokeOpacity: 1,
   fillColor: null,
   fillOpacity: 0,
   lineDash: [],
+};
+
+// ─── Color Presets ───
+
+export const ANNOTATION_COLOR_PRESETS = [
+  "#FF3B30",  // Red (default drawing)
+  "#FF9500",  // Orange
+  "#FFCC00",  // Yellow
+  "#00D4AA",  // Teal (default measurement — Part 4)
+  "#00AAFF",  // Blue
+  "#AF52DE",  // Purple
+  "#FFFFFF",  // White
+  "#8E8E93",  // Gray
+];
+
+// ─── Dash Pattern Presets ───
+
+export const DASH_PATTERN_PRESETS: Record<string, number[]> = {
+  solid: [],
+  dashed: [8, 4],
+  dotted: [2, 4],
 };
 
 // ─── Canvas Dimensions ───
@@ -216,4 +278,71 @@ export function imageToScreen(
     x: imageX * transform.zoom + transform.panX,
     y: imageY * transform.zoom + transform.panY,
   };
+}
+
+/**
+ * Compute bounding box for a set of points.
+ */
+export function computeBoundingBox(points: Point[]): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
+  if (points.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of points) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/**
+ * Ramer-Douglas-Peucker line simplification.
+ */
+export function simplifyPoints(points: Point[], tolerance: number): Point[] {
+  if (points.length <= 2) return points;
+
+  let maxDist = 0;
+  let maxIndex = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const dist = perpendicularDistance(points[i], first, last);
+    if (dist > maxDist) {
+      maxDist = dist;
+      maxIndex = i;
+    }
+  }
+
+  if (maxDist > tolerance) {
+    const left = simplifyPoints(points.slice(0, maxIndex + 1), tolerance);
+    const right = simplifyPoints(points.slice(maxIndex), tolerance);
+    return [...left.slice(0, -1), ...right];
+  }
+
+  return [first, last];
+}
+
+function perpendicularDistance(
+  point: Point,
+  lineStart: Point,
+  lineEnd: Point
+): number {
+  const dx = lineEnd.x - lineStart.x;
+  const dy = lineEnd.y - lineStart.y;
+  const lengthSq = dx * dx + dy * dy;
+
+  if (lengthSq === 0) {
+    return Math.hypot(point.x - lineStart.x, point.y - lineStart.y);
+  }
+
+  return (
+    Math.abs(dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) /
+    Math.sqrt(lengthSq)
+  );
 }

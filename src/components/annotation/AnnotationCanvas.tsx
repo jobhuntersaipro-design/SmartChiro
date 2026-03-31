@@ -1,26 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   BaseShape,
   AnnotationCanvasState,
   ImageAdjustments,
+  ShapeStyle,
 } from "@/types/annotation";
 import {
   createEmptyCanvasState,
   DEFAULT_IMAGE_ADJUSTMENTS,
+  DEFAULT_SHAPE_STYLE,
 } from "@/types/annotation";
 import { useCanvasViewport } from "@/hooks/useCanvasViewport";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useImageAdjustments } from "@/hooks/useImageAdjustments";
+import { useDrawingTools } from "@/hooks/useDrawingTools";
 import { AnnotationHeader } from "./AnnotationHeader";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { ZoomBar } from "./ZoomBar";
 import { StatusBar } from "./StatusBar";
 import { SelectionOverlay } from "./SelectionOverlay";
+import { ShapeRenderer } from "./ShapeRenderer";
+import { TextInput } from "./TextInput";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -51,6 +56,12 @@ export function AnnotationCanvas({
   );
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [currentStyle, setCurrentStyle] = useState<ShapeStyle>({
+    ...DEFAULT_SHAPE_STYLE,
+  });
+
+  // Force re-render counter for drawing preview
+  const [, setRenderTick] = useState(0);
 
   // ─── Hooks ───
   const viewport = useCanvasViewport({ imageWidth, imageHeight });
@@ -66,6 +77,56 @@ export function AnnotationCanvas({
     shapes,
     containerRef: viewport.containerRef,
   });
+
+  const handleAddShape = useCallback(
+    (shape: BaseShape) => {
+      setShapes((prev) => [...prev, shape]);
+      undoRedo.pushCommand("ADD_SHAPE", shape.id, null, shape);
+      autoSave.markDirty();
+      interaction.setSelectedShapeIds([shape.id]);
+    },
+    [undoRedo, autoSave, interaction]
+  );
+
+  const handleDeleteShapes = useCallback(
+    (ids: string[]) => {
+      setShapes((prev) => {
+        const deleted = prev.filter((s) => ids.includes(s.id));
+        for (const shape of deleted) {
+          undoRedo.pushCommand("DELETE_SHAPE", shape.id, shape, null);
+        }
+        return prev.filter((s) => !ids.includes(s.id));
+      });
+      autoSave.markDirty();
+    },
+    [undoRedo, autoSave]
+  );
+
+  const drawing = useDrawingTools({
+    activeTool: interaction.activeTool,
+    transform: viewport.transform,
+    shapes,
+    currentStyle,
+    onAddShape: handleAddShape,
+    onDeleteShapes: handleDeleteShapes,
+  });
+
+  // ─── Shape Update (from properties panel) ───
+  const handleUpdateShape = useCallback(
+    (id: string, updates: Partial<BaseShape>) => {
+      setShapes((prev) =>
+        prev.map((s) => {
+          if (s.id !== id) return s;
+          const before = { ...s };
+          const after = { ...s, ...updates };
+          undoRedo.pushCommand("MODIFY_SHAPE", id, before, after);
+          return after;
+        })
+      );
+      autoSave.markDirty();
+    },
+    [undoRedo, autoSave]
+  );
 
   // ─── Canvas State Helpers ───
   const buildCanvasState = useCallback((): AnnotationCanvasState => {
@@ -104,16 +165,9 @@ export function AnnotationCanvas({
 
   // ─── Event Listeners ───
   useEffect(() => {
-    const handleDeleteShapes = (e: Event) => {
+    const handleDeleteShapesEvent = (e: Event) => {
       const { shapeIds } = (e as CustomEvent).detail;
-      setShapes((prev) => {
-        const deleted = prev.filter((s) => shapeIds.includes(s.id));
-        for (const shape of deleted) {
-          undoRedo.pushCommand("DELETE_SHAPE", shape.id, shape, null);
-        }
-        return prev.filter((s) => !shapeIds.includes(s.id));
-      });
-      autoSave.markDirty();
+      handleDeleteShapes(shapeIds);
     };
 
     const handleReorderShape = (e: Event) => {
@@ -163,15 +217,15 @@ export function AnnotationCanvas({
       autoSave.markDirty();
     };
 
-    window.addEventListener("canvas:delete-shapes", handleDeleteShapes);
+    window.addEventListener("canvas:delete-shapes", handleDeleteShapesEvent);
     window.addEventListener("canvas:reorder-shape", handleReorderShape);
     window.addEventListener("canvas:duplicate-shapes", handleDuplicateShapes);
     return () => {
-      window.removeEventListener("canvas:delete-shapes", handleDeleteShapes);
+      window.removeEventListener("canvas:delete-shapes", handleDeleteShapesEvent);
       window.removeEventListener("canvas:reorder-shape", handleReorderShape);
       window.removeEventListener("canvas:duplicate-shapes", handleDuplicateShapes);
     };
-  }, [undoRedo, autoSave]);
+  }, [undoRedo, autoSave, handleDeleteShapes]);
 
   // ─── Keyboard Shortcuts (Zoom, Undo/Redo, Save, Panel Toggle) ───
   useEffect(() => {
@@ -182,6 +236,9 @@ export function AnnotationCanvas({
       ) {
         return;
       }
+
+      // Let drawing tools handle keys first
+      if (drawing.handleKeyDown(e)) return;
 
       const mod = e.metaKey || e.ctrlKey;
 
@@ -236,7 +293,7 @@ export function AnnotationCanvas({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport]);
+  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing]);
 
   // Fit to viewport once image loads
   useEffect(() => {
@@ -245,13 +302,77 @@ export function AnnotationCanvas({
     }
   }, [imageLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Pointer Handlers (drawing tools + interaction) ───
+  const containerRectRef = useRef<DOMRect | null>(null);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      containerRectRef.current = rect;
+
+      // Drawing tools get first chance
+      if (drawing.handlePointerDown(e, rect)) {
+        setRenderTick((n) => n + 1);
+        return;
+      }
+
+      // Fall through to interaction (select, pan)
+      interaction.handlePointerDown(e);
+    },
+    [drawing, interaction]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      const rect = containerRectRef.current ?? (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+      drawing.handlePointerMove(e, rect);
+      interaction.handlePointerMove(e);
+      setRenderTick((n) => n + 1);
+    },
+    [drawing, interaction]
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      drawing.handlePointerUp(e);
+      interaction.handlePointerUp(e);
+      setRenderTick((n) => n + 1);
+    },
+    [drawing, interaction]
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      drawing.handleDoubleClick(e, rect);
+    },
+    [drawing]
+  );
+
   // ─── Cursor ───
   const getCursor = () => {
     if (interaction.isPanning) return "grabbing";
     if (interaction.activeTool === "hand") return "grab";
     if (interaction.activeTool === "select") return "default";
+    if (interaction.activeTool === "eraser") return "crosshair";
+    if (interaction.activeTool === "text") return "text";
     return "crosshair";
   };
+
+  // Collect all shapes to render (committed + drawing preview)
+  const allShapesToRender = [...shapes];
+  if (drawing.drawingShape) {
+    allShapesToRender.push(drawing.drawingShape);
+  }
+
+  // Text input screen position
+  const textScreenPos = drawing.textInputState.active && drawing.textInputState.position
+    ? {
+        x: drawing.textInputState.position.x * viewport.transform.zoom + viewport.transform.panX,
+        y: drawing.textInputState.position.y * viewport.transform.zoom + viewport.transform.panY,
+      }
+    : null;
 
   return (
     <div className="flex h-screen w-screen flex-col" style={{ backgroundColor: "#1A1F36" }}>
@@ -291,9 +412,10 @@ export function AnnotationCanvas({
               cursor: getCursor(),
             }}
             onWheel={viewport.handleWheel}
-            onPointerDown={interaction.handlePointerDown}
-            onPointerMove={interaction.handlePointerMove}
-            onPointerUp={interaction.handlePointerUp}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onDoubleClick={handleDoubleClick}
           >
             {/* Image Layer */}
             <div
@@ -333,134 +455,15 @@ export function AnnotationCanvas({
                 className="absolute inset-0"
                 style={{ overflow: "visible" }}
               >
-                {shapes
+                {allShapesToRender
                   .filter((s) => s.visible)
                   .sort((a, b) => a.zIndex - b.zIndex)
                   .map((shape) => (
-                    <g key={shape.id} opacity={shape.style.strokeOpacity}>
-                      {shape.type === "rectangle" && (
-                        <rect
-                          x={shape.x}
-                          y={shape.y}
-                          width={shape.width}
-                          height={shape.height}
-                          fill={shape.style.fillColor ?? "none"}
-                          fillOpacity={shape.style.fillOpacity}
-                          stroke={shape.style.strokeColor}
-                          strokeWidth={shape.style.strokeWidth / viewport.transform.zoom}
-                          strokeDasharray={
-                            shape.style.lineDash.length > 0
-                              ? shape.style.lineDash
-                                  .map((d) => d / viewport.transform.zoom)
-                                  .join(" ")
-                              : undefined
-                          }
-                          transform={
-                            shape.rotation
-                              ? `rotate(${shape.rotation} ${shape.x + shape.width / 2} ${shape.y + shape.height / 2})`
-                              : undefined
-                          }
-                        />
-                      )}
-                      {shape.type === "ellipse" && (
-                        <ellipse
-                          cx={shape.x + shape.width / 2}
-                          cy={shape.y + shape.height / 2}
-                          rx={shape.width / 2}
-                          ry={shape.height / 2}
-                          fill={shape.style.fillColor ?? "none"}
-                          fillOpacity={shape.style.fillOpacity}
-                          stroke={shape.style.strokeColor}
-                          strokeWidth={shape.style.strokeWidth / viewport.transform.zoom}
-                        />
-                      )}
-                      {(shape.type === "line" || shape.type === "arrow" || shape.type === "ruler") &&
-                        shape.points.length >= 2 && (
-                          <>
-                            <line
-                              x1={shape.points[0].x}
-                              y1={shape.points[0].y}
-                              x2={shape.points[1].x}
-                              y2={shape.points[1].y}
-                              stroke={shape.style.strokeColor}
-                              strokeWidth={shape.style.strokeWidth / viewport.transform.zoom}
-                              strokeDasharray={
-                                shape.style.lineDash.length > 0
-                                  ? shape.style.lineDash
-                                      .map((d) => d / viewport.transform.zoom)
-                                      .join(" ")
-                                  : undefined
-                              }
-                            />
-                            {shape.type === "arrow" && (
-                              <polygon
-                                points={getArrowheadPoints(
-                                  shape.points[0],
-                                  shape.points[1],
-                                  8 / viewport.transform.zoom
-                                )}
-                                fill={shape.style.strokeColor}
-                              />
-                            )}
-                            {shape.measurement && (
-                              <text
-                                x={(shape.points[0].x + shape.points[1].x) / 2}
-                                y={(shape.points[0].y + shape.points[1].y) / 2 - 8 / viewport.transform.zoom}
-                                fill={shape.style.strokeColor}
-                                fontSize={12 / viewport.transform.zoom}
-                                textAnchor="middle"
-                                fontFamily="system-ui, sans-serif"
-                              >
-                                {shape.measurement.label}
-                              </text>
-                            )}
-                          </>
-                        )}
-                      {(shape.type === "freehand" || shape.type === "polyline") &&
-                        shape.points.length >= 2 && (
-                          <polyline
-                            points={shape.points.map((p) => `${p.x},${p.y}`).join(" ")}
-                            fill="none"
-                            stroke={shape.style.strokeColor}
-                            strokeWidth={shape.style.strokeWidth / viewport.transform.zoom}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        )}
-                      {shape.type === "text" && shape.text && (
-                        <text
-                          x={shape.x}
-                          y={shape.y + (shape.fontSize ?? 16)}
-                          fill={shape.style.strokeColor}
-                          fontSize={(shape.fontSize ?? 16) / viewport.transform.zoom}
-                          fontFamily="system-ui, sans-serif"
-                        >
-                          {shape.text}
-                        </text>
-                      )}
-                      {shape.type === "angle" &&
-                        shape.points.length >= 3 && (
-                          <>
-                            <polyline
-                              points={shape.points.map((p) => `${p.x},${p.y}`).join(" ")}
-                              fill="none"
-                              stroke={shape.style.strokeColor}
-                              strokeWidth={shape.style.strokeWidth / viewport.transform.zoom}
-                            />
-                            {shape.measurement && (
-                              <text
-                                x={shape.points[1].x + 12 / viewport.transform.zoom}
-                                y={shape.points[1].y - 8 / viewport.transform.zoom}
-                                fill={shape.style.strokeColor}
-                                fontSize={12 / viewport.transform.zoom}
-                                fontFamily="system-ui, sans-serif"
-                              >
-                                {shape.measurement.label}
-                              </text>
-                            )}
-                          </>
-                        )}
-                    </g>
+                    <ShapeRenderer
+                      key={shape.id}
+                      shape={shape}
+                      zoom={viewport.transform.zoom}
+                    />
                   ))}
               </svg>
             </div>
@@ -471,6 +474,23 @@ export function AnnotationCanvas({
               selectedShapeIds={interaction.selectedShapeIds}
               transform={viewport.transform}
             />
+
+            {/* Inline Text Input */}
+            {textScreenPos && (
+              <TextInput
+                x={textScreenPos.x}
+                y={textScreenPos.y}
+                zoom={viewport.transform.zoom}
+                onCommit={(text) => {
+                  drawing.commitText(text);
+                  setRenderTick((n) => n + 1);
+                }}
+                onCancel={() => {
+                  drawing.cancelDrawing();
+                  setRenderTick((n) => n + 1);
+                }}
+              />
+            )}
           </div>
 
           {/* Zoom Bar */}
@@ -491,6 +511,9 @@ export function AnnotationCanvas({
           onSelectShape={(id) => interaction.setSelectedShapeIds([id])}
           onToggleVisibility={toggleShapeVisibility}
           onToggleLock={toggleShapeLock}
+          onUpdateShape={handleUpdateShape}
+          currentStyle={currentStyle}
+          onStyleChange={setCurrentStyle}
           isOpen={propertiesPanelOpen}
           onTogglePanel={() => setPropertiesPanelOpen((prev) => !prev)}
         />
@@ -506,18 +529,4 @@ export function AnnotationCanvas({
       />
     </div>
   );
-}
-
-// Helper: compute arrowhead triangle points
-function getArrowheadPoints(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-  size: number
-): string {
-  const angle = Math.atan2(to.y - from.y, to.x - from.x);
-  const p1x = to.x - size * Math.cos(angle - Math.PI / 6);
-  const p1y = to.y - size * Math.sin(angle - Math.PI / 6);
-  const p2x = to.x - size * Math.cos(angle + Math.PI / 6);
-  const p2y = to.y - size * Math.sin(angle + Math.PI / 6);
-  return `${to.x},${to.y} ${p1x},${p1y} ${p2x},${p2y}`;
 }

@@ -13,10 +13,7 @@ type UploadStage =
   | 'idle'
   | 'validating'
   | 'generating-thumbnail'
-  | 'requesting-urls'
-  | 'uploading-original'
-  | 'uploading-thumbnail'
-  | 'confirming'
+  | 'uploading'
   | 'done'
   | 'error'
 
@@ -46,34 +43,6 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
       setPreview(null)
     }
   }, [preview])
-
-  const uploadToR2 = useCallback(
-    (url: string, body: Blob, contentType: string): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open('PUT', url)
-        xhr.setRequestHeader('Content-Type', contentType)
-
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setProgress(Math.round((e.loaded / e.total) * 100))
-          }
-        }
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve()
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`))
-          }
-        }
-
-        xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'))
-        xhr.send(body)
-      })
-    },
-    []
-  )
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -105,92 +74,61 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
         return
       }
 
-      // Step 3: Request presigned URLs
-      let uploadData: {
-        xrayId: string
-        uploadUrl: string
-        thumbnailUploadUrl: string
-      }
+      // Step 3: Upload via server-side proxy (avoids R2 CORS issues)
       try {
-        setStage('requesting-urls')
-        const res = await fetch('/api/xrays/upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileSize: file.size,
-            mimeType: file.type,
-            patientId,
-            uploadedById,
-          }),
-        })
-        if (!res.ok) {
-          const data = await res.json()
-          throw new Error(data.error || 'Failed to get upload URL.')
-        }
-        uploadData = await res.json()
-      } catch (err) {
-        setStage('error')
-        setError(err instanceof Error ? err.message : 'Failed to get upload URL.')
-        return
-      }
-
-      // Step 4: Upload original to R2
-      try {
-        setStage('uploading-original')
+        setStage('uploading')
         setProgress(0)
-        await uploadToR2(uploadData.uploadUrl, file, file.type)
+
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('thumbnail', new File([thumbnail], 'thumbnail.jpg', { type: 'image/jpeg' }))
+        formData.append('patientId', patientId)
+        formData.append('uploadedById', uploadedById)
+        formData.append('width', String(dimensions.width))
+        formData.append('height', String(dimensions.height))
+
+        const xhr = new XMLHttpRequest()
+
+        const uploadResult = await new Promise<{ xrayId: string }>((resolve, reject) => {
+          xhr.open('POST', '/api/xrays/upload')
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              setProgress(Math.round((e.loaded / e.total) * 100))
+            }
+          }
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText)
+                resolve(data)
+              } catch {
+                reject(new Error('Invalid server response.'))
+              }
+            } else {
+              try {
+                const data = JSON.parse(xhr.responseText)
+                reject(new Error(data.error || 'Upload failed.'))
+              } catch {
+                reject(new Error(`Upload failed with status ${xhr.status}.`))
+              }
+            }
+          }
+
+          xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'))
+          xhr.send(formData)
+        })
+
+        setStage('done')
+        setProgress(100)
+        onUploadComplete?.(uploadResult.xrayId)
       } catch (err) {
         setStage('error')
         setError(err instanceof Error ? err.message : 'Upload failed.')
-        return
       }
-
-      // Step 5: Upload thumbnail to R2
-      try {
-        setStage('uploading-thumbnail')
-        setProgress(0)
-        await uploadToR2(uploadData.thumbnailUploadUrl, thumbnail, 'image/jpeg')
-      } catch (err) {
-        setStage('error')
-        setError(err instanceof Error ? err.message : 'Thumbnail upload failed.')
-        return
-      }
-
-      // Step 6: Confirm upload
-      const maxRetries = 3
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          setStage('confirming')
-          const res = await fetch(`/api/xrays/${uploadData.xrayId}/confirm`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              width: dimensions.width,
-              height: dimensions.height,
-            }),
-          })
-          if (!res.ok) {
-            const data = await res.json()
-            throw new Error(data.error || 'Could not finalize upload.')
-          }
-          break
-        } catch (err) {
-          if (attempt === maxRetries) {
-            setStage('error')
-            setError(err instanceof Error ? err.message : 'Could not finalize upload.')
-            return
-          }
-          // Exponential backoff
-          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt - 1)))
-        }
-      }
-
-      setStage('done')
-      setProgress(100)
-      onUploadComplete?.(uploadData.xrayId)
     },
-    [patientId, uploadedById, uploadToR2, onUploadComplete]
+    [patientId, uploadedById, onUploadComplete]
   )
 
   const handleFileChange = useCallback(
@@ -214,16 +152,13 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
     e.preventDefault()
   }, [])
 
-  const isUploading = stage !== 'idle' && stage !== 'done' && stage !== 'error'
+  const isUploading = stage === 'uploading'
 
   const stageLabel: Record<UploadStage, string> = {
     idle: '',
     validating: 'Validating file...',
     'generating-thumbnail': 'Generating thumbnail...',
-    'requesting-urls': 'Preparing upload...',
-    'uploading-original': 'Uploading X-ray...',
-    'uploading-thumbnail': 'Uploading thumbnail...',
-    confirming: 'Finalizing...',
+    uploading: 'Uploading X-ray...',
     done: 'Upload complete!',
     error: 'Upload failed',
   }
@@ -305,12 +240,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#E3E8EE]">
                     <div
                       className="h-full rounded-full bg-[#635BFF] transition-all duration-300"
-                      style={{
-                        width:
-                          stage === 'uploading-original' || stage === 'uploading-thumbnail'
-                            ? `${progress}%`
-                            : '100%',
-                      }}
+                      style={{ width: `${progress}%` }}
                     />
                   </div>
                 </div>
@@ -318,7 +248,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
 
               {/* Stage label */}
               <div className="mt-2 flex items-center gap-1.5">
-                {isUploading && (
+                {(isUploading || stage === 'validating' || stage === 'generating-thumbnail') && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-[#635BFF]" strokeWidth={2} />
                 )}
                 {stage === 'done' && (

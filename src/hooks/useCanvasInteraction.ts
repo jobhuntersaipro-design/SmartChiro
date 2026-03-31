@@ -52,13 +52,11 @@ export function useCanvasInteraction({
   // Hit test: find topmost visible, unlocked shape at a point
   const hitTest = useCallback(
     (imageX: number, imageY: number): BaseShape | null => {
-      // Iterate shapes from highest zIndex to lowest
       const sorted = [...shapes]
         .filter((s) => s.visible && !s.locked)
         .sort((a, b) => b.zIndex - a.zIndex);
 
       for (const shape of sorted) {
-        // Simple bounding box hit test
         if (
           imageX >= shape.x &&
           imageX <= shape.x + shape.width &&
@@ -93,7 +91,6 @@ export function useCanvasInteraction({
 
         if (hit) {
           if (e.shiftKey) {
-            // Toggle selection
             setSelectedShapeIds((prev) =>
               prev.includes(hit.id)
                 ? prev.filter((id) => id !== hit.id)
@@ -120,7 +117,6 @@ export function useCanvasInteraction({
       const imagePos = screenToImage(screenX, screenY, transform);
       setCursorPosition(imagePos);
 
-      // Handle panning
       if (isPanning && panStartRef.current) {
         const dx = e.clientX - panStartRef.current.x;
         const dy = e.clientY - panStartRef.current.y;
@@ -145,7 +141,6 @@ export function useCanvasInteraction({
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't capture when typing in an input
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
@@ -164,15 +159,47 @@ export function useCanvasInteraction({
         return;
       }
 
-      // Tool shortcuts
-      if (!mod && !e.shiftKey) {
-        switch (e.key.toLowerCase()) {
-          case "v":
-            setActiveTool("select");
-            return;
-          case "h":
-            setActiveTool("hand");
-            return;
+      // Tool shortcuts (no modifier except Shift for polyline)
+      if (!mod) {
+        // Shift+L = Polyline
+        if (e.shiftKey && e.key.toLowerCase() === "l") {
+          setActiveTool("polyline");
+          return;
+        }
+
+        if (!e.shiftKey) {
+          switch (e.key.toLowerCase()) {
+            case "v":
+              setActiveTool("select");
+              return;
+            case "h":
+              setActiveTool("hand");
+              return;
+            case "p":
+              setActiveTool("freehand");
+              return;
+            case "l":
+              setActiveTool("line");
+              return;
+            case "a":
+              setActiveTool("arrow");
+              return;
+            case "r":
+              setActiveTool("rectangle");
+              return;
+            case "e":
+              setActiveTool("ellipse");
+              return;
+            case "b":
+              setActiveTool("bezier");
+              return;
+            case "t":
+              setActiveTool("text");
+              return;
+            case "x":
+              setActiveTool("eraser");
+              return;
+          }
         }
       }
 
@@ -198,7 +225,6 @@ export function useCanvasInteraction({
         (e.key === "Delete" || e.key === "Backspace") &&
         selectedShapeIds.length > 0
       ) {
-        // Emit delete event — handled by parent
         const event = new CustomEvent("canvas:delete-shapes", {
           detail: { shapeIds: selectedShapeIds },
         });
