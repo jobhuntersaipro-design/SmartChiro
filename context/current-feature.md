@@ -1,21 +1,16 @@
-# Current Feature: X-Ray Annotation UX Improvements
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- [ ] Reduce zoom sensitivity by 30% on the X-ray annotation canvas
-- [ ] Move patient image preview sidebar to the left side, beside annotation tools — show by default
-- [ ] Limit multi-view options to 1x1, 2x2, and 4x4 only — use a dropdown selector instead of current switcher
+<!-- Define goals here -->
 
 ## Notes
 
-- These are UX refinements to the existing X-ray annotation screen
-- Zoom applies to the canvas viewport (scroll wheel / pinch zoom)
-- Patient image sidebar currently on right side — move to left
-- ViewModeSwitcher currently at bottom of left toolbar — convert to dropdown with 3 options
+<!-- Additional context -->
 
 ## History
 
@@ -32,3 +27,4 @@ In Progress
 - 2026-03-31 **X-Ray Annotation Measurement Tools** — Ruler (M), Angle (Shift+M), Cobb Angle (Cmd+Shift+M), Calibration Reference (K) tools, measurement computation library, SVG rendering with end ticks/label pills/arc indicators/perpendicular construction lines, calibration dialog with mm/px conversion, calibrate API endpoint (PUT/DELETE), measurement properties panel with classification badges, measurements summary tab, teal #00D4AA measurement style + yellow #FFCC00 calibration style, 20 unit tests (`context/features/xray-annotation-part4-spec.md`)
 - 2026-03-31 **X-Ray Annotation API & Export** — X-ray CRUD (GET list/single, PATCH, DELETE archive), annotation CRUD (GET/POST/PUT/DELETE + fork), PNG/PDF export pipeline (sharp SVG compositing + pdf-lib with header/footer/measurement summary), comparison view with linked pan/zoom and draggable divider, auto-save retry with exponential backoff, canvas state size warnings (5MB/10MB), standardized error responses, 21 unit tests (`context/features/xray-annotation-part5-spec.md`)
 - 2026-03-31 **X-Ray Multi-View & Patient Image Sidebar** — ViewModeSwitcher (single/2x2/4x4) at bottom of left toolbar, PatientImageSidebar with thumbnails and metadata (body region, view type, date), MultiViewGrid with independent zoom/pan per viewport cell, click thumbnails to load into active grid slot, single mode navigates to X-ray annotation page
+- 2026-03-31 **X-Ray Annotation UX Improvements** — Reduced zoom sensitivity by 30% (scroll wheel + pinch), moved patient image sidebar from right to left (shown by default), replaced ViewModeSwitcher with dropdown selector limited to 1x1/2x2/4x4 options
