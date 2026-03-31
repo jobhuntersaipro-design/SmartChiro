@@ -17,6 +17,8 @@ import {
   GripVertical,
   Spline,
   Share2,
+  Crosshair,
+  Scaling,
 } from "lucide-react";
 import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
 import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotation";
@@ -32,7 +34,8 @@ const shapeIcons: Record<ShapeType, React.ReactNode> = {
   text: <Type size={14} strokeWidth={1.5} />,
   ruler: <Ruler size={14} strokeWidth={1.5} />,
   angle: <TriangleRight size={14} strokeWidth={1.5} />,
-  cobb_angle: <TriangleRight size={14} strokeWidth={1.5} />,
+  cobb_angle: <Scaling size={14} strokeWidth={1.5} />,
+  calibration_reference: <Crosshair size={14} strokeWidth={1.5} />,
 };
 
 function getShapeDisplayName(shape: BaseShape, index: number): string {
@@ -73,7 +76,7 @@ export function PropertiesPanel({
   isOpen,
   onTogglePanel,
 }: PropertiesPanelProps) {
-  const [activeTab, setActiveTab] = useState<"layers" | "properties">("layers");
+  const [activeTab, setActiveTab] = useState<"layers" | "properties" | "measurements">("layers");
 
   if (!isOpen) return null;
 
@@ -116,6 +119,16 @@ export function PropertiesPanel({
           }}
         >
           Properties
+        </button>
+        <button
+          onClick={() => setActiveTab("measurements")}
+          className="flex-1 py-2 text-xs font-medium transition-colors"
+          style={{
+            color: activeTab === "measurements" ? "#635BFF" : "#697386",
+            borderBottom: activeTab === "measurements" ? "2px solid #635BFF" : "2px solid transparent",
+          }}
+        >
+          Measurements
         </button>
       </div>
 
@@ -231,37 +244,14 @@ export function PropertiesPanel({
             )}
           </div>
         )}
-      </div>
 
-      {/* Measurement Summary */}
-      {shapes.filter((s) => s.measurement).length > 0 && (
-        <div
-          className="px-3 py-2"
-          style={{ borderTop: "1px solid #E3E8EE" }}
-        >
-          <p className="text-xs font-medium mb-1" style={{ color: "#0A2540" }}>
-            Measurements
-          </p>
-          {shapes
-            .filter((s) => s.measurement && s.visible)
-            .map((s) => (
-              <div
-                key={s.id}
-                className="flex items-center justify-between py-0.5"
-              >
-                <span className="text-xs truncate" style={{ color: "#425466" }}>
-                  {s.label || s.type}
-                </span>
-                <span
-                  className="text-xs font-medium tabular-nums"
-                  style={{ color: "#635BFF" }}
-                >
-                  {s.measurement!.label}
-                </span>
-              </div>
-            ))}
-        </div>
-      )}
+        {activeTab === "measurements" && (
+          <MeasurementSummary
+            shapes={shapes}
+            onSelectShape={onSelectShape}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -620,14 +610,261 @@ function ShapeProperties({
         </>
       )}
 
-      {/* Measurement */}
-      {shape.measurement && (
+      {/* ─── Measurement-Specific Properties ─── */}
+
+      {/* Ruler */}
+      {shape.type === "ruler" && (
+        <>
+          {shape.measurement && (
+            <PropertyField label="Measurement">
+              <p className="text-sm font-medium tabular-nums" style={{ color: "#00D4AA" }}>
+                {shape.measurement.label}
+              </p>
+              <span
+                className="inline-block mt-1 px-1.5 py-0.5 text-xs rounded-full"
+                style={{
+                  backgroundColor: shape.measurement.calibrated ? "#e6f9f3" : "#fef9e7",
+                  color: shape.measurement.calibrated ? "#30B130" : "#F5A623",
+                }}
+              >
+                {shape.measurement.calibrated ? "Calibrated" : "Uncalibrated"}
+              </span>
+            </PropertyField>
+          )}
+          <PropertyField label="End ticks">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.showEndTicks !== false}
+                onChange={(e) => onUpdate({ showEndTicks: e.target.checked })}
+              />
+              Show end ticks
+            </label>
+          </PropertyField>
+          <PropertyField label="Label position">
+            <select
+              value={shape.labelPosition ?? "auto"}
+              onChange={(e) => onUpdate({ labelPosition: e.target.value as "above" | "below" | "auto" })}
+              className="w-full text-xs px-2 py-1"
+              style={{ border: "1px solid #E3E8EE", borderRadius: 4, backgroundColor: "#F6F9FC", color: "#0A2540" }}
+            >
+              <option value="auto">Auto</option>
+              <option value="above">Above</option>
+              <option value="below">Below</option>
+            </select>
+          </PropertyField>
+        </>
+      )}
+
+      {/* Angle */}
+      {shape.type === "angle" && shape.measurement && (
+        <>
+          <PropertyField label="Angle">
+            <p className="text-sm font-medium tabular-nums" style={{ color: "#00D4AA" }}>
+              {shape.measurement.label}
+            </p>
+          </PropertyField>
+          <PropertyField label="Supplementary">
+            <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
+              {(180 - shape.measurement.value).toFixed(1)}°
+            </p>
+          </PropertyField>
+          <PropertyField label="Show supplementary">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.showSupplementary ?? false}
+                onChange={(e) => onUpdate({ showSupplementary: e.target.checked })}
+              />
+              Show supplementary
+            </label>
+          </PropertyField>
+          <PropertyField label="Arc radius">
+            <div className="flex items-center gap-2">
+              <input
+                type="range" min={15} max={60} step={1}
+                value={shape.arcRadius ?? 30}
+                onChange={(e) => onUpdate({ arcRadius: parseInt(e.target.value) })}
+                className="flex-1"
+              />
+              <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+                {shape.arcRadius ?? 30}px
+              </span>
+            </div>
+          </PropertyField>
+        </>
+      )}
+
+      {/* Cobb Angle */}
+      {shape.type === "cobb_angle" && shape.measurement && (
+        <>
+          <PropertyField label="Cobb angle">
+            <p className="text-sm font-medium tabular-nums" style={{ color: "#00D4AA" }}>
+              {shape.measurement.value.toFixed(1)}°
+            </p>
+          </PropertyField>
+          <PropertyField label="Classification">
+            <span
+              className="inline-block px-2 py-0.5 text-xs rounded-full font-medium"
+              style={{
+                backgroundColor:
+                  shape.cobbClassification === "Mild" ? "#e6f9f3"
+                    : shape.cobbClassification === "Moderate" ? "#fef9e7"
+                      : "#fde8ec",
+                color:
+                  shape.cobbClassification === "Mild" ? "#30B130"
+                    : shape.cobbClassification === "Moderate" ? "#F5A623"
+                      : "#DF1B41",
+              }}
+            >
+              {shape.cobbClassification}
+            </span>
+          </PropertyField>
+          <PropertyField label="Perpendiculars">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.showPerpendiculars !== false}
+                onChange={(e) => onUpdate({ showPerpendiculars: e.target.checked })}
+              />
+              Show perpendiculars
+            </label>
+          </PropertyField>
+          <PropertyField label="Classification label">
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <input
+                type="checkbox"
+                checked={shape.showClassification !== false}
+                onChange={(e) => onUpdate({ showClassification: e.target.checked })}
+              />
+              Show classification
+            </label>
+          </PropertyField>
+        </>
+      )}
+
+      {/* Calibration Reference */}
+      {shape.type === "calibration_reference" && (
+        <>
+          <PropertyField label="Known distance">
+            <div className="flex items-center gap-1">
+              <input
+                type="number" step={0.1} min={0.1}
+                value={shape.knownDistance ?? ""}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  if (!isNaN(v) && v > 0 && shape.pixelDistance) {
+                    const spacing = v / shape.pixelDistance;
+                    onUpdate({
+                      knownDistance: v,
+                      computedPixelSpacing: spacing,
+                      measurement: {
+                        value: shape.pixelDistance,
+                        unit: "mm",
+                        calibrated: true,
+                        label: `${v.toFixed(1)} mm`,
+                      },
+                    });
+                  }
+                }}
+                className="w-20 text-xs px-1.5 py-1 tabular-nums"
+                style={{ border: "1px solid #E3E8EE", borderRadius: 4, backgroundColor: "#F6F9FC", color: "#0A2540" }}
+              />
+              <span className="text-xs" style={{ color: "#697386" }}>mm</span>
+            </div>
+          </PropertyField>
+          <PropertyField label="Pixel distance">
+            <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
+              {shape.pixelDistance ? `${Math.round(shape.pixelDistance)} px` : "—"}
+            </p>
+          </PropertyField>
+          <PropertyField label="Pixel spacing">
+            <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
+              {shape.computedPixelSpacing ? `${shape.computedPixelSpacing.toFixed(4)} mm/px` : "—"}
+            </p>
+          </PropertyField>
+        </>
+      )}
+
+      {/* Generic measurement fallback */}
+      {shape.measurement && shape.type !== "ruler" && shape.type !== "angle"
+        && shape.type !== "cobb_angle" && shape.type !== "calibration_reference" && (
         <PropertyField label="Measurement">
           <p className="text-sm font-medium tabular-nums" style={{ color: "#635BFF" }}>
             {shape.measurement.label}
           </p>
         </PropertyField>
       )}
+    </div>
+  );
+}
+
+// ─── Measurement Summary Tab ───
+
+function MeasurementSummary({
+  shapes,
+  onSelectShape,
+}: {
+  shapes: BaseShape[];
+  onSelectShape: (id: string) => void;
+}) {
+  const measurementShapes = shapes.filter(
+    (s) => s.measurement && s.visible && s.type !== "calibration_reference"
+  );
+
+  return (
+    <div className="p-3">
+      <p className="text-xs font-medium mb-2" style={{ color: "#0A2540" }}>
+        Measurement Summary
+      </p>
+      {measurementShapes.length === 0 ? (
+        <div className="py-6 text-center text-xs" style={{ color: "#697386" }}>
+          No measurements yet.
+          <br />
+          Use Ruler (M), Angle (Shift+M), or Cobb (Cmd+Shift+M).
+        </div>
+      ) : (
+        <div className="space-y-0.5">
+          {/* Header */}
+          <div className="flex items-center gap-2 pb-1 mb-1" style={{ borderBottom: "1px solid #E3E8EE" }}>
+            <span className="w-5 text-xs font-medium" style={{ color: "#697386" }}>#</span>
+            <span className="flex-1 text-xs font-medium" style={{ color: "#697386" }}>Type</span>
+            <span className="text-xs font-medium text-right" style={{ color: "#697386", minWidth: 60 }}>Value</span>
+          </div>
+          {measurementShapes.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => onSelectShape(s.id)}
+              className="flex items-center gap-2 w-full py-1 px-0.5 rounded transition-colors text-left"
+              style={{ backgroundColor: "transparent" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F0F3F7")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            >
+              <span className="w-5 text-xs tabular-nums" style={{ color: "#697386" }}>{i + 1}</span>
+              <span className="flex items-center gap-1 flex-1 text-xs" style={{ color: "#425466" }}>
+                {shapeIcons[s.type]}
+                {s.label || s.type.replace("_", " ")}
+              </span>
+              <span className="text-xs font-medium tabular-nums text-right" style={{ color: "#00D4AA", minWidth: 60 }}>
+                {s.measurement!.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Calibration status */}
+      {(() => {
+        const calRef = shapes.find((s) => s.type === "calibration_reference" && s.visible);
+        return calRef ? (
+          <div className="mt-3 p-2 rounded" style={{ backgroundColor: "#fef9e7", border: "1px solid #FFCC00" }}>
+            <p className="text-xs font-medium" style={{ color: "#0A2540" }}>Calibration Active</p>
+            <p className="text-xs" style={{ color: "#425466" }}>
+              {calRef.computedPixelSpacing ? `${calRef.computedPixelSpacing.toFixed(4)} mm/px` : "Pending"}
+            </p>
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 }

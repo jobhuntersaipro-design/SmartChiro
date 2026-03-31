@@ -159,11 +159,24 @@ export function useCanvasInteraction({
         return;
       }
 
-      // Tool shortcuts (no modifier except Shift for polyline)
+      // Ctrl/Cmd+Shift+M = Cobb Angle (check before non-mod shortcuts)
+      if (mod && e.shiftKey && e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        setActiveTool("cobb_angle");
+        return;
+      }
+
+      // Tool shortcuts (no modifier except Shift for polyline/angle)
       if (!mod) {
         // Shift+L = Polyline
         if (e.shiftKey && e.key.toLowerCase() === "l") {
           setActiveTool("polyline");
+          return;
+        }
+
+        // Shift+M = Angle
+        if (e.shiftKey && e.key.toLowerCase() === "m") {
+          setActiveTool("angle");
           return;
         }
 
@@ -198,6 +211,12 @@ export function useCanvasInteraction({
               return;
             case "x":
               setActiveTool("eraser");
+              return;
+            case "m":
+              setActiveTool("ruler");
+              return;
+            case "k":
+              setActiveTool("calibration_reference");
               return;
           }
         }

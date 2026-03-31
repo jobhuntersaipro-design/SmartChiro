@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 import type {
   BaseShape,
   BezierControlPoint,
+  CalibrationData,
   Point,
   ShapeStyle,
   ToolId,
@@ -11,6 +12,8 @@ import type {
 } from "@/types/annotation";
 import {
   DEFAULT_SHAPE_STYLE,
+  MEASUREMENT_STYLE,
+  CALIBRATION_STYLE,
   computeBoundingBox,
   screenToImage,
   simplifyPoints,
@@ -41,6 +44,8 @@ interface DrawingState {
   // For text
   textInputActive: boolean;
   textPosition: Point | null;
+  // For multi-click measurement tools (angle=3 clicks, cobb=4 clicks)
+  measurementClicks: Point[];
 }
 
 interface UseDrawingToolsOptions {
@@ -48,8 +53,10 @@ interface UseDrawingToolsOptions {
   transform: ViewTransform;
   shapes: BaseShape[];
   currentStyle: ShapeStyle;
+  calibration: CalibrationData;
   onAddShape: (shape: BaseShape) => void;
   onDeleteShapes: (ids: string[]) => void;
+  onCalibrationRequest?: (shape: BaseShape) => void;
 }
 
 interface UseDrawingToolsReturn {
@@ -68,6 +75,7 @@ interface UseDrawingToolsReturn {
 
 const DRAWING_TOOLS: ToolId[] = [
   "line", "polyline", "rectangle", "ellipse", "arrow", "freehand", "bezier", "text", "eraser",
+  "ruler", "angle", "cobb_angle", "calibration_reference",
 ];
 
 function createInitialDrawingState(): DrawingState {
@@ -81,6 +89,7 @@ function createInitialDrawingState(): DrawingState {
     polylineCommitted: [],
     textInputActive: false,
     textPosition: null,
+    measurementClicks: [],
   };
 }
 
@@ -147,13 +156,21 @@ function constrainSquare(origin: Point, point: Point): Point {
   };
 }
 
+import {
+  computeRulerMeasurement,
+  computeAngleMeasurement,
+  computeCobbAngle,
+} from "@/lib/measurements";
+
 export function useDrawingTools({
   activeTool,
   transform,
   shapes,
   currentStyle,
+  calibration,
   onAddShape,
   onDeleteShapes,
+  onCalibrationRequest,
 }: UseDrawingToolsOptions): UseDrawingToolsReturn {
   const stateRef = useRef<DrawingState>(createInitialDrawingState());
   const drawingShapeRef = useRef<BaseShape | null>(null);
@@ -286,6 +303,42 @@ export function useDrawingTools({
         return true;
       }
 
+      // ─── Angle (3-click placement) ───
+      if (activeTool === "angle") {
+        if (!state.isDrawing) {
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          state.measurementClicks = [imagePos];
+          updateAnglePreview(imagePos);
+          return true;
+        }
+        state.measurementClicks.push(imagePos);
+        if (state.measurementClicks.length >= 3) {
+          commitAngle();
+          return true;
+        }
+        updateAnglePreview(imagePos);
+        return true;
+      }
+
+      // ─── Cobb Angle (4-click placement) ───
+      if (activeTool === "cobb_angle") {
+        if (!state.isDrawing) {
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          state.measurementClicks = [imagePos];
+          updateCobbPreview(imagePos);
+          return true;
+        }
+        state.measurementClicks.push(imagePos);
+        if (state.measurementClicks.length >= 4) {
+          commitCobb();
+          return true;
+        }
+        updateCobbPreview(imagePos);
+        return true;
+      }
+
       // ─── Bezier (click-to-place anchors) ───
       if (activeTool === "bezier") {
         if (!state.isDrawing) {
@@ -336,6 +389,17 @@ export function useDrawingTools({
       } else if (activeTool === "ellipse") {
         preview = buildEllipseShape(imagePos, imagePos);
         preview.id = state.shapeId;
+      } else if (activeTool === "ruler" || activeTool === "calibration_reference") {
+        const style = activeTool === "calibration_reference" ? CALIBRATION_STYLE : MEASUREMENT_STYLE;
+        preview = createBaseShape(activeTool === "ruler" ? "ruler" : "calibration_reference", style, zIndex);
+        preview.id = state.shapeId;
+        preview.points = [imagePos, imagePos];
+        preview.showEndTicks = true;
+        preview.tickLength = 8;
+        preview.labelPosition = "auto";
+        preview.lineCap = "round";
+        const bb = computeBoundingBox([imagePos, imagePos]);
+        preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
       } else {
         return false;
       }
@@ -355,6 +419,7 @@ export function useDrawingTools({
       buildLineShape,
       buildRectShape,
       buildEllipseShape,
+      calibration,
     ]
   );
 
@@ -370,6 +435,18 @@ export function useDrawingTools({
       if (activeTool === "polyline" && state.isDrawing) {
         polylinePreviewRef.current = imagePos;
         updatePolylinePreview(imagePos);
+        return;
+      }
+
+      // Angle preview cursor
+      if (activeTool === "angle" && state.isDrawing) {
+        updateAnglePreview(imagePos);
+        return;
+      }
+
+      // Cobb preview cursor
+      if (activeTool === "cobb_angle" && state.isDrawing) {
+        updateCobbPreview(imagePos);
         return;
       }
 
@@ -457,6 +534,31 @@ export function useDrawingTools({
         drawingShapeRef.current = preview;
         return;
       }
+
+      // Ruler / Calibration Reference (drag-based)
+      if (activeTool === "ruler" || activeTool === "calibration_reference") {
+        if (e.shiftKey) {
+          endPoint = constrainAngle(state.startPoint, imagePos);
+        }
+        const style = activeTool === "calibration_reference" ? CALIBRATION_STYLE : MEASUREMENT_STYLE;
+        const shapeType = activeTool === "ruler" ? "ruler" as const : "calibration_reference" as const;
+        const preview = createBaseShape(shapeType, style, getNextZIndex(shapes));
+        preview.id = state.shapeId!;
+        preview.points = [state.startPoint, endPoint];
+        preview.showEndTicks = true;
+        preview.tickLength = 8;
+        preview.labelPosition = "auto";
+        preview.lineCap = "round";
+        const bb = computeBoundingBox([state.startPoint, endPoint]);
+        preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
+        // Compute measurement for ruler preview
+        if (activeTool === "ruler") {
+          const m = computeRulerMeasurement(state.startPoint, endPoint, calibration);
+          preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: m.unit === "mm", label: m.label };
+        }
+        drawingShapeRef.current = preview;
+        return;
+      }
     },
     [
       isDrawingTool,
@@ -468,6 +570,7 @@ export function useDrawingTools({
       buildLineShape,
       buildRectShape,
       buildEllipseShape,
+      calibration,
     ]
   );
 
@@ -481,8 +584,9 @@ export function useDrawingTools({
         return;
       }
 
-      // Don't commit polyline/bezier on pointer up (they use click-to-place)
-      if (activeTool === "polyline" || activeTool === "bezier" || activeTool === "text") {
+      // Don't commit click-to-place tools on pointer up
+      if (activeTool === "polyline" || activeTool === "bezier" || activeTool === "text"
+        || activeTool === "angle" || activeTool === "cobb_angle") {
         return;
       }
 
@@ -521,8 +625,39 @@ export function useDrawingTools({
         }
       }
 
+      // Ruler / Calibration Reference validation
+      if (activeTool === "ruler" || activeTool === "calibration_reference") {
+        if (shape.points.length >= 2) {
+          const dist = Math.hypot(
+            shape.points[1].x - shape.points[0].x,
+            shape.points[1].y - shape.points[0].y
+          );
+          valid = dist >= MIN_LINE_LENGTH;
+          if (valid) {
+            if (activeTool === "ruler") {
+              const m = computeRulerMeasurement(shape.points[0], shape.points[1], calibration);
+              shape.measurement = { value: m.pixelLength, unit: m.unit, calibrated: m.unit === "mm", label: m.label };
+            } else {
+              // Calibration reference — compute pixel distance, request dialog
+              const pixDist = Math.hypot(
+                shape.points[1].x - shape.points[0].x,
+                shape.points[1].y - shape.points[0].y
+              );
+              shape.pixelDistance = pixDist;
+              shape.measurement = { value: pixDist, unit: "px", calibrated: false, label: `${Math.round(pixDist)} px` };
+            }
+          }
+        } else {
+          valid = false;
+        }
+      }
+
       if (valid) {
         onAddShape({ ...shape });
+        // For calibration reference, trigger calibration dialog
+        if (activeTool === "calibration_reference" && onCalibrationRequest) {
+          onCalibrationRequest({ ...shape });
+        }
       }
 
       // Reset state
@@ -530,7 +665,7 @@ export function useDrawingTools({
       drawingShapeRef.current = null;
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     },
-    [activeTool, transform.zoom, onAddShape]
+    [activeTool, transform.zoom, onAddShape, calibration, onCalibrationRequest]
   );
 
   // ─── Double Click ───
@@ -571,6 +706,30 @@ export function useDrawingTools({
         if (e.key === "Backspace" && state.polylineCommitted.length > 1) {
           state.polylineCommitted.pop();
           updatePolylinePreview(polylinePreviewRef.current ?? state.polylineCommitted[state.polylineCommitted.length - 1]);
+          return true;
+        }
+      }
+
+      // Angle-specific keys
+      if (activeTool === "angle" && state.isDrawing) {
+        if (e.key === "Escape") {
+          cancelDrawing();
+          return true;
+        }
+        if (e.key === "Backspace" && state.measurementClicks.length > 1) {
+          state.measurementClicks.pop();
+          return true;
+        }
+      }
+
+      // Cobb-specific keys
+      if (activeTool === "cobb_angle" && state.isDrawing) {
+        if (e.key === "Escape") {
+          cancelDrawing();
+          return true;
+        }
+        if (e.key === "Backspace" && state.measurementClicks.length > 1) {
+          state.measurementClicks.pop();
           return true;
         }
       }
@@ -678,6 +837,93 @@ export function useDrawingTools({
     drawingShapeRef.current = null;
   }
 
+  // ─── Angle Helpers ───
+  function updateAnglePreview(cursorPos: Point) {
+    const state = stateRef.current;
+    if (state.measurementClicks.length === 0) return;
+    const allPoints = [...state.measurementClicks, cursorPos];
+    const shape = createBaseShape("angle", MEASUREMENT_STYLE, getNextZIndex(shapes));
+    shape.id = state.shapeId!;
+    shape.points = allPoints;
+    shape.arcRadius = 30;
+    shape.showSupplementary = false;
+    const bb = computeBoundingBox(allPoints);
+    shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
+    if (allPoints.length >= 3) {
+      const m = computeAngleMeasurement(allPoints[0], allPoints[1], allPoints[2]);
+      shape.measurement = { value: m.degrees, unit: "deg", calibrated: false, label: m.label };
+    }
+    drawingShapeRef.current = shape;
+  }
+
+  function commitAngle() {
+    const state = stateRef.current;
+    if (state.measurementClicks.length < 3) { cancelDrawing(); return; }
+    const pts = state.measurementClicks;
+    const shape = createBaseShape("angle", MEASUREMENT_STYLE, getNextZIndex(shapes));
+    shape.id = state.shapeId!;
+    shape.points = [...pts];
+    shape.arcRadius = 30;
+    shape.showSupplementary = false;
+    const bb = computeBoundingBox(pts);
+    shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
+    const m = computeAngleMeasurement(pts[0], pts[1], pts[2]);
+    shape.measurement = { value: m.degrees, unit: "deg", calibrated: false, label: m.label };
+    onAddShape(shape);
+    stateRef.current = createInitialDrawingState();
+    drawingShapeRef.current = null;
+  }
+
+  // ─── Cobb Angle Helpers ───
+  function updateCobbPreview(cursorPos: Point) {
+    const state = stateRef.current;
+    if (state.measurementClicks.length === 0) return;
+    const allPoints = [...state.measurementClicks, cursorPos];
+    const shape = createBaseShape("cobb_angle", MEASUREMENT_STYLE, getNextZIndex(shapes));
+    shape.id = state.shapeId!;
+    shape.points = allPoints;
+    shape.showPerpendiculars = true;
+    shape.showClassification = true;
+    const bb = computeBoundingBox(allPoints);
+    shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
+    // If we have 4+ points, compute the cobb angle
+    if (allPoints.length >= 4) {
+      const cobb = computeCobbAngle(allPoints[0], allPoints[1], allPoints[2], allPoints[3]);
+      shape.line1 = [allPoints[0].x, allPoints[0].y, allPoints[1].x, allPoints[1].y];
+      shape.line2 = [allPoints[2].x, allPoints[2].y, allPoints[3].x, allPoints[3].y];
+      shape.perpendicular1 = cobb.perp1;
+      shape.perpendicular2 = cobb.perp2;
+      shape.intersection = cobb.intersection;
+      shape.cobbClassification = cobb.classification;
+      shape.measurement = { value: cobb.degrees, unit: "deg", calibrated: false, label: `${cobb.degrees.toFixed(1)}° — ${cobb.classification}` };
+    }
+    drawingShapeRef.current = shape;
+  }
+
+  function commitCobb() {
+    const state = stateRef.current;
+    if (state.measurementClicks.length < 4) { cancelDrawing(); return; }
+    const pts = state.measurementClicks;
+    const shape = createBaseShape("cobb_angle", MEASUREMENT_STYLE, getNextZIndex(shapes));
+    shape.id = state.shapeId!;
+    shape.points = [...pts];
+    shape.showPerpendiculars = true;
+    shape.showClassification = true;
+    const bb = computeBoundingBox(pts);
+    shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
+    const cobb = computeCobbAngle(pts[0], pts[1], pts[2], pts[3]);
+    shape.line1 = [pts[0].x, pts[0].y, pts[1].x, pts[1].y];
+    shape.line2 = [pts[2].x, pts[2].y, pts[3].x, pts[3].y];
+    shape.perpendicular1 = cobb.perp1;
+    shape.perpendicular2 = cobb.perp2;
+    shape.intersection = cobb.intersection;
+    shape.cobbClassification = cobb.classification;
+    shape.measurement = { value: cobb.degrees, unit: "deg", calibrated: false, label: `${cobb.degrees.toFixed(1)}° — ${cobb.classification}` };
+    onAddShape(shape);
+    stateRef.current = createInitialDrawingState();
+    drawingShapeRef.current = null;
+  }
+
   // ─── Text commit ───
   const commitText = useCallback(
     (text: string) => {
@@ -756,7 +1002,9 @@ function hitTestEraser(
         shape.type === "arrow" ||
         shape.type === "freehand" ||
         shape.type === "polyline" ||
-        shape.type === "bezier"
+        shape.type === "bezier" ||
+        shape.type === "ruler" ||
+        shape.type === "calibration_reference"
       ) {
         for (let i = 0; i < shape.points.length - 1; i++) {
           const dist = pointToSegmentDistance(

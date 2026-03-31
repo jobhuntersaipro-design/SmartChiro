@@ -1,16 +1,31 @@
-# Current Feature
+# Current Feature: X-Ray Annotation Measurements (Part 4)
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals will be populated when a feature is loaded -->
+- Ruler tool (`M`) — two-point distance measurement with end ticks, pixel or calibrated mm display
+- Angle tool (`Shift+M`) — three-click angle measurement with arc indicator and supplementary angle
+- Cobb Angle tool (`Ctrl/Cmd+Shift+M`) — four-click scoliosis measurement with perpendicular construction lines and severity classification (mild/moderate/severe)
+- Calibration Reference tool (`K`) — draw line on known reference, enter mm value, compute px-to-mm ratio, update Xray calibration state
+- Calibration system — reference marker overrides clinic default, recalculates all rulers on calibration change
+- Measurement properties panel — ruler/angle/cobb/calibration-specific fields when selected
+- Measurement summary panel — table of all measurements with click-to-select
+- Measurement default styles — teal `#00D4AA` stroke, yellow `#FFCC00` for calibration
+- Keyboard shortcuts — M, Shift+M, Ctrl/Cmd+Shift+M, K
 
 ## Notes
 
-<!-- Notes will be populated when a feature is loaded -->
+- Measurement shapes extend `BaseShape` interface from Part 3
+- Calibration sources (priority): Reference Marker > Clinic Default > Manual Entry
+- Only one calibration reference per X-ray (new replaces old)
+- Deleting calibration reference reverts Xray to uncalibrated
+- Cobb angle classification: <10° mild, 10-25° moderate, >25° severe
+- Label rendering: semi-transparent dark pill (#1A1F36 at 80% opacity), 12px white text
+- Perpendicular construction lines: dashed [6,4], same color at 60% opacity
+- Spec file: `context/features/xray-annotation-part4-spec.md`
 
 ## History
 

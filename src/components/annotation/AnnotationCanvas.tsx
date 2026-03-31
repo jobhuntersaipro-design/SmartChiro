@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   BaseShape,
   AnnotationCanvasState,
+  CalibrationData,
   ImageAdjustments,
   ShapeStyle,
 } from "@/types/annotation";
@@ -26,6 +27,7 @@ import { StatusBar } from "./StatusBar";
 import { SelectionOverlay } from "./SelectionOverlay";
 import { ShapeRenderer } from "./ShapeRenderer";
 import { TextInput } from "./TextInput";
+import { CalibrationDialog } from "./CalibrationDialog";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -36,6 +38,8 @@ interface AnnotationCanvasProps {
   annotationId: string | null;
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
+  xrayId: string;
+  initialCalibration: CalibrationData;
   onClose: () => void;
 }
 
@@ -48,6 +52,8 @@ export function AnnotationCanvas({
   annotationId,
   initialCanvasState,
   initialAdjustments,
+  xrayId,
+  initialCalibration,
   onClose,
 }: AnnotationCanvasProps) {
   // ─── State ───
@@ -59,6 +65,10 @@ export function AnnotationCanvas({
   const [currentStyle, setCurrentStyle] = useState<ShapeStyle>({
     ...DEFAULT_SHAPE_STYLE,
   });
+
+  // Calibration
+  const [calibration, setCalibration] = useState<CalibrationData>(initialCalibration);
+  const [calibrationDialogShape, setCalibrationDialogShape] = useState<BaseShape | null>(null);
 
   // Force re-render counter for drawing preview
   const [, setRenderTick] = useState(0);
@@ -102,14 +112,97 @@ export function AnnotationCanvas({
     [undoRedo, autoSave]
   );
 
+  const handleCalibrationRequest = useCallback((shape: BaseShape) => {
+    setCalibrationDialogShape(shape);
+  }, []);
+
   const drawing = useDrawingTools({
     activeTool: interaction.activeTool,
     transform: viewport.transform,
     shapes,
     currentStyle,
+    calibration,
     onAddShape: handleAddShape,
     onDeleteShapes: handleDeleteShapes,
+    onCalibrationRequest: handleCalibrationRequest,
   });
+
+  // Apply calibration from dialog
+  const handleApplyCalibration = useCallback(
+    async (knownDistanceMm: number) => {
+      if (!calibrationDialogShape) return;
+      const pixDist = calibrationDialogShape.pixelDistance;
+      if (!pixDist || pixDist <= 0) return;
+      const spacing = knownDistanceMm / pixDist;
+
+      // Remove any existing calibration reference shapes
+      setShapes((prev) => {
+        const existingCalRefs = prev.filter(
+          (s) => s.type === "calibration_reference" && s.id !== calibrationDialogShape.id
+        );
+        for (const old of existingCalRefs) {
+          undoRedo.pushCommand("DELETE_SHAPE", old.id, old, null);
+        }
+        return prev
+          .filter((s) => !(s.type === "calibration_reference" && s.id !== calibrationDialogShape.id))
+          .map((s) => {
+            if (s.id === calibrationDialogShape.id) {
+              return {
+                ...s,
+                knownDistance: knownDistanceMm,
+                computedPixelSpacing: spacing,
+                measurement: {
+                  value: pixDist,
+                  unit: "mm" as const,
+                  calibrated: true,
+                  label: `${knownDistanceMm.toFixed(1)} mm`,
+                },
+              };
+            }
+            // Recalculate all ruler measurements
+            if (s.type === "ruler" && s.points.length >= 2) {
+              const rulerPixelLen = Math.hypot(
+                s.points[1].x - s.points[0].x,
+                s.points[1].y - s.points[0].y
+              );
+              const mmVal = rulerPixelLen * spacing;
+              return {
+                ...s,
+                measurement: {
+                  value: rulerPixelLen,
+                  unit: "mm" as const,
+                  calibrated: true,
+                  label: `${mmVal.toFixed(1)} mm`,
+                },
+              };
+            }
+            return s;
+          });
+      });
+
+      // Update calibration state
+      const newCalibration: CalibrationData = { isCalibrated: true, pixelSpacing: spacing };
+      setCalibration(newCalibration);
+      autoSave.markDirty();
+
+      // Persist to backend
+      try {
+        await fetch(`/api/xrays/${xrayId}/calibrate`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pixelSpacing: spacing,
+            calibrationMethod: "REFERENCE_MARKER",
+          }),
+        });
+      } catch {
+        // Calibration applied locally even if API fails
+      }
+
+      setCalibrationDialogShape(null);
+    },
+    [calibrationDialogShape, undoRedo, autoSave, xrayId]
+  );
 
   // ─── Shape Update (from properties panel) ───
   const handleUpdateShape = useCallback(
@@ -141,7 +234,7 @@ export function AnnotationCanvas({
       metadata: {
         shapeCount: shapes.length,
         measurementCount: shapes.filter(
-          (s) => s.type === "ruler" || s.type === "angle" || s.type === "cobb_angle"
+          (s) => s.type === "ruler" || s.type === "angle" || s.type === "cobb_angle" || s.type === "calibration_reference"
         ).length,
         lastModifiedShapeId: shapes.length > 0 ? shapes[shapes.length - 1].id : null,
       },
@@ -489,6 +582,15 @@ export function AnnotationCanvas({
                   drawing.cancelDrawing();
                   setRenderTick((n) => n + 1);
                 }}
+              />
+            )}
+
+            {/* Calibration Dialog */}
+            {calibrationDialogShape && calibrationDialogShape.pixelDistance && (
+              <CalibrationDialog
+                pixelDistance={calibrationDialogShape.pixelDistance}
+                onApply={handleApplyCalibration}
+                onCancel={() => setCalibrationDialogShape(null)}
               />
             )}
           </div>

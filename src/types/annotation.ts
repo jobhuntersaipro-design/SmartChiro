@@ -11,7 +11,8 @@ export type ShapeType =
   | "text"
   | "ruler"
   | "angle"
-  | "cobb_angle";
+  | "cobb_angle"
+  | "calibration_reference";
 
 export interface ShapeStyle {
   strokeColor: string;
@@ -52,13 +53,37 @@ export interface BaseShape {
   points: Point[]; // vertices, control points, etc.
   text: string | null; // for text shapes
   fontSize: number | null;
-  // Measurement data (for ruler, angle, cobb_angle shapes)
+  // Measurement data (for ruler, angle, cobb_angle, calibration_reference shapes)
   measurement: ShapeMeasurement | null;
 
   // ─── Extended shape-specific fields ───
 
   // Line / Polyline / Arrow
   lineCap?: "round" | "butt" | "square";
+
+  // Ruler
+  showEndTicks?: boolean;
+  tickLength?: number;
+  labelPosition?: "above" | "below" | "auto";
+
+  // Angle
+  arcRadius?: number;
+  showSupplementary?: boolean;
+
+  // Cobb Angle
+  line1?: [number, number, number, number];
+  line2?: [number, number, number, number];
+  perpendicular1?: [number, number, number, number];
+  perpendicular2?: [number, number, number, number];
+  intersection?: [number, number];
+  showPerpendiculars?: boolean;
+  showClassification?: boolean;
+  cobbClassification?: string;
+
+  // Calibration Reference
+  knownDistance?: number;
+  pixelDistance?: number;
+  computedPixelSpacing?: number;
 
   // Polyline
   closed?: boolean;
@@ -171,7 +196,8 @@ export type ToolId =
   | "eraser"
   | "ruler"
   | "angle"
-  | "cobb_angle";
+  | "cobb_angle"
+  | "calibration_reference";
 
 export type ToolState =
   | "idle"
@@ -213,6 +239,33 @@ export const DEFAULT_SHAPE_STYLE: ShapeStyle = {
   fillOpacity: 0,
   lineDash: [],
 };
+
+// ─── Measurement Default Styles ───
+
+export const MEASUREMENT_STYLE: ShapeStyle = {
+  strokeColor: "#00D4AA",       // teal — distinct from drawing red
+  strokeWidth: 1.5,
+  strokeOpacity: 1,
+  fillColor: null,
+  fillOpacity: 0,
+  lineDash: [],
+};
+
+export const CALIBRATION_STYLE: ShapeStyle = {
+  strokeColor: "#FFCC00",       // yellow — distinct from measurements
+  strokeWidth: 2,
+  strokeOpacity: 1,
+  fillColor: null,
+  fillOpacity: 0,
+  lineDash: [],
+};
+
+// ─── Calibration Data (passed to canvas) ───
+
+export interface CalibrationData {
+  isCalibrated: boolean;
+  pixelSpacing: number | null;  // mm per pixel
+}
 
 // ─── Color Presets ───
 

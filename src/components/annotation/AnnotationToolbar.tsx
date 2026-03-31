@@ -14,6 +14,8 @@ import {
   Spline,
   Eraser,
   Share2,
+  Crosshair,
+  Scaling,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -38,7 +40,9 @@ const tools: ToolItem[] = [
   { id: "text", label: "Text", shortcut: "T", icon: <Type size={18} strokeWidth={1.5} /> },
   { id: "eraser", label: "Eraser", shortcut: "X", icon: <Eraser size={18} strokeWidth={1.5} />, separator: true },
   { id: "ruler", label: "Ruler", shortcut: "M", icon: <Ruler size={18} strokeWidth={1.5} /> },
-  { id: "angle", label: "Angle", shortcut: "G", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
+  { id: "angle", label: "Angle", shortcut: "⇧M", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
+  { id: "cobb_angle", label: "Cobb Angle", shortcut: "⌘⇧M", icon: <Scaling size={18} strokeWidth={1.5} /> },
+  { id: "calibration_reference", label: "Calibration", shortcut: "K", icon: <Crosshair size={18} strokeWidth={1.5} /> },
 ];
 
 interface AnnotationToolbarProps {

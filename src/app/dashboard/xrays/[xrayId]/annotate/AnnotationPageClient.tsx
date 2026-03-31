@@ -14,6 +14,8 @@ interface AnnotationPageClientProps {
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
+  isCalibrated: boolean;
+  pixelSpacing: number | null;
 }
 
 export function AnnotationPageClient({
@@ -25,6 +27,9 @@ export function AnnotationPageClient({
   annotationId,
   initialCanvasState,
   initialAdjustments,
+  xrayId,
+  isCalibrated,
+  pixelSpacing,
 }: AnnotationPageClientProps) {
   const router = useRouter();
 
@@ -38,6 +43,8 @@ export function AnnotationPageClient({
       annotationId={annotationId}
       initialCanvasState={initialCanvasState}
       initialAdjustments={initialAdjustments}
+      xrayId={xrayId}
+      initialCalibration={{ isCalibrated, pixelSpacing }}
       onClose={() => router.back()}
     />
   );
