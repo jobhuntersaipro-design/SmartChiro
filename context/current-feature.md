@@ -1,28 +1,12 @@
-# Current Feature: Login Page & NextAuth Integration
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- NextAuth v5 setup with Credentials (email/password) + Google OAuth providers
-- Login page at `/login` with role selector (Branch Owner / Branch Staff)
-- Email/password form with validation + Google sign-in button
-- Stripe-inspired design system (white card, `#F6F9FC` bg, `#635BFF` primary)
-- Schema: add `activeClinicId` to User model
-- Middleware protecting `/dashboard/*` routes
-- Auth utilities: `getCurrentUser()`, `requireAuth()`, `getUserClinicRole()`
-- Seed data: demo clinic + ClinicMember (OWNER) for demo user
-- Redirect to `/dashboard` on success, redirect away if already authed
-
 ## Notes
-
-- JWT session strategy (no DB session lookups)
-- Branch Owner maps to ClinicRole.OWNER; Branch Staff maps to DOCTOR/ADMIN/VIEWER
-- No self-signup — footer says "Contact your clinic admin"
-- Role selector determines which ClinicMember to look up, not a new DB field
-- Spec file: `context/features/login-page-spec.md`
 
 ## History
 
@@ -41,3 +25,4 @@ In Progress
 - 2026-03-31 **X-Ray Multi-View & Patient Image Sidebar** — ViewModeSwitcher (single/2x2/4x4) at bottom of left toolbar, PatientImageSidebar with thumbnails and metadata (body region, view type, date), MultiViewGrid with independent zoom/pan per viewport cell, click thumbnails to load into active grid slot, single mode navigates to X-ray annotation page
 - 2026-03-31 **X-Ray Annotation UX Improvements** — Reduced zoom sensitivity by 30% (scroll wheel + pinch), moved patient image sidebar from right to left (shown by default), replaced ViewModeSwitcher with dropdown selector limited to 1x1/2x2/4x4 options
 - 2026-03-31 **Annotation Enhancement Tools** — Fixed undo/redo (Ctrl+Z / Ctrl+Shift+Z) to apply changes directly to canvas, shape dragging for repositioning, copy/paste (Cmd+C / Cmd+V) with 20px offset, arrow key nudging (1px / 10px with Shift), undo/redo UI buttons in status bar
+- 2026-03-31 **Login Page & NextAuth Integration** — NextAuth v5 with Credentials + Google OAuth (JWT sessions), login page at /login with Branch Owner/Staff role selector, Stripe-inspired UI, middleware protecting /dashboard, activeClinicId on User model, auth utilities, demo clinic seed data (`context/features/login-page-spec.md`)
