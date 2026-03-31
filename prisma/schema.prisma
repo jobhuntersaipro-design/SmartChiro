@@ -278,9 +278,15 @@ model Annotation {
   label   String?
   version Int    @default(1)
 
-  // Full canvas state stored as JSON
-  canvasState Json
-  thumbnail   String?
+  // Canvas state — the core payload
+  canvasState     Json   // AnnotationCanvasState
+  canvasStateSize Int    @default(0) // byte size of canvasState JSON (for quota tracking)
+
+  // Snapshot
+  thumbnailUrl String? // auto-generated preview after save
+
+  // Image adjustment settings applied when this annotation was saved
+  imageAdjustments Json? // ImageAdjustments
 
   // AI analysis results
   aiLandmarks    Json?
