@@ -2,12 +2,18 @@
 
 import type { Point } from "@/types/annotation";
 
+type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
+
 interface StatusBarProps {
   cursorPosition: Point | null;
   selectedCount: number;
   isDirty: boolean;
   activeTool: string;
   shapeCount: number;
+  saveStatus?: SaveStatus;
+  saveError?: string | null;
+  sizeWarning?: string | null;
+  onRetrySave?: () => void;
 }
 
 export function StatusBar({
@@ -16,7 +22,42 @@ export function StatusBar({
   isDirty,
   activeTool,
   shapeCount,
+  saveStatus = "idle",
+  saveError,
+  sizeWarning,
+  onRetrySave,
 }: StatusBarProps) {
+  const renderSaveStatus = () => {
+    switch (saveStatus) {
+      case "saving":
+        return <span style={{ color: "#0570DE" }}>Saving...</span>;
+      case "saved":
+        return <span style={{ color: "#30B130" }}>Saved</span>;
+      case "retrying":
+        return <span style={{ color: "#F5A623" }}>{saveError ?? "Save failed — retrying..."}</span>;
+      case "failed":
+        return (
+          <span className="flex items-center gap-1.5">
+            <span style={{ color: "#DF1B41" }}>{saveError ?? "Save failed"}</span>
+            {onRetrySave && (
+              <button
+                onClick={onRetrySave}
+                className="rounded-[4px] px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#F0F3F7]"
+                style={{ color: "#635BFF" }}
+              >
+                Retry
+              </button>
+            )}
+          </span>
+        );
+      default:
+        if (isDirty) {
+          return <span style={{ color: "#F5A623" }}>Unsaved changes</span>;
+        }
+        return null;
+    }
+  };
+
   return (
     <div
       className="flex items-center justify-between px-4"
@@ -39,14 +80,15 @@ export function StatusBar({
             {selectedCount} shape{selectedCount !== 1 ? "s" : ""} selected
           </span>
         )}
+        {sizeWarning && (
+          <span style={{ color: "#F5A623" }}>{sizeWarning}</span>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
         <span>{shapeCount} annotation{shapeCount !== 1 ? "s" : ""}</span>
         <span className="capitalize">{activeTool.replace("_", " ")} tool</span>
-        {isDirty && (
-          <span style={{ color: "#F5A623" }}>Unsaved changes</span>
-        )}
+        {renderSaveStatus()}
       </div>
     </div>
   );

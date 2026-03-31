@@ -12,6 +12,7 @@ vi.mock('@aws-sdk/client-s3', () => ({
   S3Client: class MockS3Client {},
   PutObjectCommand: class MockPutObjectCommand {},
   DeleteObjectCommand: class MockDeleteObjectCommand {},
+  GetObjectCommand: class MockGetObjectCommand {},
 }))
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -39,6 +40,25 @@ describe('buildXrayKey', () => {
   it('builds export key', () => {
     const key = buildXrayKey('c1', 'p2', 'x3', 'exports/export-1.png')
     expect(key).toBe('xrays/c1/p2/x3/exports/export-1.png')
+  })
+})
+
+describe('buildExportKey', () => {
+  let buildExportKey: typeof import('../r2').buildExportKey
+
+  beforeEach(async () => {
+    const mod = await import('../r2')
+    buildExportKey = mod.buildExportKey
+  })
+
+  it('builds the correct export key for PNG', () => {
+    const key = buildExportKey('clinic-1', 'patient-2', 'xray-3', 'export-abc', 'png')
+    expect(key).toBe('xrays/clinic-1/patient-2/xray-3/exports/export-abc.png')
+  })
+
+  it('builds the correct export key for PDF', () => {
+    const key = buildExportKey('c1', 'p2', 'x3', 'exp-123', 'pdf')
+    expect(key).toBe('xrays/c1/p2/x3/exports/exp-123.pdf')
   })
 })
 

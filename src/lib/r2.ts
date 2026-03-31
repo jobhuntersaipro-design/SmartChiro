@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!
@@ -57,9 +57,55 @@ export function buildXrayKey(
 }
 
 /**
+ * Generate a presigned GET URL for downloading a file from R2.
+ * Expires in 24 hours by default.
+ */
+export async function getPresignedDownloadUrl(
+  key: string,
+  expiresIn = 86400
+): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+  })
+  return getSignedUrl(r2Client, command, { expiresIn })
+}
+
+/**
+ * Upload a buffer directly to R2.
+ */
+export async function uploadToR2(
+  key: string,
+  body: Buffer | Uint8Array,
+  contentType: string
+): Promise<void> {
+  const command = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  })
+  await r2Client.send(command)
+}
+
+/**
  * Get the public URL for an R2 object.
  */
 export function getR2PublicUrl(key: string): string {
   const publicUrl = process.env.R2_PUBLIC_URL!
   return `${publicUrl}/${key}`
+}
+
+/**
+ * Build the R2 storage key for an export file.
+ * Structure: /xrays/{clinicId}/{patientId}/{xrayId}/exports/{exportId}.{ext}
+ */
+export function buildExportKey(
+  clinicId: string,
+  patientId: string,
+  xrayId: string,
+  exportId: string,
+  ext: 'png' | 'pdf'
+): string {
+  return `xrays/${clinicId}/${patientId}/${xrayId}/exports/${exportId}.${ext}`
 }

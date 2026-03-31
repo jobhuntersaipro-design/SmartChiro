@@ -1,16 +1,33 @@
-# Current Feature
+# Current Feature: X-Ray Annotation API & Export
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals will be populated when a feature is loaded -->
+- X-Ray CRUD endpoints: GET list (paginated, filterable), GET single with annotation summaries, PATCH metadata, DELETE (soft-delete/archive)
+- Annotation CRUD endpoints: GET list, GET single (full canvasState), POST create, PUT update (version increment), POST fork (copy), DELETE (hard-delete)
+- Export endpoint: POST export with PNG/PDF format support, server-side rendering pipeline (load image → apply adjustments → render shapes → encode → upload to R2 → return presigned URL)
+- PDF export: auto-fit page size, header (patient/xray/clinic info), footer, measurement summary table on second page
+- PNG export: full-resolution rasterized output with all visible annotations
+- Comparison view endpoint: GET compare with 2 xray IDs, validate same patient, return both xrays + annotations
+- Client-side comparison: side-by-side canvases with linked pan/zoom, draggable divider
+- Standardized error responses: upload errors, annotation errors, export errors with proper HTTP status codes
+- Client-side error UX: auto-retry with exponential backoff on save failure, canvas state size warnings at 5MB, block save at 10MB
+- Export storage: R2 /exports/ path with 24h TTL auto-expiry
 
 ## Notes
 
-<!-- Notes will be populated when a feature is loaded -->
+- Spec: `context/features/xray-annotation-part5-spec.md`
+- This is Part 5 of 5 in the X-Ray Annotation series
+- Canvas state max size: 10MB (10,485,760 bytes)
+- Export files stored at `/xrays/{clinicId}/{patientId}/{xrayId}/exports/{exportId}.{png|pdf}`
+- PDF DPI: configurable, default 150, max 300
+- Presigned download URLs expire after 24 hours
+- No caching of exports — re-exporting always generates a new file
+- Comparison view: exactly 2 IDs required, both must be READY status and same patient
+- Fork creates a new annotation with copied canvasState, version reset to 1, label appended with "(copy)"
 
 ## History
 

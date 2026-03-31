@@ -628,6 +628,10 @@ export function AnnotationCanvas({
         isDirty={autoSave.isDirty}
         activeTool={interaction.activeTool}
         shapeCount={shapes.length}
+        saveStatus={autoSave.saveStatus}
+        saveError={autoSave.saveError}
+        sizeWarning={autoSave.sizeWarning}
+        onRetrySave={autoSave.retrySave}
       />
     </div>
   );
