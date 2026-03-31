@@ -1,20 +1,24 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature — User Table: Pro & Stripe Columns
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Add `isPro` (Boolean, default false) to User model
+- Add `phoneNumber` (String, optional) to User model
+- Add `stripeCustomerId` (String, optional, unique) to User model
+- Add `stripeSubscriptionId` (String, optional, unique) to User model
+- Create and apply Prisma migration via Neon MCP
+- Verify schema matches in Neon database
 
 ## Notes
 
-<!-- Any extra notes -->
+- Use Neon MCP to verify/apply migration
+- `isPro` defaults to `false` — tracks whether user is on Pro plan
+- `stripeCustomerId` and `stripeSubscriptionId` are unique (one Stripe customer/sub per user)
+- `phoneNumber` is optional, no uniqueness constraint
 
 ## History
 

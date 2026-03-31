@@ -17,6 +17,11 @@ model User {
   image         String?
   role          GlobalRole @default(USER)
 
+  isPro                Boolean  @default(false)
+  phoneNumber          String?
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+
   accounts         Account[]
   sessions         Session[]
   clinicMemberships ClinicMember[]
