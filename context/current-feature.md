@@ -1,23 +1,16 @@
-# Current Feature: Auth UI - Register Page
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Change login page "Sign up" link text to "Register Here" and point to `/register`
-- Create Register page at `/register` with name, email, password, confirm password fields
-- Include Google register button on register page
-- Form validation (passwords match, email format)
-- Submit to `POST /api/auth/register`
-- Redirect to login on successful registration
-- Stripe-inspired UI consistent with login page
+<!-- Add goals here -->
 
 ## Notes
 
-- Spec file: `context/features/auth-spec-files/auth-spec-3.md`
-- Registration API already exists at `/api/auth/register`
+<!-- Add notes here -->
 
 ## History
 
@@ -38,3 +31,4 @@ In Progress
 - 2026-03-31 **Annotation Enhancement Tools** — Fixed undo/redo (Ctrl+Z / Ctrl+Shift+Z) to apply changes directly to canvas, shape dragging for repositioning, copy/paste (Cmd+C / Cmd+V) with 20px offset, arrow key nudging (1px / 10px with Shift), undo/redo UI buttons in status bar
 - 2026-03-31 **Login Page & NextAuth Integration** — NextAuth v5 with Credentials + Google OAuth (JWT sessions), login page at /login with Branch Owner/Staff role selector, Stripe-inspired UI, middleware protecting /dashboard, activeClinicId on User model, auth utilities, demo clinic seed data (`context/features/login-page-spec.md`)
 - 2026-03-31 **Auth Credentials - Email/Password Provider** — Split auth into auth.config.ts (Edge-safe) + auth.ts (bcrypt override), registration API at POST /api/auth/register with validation and bcryptjs hashing, sidebar logout button, login sign-up link (`context/features/auth-spec-files/auth-spec-2.md`)
+- 2026-03-31 **Auth UI - Register Page** — Register page at /register with name, email, password, confirm password fields, Google sign-up button, form validation (passwords match, email format), submits to POST /api/auth/register, redirects to login on success, Stripe-inspired UI (`context/features/auth-spec-files/auth-spec-3.md`)
