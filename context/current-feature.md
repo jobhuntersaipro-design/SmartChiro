@@ -1,23 +1,16 @@
-# Current Feature: Auth - Google Sign-Up / Sign-In Flow
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Enable "Sign up with Google" on `/register` and "Sign in with Google" on `/login` end-to-end via NextAuth v5 Google OAuth
-- New Google users: create User + Account records, redirect to `/dashboard`
-- Existing users: link Google account to existing user (no duplicates), redirect to `/dashboard`
-- Existing credentials users can link Google as an additional sign-in method
-- Hide Google button + divider when `AUTH_GOOGLE_ID` is not configured (Option A from spec)
+<!-- Add goals here -->
 
 ## Notes
 
-- All code is already implemented (Google provider, `GoogleSignInButton`, `signIn` callback with user creation/linking)
-- Only missing: Google Cloud OAuth credentials in `.env` (`AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`)
-- Spec file: `context/features/auth-spec-files/auth-spec-4.md`
-- Optional improvement: pass `googleEnabled` prop from server pages to hide button when not configured
+<!-- Add notes here -->
 
 ## History
 
@@ -39,3 +32,4 @@ In Progress
 - 2026-03-31 **Login Page & NextAuth Integration** — NextAuth v5 with Credentials + Google OAuth (JWT sessions), login page at /login with Branch Owner/Staff role selector, Stripe-inspired UI, middleware protecting /dashboard, activeClinicId on User model, auth utilities, demo clinic seed data (`context/features/login-page-spec.md`)
 - 2026-03-31 **Auth Credentials - Email/Password Provider** — Split auth into auth.config.ts (Edge-safe) + auth.ts (bcrypt override), registration API at POST /api/auth/register with validation and bcryptjs hashing, sidebar logout button, login sign-up link (`context/features/auth-spec-files/auth-spec-2.md`)
 - 2026-03-31 **Auth UI - Register Page** — Register page at /register with name, email, password, confirm password fields, Google sign-up button, form validation (passwords match, email format), submits to POST /api/auth/register, redirects to login on success, Stripe-inspired UI (`context/features/auth-spec-files/auth-spec-3.md`)
+- 2026-04-01 **Auth - Google Sign-Up / Sign-In Flow** — Conditional Google OAuth button on login/register pages (hidden when AUTH_GOOGLE_ID not configured), googleEnabled prop from server pages, spec with Google Cloud Console setup instructions and OAuth flow documentation (`context/features/auth-spec-files/auth-spec-4.md`)
