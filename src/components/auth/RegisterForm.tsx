@@ -5,39 +5,65 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { RoleSelector } from './RoleSelector'
 import { GoogleSignInButton } from './GoogleSignInButton'
 
-export function LoginForm() {
+export function RegisterForm() {
   const router = useRouter()
-  const [loginRole, setLoginRole] = useState<'owner' | 'staff'>('owner')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    setLoading(true)
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      loginRole,
-      redirect: false,
-    })
-
-    setLoading(false)
-
-    if (result?.error) {
-      setError('Invalid password or username')
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
       return
     }
 
-    router.push('/dashboard')
-    router.refresh()
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, confirmPassword }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Registration failed. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      // Auto sign in after successful registration
+      await signIn('credentials', {
+        email,
+        password,
+        loginRole: 'owner',
+        redirect: false,
+      })
+
+      setLoading(false)
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setError('Something went wrong. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -48,25 +74,35 @@ export function LoginForm() {
           <span className="text-[20px] font-bold text-white">S</span>
         </div>
         <h1 className="text-[23px] font-semibold text-[#0A2540]">
-          Sign in to SmartChiro
+          Create your account
         </h1>
         <p className="mt-1 text-[15px] text-[#697386]">
-          Select your role and enter your credentials
+          Get started with SmartChiro
         </p>
       </div>
 
       {/* Auth Card */}
       <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[var(--shadow-card)]">
-        {/* Role Selector */}
-        <div className="mb-5">
-          <label className="mb-2 block text-[14px] font-medium text-[#0A2540]">
-            Sign in as
-          </label>
-          <RoleSelector value={loginRole} onChange={setLoginRole} />
-        </div>
-
-        {/* Email/Password Form */}
+        {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="name"
+              className="mb-1.5 block text-[14px] font-medium text-[#0A2540]"
+            >
+              Full name
+            </label>
+            <input
+              id="name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Dr. Jane Smith"
+              className="h-[40px] w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 text-[15px] text-[#0A2540] placeholder-[#697386] transition-colors focus:border-[#635BFF] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="email"
@@ -99,7 +135,7 @@ export function LoginForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="At least 8 characters"
                 className="h-[40px] w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 pr-10 text-[15px] text-[#0A2540] placeholder-[#697386] transition-colors focus:border-[#635BFF] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
               />
               <button
@@ -109,6 +145,38 @@ export function LoginForm() {
                 tabIndex={-1}
               >
                 {showPassword ? (
+                  <EyeOff size={16} strokeWidth={1.5} />
+                ) : (
+                  <Eye size={16} strokeWidth={1.5} />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="mb-1.5 block text-[14px] font-medium text-[#0A2540]"
+            >
+              Confirm password
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                className="h-[40px] w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 pr-10 text-[15px] text-[#0A2540] placeholder-[#697386] transition-colors focus:border-[#635BFF] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#697386] hover:text-[#0A2540] cursor-pointer"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? (
                   <EyeOff size={16} strokeWidth={1.5} />
                 ) : (
                   <Eye size={16} strokeWidth={1.5} />
@@ -129,7 +197,7 @@ export function LoginForm() {
             {loading ? (
               <Loader2 size={18} className="animate-spin" />
             ) : (
-              'Sign in'
+              'Create account'
             )}
           </button>
         </form>
@@ -141,14 +209,14 @@ export function LoginForm() {
           <div className="h-px flex-1 bg-[#E3E8EE]" />
         </div>
 
-        {/* Google Sign In */}
-        <GoogleSignInButton />
+        {/* Google Sign Up */}
+        <GoogleSignInButton label="Sign up with Google" />
       </div>
 
       {/* Footer */}
       <p className="mt-6 text-center text-[14px] text-[#697386]">
-        Don&apos;t have an account?{' '}
-        <Link href="/register" className="text-[#635BFF] hover:text-[#5851EB] transition-colors">Register Here</Link>
+        Already have an account?{' '}
+        <Link href="/login" className="text-[#635BFF] hover:text-[#5851EB] transition-colors">Sign in</Link>
       </p>
     </div>
   )

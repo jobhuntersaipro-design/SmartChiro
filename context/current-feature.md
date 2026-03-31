@@ -1,12 +1,23 @@
-# Current Feature
+# Current Feature: Auth UI - Register Page
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Change login page "Sign up" link text to "Register Here" and point to `/register`
+- Create Register page at `/register` with name, email, password, confirm password fields
+- Include Google register button on register page
+- Form validation (passwords match, email format)
+- Submit to `POST /api/auth/register`
+- Redirect to login on successful registration
+- Stripe-inspired UI consistent with login page
+
 ## Notes
+
+- Spec file: `context/features/auth-spec-files/auth-spec-3.md`
+- Registration API already exists at `/api/auth/register`
 
 ## History
 

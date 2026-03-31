@@ -40,49 +40,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const isValid = await compare(password, user.password)
         if (!isValid) return null
 
-        // Validate clinic membership based on selected login role
+        // Find clinic membership if one exists
+        let clinicRole: string | null = null
+        let activeClinicId: string | null = null
+
         if (loginRole === 'owner') {
           const ownerMembership = user.clinicMemberships.find(
             (m) => m.role === 'OWNER'
           )
-          if (!ownerMembership) return null
-
-          // Set active clinic
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { activeClinicId: ownerMembership.clinicId },
-          })
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            role: user.role,
-            clinicRole: 'OWNER' as const,
-            activeClinicId: ownerMembership.clinicId,
+          if (ownerMembership) {
+            clinicRole = 'OWNER'
+            activeClinicId = ownerMembership.clinicId
           }
         } else {
-          // Staff: DOCTOR, ADMIN, or VIEWER
           const staffMembership = user.clinicMemberships.find(
             (m) => m.role !== 'OWNER'
           )
-          if (!staffMembership) return null
+          if (staffMembership) {
+            clinicRole = staffMembership.role
+            activeClinicId = staffMembership.clinicId
+          }
+        }
 
+        // Set active clinic if user has a membership
+        if (activeClinicId) {
           await prisma.user.update({
             where: { id: user.id },
-            data: { activeClinicId: staffMembership.clinicId },
+            data: { activeClinicId },
           })
+        }
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            role: user.role,
-            clinicRole: staffMembership.role,
-            activeClinicId: staffMembership.clinicId,
-          }
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+          clinicRole,
+          activeClinicId,
         }
       },
     }),
