@@ -75,7 +75,7 @@ export function AnnotationCanvas({
 
   // View mode & multi-view
   const [viewMode, setViewMode] = useState<ViewMode>("single");
-  const [imageSidebarOpen, setImageSidebarOpen] = useState(false);
+  const [imageSidebarOpen, setImageSidebarOpen] = useState(true);
   const [gridSlots, setGridSlots] = useState<ViewportSlot[]>([
     { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
   ]);
@@ -531,28 +531,36 @@ export function AnnotationCanvas({
         isAdjustmentsModified={imageAdj.isModified}
       />
 
+      {/* Horizontal Toolbar */}
+      <div
+        className="flex items-center"
+        style={{
+          height: 44,
+          backgroundColor: "#FFFFFF",
+          borderBottom: "1px solid #E3E8EE",
+        }}
+      >
+        <ViewModeSwitcher
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+        <div style={{ width: 1, height: 28, backgroundColor: "#E3E8EE", marginLeft: 4, marginRight: 4 }} />
+        <AnnotationToolbar
+          activeTool={interaction.activeTool}
+          onToolChange={interaction.setActiveTool}
+        />
+      </div>
+
       {/* Main Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Toolbar */}
-        <div
-          className="flex flex-col"
-          style={{
-            width: 56,
-            backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #E3E8EE",
-          }}
-        >
-          <AnnotationToolbar
-            activeTool={interaction.activeTool}
-            onToolChange={interaction.setActiveTool}
-          />
-          <div className="mt-auto pb-2">
-            <ViewModeSwitcher
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-          </div>
-        </div>
+        {/* Patient Image Sidebar (left side) */}
+        <PatientImageSidebar
+          patientId={patientId}
+          currentXrayId={xrayId}
+          onSelectXray={handleSelectXrayForSlot}
+          isOpen={imageSidebarOpen}
+          onToggle={() => setImageSidebarOpen((prev) => !prev)}
+        />
 
         {/* Canvas Area */}
         <div className="relative flex flex-1 flex-col">
@@ -676,15 +684,6 @@ export function AnnotationCanvas({
             />
           )}
         </div>
-
-        {/* Patient Image Sidebar */}
-        <PatientImageSidebar
-          patientId={patientId}
-          currentXrayId={xrayId}
-          onSelectXray={handleSelectXrayForSlot}
-          isOpen={imageSidebarOpen}
-          onToggle={() => setImageSidebarOpen((prev) => !prev)}
-        />
 
         {/* Right Properties Panel */}
         <PropertiesPanel

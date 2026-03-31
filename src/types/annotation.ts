@@ -217,7 +217,7 @@ export interface CanvasToolState {
 
 // ─── View Mode (Multi-View Grid) ───
 
-export type ViewMode = "single" | "2x2" | "4x4";
+export type ViewMode = "single" | "1x1" | "2x2";
 
 export interface ViewportSlot {
   xrayId: string | null;
@@ -237,7 +237,7 @@ export interface ViewTransform {
 
 export const ZOOM_MIN = 0.05;  // 5%
 export const ZOOM_MAX = 32;    // 3200%
-export const ZOOM_SCROLL_STEP = 1.1;
+export const ZOOM_SCROLL_STEP = 1.056;
 export const ZOOM_SHORTCUT_STEP = 1.25;
 export const CANVAS_PADDING = 24; // px padding for fit-to-viewport
 

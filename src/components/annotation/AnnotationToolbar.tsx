@@ -52,17 +52,16 @@ interface AnnotationToolbarProps {
 
 export function AnnotationToolbar({ activeTool, onToolChange }: AnnotationToolbarProps) {
   return (
-    <div className="flex flex-col items-center gap-1 py-2">
-
+    <div className="flex items-center gap-1 px-2">
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
         const prevTool = i > 0 ? tools[i - 1] : null;
         return (
-          <div key={tool.id}>
+          <div key={tool.id} className="flex items-center">
             {prevTool?.separator && (
               <div
-                className="mx-auto my-1"
-                style={{ width: 28, height: 1, backgroundColor: "#E3E8EE" }}
+                className="mx-1"
+                style={{ width: 1, height: 28, backgroundColor: "#E3E8EE" }}
               />
             )}
             <button
@@ -71,8 +70,8 @@ export function AnnotationToolbar({ activeTool, onToolChange }: AnnotationToolba
               aria-label={tool.label}
               className="flex items-center justify-center transition-colors"
               style={{
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 borderRadius: 4,
                 backgroundColor: isActive ? "#F0EEFF" : "transparent",
                 color: isActive ? "#635BFF" : "#425466",

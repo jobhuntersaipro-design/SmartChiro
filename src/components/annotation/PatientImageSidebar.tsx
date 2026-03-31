@@ -51,27 +51,6 @@ export function PatientImageSidebar({
 
   return (
     <div className="relative flex" style={{ height: "100%" }}>
-      {/* Toggle Button */}
-      <button
-        onClick={onToggle}
-        className="absolute top-3 flex items-center justify-center transition-colors"
-        style={{
-          left: isOpen ? -16 : -16,
-          width: 16,
-          height: 32,
-          backgroundColor: "#FFFFFF",
-          borderRadius: "4px 0 0 4px",
-          borderTop: "1px solid #E3E8EE",
-          borderLeft: "1px solid #E3E8EE",
-          borderBottom: "1px solid #E3E8EE",
-          color: "#697386",
-          zIndex: 10,
-        }}
-        title={isOpen ? "Hide patient images" : "Show patient images"}
-      >
-        {isOpen ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
-      </button>
-
       {/* Sidebar Panel */}
       {isOpen && (
         <div
@@ -79,7 +58,7 @@ export function PatientImageSidebar({
           style={{
             width: 200,
             backgroundColor: "#FFFFFF",
-            borderLeft: "1px solid #E3E8EE",
+            borderRight: "1px solid #E3E8EE",
           }}
         >
           {/* Header */}
@@ -205,6 +184,27 @@ export function PatientImageSidebar({
           </div>
         </div>
       )}
+
+      {/* Toggle Button (right edge) */}
+      <button
+        onClick={onToggle}
+        className="absolute top-3 flex items-center justify-center transition-colors"
+        style={{
+          right: -16,
+          width: 16,
+          height: 32,
+          backgroundColor: "#FFFFFF",
+          borderRadius: "0 4px 4px 0",
+          borderTop: "1px solid #E3E8EE",
+          borderRight: "1px solid #E3E8EE",
+          borderBottom: "1px solid #E3E8EE",
+          color: "#697386",
+          zIndex: 10,
+        }}
+        title={isOpen ? "Hide patient images" : "Show patient images"}
+      >
+        {isOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
+      </button>
     </div>
   );
 }

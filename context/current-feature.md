@@ -1,16 +1,21 @@
-# Current Feature
+# Current Feature: X-Ray Annotation UX Improvements
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals will be populated when a feature is loaded -->
+- [ ] Reduce zoom sensitivity by 30% on the X-ray annotation canvas
+- [ ] Move patient image preview sidebar to the left side, beside annotation tools — show by default
+- [ ] Limit multi-view options to 1x1, 2x2, and 4x4 only — use a dropdown selector instead of current switcher
 
 ## Notes
 
-<!-- Notes will be populated when a feature is loaded -->
+- These are UX refinements to the existing X-ray annotation screen
+- Zoom applies to the canvas viewport (scroll wheel / pinch zoom)
+- Patient image sidebar currently on right side — move to left
+- ViewModeSwitcher currently at bottom of left toolbar — convert to dropdown with 3 options
 
 ## History
 

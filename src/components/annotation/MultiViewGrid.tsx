@@ -198,8 +198,8 @@ export function MultiViewGrid({
   activeSlotIndex,
   onSlotClick,
 }: MultiViewGridProps) {
-  const gridCols = viewMode === "2x2" ? 2 : 4;
-  const gridRows = viewMode === "2x2" ? 2 : 4;
+  const gridCols = viewMode === "1x1" ? 2 : 2;
+  const gridRows = viewMode === "1x1" ? 1 : 2;
   const totalSlots = gridCols * gridRows;
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
-import { Square, Grid2x2, Grid3x3 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Square, Columns2, Grid2x2, ChevronDown } from "lucide-react";
 import type { ViewMode } from "@/types/annotation";
 
 interface ViewModeSwitcherProps {
@@ -9,50 +10,98 @@ interface ViewModeSwitcherProps {
 }
 
 const modes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
-  { id: "single", label: "Single View", icon: <Square size={18} strokeWidth={1.5} /> },
-  { id: "2x2", label: "2×2 Grid", icon: <Grid2x2 size={18} strokeWidth={1.5} /> },
-  { id: "4x4", label: "4×4 Grid", icon: <Grid3x3 size={18} strokeWidth={1.5} /> },
+  { id: "single", label: "Single", icon: <Square size={14} strokeWidth={1.5} /> },
+  { id: "1x1", label: "Side by Side", icon: <Columns2 size={14} strokeWidth={1.5} /> },
+  { id: "2x2", label: "2×2 Grid", icon: <Grid2x2 size={14} strokeWidth={1.5} /> },
 ];
 
 export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const current = modes.find((m) => m.id === viewMode) ?? modes[0];
+
   return (
-    <div className="flex flex-col items-center gap-1">
-      <div
-        className="mx-auto my-1"
-        style={{ width: 28, height: 1, backgroundColor: "#E3E8EE" }}
-      />
-      <span
-        style={{
-          fontSize: 9,
-          fontWeight: 600,
-          color: "#697386",
-          letterSpacing: "0.05em",
-          textTransform: "uppercase",
-        }}
-      >
-        View
-      </span>
-      {modes.map((mode) => {
-        const isActive = viewMode === mode.id;
-        return (
-          <button
-            key={mode.id}
-            onClick={() => onViewModeChange(mode.id)}
-            title={mode.label}
-            aria-label={mode.label}
-            className="flex items-center justify-center transition-colors"
+    <div className="flex items-center px-2" ref={ref}>
+      {/* Dropdown Trigger */}
+      <div className="relative">
+        <button
+          onClick={() => setOpen((prev) => !prev)}
+          title="Change view mode"
+          aria-label="Change view mode"
+          className="flex items-center gap-1 transition-colors"
+          style={{
+            padding: "6px 8px",
+            borderRadius: 4,
+            backgroundColor: open ? "#F0EEFF" : "transparent",
+            color: "#635BFF",
+            border: "1px solid #E3E8EE",
+          }}
+        >
+          {current.icon}
+          <span style={{ fontSize: 11, fontWeight: 500 }}>{current.label}</span>
+          <ChevronDown size={10} style={{ marginLeft: 2 }} />
+        </button>
+
+        {/* Dropdown Menu */}
+        {open && (
+          <div
+            className="absolute z-50"
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 4,
-              backgroundColor: isActive ? "#F0EEFF" : "transparent",
-              color: isActive ? "#635BFF" : "#425466",
+              top: "100%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              marginTop: 4,
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #E3E8EE",
+              borderRadius: 6,
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(18, 42, 66, 0.06)",
+              minWidth: 100,
+              overflow: "hidden",
             }}
           >
-            {mode.icon}
-          </button>
-        );
-      })}
+            {modes.map((mode) => {
+              const isActive = viewMode === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  onClick={() => {
+                    onViewModeChange(mode.id);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 transition-colors"
+                  style={{
+                    padding: "8px 12px",
+                    backgroundColor: isActive ? "#F0EEFF" : "transparent",
+                    color: isActive ? "#635BFF" : "#425466",
+                    fontSize: 12,
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.backgroundColor = "#F0F3F7";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = isActive ? "#F0EEFF" : "transparent";
+                  }}
+                >
+                  {mode.icon}
+                  <span>{mode.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
