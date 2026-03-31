@@ -1,25 +1,12 @@
-# Current Feature: Auth Credentials - Email/Password Provider
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add Credentials provider for email/password authentication with bcryptjs
-- Add password field to User model via migration if not already there
-- Update `auth.config.ts` with Credentials provider placeholder (`authorize: () => null`)
-- Update `auth.ts` to override Credentials with actual bcrypt validation
-- Create registration API route at `POST /api/auth/register` (name, email, password, confirmPassword)
-- Validate passwords match, check for existing user, hash with bcryptjs, create user
-- Verify GitHub/Google OAuth still works after changes
-
 ## Notes
-
-- Uses split pattern: `auth.config.ts` has placeholder, `auth.ts` has real logic
-- Registration endpoint: `POST /api/auth/register`
-- bcryptjs already installed
-- Spec file: `context/features/auth-spec-files/auth-spec-2.md`
 
 ## History
 
@@ -39,3 +26,4 @@ In Progress
 - 2026-03-31 **X-Ray Annotation UX Improvements** — Reduced zoom sensitivity by 30% (scroll wheel + pinch), moved patient image sidebar from right to left (shown by default), replaced ViewModeSwitcher with dropdown selector limited to 1x1/2x2/4x4 options
 - 2026-03-31 **Annotation Enhancement Tools** — Fixed undo/redo (Ctrl+Z / Ctrl+Shift+Z) to apply changes directly to canvas, shape dragging for repositioning, copy/paste (Cmd+C / Cmd+V) with 20px offset, arrow key nudging (1px / 10px with Shift), undo/redo UI buttons in status bar
 - 2026-03-31 **Login Page & NextAuth Integration** — NextAuth v5 with Credentials + Google OAuth (JWT sessions), login page at /login with Branch Owner/Staff role selector, Stripe-inspired UI, middleware protecting /dashboard, activeClinicId on User model, auth utilities, demo clinic seed data (`context/features/login-page-spec.md`)
+- 2026-03-31 **Auth Credentials - Email/Password Provider** — Split auth into auth.config.ts (Edge-safe) + auth.ts (bcrypt override), registration API at POST /api/auth/register with validation and bcryptjs hashing, sidebar logout button, login sign-up link (`context/features/auth-spec-files/auth-spec-2.md`)
