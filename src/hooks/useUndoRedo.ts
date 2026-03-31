@@ -9,11 +9,17 @@ function generateId(): string {
   return crypto.randomUUID();
 }
 
+interface UseUndoRedoOptions {
+  shapes: BaseShape[];
+  setShapes: React.Dispatch<React.SetStateAction<BaseShape[]>>;
+  onDirty: () => void;
+}
+
 interface UseUndoRedoReturn {
   canUndo: boolean;
   canRedo: boolean;
-  undo: () => BaseShape[] | null;
-  redo: () => BaseShape[] | null;
+  undo: () => void;
+  redo: () => void;
   pushCommand: (
     type: CommandType,
     shapeId: string,
@@ -23,9 +29,80 @@ interface UseUndoRedoReturn {
   pushBatch: (commands: Omit<CanvasCommand, "id" | "timestamp">[]) => void;
   clear: () => void;
   historyLength: number;
+  pointer: number;
 }
 
-export function useUndoRedo(): UseUndoRedoReturn {
+function applyUndo(shapes: BaseShape[], command: CanvasCommand): BaseShape[] {
+  if (command.type === "BATCH" && command.children) {
+    let result = shapes;
+    // Apply children in reverse order for undo
+    for (let i = command.children.length - 1; i >= 0; i--) {
+      result = applyUndo(result, command.children[i]);
+    }
+    return result;
+  }
+
+  switch (command.type) {
+    case "ADD_SHAPE":
+      // Undo add = remove the shape
+      return shapes.filter((s) => s.id !== command.shapeId);
+    case "DELETE_SHAPE":
+      // Undo delete = re-add the shape
+      if (command.shapeBefore) {
+        return [...shapes, command.shapeBefore];
+      }
+      return shapes;
+    case "MODIFY_SHAPE":
+    case "REORDER_SHAPE":
+      // Undo modify = restore shapeBefore
+      if (command.shapeBefore) {
+        return shapes.map((s) =>
+          s.id === command.shapeId ? command.shapeBefore! : s
+        );
+      }
+      return shapes;
+    default:
+      return shapes;
+  }
+}
+
+function applyRedo(shapes: BaseShape[], command: CanvasCommand): BaseShape[] {
+  if (command.type === "BATCH" && command.children) {
+    let result = shapes;
+    for (const child of command.children) {
+      result = applyRedo(result, child);
+    }
+    return result;
+  }
+
+  switch (command.type) {
+    case "ADD_SHAPE":
+      // Redo add = re-add the shape
+      if (command.shapeAfter) {
+        return [...shapes, command.shapeAfter];
+      }
+      return shapes;
+    case "DELETE_SHAPE":
+      // Redo delete = remove the shape
+      return shapes.filter((s) => s.id !== command.shapeId);
+    case "MODIFY_SHAPE":
+    case "REORDER_SHAPE":
+      // Redo modify = apply shapeAfter
+      if (command.shapeAfter) {
+        return shapes.map((s) =>
+          s.id === command.shapeId ? command.shapeAfter! : s
+        );
+      }
+      return shapes;
+    default:
+      return shapes;
+  }
+}
+
+export function useUndoRedo({
+  setShapes,
+  onDirty,
+}: UseUndoRedoOptions): UseUndoRedoReturn {
   const historyRef = useRef<CanvasCommand[]>([]);
   const pointerRef = useRef(-1);
   const [, forceUpdate] = useState(0);
@@ -92,24 +169,23 @@ export function useUndoRedo(): UseUndoRedoReturn {
     [rerender]
   );
 
-  // Returns the shapes array that should replace current shapes, or null if nothing to undo
-  const undo = useCallback((): BaseShape[] | null => {
-    if (pointerRef.current < 0) return null;
+  const undo = useCallback(() => {
+    if (pointerRef.current < 0) return;
     const command = historyRef.current[pointerRef.current];
     pointerRef.current--;
+    setShapes((prev) => applyUndo(prev, command));
+    onDirty();
     rerender();
-    // Caller applies the undo by using command.shapeBefore
-    // For batch, caller iterates command.children
-    return command ? [command.shapeBefore].filter(Boolean) as BaseShape[] : null;
-  }, [rerender]);
+  }, [rerender, setShapes, onDirty]);
 
-  const redo = useCallback((): BaseShape[] | null => {
-    if (pointerRef.current >= historyRef.current.length - 1) return null;
+  const redo = useCallback(() => {
+    if (pointerRef.current >= historyRef.current.length - 1) return;
     pointerRef.current++;
     const command = historyRef.current[pointerRef.current];
+    setShapes((prev) => applyRedo(prev, command));
+    onDirty();
     rerender();
-    return command ? [command.shapeAfter].filter(Boolean) as BaseShape[] : null;
-  }, [rerender]);
+  }, [rerender, setShapes, onDirty]);
 
   const clear = useCallback(() => {
     historyRef.current = [];
@@ -126,5 +202,6 @@ export function useUndoRedo(): UseUndoRedoReturn {
     pushBatch,
     clear,
     historyLength: historyRef.current.length,
+    pointer: pointerRef.current,
   };
 }

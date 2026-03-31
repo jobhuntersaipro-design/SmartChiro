@@ -2,15 +2,23 @@
 
 ## Status
 
-Not Started
+Completed
 
 ## Goals
 
-<!-- Define goals here -->
+Enhanced annotation tools for top-tier editing experience:
+1. Fix undo/redo (Ctrl+Z / Ctrl+Shift+Z) — was broken, now applies changes to canvas
+2. Shape dragging — select and drag shapes to reposition
+3. Copy/paste (Cmd+C / Cmd+V) — copy selected shapes, paste with offset
+4. Arrow key nudging — 1px (10px with Shift) for precise positioning
+5. Undo/redo UI buttons in status bar
 
 ## Notes
 
-<!-- Additional context -->
+- Refactored useUndoRedo to accept setShapes and apply commands directly
+- Shape dragging captures snapshots before move for clean undo
+- Copy/paste uses in-memory clipboard with 20px offset per paste
+- All operations push to undo/redo stack and mark auto-save dirty
 
 ## History
 

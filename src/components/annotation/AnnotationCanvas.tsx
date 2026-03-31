@@ -88,19 +88,51 @@ export function AnnotationCanvas({
   // Force re-render counter for drawing preview
   const [, setRenderTick] = useState(0);
 
+  // Clipboard for copy/paste
+  const clipboardRef = useRef<BaseShape[]>([]);
+
   // ─── Hooks ───
   const viewport = useCanvasViewport({ imageWidth, imageHeight });
-  const undoRedo = useUndoRedo();
   const imageAdj = useImageAdjustments(
     initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS }
   );
   const autoSave = useAutoSave({ annotationId });
+  const undoRedo = useUndoRedo({
+    shapes,
+    setShapes,
+    onDirty: () => autoSave.markDirty(),
+  });
+
+  // Track shape snapshots before drag for undo
+  const dragSnapshotsRef = useRef<Map<string, BaseShape>>(new Map());
+
+  const handleMoveShapes = useCallback(
+    (shapeIds: string[], dx: number, dy: number) => {
+      setShapes((prev) =>
+        prev.map((s) => {
+          if (!shapeIds.includes(s.id)) return s;
+          // Capture snapshot before first move
+          if (!dragSnapshotsRef.current.has(s.id)) {
+            dragSnapshotsRef.current.set(s.id, { ...s, points: [...s.points] });
+          }
+          return {
+            ...s,
+            x: s.x + dx,
+            y: s.y + dy,
+            points: s.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+          };
+        })
+      );
+    },
+    []
+  );
 
   const interaction = useCanvasInteraction({
     transform: viewport.transform,
     pan: viewport.pan,
     shapes,
     containerRef: viewport.containerRef,
+    onMoveShapes: handleMoveShapes,
   });
 
   const handleAddShape = useCallback(
@@ -354,15 +386,33 @@ export function AnnotationCanvas({
       autoSave.markDirty();
     };
 
+    const handleDragEnd = (e: Event) => {
+      const { shapeIds } = (e as CustomEvent).detail;
+      // Push undo commands for each dragged shape
+      for (const id of shapeIds) {
+        const before = dragSnapshotsRef.current.get(id);
+        if (before) {
+          const after = shapes.find((s) => s.id === id);
+          if (after) {
+            undoRedo.pushCommand("MODIFY_SHAPE", id, before, after);
+          }
+        }
+      }
+      dragSnapshotsRef.current.clear();
+      autoSave.markDirty();
+    };
+
     window.addEventListener("canvas:delete-shapes", handleDeleteShapesEvent);
     window.addEventListener("canvas:reorder-shape", handleReorderShape);
     window.addEventListener("canvas:duplicate-shapes", handleDuplicateShapes);
+    window.addEventListener("canvas:drag-end", handleDragEnd);
     return () => {
       window.removeEventListener("canvas:delete-shapes", handleDeleteShapesEvent);
       window.removeEventListener("canvas:reorder-shape", handleReorderShape);
       window.removeEventListener("canvas:duplicate-shapes", handleDuplicateShapes);
+      window.removeEventListener("canvas:drag-end", handleDragEnd);
     };
-  }, [undoRedo, autoSave, handleDeleteShapes]);
+  }, [undoRedo, autoSave, handleDeleteShapes, shapes]);
 
   // ─── Keyboard Shortcuts (Zoom, Undo/Redo, Save, Panel Toggle) ───
   useEffect(() => {
@@ -426,11 +476,81 @@ export function AnnotationCanvas({
         setPropertiesPanelOpen((prev) => !prev);
         return;
       }
+
+      // Copy (Cmd+C)
+      if (mod && e.key.toLowerCase() === "c" && interaction.selectedShapeIds.length > 0) {
+        e.preventDefault();
+        clipboardRef.current = shapes.filter((s) =>
+          interaction.selectedShapeIds.includes(s.id)
+        );
+        return;
+      }
+
+      // Paste (Cmd+V)
+      if (mod && e.key.toLowerCase() === "v" && clipboardRef.current.length > 0) {
+        e.preventDefault();
+        const pasted: BaseShape[] = clipboardRef.current.map((s) => ({
+          ...s,
+          id: crypto.randomUUID(),
+          x: s.x + 20,
+          y: s.y + 20,
+          points: s.points.map((p) => ({ x: p.x + 20, y: p.y + 20 })),
+          label: s.label ? `${s.label} copy` : null,
+          zIndex: Math.max(...shapes.map((p) => p.zIndex), 0) + 1,
+        }));
+        setShapes((prev) => [...prev, ...pasted]);
+        for (const shape of pasted) {
+          undoRedo.pushCommand("ADD_SHAPE", shape.id, null, shape);
+        }
+        autoSave.markDirty();
+        interaction.setSelectedShapeIds(pasted.map((s) => s.id));
+        // Update clipboard offset for successive pastes
+        clipboardRef.current = clipboardRef.current.map((s) => ({
+          ...s,
+          x: s.x + 20,
+          y: s.y + 20,
+          points: s.points.map((p) => ({ x: p.x + 20, y: p.y + 20 })),
+        }));
+        return;
+      }
+
+      // Arrow key nudging (1px, or 10px with Shift)
+      if (
+        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) &&
+        interaction.selectedShapeIds.length > 0 &&
+        !mod
+      ) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        let dx = 0;
+        let dy = 0;
+        if (e.key === "ArrowUp") dy = -step;
+        if (e.key === "ArrowDown") dy = step;
+        if (e.key === "ArrowLeft") dx = -step;
+        if (e.key === "ArrowRight") dx = step;
+
+        setShapes((prev) =>
+          prev.map((s) => {
+            if (!interaction.selectedShapeIds.includes(s.id)) return s;
+            const before = { ...s };
+            const after = {
+              ...s,
+              x: s.x + dx,
+              y: s.y + dy,
+              points: s.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+            };
+            undoRedo.pushCommand("MODIFY_SHAPE", s.id, before, after);
+            return after;
+          })
+        );
+        autoSave.markDirty();
+        return;
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing]);
+  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction]);
 
   // Fit to viewport once image loads
   useEffect(() => {
@@ -490,6 +610,7 @@ export function AnnotationCanvas({
   // ─── Cursor ───
   const getCursor = () => {
     if (interaction.isPanning) return "grabbing";
+    if (interaction.isDragging) return "move";
     if (interaction.activeTool === "hand") return "grab";
     if (interaction.activeTool === "select") return "default";
     if (interaction.activeTool === "eraser") return "crosshair";
@@ -711,6 +832,10 @@ export function AnnotationCanvas({
         saveError={autoSave.saveError}
         sizeWarning={autoSave.sizeWarning}
         onRetrySave={autoSave.retrySave}
+        canUndo={undoRedo.canUndo}
+        canRedo={undoRedo.canRedo}
+        onUndo={undoRedo.undo}
+        onRedo={undoRedo.redo}
       />
     </div>
   );

@@ -10,6 +10,13 @@ interface UseCanvasInteractionOptions {
   pan: (dx: number, dy: number) => void;
   shapes: BaseShape[];
   containerRef: React.RefObject<HTMLDivElement | null>;
+  onMoveShapes?: (shapeIds: string[], dx: number, dy: number) => void;
+}
+
+interface DragEvent {
+  shapeIds: string[];
+  startImagePos: Point;
+  hasMoved: boolean;
 }
 
 interface UseCanvasInteractionReturn {
@@ -20,6 +27,7 @@ interface UseCanvasInteractionReturn {
   setSelectedShapeIds: (ids: string[]) => void;
   cursorPosition: Point | null;
   isPanning: boolean;
+  isDragging: boolean;
   handlePointerDown: (e: React.PointerEvent) => void;
   handlePointerMove: (e: React.PointerEvent) => void;
   handlePointerUp: (e: React.PointerEvent) => void;
@@ -30,14 +38,17 @@ export function useCanvasInteraction({
   pan,
   shapes,
   containerRef,
+  onMoveShapes,
 }: UseCanvasInteractionOptions): UseCanvasInteractionReturn {
   const [activeTool, setActiveToolState] = useState<ToolId>("select");
   const [toolState, setToolState] = useState<ToolState>("idle");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState<Point | null>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<DragEvent | null>(null);
   const spaceHeldRef = useRef(false);
   const previousToolRef = useRef<ToolId>("select");
 
@@ -96,17 +107,28 @@ export function useCanvasInteraction({
                 ? prev.filter((id) => id !== hit.id)
                 : [...prev, hit.id]
             );
-          } else {
+          } else if (!selectedShapeIds.includes(hit.id)) {
             setSelectedShapeIds([hit.id]);
           }
           setToolState("shape_selected");
+          // Start drag tracking
+          const dragIds = selectedShapeIds.includes(hit.id)
+            ? selectedShapeIds
+            : [hit.id];
+          dragRef.current = {
+            shapeIds: dragIds,
+            startImagePos: imagePos,
+            hasMoved: false,
+          };
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         } else {
           setSelectedShapeIds([]);
           setToolState("idle");
+          dragRef.current = null;
         }
       }
     },
-    [activeTool, transform, hitTest]
+    [activeTool, transform, hitTest, selectedShapeIds]
   );
 
   const handlePointerMove = useCallback(
@@ -122,9 +144,24 @@ export function useCanvasInteraction({
         const dy = e.clientY - panStartRef.current.y;
         panStartRef.current = { x: e.clientX, y: e.clientY };
         pan(dx, dy);
+        return;
+      }
+
+      // Shape dragging
+      if (dragRef.current && activeTool === "select") {
+        const dx = imagePos.x - dragRef.current.startImagePos.x;
+        const dy = imagePos.y - dragRef.current.startImagePos.y;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          if (!dragRef.current.hasMoved) {
+            dragRef.current.hasMoved = true;
+            setIsDragging(true);
+          }
+          onMoveShapes?.(dragRef.current.shapeIds, dx, dy);
+          dragRef.current.startImagePos = imagePos;
+        }
       }
     },
-    [transform, isPanning, pan]
+    [transform, isPanning, pan, activeTool, onMoveShapes]
   );
 
   const handlePointerUp = useCallback(
@@ -133,6 +170,23 @@ export function useCanvasInteraction({
         setIsPanning(false);
         panStartRef.current = null;
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      }
+      if (dragRef.current) {
+        if (dragRef.current.hasMoved) {
+          // Drag completed — commit undo entry via custom event
+          window.dispatchEvent(
+            new CustomEvent("canvas:drag-end", {
+              detail: { shapeIds: dragRef.current.shapeIds },
+            })
+          );
+        }
+        dragRef.current = null;
+        setIsDragging(false);
+        try {
+          (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        } catch {
+          // Already released
+        }
       }
     },
     [isPanning]
@@ -306,6 +360,7 @@ export function useCanvasInteraction({
     setSelectedShapeIds,
     cursorPosition,
     isPanning,
+    isDragging,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
