@@ -1,16 +1,24 @@
-# Current Feature
+# Current Feature: X-Ray Annotation Multi-View & Patient Image Sidebar
 
 ## Status
 
-Not Started
+Complete
 
 ## Goals
 
-<!-- Goals will be populated when a feature is loaded -->
+- Add a view mode switcher in the annotation screen sidebar to toggle between 1-up, 2x2, and 4x4 grid layouts for viewing multiple X-ray images simultaneously
+- Add a patient image sidebar that lists all uploaded X-ray images for the current patient, with thumbnail previews
+- Clicking a thumbnail in the sidebar loads that X-ray into the selected viewport slot
+- Patient with multiple X-rays can view/compare them side by side in grid layouts
 
 ## Notes
 
-<!-- Notes will be populated when a feature is loaded -->
+- This builds on the existing annotation canvas engine and comparison view
+- The 1-up view is the current default single image view
+- 2x2 grid shows 4 viewports, 4x4 grid shows 16 viewports (though rarely used, good for full-spine series)
+- Each viewport should support independent zoom/pan
+- The patient image sidebar should show thumbnails with basic metadata (date, body region, view type)
+- This is different from the existing comparison view (which is a split/slider) — this is a grid layout system
 
 ## History
 

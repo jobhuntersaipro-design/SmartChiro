@@ -39,6 +39,7 @@ export default async function AnnotationPage({
       imageHeight={xray.height ?? 768}
       xrayTitle={xray.title ?? "Untitled X-ray"}
       patientName={patientName}
+      patientId={xray.patientId}
       annotationId={annotation?.id ?? null}
       initialCanvasState={annotation?.canvasState as unknown as AnnotationCanvasState | undefined}
       initialAdjustments={annotation?.imageAdjustments as unknown as ImageAdjustments | undefined}

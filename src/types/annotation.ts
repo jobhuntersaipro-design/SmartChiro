@@ -215,6 +215,18 @@ export interface CanvasToolState {
   drawingShapeId: string | null;
 }
 
+// ─── View Mode (Multi-View Grid) ───
+
+export type ViewMode = "single" | "2x2" | "4x4";
+
+export interface ViewportSlot {
+  xrayId: string | null;
+  imageUrl: string | null;
+  imageWidth: number;
+  imageHeight: number;
+  title: string;
+}
+
 // ─── Viewport / Transform ───
 
 export interface ViewTransform {

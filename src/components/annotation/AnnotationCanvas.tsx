@@ -7,6 +7,8 @@ import type {
   CalibrationData,
   ImageAdjustments,
   ShapeStyle,
+  ViewMode,
+  ViewportSlot,
 } from "@/types/annotation";
 import {
   createEmptyCanvasState,
@@ -28,6 +30,9 @@ import { SelectionOverlay } from "./SelectionOverlay";
 import { ShapeRenderer } from "./ShapeRenderer";
 import { TextInput } from "./TextInput";
 import { CalibrationDialog } from "./CalibrationDialog";
+import { ViewModeSwitcher } from "./ViewModeSwitcher";
+import { PatientImageSidebar } from "./PatientImageSidebar";
+import { MultiViewGrid } from "./MultiViewGrid";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -35,6 +40,7 @@ interface AnnotationCanvasProps {
   imageHeight: number;
   xrayTitle: string;
   patientName: string;
+  patientId: string;
   annotationId: string | null;
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
@@ -49,6 +55,7 @@ export function AnnotationCanvas({
   imageHeight,
   xrayTitle,
   patientName,
+  patientId,
   annotationId,
   initialCanvasState,
   initialAdjustments,
@@ -65,6 +72,14 @@ export function AnnotationCanvas({
   const [currentStyle, setCurrentStyle] = useState<ShapeStyle>({
     ...DEFAULT_SHAPE_STYLE,
   });
+
+  // View mode & multi-view
+  const [viewMode, setViewMode] = useState<ViewMode>("single");
+  const [imageSidebarOpen, setImageSidebarOpen] = useState(false);
+  const [gridSlots, setGridSlots] = useState<ViewportSlot[]>([
+    { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
+  ]);
+  const [activeSlotIndex, setActiveSlotIndex] = useState(0);
 
   // Calibration
   const [calibration, setCalibration] = useState<CalibrationData>(initialCalibration);
@@ -202,6 +217,35 @@ export function AnnotationCanvas({
       setCalibrationDialogShape(null);
     },
     [calibrationDialogShape, undoRedo, autoSave, xrayId]
+  );
+
+  // ─── Multi-View: Select X-ray from sidebar ───
+  const handleSelectXrayForSlot = useCallback(
+    (xray: { id: string; fileUrl: string; width: number | null; height: number | null; title: string | null }) => {
+      if (viewMode === "single") {
+        // In single mode, navigate to that X-ray's annotation page
+        window.location.href = `/dashboard/xrays/${xray.id}/annotate`;
+        return;
+      }
+      // In grid mode, place into the active slot
+      setGridSlots((prev) => {
+        const newSlots = [...prev];
+        const slot: ViewportSlot = {
+          xrayId: xray.id,
+          imageUrl: xray.fileUrl,
+          imageWidth: xray.width ?? 1024,
+          imageHeight: xray.height ?? 768,
+          title: xray.title ?? "Untitled",
+        };
+        // Expand array if needed
+        while (newSlots.length <= activeSlotIndex) {
+          newSlots.push({ xrayId: null, imageUrl: null, imageWidth: 1024, imageHeight: 768, title: "" });
+        }
+        newSlots[activeSlotIndex] = slot;
+        return newSlots;
+      });
+    },
+    [viewMode, activeSlotIndex]
   );
 
   // ─── Shape Update (from properties panel) ───
@@ -490,121 +534,157 @@ export function AnnotationCanvas({
       {/* Main Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Toolbar */}
-        <AnnotationToolbar
-          activeTool={interaction.activeTool}
-          onToolChange={interaction.setActiveTool}
-        />
+        <div
+          className="flex flex-col"
+          style={{
+            width: 56,
+            backgroundColor: "#FFFFFF",
+            borderRight: "1px solid #E3E8EE",
+          }}
+        >
+          <AnnotationToolbar
+            activeTool={interaction.activeTool}
+            onToolChange={interaction.setActiveTool}
+          />
+          <div className="mt-auto pb-2">
+            <ViewModeSwitcher
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          </div>
+        </div>
 
         {/* Canvas Area */}
         <div className="relative flex flex-1 flex-col">
-          <div
-            ref={viewport.containerRef}
-            className="relative flex-1 overflow-hidden"
-            style={{
-              backgroundColor: "#1A1F36",
-              cursor: getCursor(),
-            }}
-            onWheel={viewport.handleWheel}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onDoubleClick={handleDoubleClick}
-          >
-            {/* Image Layer */}
-            <div
-              className="absolute origin-top-left"
-              style={{
-                transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
-                willChange: "transform",
-              }}
-            >
-              <img
-                src={imageUrl}
-                alt={xrayTitle}
-                width={imageWidth}
-                height={imageHeight}
+          {viewMode === "single" ? (
+            <>
+              <div
+                ref={viewport.containerRef}
+                className="relative flex-1 overflow-hidden"
                 style={{
-                  filter: imageAdj.cssFilter,
-                  imageRendering: viewport.transform.zoom > 2 ? "pixelated" : "auto",
-                  display: "block",
+                  backgroundColor: "#1A1F36",
+                  cursor: getCursor(),
                 }}
-                onLoad={() => setImageLoaded(true)}
-                draggable={false}
-              />
-            </div>
-
-            {/* Annotation Shapes Layer */}
-            <div
-              className="absolute origin-top-left"
-              style={{
-                transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
-                willChange: "transform",
-                pointerEvents: "none",
-              }}
-            >
-              <svg
-                width={imageWidth}
-                height={imageHeight}
-                className="absolute inset-0"
-                style={{ overflow: "visible" }}
+                onWheel={viewport.handleWheel}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onDoubleClick={handleDoubleClick}
               >
-                {allShapesToRender
-                  .filter((s) => s.visible)
-                  .sort((a, b) => a.zIndex - b.zIndex)
-                  .map((shape) => (
-                    <ShapeRenderer
-                      key={shape.id}
-                      shape={shape}
-                      zoom={viewport.transform.zoom}
-                    />
-                  ))}
-              </svg>
-            </div>
+                {/* Image Layer */}
+                <div
+                  className="absolute origin-top-left"
+                  style={{
+                    transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
+                    willChange: "transform",
+                  }}
+                >
+                  <img
+                    src={imageUrl}
+                    alt={xrayTitle}
+                    width={imageWidth}
+                    height={imageHeight}
+                    style={{
+                      filter: imageAdj.cssFilter,
+                      imageRendering: viewport.transform.zoom > 2 ? "pixelated" : "auto",
+                      display: "block",
+                    }}
+                    onLoad={() => setImageLoaded(true)}
+                    draggable={false}
+                  />
+                </div>
 
-            {/* Selection Overlay (screen space) */}
-            <SelectionOverlay
-              shapes={shapes}
-              selectedShapeIds={interaction.selectedShapeIds}
-              transform={viewport.transform}
+                {/* Annotation Shapes Layer */}
+                <div
+                  className="absolute origin-top-left"
+                  style={{
+                    transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
+                    willChange: "transform",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <svg
+                    width={imageWidth}
+                    height={imageHeight}
+                    className="absolute inset-0"
+                    style={{ overflow: "visible" }}
+                  >
+                    {allShapesToRender
+                      .filter((s) => s.visible)
+                      .sort((a, b) => a.zIndex - b.zIndex)
+                      .map((shape) => (
+                        <ShapeRenderer
+                          key={shape.id}
+                          shape={shape}
+                          zoom={viewport.transform.zoom}
+                        />
+                      ))}
+                  </svg>
+                </div>
+
+                {/* Selection Overlay (screen space) */}
+                <SelectionOverlay
+                  shapes={shapes}
+                  selectedShapeIds={interaction.selectedShapeIds}
+                  transform={viewport.transform}
+                />
+
+                {/* Inline Text Input */}
+                {textScreenPos && (
+                  <TextInput
+                    x={textScreenPos.x}
+                    y={textScreenPos.y}
+                    zoom={viewport.transform.zoom}
+                    onCommit={(text) => {
+                      drawing.commitText(text);
+                      setRenderTick((n) => n + 1);
+                    }}
+                    onCancel={() => {
+                      drawing.cancelDrawing();
+                      setRenderTick((n) => n + 1);
+                    }}
+                  />
+                )}
+
+                {/* Calibration Dialog */}
+                {calibrationDialogShape && calibrationDialogShape.pixelDistance && (
+                  <CalibrationDialog
+                    pixelDistance={calibrationDialogShape.pixelDistance}
+                    onApply={handleApplyCalibration}
+                    onCancel={() => setCalibrationDialogShape(null)}
+                  />
+                )}
+              </div>
+
+              {/* Zoom Bar */}
+              <ZoomBar
+                zoomPercent={viewport.zoomPercent}
+                onFit={viewport.fitToViewport}
+                onActual={viewport.zoomToActual}
+                onZoomIn={viewport.zoomIn}
+                onZoomOut={viewport.zoomOut}
+                onCustomZoom={(z) => viewport.zoomAtCenter(z)}
+              />
+            </>
+          ) : (
+            /* Multi-View Grid */
+            <MultiViewGrid
+              viewMode={viewMode}
+              slots={gridSlots}
+              activeSlotIndex={activeSlotIndex}
+              onSlotClick={setActiveSlotIndex}
             />
-
-            {/* Inline Text Input */}
-            {textScreenPos && (
-              <TextInput
-                x={textScreenPos.x}
-                y={textScreenPos.y}
-                zoom={viewport.transform.zoom}
-                onCommit={(text) => {
-                  drawing.commitText(text);
-                  setRenderTick((n) => n + 1);
-                }}
-                onCancel={() => {
-                  drawing.cancelDrawing();
-                  setRenderTick((n) => n + 1);
-                }}
-              />
-            )}
-
-            {/* Calibration Dialog */}
-            {calibrationDialogShape && calibrationDialogShape.pixelDistance && (
-              <CalibrationDialog
-                pixelDistance={calibrationDialogShape.pixelDistance}
-                onApply={handleApplyCalibration}
-                onCancel={() => setCalibrationDialogShape(null)}
-              />
-            )}
-          </div>
-
-          {/* Zoom Bar */}
-          <ZoomBar
-            zoomPercent={viewport.zoomPercent}
-            onFit={viewport.fitToViewport}
-            onActual={viewport.zoomToActual}
-            onZoomIn={viewport.zoomIn}
-            onZoomOut={viewport.zoomOut}
-            onCustomZoom={(z) => viewport.zoomAtCenter(z)}
-          />
+          )}
         </div>
+
+        {/* Patient Image Sidebar */}
+        <PatientImageSidebar
+          patientId={patientId}
+          currentXrayId={xrayId}
+          onSelectXray={handleSelectXrayForSlot}
+          isOpen={imageSidebarOpen}
+          onToggle={() => setImageSidebarOpen((prev) => !prev)}
+        />
 
         {/* Right Properties Panel */}
         <PropertiesPanel

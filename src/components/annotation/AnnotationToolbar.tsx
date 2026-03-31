@@ -52,14 +52,8 @@ interface AnnotationToolbarProps {
 
 export function AnnotationToolbar({ activeTool, onToolChange }: AnnotationToolbarProps) {
   return (
-    <div
-      className="flex flex-col items-center gap-1 py-2"
-      style={{
-        width: 56,
-        backgroundColor: "#FFFFFF",
-        borderRight: "1px solid #E3E8EE",
-      }}
-    >
+    <div className="flex flex-col items-center gap-1 py-2">
+
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
         const prevTool = i > 0 ? tools[i - 1] : null;
