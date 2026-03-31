@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { GoogleSignInButton } from './GoogleSignInButton'
 
-export function RegisterForm() {
+export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -202,15 +202,17 @@ export function RegisterForm() {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#E3E8EE]" />
-          <span className="text-[13px] text-[#697386]">or continue with</span>
-          <div className="h-px flex-1 bg-[#E3E8EE]" />
-        </div>
-
         {/* Google Sign Up */}
-        <GoogleSignInButton label="Sign up with Google" />
+        {googleEnabled && (
+          <>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[#E3E8EE]" />
+              <span className="text-[13px] text-[#697386]">or continue with</span>
+              <div className="h-px flex-1 bg-[#E3E8EE]" />
+            </div>
+            <GoogleSignInButton label="Sign up with Google" />
+          </>
+        )}
       </div>
 
       {/* Footer */}

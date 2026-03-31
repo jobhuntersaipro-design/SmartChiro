@@ -8,7 +8,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { RoleSelector } from './RoleSelector'
 import { GoogleSignInButton } from './GoogleSignInButton'
 
-export function LoginForm() {
+export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter()
   const [loginRole, setLoginRole] = useState<'owner' | 'staff'>('owner')
   const [email, setEmail] = useState('')
@@ -134,15 +134,17 @@ export function LoginForm() {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#E3E8EE]" />
-          <span className="text-[13px] text-[#697386]">or continue with</span>
-          <div className="h-px flex-1 bg-[#E3E8EE]" />
-        </div>
-
         {/* Google Sign In */}
-        <GoogleSignInButton />
+        {googleEnabled && (
+          <>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[#E3E8EE]" />
+              <span className="text-[13px] text-[#697386]">or continue with</span>
+              <div className="h-px flex-1 bg-[#E3E8EE]" />
+            </div>
+            <GoogleSignInButton />
+          </>
+        )}
       </div>
 
       {/* Footer */}

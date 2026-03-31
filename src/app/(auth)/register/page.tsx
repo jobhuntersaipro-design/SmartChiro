@@ -10,9 +10,11 @@ export default async function RegisterPage() {
   const session = await auth()
   if (session) redirect('/dashboard')
 
+  const googleEnabled = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F6F9FC] px-4">
-      <RegisterForm />
+      <RegisterForm googleEnabled={googleEnabled} />
     </div>
   )
 }

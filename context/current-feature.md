@@ -1,16 +1,23 @@
-# Current Feature
+# Current Feature: Auth - Google Sign-Up / Sign-In Flow
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Add goals here -->
+- Enable "Sign up with Google" on `/register` and "Sign in with Google" on `/login` end-to-end via NextAuth v5 Google OAuth
+- New Google users: create User + Account records, redirect to `/dashboard`
+- Existing users: link Google account to existing user (no duplicates), redirect to `/dashboard`
+- Existing credentials users can link Google as an additional sign-in method
+- Hide Google button + divider when `AUTH_GOOGLE_ID` is not configured (Option A from spec)
 
 ## Notes
 
-<!-- Add notes here -->
+- All code is already implemented (Google provider, `GoogleSignInButton`, `signIn` callback with user creation/linking)
+- Only missing: Google Cloud OAuth credentials in `.env` (`AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`)
+- Spec file: `context/features/auth-spec-files/auth-spec-4.md`
+- Optional improvement: pass `googleEnabled` prop from server pages to hide button when not configured
 
 ## History
 
