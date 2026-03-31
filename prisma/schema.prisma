@@ -102,6 +102,36 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+enum XrayStatus {
+  UPLOADING  // presigned URL generated, file not yet confirmed
+  READY      // upload confirmed, available for annotation
+  ARCHIVED   // soft-deleted / hidden from active views
+}
+
+enum BodyRegion {
+  CERVICAL
+  THORACIC
+  LUMBAR
+  PELVIS
+  FULL_SPINE
+  EXTREMITY
+  OTHER
+}
+
+enum ViewType {
+  AP       // anterior-posterior
+  LATERAL
+  OBLIQUE
+  PA       // posterior-anterior
+  OTHER
+}
+
+enum CalibrationMethod {
+  CLINIC_DEFAULT    // inherited from Clinic.defaultPixelSpacing
+  REFERENCE_MARKER  // user placed a known-size marker on the image
+  MANUAL            // user entered mm/px directly
+}
+
 // ─── Organization ───
 
 model Clinic {
@@ -203,28 +233,35 @@ model Visit {
 // ─── X-Ray & Annotations ───
 
 model Xray {
-  id         String  @id @default(cuid())
+  id         String      @id @default(cuid())
   title      String?
-  bodyRegion String?
-  viewType   String?
+  bodyRegion BodyRegion?
+  viewType   ViewType?
+  status     XrayStatus  @default(UPLOADING)
 
   // Original upload
   fileUrl  String
   fileName String
-  fileSize Int
-  mimeType String
-  width    Int?
-  height   Int?
+  fileSize Int        // bytes
+  mimeType String     // image/jpeg | image/png
+  width    Int?       // px — set after upload confirmation
+  height   Int?       // px
 
-  // Calibration
-  isCalibrated Boolean @default(false)
-  pixelSpacing Float?
+  // Thumbnail
+  thumbnailUrl String?
+
+  // Calibration (written by measurement tools — Part 4)
+  isCalibrated      Boolean            @default(false)
+  pixelSpacing      Float?             // mm per pixel
+  calibrationMethod CalibrationMethod?
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   visitId String?
   visit   Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  uploadedById String // references User.id
 
   annotations Annotation[]
 
@@ -233,6 +270,7 @@ model Xray {
 
   @@index([patientId])
   @@index([visitId])
+  @@index([status])
 }
 
 model Annotation {

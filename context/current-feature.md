@@ -1,16 +1,30 @@
-# Current Feature
+# Current Feature: X-Ray Upload & Storage (Part 1 of 5)
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals will be populated when a feature is loaded -->
+- Client-side file validation (type, size, dimensions) before upload
+- Thumbnail generation (256px longest edge, JPEG 80%) on client
+- Presigned upload flow to Cloudflare R2 (original + thumbnail)
+- API route: POST /api/xrays/upload-url — generates presigned PUT URLs
+- API route: POST /api/xrays/{xrayId}/confirm — finalizes upload, sets status READY
+- Prisma schema updates: Xray model with enums (XrayStatus, BodyRegion, ViewType, CalibrationMethod)
+- R2 storage structure: /xrays/{clinicId}/{patientId}/{xrayId}/...
+- Upload progress UX with progress bar, preview, error toasts, retry
+- Status lifecycle: UPLOADING → READY → ARCHIVED
 
 ## Notes
 
-<!-- Notes will be populated when a feature is loaded -->
+- Max file size: 300 MB; allowed types: .png, .jpg, .jpeg
+- Min dimensions: 100×100 px; max dimensions: 16384×16384 px
+- Presigned URL expiry: 5 minutes; auto-retry on expiry
+- Stale upload cleanup: daily job deletes UPLOADING records older than 24h
+- Calibration fields (pixelSpacing, calibrationMethod) written by Part 4 measurement tools
+- This is Part 1 of 5 in the X-Ray Annotation series
+- Spec file: context/features/xray-annotation-part1-spec.md
 
 ## History
 
