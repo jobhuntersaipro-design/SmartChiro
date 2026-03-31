@@ -1,12 +1,28 @@
-# Current Feature
+# Current Feature: Login Page & NextAuth Integration
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- NextAuth v5 setup with Credentials (email/password) + Google OAuth providers
+- Login page at `/login` with role selector (Branch Owner / Branch Staff)
+- Email/password form with validation + Google sign-in button
+- Stripe-inspired design system (white card, `#F6F9FC` bg, `#635BFF` primary)
+- Schema: add `activeClinicId` to User model
+- Middleware protecting `/dashboard/*` routes
+- Auth utilities: `getCurrentUser()`, `requireAuth()`, `getUserClinicRole()`
+- Seed data: demo clinic + ClinicMember (OWNER) for demo user
+- Redirect to `/dashboard` on success, redirect away if already authed
+
 ## Notes
+
+- JWT session strategy (no DB session lookups)
+- Branch Owner maps to ClinicRole.OWNER; Branch Staff maps to DOCTOR/ADMIN/VIEWER
+- No self-signup — footer says "Contact your clinic admin"
+- Role selector determines which ClinicMember to look up, not a new DB field
+- Spec file: `context/features/login-page-spec.md`
 
 ## History
 

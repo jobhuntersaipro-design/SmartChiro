@@ -22,6 +22,8 @@ model User {
   stripeCustomerId     String?  @unique
   stripeSubscriptionId String?  @unique
 
+  activeClinicId String?
+
   accounts         Account[]
   sessions         Session[]
   clinicMemberships ClinicMember[]
