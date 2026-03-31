@@ -1,20 +1,16 @@
-# Current Feature: Seed Data Script
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Create `prisma/seed.ts` to populate the database with sample data for development and demos
-- Seed a demo user with email `demo@smartchiro.org`, name `Demo Wojak`
-- Hash password `12345678` with bcryptjs (12 rounds)
-- Set `isPro: false` and `emailVerified` to current date
+<!-- Goals will be populated when a feature is loaded -->
 
 ## Notes
 
-- Spec file: `context/features/seed-spec.md`
-- Only seeding the User model for now (no clinic, patient, or other data specified)
+<!-- Notes will be populated when a feature is loaded -->
 
 ## History
 
@@ -24,3 +20,4 @@ In Progress
 - 2026-03-31 **Dashboard UI Phase 2** — Your Overview stat cards, Today's Schedule table with status badges, Recent Activity feed with timestamps
 - 2026-03-31 **Prisma + Neon PostgreSQL Setup** — Prisma 7 ORM with Neon serverless adapter, full schema (NextAuth, Clinic, Patient, Visit, Xray, Annotation, Appointment, Invoice, PatientDocument), indexes, cascade deletes, initial migration (`context/features/databse-spec.md`)
 - 2026-03-31 **User Table: Pro & Stripe Columns** — Added isPro, phoneNumber, stripeCustomerId, stripeSubscriptionId columns to User model with Prisma migration (`context/features/seed-spec.md`)
+- 2026-03-31 **Seed Data Script** — Prisma seed script with demo user (demo@smartchiro.org), bcryptjs password hashing, upsert for idempotency (`context/features/seed-spec.md`)
