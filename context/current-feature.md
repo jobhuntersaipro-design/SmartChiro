@@ -1,24 +1,16 @@
-# Current Feature: X-Ray Annotation Multi-View & Patient Image Sidebar
+# Current Feature
 
 ## Status
 
-Complete
+Not Started
 
 ## Goals
 
-- Add a view mode switcher in the annotation screen sidebar to toggle between 1-up, 2x2, and 4x4 grid layouts for viewing multiple X-ray images simultaneously
-- Add a patient image sidebar that lists all uploaded X-ray images for the current patient, with thumbnail previews
-- Clicking a thumbnail in the sidebar loads that X-ray into the selected viewport slot
-- Patient with multiple X-rays can view/compare them side by side in grid layouts
+<!-- Goals will be populated when a feature is loaded -->
 
 ## Notes
 
-- This builds on the existing annotation canvas engine and comparison view
-- The 1-up view is the current default single image view
-- 2x2 grid shows 4 viewports, 4x4 grid shows 16 viewports (though rarely used, good for full-spine series)
-- Each viewport should support independent zoom/pan
-- The patient image sidebar should show thumbnails with basic metadata (date, body region, view type)
-- This is different from the existing comparison view (which is a split/slider) — this is a grid layout system
+<!-- Notes will be populated when a feature is loaded -->
 
 ## History
 
@@ -34,3 +26,4 @@ Complete
 - 2026-03-31 **X-Ray Annotation Drawing Tools** — Shape type system (8 shape types), drawing tool behaviors with pointer events and modifier keys, eraser tool, keyboard shortcuts, default styles and color presets, properties panel, ShapeRenderer with SVG rendering, inline text editor, server-side upload proxy (R2 CORS fix), X-rays page with upload UI, 25 unit tests (`context/features/xray-annotation-part3-spec.md`)
 - 2026-03-31 **X-Ray Annotation Measurement Tools** — Ruler (M), Angle (Shift+M), Cobb Angle (Cmd+Shift+M), Calibration Reference (K) tools, measurement computation library, SVG rendering with end ticks/label pills/arc indicators/perpendicular construction lines, calibration dialog with mm/px conversion, calibrate API endpoint (PUT/DELETE), measurement properties panel with classification badges, measurements summary tab, teal #00D4AA measurement style + yellow #FFCC00 calibration style, 20 unit tests (`context/features/xray-annotation-part4-spec.md`)
 - 2026-03-31 **X-Ray Annotation API & Export** — X-ray CRUD (GET list/single, PATCH, DELETE archive), annotation CRUD (GET/POST/PUT/DELETE + fork), PNG/PDF export pipeline (sharp SVG compositing + pdf-lib with header/footer/measurement summary), comparison view with linked pan/zoom and draggable divider, auto-save retry with exponential backoff, canvas state size warnings (5MB/10MB), standardized error responses, 21 unit tests (`context/features/xray-annotation-part5-spec.md`)
+- 2026-03-31 **X-Ray Multi-View & Patient Image Sidebar** — ViewModeSwitcher (single/2x2/4x4) at bottom of left toolbar, PatientImageSidebar with thumbnails and metadata (body region, view type, date), MultiViewGrid with independent zoom/pan per viewport cell, click thumbnails to load into active grid slot, single mode navigates to X-ray annotation page
