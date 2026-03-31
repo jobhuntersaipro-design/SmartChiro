@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { RoleSelector } from './RoleSelector'
 import { GoogleSignInButton } from './GoogleSignInButton'
@@ -151,7 +152,7 @@ export function LoginForm() {
       {/* Footer */}
       <p className="mt-6 text-center text-[14px] text-[#697386]">
         Don&apos;t have an account?{' '}
-        <span className="text-[#635BFF]">Contact your clinic admin</span>
+        <Link href="/signup" className="text-[#635BFF] hover:text-[#5851EB] transition-colors">Sign up</Link>
       </p>
     </div>
   )

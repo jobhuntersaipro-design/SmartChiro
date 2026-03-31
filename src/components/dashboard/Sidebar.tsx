@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -113,7 +114,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
 
         {/* Logout */}
-        <button className="flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] text-[#425466] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]">
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] text-[#425466] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]"
+        >
           <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.5} />
           {!collapsed && <span>Logout</span>}
         </button>

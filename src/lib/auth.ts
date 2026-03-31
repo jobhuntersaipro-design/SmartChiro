@@ -1,24 +1,18 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import Google from 'next-auth/providers/google'
 import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { GlobalRole, ClinicRole } from '@prisma/client'
+import authConfig from './auth.config'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  // No adapter — JWT strategy handles sessions, OAuth account linking done in signIn callback
-  session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
+  ...authConfig,
   providers: [
-    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
-      ? [Google({
-          clientId: process.env.AUTH_GOOGLE_ID,
-          clientSecret: process.env.AUTH_GOOGLE_SECRET,
-        })]
-      : []),
+    // Keep non-Credentials providers from config (Google OAuth, etc.)
+    ...authConfig.providers.filter(
+      (p) => (p as { type?: string }).type !== 'credentials'
+    ),
+    // Override Credentials with actual bcrypt validation
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
