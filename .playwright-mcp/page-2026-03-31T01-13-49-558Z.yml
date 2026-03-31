@@ -1,0 +1,178 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: SC
+      - generic [ref=e6]:
+        - generic [ref=e7]: SmartChiro
+        - generic [ref=e8]: Health Center
+    - navigation [ref=e9]:
+      - generic [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e17]: Dashboard
+        - link "Patients" [ref=e18] [cursor=pointer]:
+          - /url: /dashboard/patients
+          - img [ref=e19]
+          - generic [ref=e24]: Patients
+        - link "Calendar" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard/calendar
+          - img [ref=e26]
+          - generic [ref=e28]: Calendar
+        - link "X-Rays" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/xrays
+          - img [ref=e30]
+          - generic [ref=e35]: X-Rays
+        - link "Invoices" [ref=e36] [cursor=pointer]:
+          - /url: /dashboard/invoices
+          - img [ref=e37]
+          - generic [ref=e40]: Invoices
+        - link "Settings" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/settings
+          - img [ref=e42]
+          - generic [ref=e45]: Settings
+    - generic [ref=e46]:
+      - button "New Appointment" [ref=e47]:
+        - img
+        - generic [ref=e48]: New Appointment
+      - button "Profile" [ref=e50]:
+        - img [ref=e51]
+        - generic [ref=e54]: Profile
+      - button "Logout" [ref=e55]:
+        - img [ref=e56]
+        - generic [ref=e59]: Logout
+      - button [ref=e61]:
+        - img [ref=e62]
+  - generic [ref=e64]:
+    - banner [ref=e65]:
+      - generic [ref=e66]:
+        - img [ref=e67]
+        - textbox "Search patients, appointments, or invoices..." [ref=e70]
+      - navigation [ref=e71]:
+        - button "Patients" [ref=e72]
+        - button "Schedule" [ref=e73]
+        - button "Reports" [ref=e74]
+      - generic [ref=e75]:
+        - button "New" [ref=e76]:
+          - img
+          - generic [ref=e77]: New
+        - button [ref=e78]:
+          - img [ref=e79]
+        - generic [ref=e82]:
+          - generic [ref=e84]: DJ
+          - generic [ref=e85]: Dr. James Miller
+    - main [ref=e86]:
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - heading "Your overview" [level=2] [ref=e90]
+            - generic [ref=e91]:
+              - button "+ Add" [ref=e92]
+              - button "Edit" [ref=e93]
+          - generic [ref=e94]:
+            - button "Date range" [ref=e95]
+            - button "Last 7 days" [ref=e96]
+            - button "Daily" [ref=e97]
+            - button "Compare" [ref=e98]
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - generic [ref=e101]:
+                - generic [ref=e102]: Payments
+                - img [ref=e103]
+              - generic [ref=e105]: MYR 12,450.00
+              - generic [ref=e106]: MYR 0.00 previous period
+              - generic [ref=e121]:
+                - generic [ref=e122]: Updated 8 hours ago
+                - button "More details" [ref=e123]
+            - generic [ref=e124]:
+              - generic [ref=e125]:
+                - generic [ref=e126]: Net volume
+                - img [ref=e127]
+              - generic [ref=e129]: MYR 12,450.00
+              - generic [ref=e130]: MYR 0.00 previous period
+              - generic [ref=e145]:
+                - generic [ref=e146]: Updated 8 hours ago
+                - button "More details" [ref=e147]
+            - generic [ref=e148]:
+              - generic [ref=e149]:
+                - generic [ref=e150]: MRR
+                - img [ref=e151]
+              - generic [ref=e153]: MYR 0.00
+              - generic [ref=e154]: MYR 0.00 previous period
+              - generic [ref=e169]:
+                - generic [ref=e170]: Updated 8 hours ago
+                - button "More details" [ref=e171]
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - generic [ref=e174]: Failed payments
+                - img [ref=e175]
+              - generic [ref=e178]: No data
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - generic [ref=e181]: New customers
+                - img [ref=e182]
+              - generic [ref=e184]: "1284"
+              - generic [ref=e185]: 0 previous period
+              - generic [ref=e200]:
+                - generic [ref=e201]: Updated 8 hours ago
+                - button "More details" [ref=e202]
+        - generic [ref=e203]:
+          - generic [ref=e204]:
+            - generic [ref=e205]:
+              - heading "Today's Schedule" [level=3] [ref=e206]
+              - generic [ref=e207]:
+                - generic [ref=e208]:
+                  - button "List View" [ref=e209]
+                  - button "Timeline" [ref=e210]
+                - button "Filter" [ref=e211]
+            - generic [ref=e212]:
+              - generic [ref=e213]:
+                - generic [ref=e214]: Patient
+                - generic [ref=e215]: Time
+                - generic [ref=e216]: Status
+                - generic [ref=e217]: Service
+              - generic [ref=e218] [cursor=pointer]:
+                - generic [ref=e219]:
+                  - generic [ref=e221]: JD
+                  - generic [ref=e222]: John Doe
+                - generic [ref=e223]: 09:30 AM
+                - generic [ref=e224]: Checked in
+                - generic [ref=e225]: Adjustment
+              - generic [ref=e226] [cursor=pointer]:
+                - generic [ref=e227]:
+                  - generic [ref=e229]: SL
+                  - generic [ref=e230]: Sarah Lim
+                - generic [ref=e231]: 10:15 AM
+                - generic [ref=e232]: Scheduled
+                - generic [ref=e233]: Consultation
+              - generic [ref=e234] [cursor=pointer]:
+                - generic [ref=e235]:
+                  - generic [ref=e237]: AI
+                  - generic [ref=e238]: Ahmad Ibrahim
+                - generic [ref=e239]: 11:00 AM
+                - generic [ref=e240]: Completed
+                - generic [ref=e241]: Follow Up
+              - generic [ref=e242] [cursor=pointer]:
+                - generic [ref=e243]:
+                  - generic [ref=e245]: KL
+                  - generic [ref=e246]: Kevin Low
+                - generic [ref=e247]: 01:30 PM
+                - generic [ref=e248]: Scheduled
+                - generic [ref=e249]: X-Ray
+          - generic [ref=e250]:
+            - generic [ref=e251]:
+              - heading "Recent Activity" [level=3] [ref=e252]
+              - button "Filter" [ref=e253]
+            - generic [ref=e254]:
+              - generic [ref=e257]:
+                - paragraph [ref=e258]: Dr. Smith annotated L-Spine for John Doe
+                - paragraph [ref=e259]: 15 hours ago
+              - generic [ref=e262]:
+                - paragraph [ref=e263]: New invoice generated for Sarah Lim
+                - paragraph [ref=e264]: 16 hours ago
+              - generic [ref=e267]:
+                - paragraph [ref=e268]: Patient intake form received from Ahmad Ibrahim
+                - paragraph [ref=e269]: 16 hours ago
+              - generic [ref=e272]:
+                - paragraph [ref=e273]: System backup completed successfully
+                - paragraph [ref=e274]: 18 hours ago
