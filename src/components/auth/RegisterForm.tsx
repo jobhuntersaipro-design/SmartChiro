@@ -1,14 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Mail, ArrowLeft } from 'lucide-react'
 import { GoogleSignInButton } from './GoogleSignInButton'
 
 export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,6 +14,8 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [resending, setResending] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -49,21 +48,72 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         return
       }
 
-      // Auto sign in after successful registration
-      await signIn('credentials', {
-        email,
-        password,
-        loginRole: 'owner',
-        redirect: false,
-      })
-
       setLoading(false)
-      router.push('/dashboard')
-      router.refresh()
+      setEmailSent(true)
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)
     }
+  }
+
+  async function handleResend() {
+    setResending(true)
+    try {
+      await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+    } catch {
+      // Silently fail — don't reveal info
+    }
+    setResending(false)
+  }
+
+  if (emailSent) {
+    return (
+      <div className="w-full max-w-[420px]">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#635BFF]">
+            <Mail size={24} className="text-white" />
+          </div>
+          <h1 className="text-[23px] font-semibold text-[#0A2540]">
+            Check your email
+          </h1>
+          <p className="mt-2 text-[15px] text-[#425466] leading-relaxed">
+            We sent a verification link to<br />
+            <span className="font-medium text-[#0A2540]">{email}</span>
+          </p>
+        </div>
+
+        <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[var(--shadow-card)]">
+          <p className="text-[14px] text-[#425466] leading-relaxed text-center">
+            Click the link in your email to verify your account. If you don&apos;t see it, check your spam folder.
+          </p>
+
+          <div className="mt-5 flex flex-col gap-3">
+            <button
+              onClick={handleResend}
+              disabled={resending}
+              className="flex h-[40px] w-full items-center justify-center rounded-[4px] border border-[#E3E8EE] bg-white text-[15px] font-medium text-[#0A2540] transition-colors hover:bg-[#F0F3F7] disabled:opacity-60 cursor-pointer"
+            >
+              {resending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                'Resend verification email'
+              )}
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-6 text-center text-[14px] text-[#697386]">
+          <Link href="/login" className="inline-flex items-center gap-1 text-[#635BFF] hover:text-[#5851EB] transition-colors">
+            <ArrowLeft size={14} />
+            Back to sign in
+          </Link>
+        </p>
+      </div>
+    )
   }
 
   return (

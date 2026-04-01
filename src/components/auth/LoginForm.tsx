@@ -16,10 +16,13 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailNotVerified, setEmailNotVerified] = useState(false)
+  const [resending, setResending] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setEmailNotVerified(false)
     setLoading(true)
 
     const result = await signIn('credentials', {
@@ -32,12 +35,33 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
     setLoading(false)
 
     if (result?.error) {
+      if (result.code === 'email_not_verified') {
+        setEmailNotVerified(true)
+        return
+      }
       setError('Invalid password or username')
       return
     }
 
     router.push('/dashboard')
     router.refresh()
+  }
+
+  async function handleResendVerification() {
+    setResending(true)
+    try {
+      await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      setError('')
+      setEmailNotVerified(false)
+      setError('Verification email sent! Check your inbox.')
+    } catch {
+      // Silently handle
+    }
+    setResending(false)
   }
 
   return (
@@ -116,6 +140,23 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
               </button>
             </div>
           </div>
+
+          {emailNotVerified && (
+            <div className="rounded-[4px] border border-[#F5A623]/30 bg-[#FFF8ED] p-3">
+              <p className="text-[14px] text-[#0A2540] font-medium">Email not verified</p>
+              <p className="mt-1 text-[13px] text-[#425466]">
+                Please check your inbox and click the verification link.
+              </p>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resending}
+                className="mt-2 text-[13px] font-medium text-[#635BFF] hover:text-[#5851EB] transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {resending ? 'Sending...' : 'Resend verification email'}
+              </button>
+            </div>
+          )}
 
           {error && (
             <p className="text-[14px] text-[#DF1B41]">{error}</p>

@@ -1,9 +1,13 @@
-import NextAuth from 'next-auth'
+import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { GlobalRole, ClinicRole } from '@prisma/client'
 import authConfig from './auth.config'
+
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = 'email_not_verified'
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -39,6 +43,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const isValid = await compare(password, user.password)
         if (!isValid) return null
+
+        // Block unverified users
+        if (!user.emailVerified) {
+          throw new EmailNotVerifiedError()
+        }
 
         // Find clinic membership if one exists
         let clinicRole: string | null = null

@@ -1,16 +1,26 @@
-# Current Feature
+# Current Feature: Email Verification on Register
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Add goals here -->
+- After registration, send a verification email via Resend with a unique token link
+- User must click the verification link to activate their account
+- Unverified users cannot log in (show clear message to verify email first)
+- Verification tokens expire after a reasonable timeframe (e.g., 24 hours)
+- Handle edge cases: expired tokens, already-verified users, resend verification email
 
 ## Notes
 
-<!-- Add notes here -->
+- Using Resend as the email provider (RESEND_API_KEY already in .env)
+- Integrates with existing registration flow at POST /api/auth/register
+- Need a VerificationToken model (or use NextAuth's built-in token table)
+- Need a verification API route (e.g., GET /api/auth/verify?token=xxx)
+- Update User model to track emailVerified status
+- Update login flow to check verification status before allowing sign-in
+- Spec file: context/features/auth-spec-files/auth-spec-5.md
 
 ## History
 
