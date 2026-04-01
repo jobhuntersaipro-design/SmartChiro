@@ -1,23 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import NextAuth from 'next-auth'
+import authConfig from '@/lib/auth.config'
 
-export async function middleware(req: NextRequest) {
+const { auth } = NextAuth(authConfig)
+
+export default auth((req) => {
   const { pathname } = req.nextUrl
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
-  const isLoggedIn = !!token
+  const isLoggedIn = !!req.auth
 
   // Protect dashboard routes
   if (pathname.startsWith('/dashboard') && !isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', req.url))
+    return Response.redirect(new URL('/login', req.url))
   }
 
-  // Redirect logged-in users away from login
-  if (pathname === '/login' && isLoggedIn) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Redirect logged-in users away from login/register
+  if ((pathname === '/login' || pathname === '/register') && isLoggedIn) {
+    return Response.redirect(new URL('/dashboard', req.url))
   }
-
-  return NextResponse.next()
-}
+})
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
