@@ -1,26 +1,16 @@
-# Current Feature: Email Verification on Register
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- After registration, send a verification email via Resend with a unique token link
-- User must click the verification link to activate their account
-- Unverified users cannot log in (show clear message to verify email first)
-- Verification tokens expire after a reasonable timeframe (e.g., 24 hours)
-- Handle edge cases: expired tokens, already-verified users, resend verification email
+<!-- Add goals here -->
 
 ## Notes
 
-- Using Resend as the email provider (RESEND_API_KEY already in .env)
-- Integrates with existing registration flow at POST /api/auth/register
-- Need a VerificationToken model (or use NextAuth's built-in token table)
-- Need a verification API route (e.g., GET /api/auth/verify?token=xxx)
-- Update User model to track emailVerified status
-- Update login flow to check verification status before allowing sign-in
-- Spec file: context/features/auth-spec-files/auth-spec-5.md
+<!-- Add notes here -->
 
 ## History
 
@@ -43,3 +33,4 @@ In Progress
 - 2026-03-31 **Auth Credentials - Email/Password Provider** — Split auth into auth.config.ts (Edge-safe) + auth.ts (bcrypt override), registration API at POST /api/auth/register with validation and bcryptjs hashing, sidebar logout button, login sign-up link (`context/features/auth-spec-files/auth-spec-2.md`)
 - 2026-03-31 **Auth UI - Register Page** — Register page at /register with name, email, password, confirm password fields, Google sign-up button, form validation (passwords match, email format), submits to POST /api/auth/register, redirects to login on success, Stripe-inspired UI (`context/features/auth-spec-files/auth-spec-3.md`)
 - 2026-04-01 **Auth - Google Sign-Up / Sign-In Flow** — Conditional Google OAuth button on login/register pages (hidden when AUTH_GOOGLE_ID not configured), googleEnabled prop from server pages, spec with Google Cloud Console setup instructions and OAuth flow documentation (`context/features/auth-spec-files/auth-spec-4.md`)
+- 2026-04-01 **Email Verification on Register** — Resend integration for verification emails, 24-hour token expiry, verify API route with redirect to status page (success/expired/invalid/already-verified), credentials provider blocks unverified users with custom CredentialsSignin error, RegisterForm shows "check your email" state, LoginForm shows verification warning with resend button, resend-verification API (no user existence leak), 18 unit tests
