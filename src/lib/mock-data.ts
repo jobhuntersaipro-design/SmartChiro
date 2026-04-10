@@ -6,8 +6,8 @@ export const currentUser = {
   email: "james.miller@smartchiro.com",
   role: "OWNER" as const,
   image: null,
-  clinic: {
-    id: "clinic_1",
+  branch: {
+    id: "branch_1",
     name: "SmartChiro Health Center",
   },
 };

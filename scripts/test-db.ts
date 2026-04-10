@@ -19,21 +19,21 @@ async function main() {
   })
   console.log('Created user:', user)
 
-  // Create a test clinic
-  const clinic = await prisma.clinic.create({
+  // Create a test branch
+  const branch = await prisma.branch.create({
     data: {
-      name: 'Test Clinic',
+      name: 'Test Branch',
       address: '123 Main St',
       phone: '+60123456789',
     },
   })
-  console.log('Created clinic:', clinic)
+  console.log('Created branch:', branch)
 
-  // Link user to clinic as OWNER
-  const membership = await prisma.clinicMember.create({
+  // Link user to branch as OWNER
+  const membership = await prisma.branchMember.create({
     data: {
       userId: user.id,
-      clinicId: clinic.id,
+      branchId: branch.id,
       role: 'OWNER',
     },
   })
@@ -45,25 +45,26 @@ async function main() {
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
-      clinicId: clinic.id,
+      branchId: branch.id,
+      doctorId: user.id,
     },
   })
   console.log('Created patient:', patient)
 
   // Verify relations
-  const clinicWithMembers = await prisma.clinic.findUnique({
-    where: { id: clinic.id },
+  const branchWithMembers = await prisma.branch.findUnique({
+    where: { id: branch.id },
     include: {
       members: { include: { user: true } },
       patients: true,
     },
   })
-  console.log('\nClinic with relations:', JSON.stringify(clinicWithMembers, null, 2))
+  console.log('\nBranch with relations:', JSON.stringify(branchWithMembers, null, 2))
 
   // Clean up test data
   await prisma.patient.delete({ where: { id: patient.id } })
-  await prisma.clinicMember.delete({ where: { id: membership.id } })
-  await prisma.clinic.delete({ where: { id: clinic.id } })
+  await prisma.branchMember.delete({ where: { id: membership.id } })
+  await prisma.branch.delete({ where: { id: branch.id } })
   await prisma.user.delete({ where: { id: user.id } })
   console.log('\nTest data cleaned up.')
 }

@@ -43,10 +43,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify patient exists and get clinicId
+    // Verify patient exists and get branchId
     const patient = await prisma.patient.findUnique({
       where: { id: patientId },
-      select: { id: true, clinicId: true },
+      select: { id: true, branchId: true },
     })
 
     if (!patient) {
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
     })
 
     // Build R2 keys
-    const originalKey = buildXrayKey(patient.clinicId, patientId, xray.id, `original.${ext}`)
-    const thumbnailKey = buildXrayKey(patient.clinicId, patientId, xray.id, 'thumbnail.jpg')
+    const originalKey = buildXrayKey(patient.branchId, patientId, xray.id, `original.${ext}`)
+    const thumbnailKey = buildXrayKey(patient.branchId, patientId, xray.id, 'thumbnail.jpg')
 
     // Generate presigned URLs (5 min expiry)
     const [uploadUrl, thumbnailUploadUrl] = await Promise.all([

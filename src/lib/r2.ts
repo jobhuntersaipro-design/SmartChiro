@@ -45,15 +45,15 @@ export async function deleteR2Object(key: string): Promise<void> {
 
 /**
  * Build the R2 storage key for an X-ray file.
- * Structure: /xrays/{clinicId}/{patientId}/{xrayId}/{filename}
+ * Structure: /xrays/{branchId}/{patientId}/{xrayId}/{filename}
  */
 export function buildXrayKey(
-  clinicId: string,
+  branchId: string,
   patientId: string,
   xrayId: string,
   filename: string
 ): string {
-  return `xrays/${clinicId}/${patientId}/${xrayId}/${filename}`
+  return `xrays/${branchId}/${patientId}/${xrayId}/${filename}`
 }
 
 /**
@@ -98,14 +98,14 @@ export function getR2PublicUrl(key: string): string {
 
 /**
  * Build the R2 storage key for an export file.
- * Structure: /xrays/{clinicId}/{patientId}/{xrayId}/exports/{exportId}.{ext}
+ * Structure: /xrays/{branchId}/{patientId}/{xrayId}/exports/{exportId}.{ext}
  */
 export function buildExportKey(
-  clinicId: string,
+  branchId: string,
   patientId: string,
   xrayId: string,
   exportId: string,
   ext: 'png' | 'pdf'
 ): string {
-  return `xrays/${clinicId}/${patientId}/${xrayId}/exports/${exportId}.${ext}`
+  return `xrays/${branchId}/${patientId}/${xrayId}/exports/${exportId}.${ext}`
 }

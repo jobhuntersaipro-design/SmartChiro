@@ -23,7 +23,6 @@ export default {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
-        loginRole: { label: 'Login Role', type: 'text' },
       },
       authorize: () => null,
     }),

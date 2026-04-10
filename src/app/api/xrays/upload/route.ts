@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Verify patient exists
     const patient = await prisma.patient.findUnique({
       where: { id: patientId },
-      select: { id: true, clinicId: true },
+      select: { id: true, branchId: true },
     })
 
     if (!patient) {
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const originalKey = buildXrayKey(patient.clinicId, patientId, xray.id, `original.${ext}`)
+    const originalKey = buildXrayKey(patient.branchId, patientId, xray.id, `original.${ext}`)
     const fileUrl = getR2PublicUrl(originalKey)
 
     // Upload original to R2
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     // Upload thumbnail if provided
     let thumbnailUrl: string | null = null
     if (thumbnail) {
-      const thumbnailKey = buildXrayKey(patient.clinicId, patientId, xray.id, 'thumbnail.jpg')
+      const thumbnailKey = buildXrayKey(patient.branchId, patientId, xray.id, 'thumbnail.jpg')
       const thumbBuffer = Buffer.from(await thumbnail.arrayBuffer())
       await r2Client.send(
         new PutObjectCommand({

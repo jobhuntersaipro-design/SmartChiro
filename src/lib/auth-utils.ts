@@ -13,10 +13,10 @@ export async function requireAuth() {
   return user
 }
 
-export async function getUserClinicRole(userId: string, clinicId: string) {
-  const membership = await prisma.clinicMember.findUnique({
+export async function getUserBranchRole(userId: string, branchId: string) {
+  const membership = await prisma.branchMember.findUnique({
     where: {
-      userId_clinicId: { userId, clinicId },
+      userId_branchId: { userId, branchId },
     },
   })
   return membership?.role ?? null

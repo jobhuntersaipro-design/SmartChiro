@@ -11,7 +11,7 @@ export async function PUT(
   const body = await request.json();
   const { pixelSpacing, calibrationMethod } = body as {
     pixelSpacing: number;
-    calibrationMethod: "REFERENCE_MARKER" | "MANUAL" | "CLINIC_DEFAULT";
+    calibrationMethod: "REFERENCE_MARKER" | "MANUAL" | "BRANCH_DEFAULT";
   };
 
   if (!pixelSpacing || pixelSpacing <= 0) {

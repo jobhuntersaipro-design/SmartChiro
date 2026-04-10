@@ -1,4 +1,4 @@
-import type { GlobalRole, ClinicRole } from '@prisma/client'
+import type { BranchRole } from '@prisma/client'
 import 'next-auth'
 
 declare module 'next-auth' {
@@ -8,9 +8,8 @@ declare module 'next-auth' {
       email: string
       name?: string | null
       image?: string | null
-      role: GlobalRole
-      clinicRole: ClinicRole | null
-      activeClinicId: string | null
+      branchRole: BranchRole | null
+      activeBranchId: string | null
     }
   }
 }

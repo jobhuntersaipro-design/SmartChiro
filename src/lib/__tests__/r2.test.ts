@@ -28,8 +28,8 @@ describe('buildXrayKey', () => {
   })
 
   it('builds the correct key structure', () => {
-    const key = buildXrayKey('clinic-1', 'patient-2', 'xray-3', 'original.jpg')
-    expect(key).toBe('xrays/clinic-1/patient-2/xray-3/original.jpg')
+    const key = buildXrayKey('branch-1', 'patient-2', 'xray-3', 'original.jpg')
+    expect(key).toBe('xrays/branch-1/patient-2/xray-3/original.jpg')
   })
 
   it('builds thumbnail key', () => {
@@ -52,8 +52,8 @@ describe('buildExportKey', () => {
   })
 
   it('builds the correct export key for PNG', () => {
-    const key = buildExportKey('clinic-1', 'patient-2', 'xray-3', 'export-abc', 'png')
-    expect(key).toBe('xrays/clinic-1/patient-2/xray-3/exports/export-abc.png')
+    const key = buildExportKey('branch-1', 'patient-2', 'xray-3', 'export-abc', 'png')
+    expect(key).toBe('xrays/branch-1/patient-2/xray-3/exports/export-abc.png')
   })
 
   it('builds the correct export key for PDF', () => {

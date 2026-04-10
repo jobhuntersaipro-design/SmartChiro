@@ -2,7 +2,7 @@ import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import type { GlobalRole, ClinicRole } from '@prisma/client'
+import type { BranchRole } from '@prisma/client'
 import authConfig from './auth.config'
 
 class EmailNotVerifiedError extends CredentialsSignin {
@@ -21,20 +21,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
-        loginRole: { label: 'Login Role', type: 'text' },
       },
       async authorize(credentials) {
         const email = credentials.email as string
         const password = credentials.password as string
-        const loginRole = credentials.loginRole as string
 
         if (!email || !password) return null
 
         const user = await prisma.user.findUnique({
           where: { email },
           include: {
-            clinicMemberships: {
-              include: { clinic: true },
+            branchMemberships: {
+              include: { branch: true },
             },
           },
         })
@@ -49,33 +47,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new EmailNotVerifiedError()
         }
 
-        // Find clinic membership if one exists
-        let clinicRole: string | null = null
-        let activeClinicId: string | null = null
+        // Find branch membership — pick first available
+        let branchRole: string | null = null
+        let activeBranchId: string | null = null
 
-        if (loginRole === 'owner') {
-          const ownerMembership = user.clinicMemberships.find(
-            (m) => m.role === 'OWNER'
-          )
-          if (ownerMembership) {
-            clinicRole = 'OWNER'
-            activeClinicId = ownerMembership.clinicId
-          }
-        } else {
-          const staffMembership = user.clinicMemberships.find(
-            (m) => m.role !== 'OWNER'
-          )
-          if (staffMembership) {
-            clinicRole = staffMembership.role
-            activeClinicId = staffMembership.clinicId
-          }
+        const firstMembership = user.branchMemberships[0]
+        if (firstMembership) {
+          branchRole = firstMembership.role
+          activeBranchId = firstMembership.branchId
         }
 
-        // Set active clinic if user has a membership
-        if (activeClinicId) {
+        // Set active branch if user has a membership
+        if (activeBranchId) {
           await prisma.user.update({
             where: { id: user.id },
-            data: { activeClinicId },
+            data: { activeBranchId },
           })
         }
 
@@ -84,9 +70,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           name: user.name,
           image: user.image,
-          role: user.role,
-          clinicRole,
-          activeClinicId,
+          branchRole,
+          activeBranchId,
         }
       },
     }),
@@ -96,27 +81,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id as string
         const u = user as unknown as {
-          role: GlobalRole
-          clinicRole: ClinicRole | null
-          activeClinicId: string | null
+          branchRole: BranchRole | null
+          activeBranchId: string | null
         }
-        token.role = u.role
-        token.clinicRole = u.clinicRole ?? null
-        token.activeClinicId = u.activeClinicId ?? null
+        token.branchRole = u.branchRole ?? null
+        token.activeBranchId = u.activeBranchId ?? null
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
-        session.user.role = token.role as GlobalRole
-        session.user.clinicRole = token.clinicRole as ClinicRole | null
-        session.user.activeClinicId = token.activeClinicId as string | null
+        session.user.branchRole = token.branchRole as BranchRole | null
+        session.user.activeBranchId = token.activeBranchId as string | null
       }
       return session
     },
     async signIn({ user, account, profile }) {
-      // For OAuth (Google), create or link user + set active clinic
+      // For OAuth (Google), create or link user + set active branch
       if (account?.provider === 'google' && profile?.email) {
         let dbUser = await prisma.user.findUnique({
           where: { email: profile.email },
@@ -160,14 +142,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
         }
 
-        // Set active clinic
-        const membership = await prisma.clinicMember.findFirst({
+        // Set active branch
+        const membership = await prisma.branchMember.findFirst({
           where: { userId: dbUser.id },
         })
         if (membership) {
           await prisma.user.update({
             where: { id: dbUser.id },
-            data: { activeClinicId: membership.clinicId },
+            data: { activeBranchId: membership.branchId },
           })
         }
 

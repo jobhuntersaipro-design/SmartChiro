@@ -245,7 +245,7 @@ export async function renderAnnotatedPdf(
   metadata: {
     patientName: string;
     xrayTitle: string;
-    clinicName: string;
+    branchName: string;
     exportDate: string;
   }
 ): Promise<Buffer> {
@@ -287,7 +287,7 @@ export async function renderAnnotatedPdf(
     font: fontBold,
     color: rgb(0.04, 0.15, 0.25),
   });
-  page.drawText(`${metadata.xrayTitle}  |  ${metadata.clinicName}  |  ${metadata.exportDate}`, {
+  page.drawText(`${metadata.xrayTitle}  |  ${metadata.branchName}  |  ${metadata.exportDate}`, {
     x: margin,
     y: headerY + 8,
     size: 9,

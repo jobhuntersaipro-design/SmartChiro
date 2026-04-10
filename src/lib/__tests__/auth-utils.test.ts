@@ -12,7 +12,7 @@ const mockFindUnique = vi.fn()
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    clinicMember: {
+    branchMember: {
       findUnique: (...args: unknown[]) => mockFindUnique(...args),
     },
   },
@@ -31,14 +31,14 @@ vi.mock('next/navigation', () => ({
 describe('auth-utils', () => {
   let getCurrentUser: typeof import('../auth-utils').getCurrentUser
   let requireAuth: typeof import('../auth-utils').requireAuth
-  let getUserClinicRole: typeof import('../auth-utils').getUserClinicRole
+  let getUserBranchRole: typeof import('../auth-utils').getUserBranchRole
 
   beforeEach(async () => {
     vi.clearAllMocks()
     const mod = await import('../auth-utils')
     getCurrentUser = mod.getCurrentUser
     requireAuth = mod.requireAuth
-    getUserClinicRole = mod.getUserClinicRole
+    getUserBranchRole = mod.getUserBranchRole
   })
 
   describe('getCurrentUser', () => {
@@ -83,21 +83,21 @@ describe('auth-utils', () => {
     })
   })
 
-  describe('getUserClinicRole', () => {
+  describe('getUserBranchRole', () => {
     it('returns role when membership exists', async () => {
       mockFindUnique.mockResolvedValue({ role: 'OWNER' })
 
-      const result = await getUserClinicRole('u1', 'c1')
+      const result = await getUserBranchRole('u1', 'b1')
       expect(result).toBe('OWNER')
       expect(mockFindUnique).toHaveBeenCalledWith({
-        where: { userId_clinicId: { userId: 'u1', clinicId: 'c1' } },
+        where: { userId_branchId: { userId: 'u1', branchId: 'b1' } },
       })
     })
 
     it('returns null when no membership', async () => {
       mockFindUnique.mockResolvedValue(null)
 
-      const result = await getUserClinicRole('u1', 'c1')
+      const result = await getUserBranchRole('u1', 'b1')
       expect(result).toBeNull()
     })
   })

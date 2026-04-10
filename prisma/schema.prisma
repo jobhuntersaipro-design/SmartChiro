@@ -15,18 +15,24 @@ model User {
   name          String?
   password      String?
   image         String?
-  role          GlobalRole @default(USER)
+  phoneNumber   String?
 
   isPro                Boolean  @default(false)
-  phoneNumber          String?
   stripeCustomerId     String?  @unique
   stripeSubscriptionId String?  @unique
 
-  activeClinicId String?
+  activeBranchId String?
 
-  accounts         Account[]
-  sessions         Session[]
-  clinicMemberships ClinicMember[]
+  accounts          Account[]
+  sessions          Session[]
+  branchMemberships BranchMember[]
+
+  // As doctor
+  assignedPatients Patient[]      @relation("PatientDoctor")
+  visits           Visit[]        @relation("VisitDoctor")
+  appointments     Appointment[]  @relation("AppointmentDoctor")
+  uploadedXrays    Xray[]         @relation("XrayUploader")
+  annotations      Annotation[]   @relation("AnnotationCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,16 +81,10 @@ model VerificationToken {
 
 // ─── Enums ───
 
-enum GlobalRole {
-  USER
-  ADMIN
-}
-
-enum ClinicRole {
+enum BranchRole {
   OWNER
-  DOCTOR
   ADMIN
-  VIEWER
+  DOCTOR
 }
 
 enum AppointmentStatus {
@@ -129,14 +129,14 @@ enum ViewType {
 }
 
 enum CalibrationMethod {
-  CLINIC_DEFAULT    // inherited from Clinic.defaultPixelSpacing
+  BRANCH_DEFAULT    // inherited from Branch.defaultPixelSpacing
   REFERENCE_MARKER  // user placed a known-size marker on the image
   MANUAL            // user entered mm/px directly
 }
 
 // ─── Organization ───
 
-model Clinic {
+model Branch {
   id      String  @id @default(cuid())
   name    String
   address String?
@@ -148,7 +148,7 @@ model Clinic {
   calibrationEnabled  Boolean @default(false)
   defaultPixelSpacing Float?
 
-  members      ClinicMember[]
+  members      BranchMember[]
   patients     Patient[]
   appointments Appointment[]
   invoices     Invoice[]
@@ -157,21 +157,22 @@ model Clinic {
   updatedAt DateTime @updatedAt
 }
 
-model ClinicMember {
+model BranchMember {
   id   String     @id @default(cuid())
-  role ClinicRole @default(DOCTOR)
+  role BranchRole @default(DOCTOR)
 
   userId   String
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  clinicId String
-  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, clinicId])
+  @@unique([userId, branchId])
   @@index([userId])
-  @@index([clinicId])
+  @@index([branchId])
+  @@index([role])
 }
 
 // ─── Patient & Clinical ───
@@ -189,8 +190,12 @@ model Patient {
   medicalHistory   String?
   notes            String?
 
-  clinicId String
-  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Assigned to one doctor at a time
+  doctorId String
+  doctor   User @relation("PatientDoctor", fields: [doctorId], references: [id])
 
   visits       Visit[]
   xrays        Xray[]
@@ -201,7 +206,8 @@ model Patient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([clinicId])
+  @@index([branchId])
+  @@index([doctorId])
   @@index([lastName, firstName])
 }
 
@@ -220,6 +226,8 @@ model Visit {
   patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   doctorId      String
+  doctor        User @relation("VisitDoctor", fields: [doctorId], references: [id])
+
   appointmentId String? @unique
 
   xrays Xray[]
@@ -252,7 +260,7 @@ model Xray {
   // Thumbnail
   thumbnailUrl String?
 
-  // Calibration (written by measurement tools — Part 4)
+  // Calibration (written by measurement tools)
   isCalibrated      Boolean            @default(false)
   pixelSpacing      Float?             // mm per pixel
   calibrationMethod CalibrationMethod?
@@ -263,7 +271,8 @@ model Xray {
   visitId String?
   visit   Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
 
-  uploadedById String // references User.id
+  uploadedById String
+  uploadedBy   User @relation("XrayUploader", fields: [uploadedById], references: [id])
 
   annotations Annotation[]
 
@@ -273,6 +282,7 @@ model Xray {
   @@index([patientId])
   @@index([visitId])
   @@index([status])
+  @@index([uploadedById])
 }
 
 model Annotation {
@@ -298,6 +308,7 @@ model Annotation {
   xray   Xray @relation(fields: [xrayId], references: [id], onDelete: Cascade)
 
   createdById String
+  createdBy   User @relation("AnnotationCreator", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -318,16 +329,17 @@ model Appointment {
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
-  clinicId String
-  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   doctorId String
+  doctor   User @relation("AppointmentDoctor", fields: [doctorId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([patientId])
-  @@index([clinicId])
+  @@index([branchId])
   @@index([doctorId])
   @@index([dateTime])
   @@index([status])
@@ -349,14 +361,14 @@ model Invoice {
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
-  clinicId String
-  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([patientId])
-  @@index([clinicId])
+  @@index([branchId])
   @@index([status])
   @@index([invoiceNumber])
 }

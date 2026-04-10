@@ -6,11 +6,15 @@ Completed
 
 ## Goals
 
-N/A — see next feature below.
+Restructure entire database schema — all completed:
 
-## Next Up: Database Restructuring (Clinic → Branch, Role System)
-
-Rename Clinic → Branch, replace roles with OWNER/ADMIN/DOCTOR, add Patient.practitionerId for data isolation, fix dangling string FKs. See conversation history for full proposal.
+1. **Rename Clinic → Branch** throughout codebase
+2. **New role system**: `BranchRole` = OWNER / ADMIN / DOCTOR (drop GlobalRole + old ClinicRole)
+3. **Patient.doctorId** — each patient assigned to one doctor at a time
+4. **Data isolation** — doctors see only their patients, owners see everything, admins see their one branch
+5. **Fix dangling FKs** — `doctorId`, `uploadedById`, `createdById` become proper `@relation` fields
+6. **Constraints**: admin can only belong to one branch (app-level), one branch can have multiple owners, one doctor can be in multiple branches
+7. **Update all code references** — API routes, components, seed data, auth utilities
 
 ## History
 
@@ -35,3 +39,4 @@ Rename Clinic → Branch, replace roles with OWNER/ADMIN/DOCTOR, add Patient.pra
 - 2026-04-01 **Auth - Google Sign-Up / Sign-In Flow** — Conditional Google OAuth button on login/register pages (hidden when AUTH_GOOGLE_ID not configured), googleEnabled prop from server pages, spec with Google Cloud Console setup instructions and OAuth flow documentation (`context/features/auth-spec-files/auth-spec-4.md`)
 - 2026-04-01 **Email Verification on Register** — Resend integration for verification emails, 24-hour token expiry, verify API route with redirect to status page (success/expired/invalid/already-verified), credentials provider blocks unverified users with custom CredentialsSignin error, RegisterForm shows "check your email" state, LoginForm shows verification warning with resend button, resend-verification API (no user existence leak), 18 unit tests
 - 2026-04-01 **Auth Middleware Fix & Test Coverage** — Fixed redirect loop caused by getToken using wrong cookie prefix (next-auth.* vs authjs.*), replaced with NextAuth v5 auth() middleware wrapper, added register API tests (10) and auth-utils tests (6), gitignored .playwright-mcp/
+- 2026-04-10 **Database Restructuring (Clinic → Branch)** — Renamed Clinic/ClinicMember/ClinicRole to Branch/BranchMember/BranchRole, new role enum (OWNER/ADMIN/DOCTOR), removed GlobalRole from User, added Patient.doctorId with proper FK for data isolation, added proper @relation FKs on Visit.doctorId, Appointment.doctorId, Xray.uploadedById, Annotation.createdById, renamed activeClinicId → activeBranchId, renamed CalibrationMethod.CLINIC_DEFAULT → BRANCH_DEFAULT, deleted unused RoleSelector component, removed loginRole from auth flow, updated 26+ files (schema, seed, auth, API routes, R2, export renderer, mock data, tests), migration with data backfill, 122 tests passing

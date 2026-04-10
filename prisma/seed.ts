@@ -25,43 +25,43 @@ async function main() {
 
   console.log(`Seeded user: ${user.email} (id: ${user.id})`)
 
-  // Create demo clinic
-  const clinic = await prisma.clinic.upsert({
-    where: { id: 'demo-clinic-001' },
+  // Create demo branch
+  const branch = await prisma.branch.upsert({
+    where: { id: 'demo-branch-001' },
     update: {},
     create: {
-      id: 'demo-clinic-001',
-      name: 'SmartChiro Demo Clinic',
+      id: 'demo-branch-001',
+      name: 'SmartChiro Demo Branch',
       address: '123 Main Street, Kuala Lumpur',
       phone: '+60 12-345 6789',
-      email: 'clinic@smartchiro.org',
+      email: 'branch@smartchiro.org',
     },
   })
 
-  console.log(`Seeded clinic: ${clinic.name} (id: ${clinic.id})`)
+  console.log(`Seeded branch: ${branch.name} (id: ${branch.id})`)
 
-  // Link user as clinic OWNER
-  const membership = await prisma.clinicMember.upsert({
+  // Link user as branch OWNER
+  const membership = await prisma.branchMember.upsert({
     where: {
-      userId_clinicId: { userId: user.id, clinicId: clinic.id },
+      userId_branchId: { userId: user.id, branchId: branch.id },
     },
     update: { role: 'OWNER' },
     create: {
       userId: user.id,
-      clinicId: clinic.id,
+      branchId: branch.id,
       role: 'OWNER',
     },
   })
 
-  console.log(`Seeded membership: ${user.email} → ${clinic.name} (${membership.role})`)
+  console.log(`Seeded membership: ${user.email} → ${branch.name} (${membership.role})`)
 
-  // Set active clinic on user
+  // Set active branch on user
   await prisma.user.update({
     where: { id: user.id },
-    data: { activeClinicId: clinic.id },
+    data: { activeBranchId: branch.id },
   })
 
-  console.log(`Set active clinic for ${user.email}`)
+  console.log(`Set active branch for ${user.email}`)
 }
 
 main()

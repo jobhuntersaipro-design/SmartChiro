@@ -356,7 +356,7 @@ describe("renderAnnotatedPdf", () => {
       {
         patientName: "John Doe",
         xrayTitle: "Cervical AP",
-        clinicName: "Test Clinic",
+        branchName: "Test Branch",
         exportDate: "March 31, 2026",
       }
     );
@@ -394,7 +394,7 @@ describe("renderAnnotatedPdf", () => {
       {
         patientName: "Jane Smith",
         xrayTitle: "Lumbar Lateral",
-        clinicName: "Spine Center",
+        branchName: "Spine Center",
         exportDate: "March 31, 2026",
       }
     );
@@ -432,7 +432,7 @@ describe("renderAnnotatedPdf", () => {
       {
         patientName: "Test Patient",
         xrayTitle: "Test X-ray",
-        clinicName: "Test Clinic",
+        branchName: "Test Branch",
         exportDate: "March 31, 2026",
       }
     );
@@ -447,14 +447,14 @@ describe("renderAnnotatedPdf", () => {
     const lowDpi = await renderAnnotatedPdf(img, canvas, 200, 200, false, null, 72, {
       patientName: "A",
       xrayTitle: "B",
-      clinicName: "C",
+      branchName: "C",
       exportDate: "D",
     });
 
     const highDpi = await renderAnnotatedPdf(img, canvas, 200, 200, false, null, 300, {
       patientName: "A",
       xrayTitle: "B",
-      clinicName: "C",
+      branchName: "C",
       exportDate: "D",
     });
 

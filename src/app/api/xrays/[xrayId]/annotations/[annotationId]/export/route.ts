@@ -37,7 +37,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Load xray with patient and clinic info
+    // Load xray with patient and branch info
     const xray = await prisma.xray.findUnique({
       where: { id: xrayId },
       include: {
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           select: {
             firstName: true,
             lastName: true,
-            clinicId: true,
-            clinic: { select: { name: true } },
+            branchId: true,
+            branch: { select: { name: true } },
           },
         },
       },
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         {
           patientName: `${xray.patient.firstName} ${xray.patient.lastName}`,
           xrayTitle: xray.title ?? "Untitled X-ray",
-          clinicName: xray.patient.clinic.name,
+          branchName: xray.patient.branch.name,
           exportDate,
         }
       );
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Upload to R2
     const exportKey = buildExportKey(
-      xray.patient.clinicId,
+      xray.patient.branchId,
       xray.patientId,
       xrayId,
       exportId,
