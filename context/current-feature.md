@@ -2,19 +2,15 @@
 
 ## Status
 
-Completed
+Not Started
 
 ## Goals
 
-Restructure entire database schema — all completed:
+<!-- Define goals here -->
 
-1. **Rename Clinic → Branch** throughout codebase
-2. **New role system**: `BranchRole` = OWNER / ADMIN / DOCTOR (drop GlobalRole + old ClinicRole)
-3. **Patient.doctorId** — each patient assigned to one doctor at a time
-4. **Data isolation** — doctors see only their patients, owners see everything, admins see their one branch
-5. **Fix dangling FKs** — `doctorId`, `uploadedById`, `createdById` become proper `@relation` fields
-6. **Constraints**: admin can only belong to one branch (app-level), one branch can have multiple owners, one doctor can be in multiple branches
-7. **Update all code references** — API routes, components, seed data, auth utilities
+## Notes
+
+<!-- Additional context -->
 
 ## History
 
