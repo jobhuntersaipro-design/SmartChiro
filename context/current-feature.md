@@ -1,16 +1,25 @@
-# Current Feature
+# Current Feature: Patient Management Page
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Define goals here -->
+- Patient registration form with full name, email, assigned doctor (defaults to signed-in doctor, changeable)
+- Top bar search with fuzzy search across patients
+- Patient table with basic info in Stripe-inspired neon table style
+- Right-slide-in modal on patient click showing full patient info (X-rays, recent visits, notes, etc.)
+- Create a mock data for patient too
 
 ## Notes
 
-<!-- Additional context -->
+- Route: `/dashboard/patients` (sidebar link already exists, just needs the page)
+- Prisma Patient model already exists with: firstName, lastName, email, phone, dateOfBirth, gender, address, emergencyContact, medicalHistory, notes, branchId, doctorId
+- Relations: visits, xrays, appointments, invoices, documents
+- Indexes exist on: branchId, doctorId, lastName+firstName
+- Follow existing dashboard patterns (DashboardShell layout, Stripe design tokens)
+- Source spec: `context/features/patient-spec.md`
 
 ## History
 
