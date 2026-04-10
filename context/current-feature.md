@@ -1,25 +1,16 @@
-# Current Feature: Patient Management Page
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Patient registration form with full name, email, assigned doctor (defaults to signed-in doctor, changeable)
-- Top bar search with fuzzy search across patients
-- Patient table with basic info in Stripe-inspired neon table style
-- Right-slide-in modal on patient click showing full patient info (X-rays, recent visits, notes, etc.)
-- Create a mock data for patient too
+<!-- Define goals here -->
 
 ## Notes
 
-- Route: `/dashboard/patients` (sidebar link already exists, just needs the page)
-- Prisma Patient model already exists with: firstName, lastName, email, phone, dateOfBirth, gender, address, emergencyContact, medicalHistory, notes, branchId, doctorId
-- Relations: visits, xrays, appointments, invoices, documents
-- Indexes exist on: branchId, doctorId, lastName+firstName
-- Follow existing dashboard patterns (DashboardShell layout, Stripe design tokens)
-- Source spec: `context/features/patient-spec.md`
+<!-- Additional context -->
 
 ## History
 
@@ -45,3 +36,4 @@ In Progress
 - 2026-04-01 **Email Verification on Register** — Resend integration for verification emails, 24-hour token expiry, verify API route with redirect to status page (success/expired/invalid/already-verified), credentials provider blocks unverified users with custom CredentialsSignin error, RegisterForm shows "check your email" state, LoginForm shows verification warning with resend button, resend-verification API (no user existence leak), 18 unit tests
 - 2026-04-01 **Auth Middleware Fix & Test Coverage** — Fixed redirect loop caused by getToken using wrong cookie prefix (next-auth.* vs authjs.*), replaced with NextAuth v5 auth() middleware wrapper, added register API tests (10) and auth-utils tests (6), gitignored .playwright-mcp/
 - 2026-04-10 **Database Restructuring (Clinic → Branch)** — Renamed Clinic/ClinicMember/ClinicRole to Branch/BranchMember/BranchRole, new role enum (OWNER/ADMIN/DOCTOR), removed GlobalRole from User, added Patient.doctorId with proper FK for data isolation, added proper @relation FKs on Visit.doctorId, Appointment.doctorId, Xray.uploadedById, Annotation.createdById, renamed activeClinicId → activeBranchId, renamed CalibrationMethod.CLINIC_DEFAULT → BRANCH_DEFAULT, deleted unused RoleSelector component, removed loginRole from auth flow, updated 26+ files (schema, seed, auth, API routes, R2, export renderer, mock data, tests), migration with data backfill, 122 tests passing
+- 2026-04-11 **Patient Management Page** — Patient list at /dashboard/patients with Stripe-styled table (name, contact, last visit, visits, status), fuzzy search across name/email/phone, Add Patient dialog with form validation (defaults doctor to signed-in user), right-slide-in detail sheet with contact info/clinical data/stat cards, 8 mock patients with Malaysian context, shadcn Sheet + Dialog components (`context/features/patient-spec.md`)
