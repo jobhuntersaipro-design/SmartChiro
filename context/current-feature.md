@@ -2,15 +2,15 @@
 
 ## Status
 
-Not Started
+Completed
 
 ## Goals
 
-<!-- Add goals here -->
+N/A — see next feature below.
 
-## Notes
+## Next Up: Database Restructuring (Clinic → Branch, Role System)
 
-<!-- Add notes here -->
+Rename Clinic → Branch, replace roles with OWNER/ADMIN/DOCTOR, add Patient.practitionerId for data isolation, fix dangling string FKs. See conversation history for full proposal.
 
 ## History
 

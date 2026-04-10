@@ -5,12 +5,10 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { RoleSelector } from './RoleSelector'
 import { GoogleSignInButton } from './GoogleSignInButton'
 
 export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter()
-  const [loginRole, setLoginRole] = useState<'owner' | 'staff'>('owner')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -28,7 +26,6 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
     const result = await signIn('credentials', {
       email,
       password,
-      loginRole,
       redirect: false,
     })
 
@@ -75,20 +72,12 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
           Sign in to SmartChiro
         </h1>
         <p className="mt-1 text-[15px] text-[#697386]">
-          Select your role and enter your credentials
+          Enter your credentials to continue
         </p>
       </div>
 
       {/* Auth Card */}
       <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[var(--shadow-card)]">
-        {/* Role Selector */}
-        <div className="mb-5">
-          <label className="mb-2 block text-[14px] font-medium text-[#0A2540]">
-            Sign in as
-          </label>
-          <RoleSelector value={loginRole} onChange={setLoginRole} />
-        </div>
-
         {/* Email/Password Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
