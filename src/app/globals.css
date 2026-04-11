@@ -19,6 +19,20 @@
   }
 }
 
+@keyframes title-hint {
+  0%, 100% {
+    border-bottom-color: transparent;
+  }
+  30%, 70% {
+    border-bottom-color: #635BFF;
+  }
+}
+
+.animate-title-hint {
+  animation: title-hint 1.5s ease-in-out 1;
+  border-bottom: 1px dashed transparent;
+}
+
 @theme inline {
   --font-heading: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --font-sans: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;

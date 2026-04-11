@@ -183,7 +183,6 @@ export interface UndoRedoStack {
 // ─── Tool State Machine ───
 
 export type ToolId =
-  | "select"
   | "hand"
   | "line"
   | "polyline"

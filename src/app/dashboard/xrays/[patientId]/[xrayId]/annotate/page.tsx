@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { AnnotationPageClient } from "./AnnotationPageClient";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
 
@@ -12,6 +13,9 @@ export default async function AnnotationPage({
   params,
   searchParams,
 }: AnnotationPageProps) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
   const { xrayId } = await params;
   const { annotationId } = await searchParams;
 
@@ -40,6 +44,7 @@ export default async function AnnotationPage({
       xrayTitle={xray.title ?? "Untitled X-ray"}
       patientName={patientName}
       patientId={xray.patientId}
+      userId={session.user.id}
       annotationId={annotation?.id ?? null}
       initialCanvasState={annotation?.canvasState as unknown as AnnotationCanvasState | undefined}
       initialAdjustments={annotation?.imageAdjustments as unknown as ImageAdjustments | undefined}

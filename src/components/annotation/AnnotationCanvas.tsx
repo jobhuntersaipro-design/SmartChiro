@@ -41,6 +41,7 @@ interface AnnotationCanvasProps {
   xrayTitle: string;
   patientName: string;
   patientId: string;
+  userId: string;
   annotationId: string | null;
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
@@ -56,6 +57,7 @@ export function AnnotationCanvas({
   xrayTitle,
   patientName,
   patientId,
+  userId,
   annotationId,
   initialCanvasState,
   initialAdjustments,
@@ -612,7 +614,6 @@ export function AnnotationCanvas({
     if (interaction.isPanning) return "grabbing";
     if (interaction.isDragging) return "move";
     if (interaction.activeTool === "hand") return "grab";
-    if (interaction.activeTool === "select") return "default";
     if (interaction.activeTool === "eraser") return "crosshair";
     if (interaction.activeTool === "text") return "text";
     return "crosshair";
@@ -638,6 +639,8 @@ export function AnnotationCanvas({
       <AnnotationHeader
         xrayTitle={xrayTitle}
         patientName={patientName}
+        patientId={patientId}
+        xrayId={xrayId}
         isDirty={autoSave.isDirty}
         isSaving={autoSave.isSaving}
         onSave={() => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments)}
@@ -677,6 +680,7 @@ export function AnnotationCanvas({
         {/* Patient Image Sidebar (left side) */}
         <PatientImageSidebar
           patientId={patientId}
+          userId={userId}
           currentXrayId={xrayId}
           onSelectXray={handleSelectXrayForSlot}
           isOpen={imageSidebarOpen}

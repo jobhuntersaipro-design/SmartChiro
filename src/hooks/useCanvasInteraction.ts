@@ -40,7 +40,7 @@ export function useCanvasInteraction({
   containerRef,
   onMoveShapes,
 }: UseCanvasInteractionOptions): UseCanvasInteractionReturn {
-  const [activeTool, setActiveToolState] = useState<ToolId>("select");
+  const [activeTool, setActiveToolState] = useState<ToolId>("hand");
   const [toolState, setToolState] = useState<ToolState>("idle");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState<Point | null>(null);
@@ -50,12 +50,12 @@ export function useCanvasInteraction({
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const dragRef = useRef<DragEvent | null>(null);
   const spaceHeldRef = useRef(false);
-  const previousToolRef = useRef<ToolId>("select");
+  const previousToolRef = useRef<ToolId>("hand");
 
   const setActiveTool = useCallback(
     (tool: ToolId) => {
       setActiveToolState(tool);
-      setToolState(tool === "select" ? "idle" : "tool_selected");
+      setToolState(tool === "hand" ? "idle" : "tool_selected");
     },
     []
   );
@@ -88,15 +88,16 @@ export function useCanvasInteraction({
       const screenX = e.clientX - rect.left;
       const screenY = e.clientY - rect.top;
 
-      // Middle mouse button or space+click = pan
-      if (e.button === 1 || spaceHeldRef.current || activeTool === "hand") {
+      // Middle mouse button or space+click = always pan
+      if (e.button === 1 || spaceHeldRef.current) {
         setIsPanning(true);
         panStartRef.current = { x: e.clientX, y: e.clientY };
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         return;
       }
 
-      if (activeTool === "select") {
+      // Hand tool: try shape selection first, fall back to pan
+      if (activeTool === "hand") {
         const imagePos = screenToImage(screenX, screenY, transform);
         const hit = hitTest(imagePos.x, imagePos.y);
 
@@ -125,7 +126,12 @@ export function useCanvasInteraction({
           setSelectedShapeIds([]);
           setToolState("idle");
           dragRef.current = null;
+          // No shape hit — start panning
+          setIsPanning(true);
+          panStartRef.current = { x: e.clientX, y: e.clientY };
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         }
+        return;
       }
     },
     [activeTool, transform, hitTest, selectedShapeIds]
@@ -148,7 +154,7 @@ export function useCanvasInteraction({
       }
 
       // Shape dragging
-      if (dragRef.current && activeTool === "select") {
+      if (dragRef.current && activeTool === "hand") {
         const dx = imagePos.x - dragRef.current.startImagePos.x;
         const dy = imagePos.y - dragRef.current.startImagePos.y;
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
@@ -237,8 +243,6 @@ export function useCanvasInteraction({
         if (!e.shiftKey) {
           switch (e.key.toLowerCase()) {
             case "v":
-              setActiveTool("select");
-              return;
             case "h":
               setActiveTool("hand");
               return;

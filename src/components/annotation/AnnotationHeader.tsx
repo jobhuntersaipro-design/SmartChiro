@@ -1,11 +1,15 @@
 "use client";
 
-import { ChevronRight, Save, X } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { ChevronRight, Save, X, Pencil, Check } from "lucide-react";
+import Link from "next/link";
 import type { ImageAdjustments } from "@/types/annotation";
 
 interface AnnotationHeaderProps {
   xrayTitle: string;
   patientName: string;
+  patientId: string;
+  xrayId: string;
   isDirty: boolean;
   isSaving: boolean;
   onSave: () => void;
@@ -60,9 +64,129 @@ function AdjustmentSlider({
   );
 }
 
+function InlineEditableTitle({
+  title,
+  xrayId,
+}: {
+  title: string;
+  xrayId: string;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentTitle, setCurrentTitle] = useState(title);
+  const [editValue, setEditValue] = useState(title);
+  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isUntitled = currentTitle === "Untitled X-ray";
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const saveTitle = useCallback(
+    async (newTitle: string) => {
+      const trimmed = newTitle.trim();
+      const finalTitle = trimmed || "Untitled X-ray";
+      setCurrentTitle(finalTitle);
+      setIsEditing(false);
+
+      if (finalTitle === currentTitle) return;
+
+      try {
+        const res = await fetch(`/api/xrays/${xrayId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: finalTitle }),
+        });
+        if (res.ok) {
+          setSaveState("saved");
+          setTimeout(() => setSaveState("idle"), 1500);
+        } else {
+          setCurrentTitle(currentTitle);
+        }
+      } catch {
+        setCurrentTitle(currentTitle);
+      }
+    },
+    [xrayId, currentTitle]
+  );
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitle(editValue);
+    } else if (e.key === "Escape") {
+      setEditValue(currentTitle);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={() => saveTitle(editValue)}
+        onKeyDown={handleKeyDown}
+        className="text-sm font-medium outline-none"
+        style={{
+          color: "#0A2540",
+          backgroundColor: "#F6F9FC",
+          border: "1px solid #635BFF",
+          borderRadius: 4,
+          padding: "2px 8px",
+          width: Math.max(120, editValue.length * 8 + 32),
+          transition: "width 200ms ease",
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => {
+        setEditValue(currentTitle);
+        setIsEditing(true);
+      }}
+      className="group flex items-center gap-1.5 text-sm font-medium"
+      style={{ color: "#0A2540", position: "relative" }}
+    >
+      <span
+        className={isUntitled ? "animate-title-hint" : ""}
+        style={{
+          borderBottom: "1px dashed transparent",
+          transition: "border-color 150ms ease",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = "#A3ACB9";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+        }}
+      >
+        {currentTitle}
+      </span>
+      {saveState === "saved" ? (
+        <Check size={12} style={{ color: "#30B130" }} />
+      ) : (
+        <Pencil
+          size={12}
+          className="opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          style={{ color: "#A3ACB9" }}
+        />
+      )}
+    </button>
+  );
+}
+
 export function AnnotationHeader({
   xrayTitle,
   patientName,
+  patientId,
+  xrayId,
   isDirty,
   isSaving,
   onSave,
@@ -87,13 +211,15 @@ export function AnnotationHeader({
     >
       {/* Left: Breadcrumb */}
       <div className="flex items-center gap-1.5">
-        <span className="text-sm" style={{ color: "#697386" }}>
+        <Link
+          href={`/dashboard/${patientId}`}
+          className="text-sm transition-colors hover:underline"
+          style={{ color: "#697386" }}
+        >
           {patientName}
-        </span>
+        </Link>
         <ChevronRight size={14} style={{ color: "#A3ACB9" }} />
-        <span className="text-sm font-medium" style={{ color: "#0A2540" }}>
-          {xrayTitle}
-        </span>
+        <InlineEditableTitle title={xrayTitle} xrayId={xrayId} />
       </div>
 
       {/* Center: Image adjustments */}
