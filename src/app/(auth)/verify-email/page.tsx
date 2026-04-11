@@ -49,9 +49,9 @@ export default async function VerifyEmailPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F6F9FC] px-4">
       <div className="w-full max-w-[420px]">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#635BFF]">
-            <span className="text-[20px] font-bold text-white">S</span>
+        <div className="mb-8 text-center flex flex-col items-center">
+          <div className="mb-4 rounded-[6px] bg-[#635BFF] px-3 py-2">
+            <span className="text-[14px] font-bold text-white">Smart Chiro</span>
           </div>
         </div>
 

@@ -60,10 +60,10 @@ const bodyRegionLabels: Record<string, string> = {
   FULL_SPINE: "Full Spine",
 };
 
-function XrayCard({ xray }: { xray: PatientXray }) {
+function XrayCard({ xray, patientId }: { xray: PatientXray; patientId: string }) {
   return (
     <a
-      href={`/dashboard/xrays/${xray.id}/annotate`}
+      href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
       target="_blank"
       rel="noopener noreferrer"
       className="group flex items-center gap-3 rounded-[6px] border border-[#E3E8EE] bg-white p-3 transition-colors hover:bg-[#F0F3F7] hover:border-[#C1C9D2] cursor-pointer"
@@ -179,7 +179,7 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
               {uploadedXrayIds.map((xrayId) => (
                 <a
                   key={xrayId}
-                  href={`/dashboard/xrays/${xrayId}/annotate`}
+                  href={`/dashboard/xrays/${patient.id}/${xrayId}/annotate`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center gap-3 rounded-[6px] border border-[#E3E8EE] bg-[#E8F5E8] p-3 transition-colors hover:bg-[#d4edd4] cursor-pointer"
@@ -205,7 +205,7 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
           {patient.xrays.length > 0 ? (
             <div className="space-y-2">
               {patient.xrays.map((xray) => (
-                <XrayCard key={xray.id} xray={xray} />
+                <XrayCard key={xray.id} xray={xray} patientId={patient.id} />
               ))}
             </div>
           ) : uploadedXrayIds.length === 0 ? (

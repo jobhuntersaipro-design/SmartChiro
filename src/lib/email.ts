@@ -38,8 +38,8 @@ export async function sendVerificationEmail(email: string, name: string) {
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; width: 48px; height: 48px; background: #635BFF; border-radius: 6px; line-height: 48px; text-align: center;">
-            <span style="color: white; font-size: 20px; font-weight: bold;">S</span>
+          <div style="display: inline-block; background: #635BFF; border-radius: 6px; padding: 8px 12px; text-align: center;">
+            <span style="color: white; font-size: 14px; font-weight: bold;">Smart Chiro</span>
           </div>
         </div>
         <h1 style="color: #0A2540; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">

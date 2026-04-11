@@ -256,7 +256,7 @@ export function AnnotationCanvas({
     (xray: { id: string; fileUrl: string; width: number | null; height: number | null; title: string | null }) => {
       if (viewMode === "single") {
         // In single mode, navigate to that X-ray's annotation page
-        window.location.href = `/dashboard/xrays/${xray.id}/annotate`;
+        window.location.href = `/dashboard/xrays/${patientId}/${xray.id}/annotate`;
         return;
       }
       // In grid mode, place into the active slot

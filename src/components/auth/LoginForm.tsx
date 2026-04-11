@@ -64,9 +64,9 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
   return (
     <div className="w-full max-w-[420px]">
       {/* Logo / Branding */}
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#635BFF]">
-          <span className="text-[20px] font-bold text-white">S</span>
+      <div className="mb-8 text-center flex flex-col items-center">
+        <div className="mb-4 rounded-[6px] bg-[#635BFF] px-3 py-2">
+          <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
         <h1 className="text-[23px] font-semibold text-[#0A2540]">
           Sign in to SmartChiro

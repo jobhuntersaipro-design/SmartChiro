@@ -4,6 +4,7 @@ import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { BranchRole } from '@prisma/client'
 import authConfig from './auth.config'
+import { sendVerificationEmail } from './email'
 
 class EmailNotVerifiedError extends CredentialsSignin {
   code = 'email_not_verified'
@@ -98,11 +99,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
     async signIn({ user, account, profile }) {
-      // For OAuth (Google), create or link user + set active branch
+      // For OAuth (Google), create or link user + require email verification
       if (account?.provider === 'google' && profile?.email) {
         let dbUser = await prisma.user.findUnique({
           where: { email: profile.email },
         })
+
+        const isNewUser = !dbUser
 
         if (!dbUser) {
           dbUser = await prisma.user.create({
@@ -110,7 +113,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: profile.email,
               name: profile.name ?? null,
               image: (profile as Record<string, unknown>).picture as string ?? null,
-              emailVerified: new Date(),
             },
           })
         }
@@ -140,6 +142,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               id_token: account.id_token,
             },
           })
+        }
+
+        // Block unverified users and send verification email
+        if (!dbUser.emailVerified) {
+          try {
+            await sendVerificationEmail(dbUser.email, dbUser.name ?? 'there')
+          } catch (e) {
+            console.error('Failed to send verification email for Google user:', e)
+          }
+          return '/verify-email'
         }
 
         // Set active branch

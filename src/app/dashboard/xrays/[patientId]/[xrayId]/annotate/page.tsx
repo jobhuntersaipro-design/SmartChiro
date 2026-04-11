@@ -4,7 +4,7 @@ import { AnnotationPageClient } from "./AnnotationPageClient";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
 
 interface AnnotationPageProps {
-  params: Promise<{ xrayId: string }>;
+  params: Promise<{ patientId: string; xrayId: string }>;
   searchParams: Promise<{ annotationId?: string }>;
 }
 

@@ -12,12 +12,12 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   const { ids: idsParam } = await searchParams;
 
   if (!idsParam) {
-    redirect("/dashboard/xrays");
+    redirect("/dashboard/patients");
   }
 
   const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean);
   if (ids.length !== 2) {
-    redirect("/dashboard/xrays");
+    redirect("/dashboard/patients");
   }
 
   const xrays = await prisma.xray.findMany({
@@ -29,7 +29,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   });
 
   if (xrays.length !== 2 || xrays[0].patientId !== xrays[1].patientId) {
-    redirect("/dashboard/xrays");
+    redirect("/dashboard/patients");
   }
 
   const patientName = `${xrays[0].patient.firstName} ${xrays[0].patient.lastName}`;

@@ -119,9 +119,9 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
   return (
     <div className="w-full max-w-[420px]">
       {/* Logo / Branding */}
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#635BFF]">
-          <span className="text-[20px] font-bold text-white">S</span>
+      <div className="mb-8 text-center flex flex-col items-center">
+        <div className="mb-4 rounded-[6px] bg-[#635BFF] px-3 py-2">
+          <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
         <h1 className="text-[23px] font-semibold text-[#0A2540]">
           Create your account
@@ -260,7 +260,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               <span className="text-[13px] text-[#697386]">or continue with</span>
               <div className="h-px flex-1 bg-[#E3E8EE]" />
             </div>
-            <GoogleSignInButton label="Sign up with Google" />
+            <GoogleSignInButton label="Register using Google" />
           </>
         )}
       </div>

@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
-  ScanLine,
+
   FileText,
   Settings,
   Plus,
@@ -23,7 +23,7 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/dashboard/patients", icon: Users },
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
-  { label: "X-Rays", href: "/dashboard/xrays", icon: ScanLine },
+
   { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
