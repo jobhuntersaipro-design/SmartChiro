@@ -1,25 +1,16 @@
-# Current Feature: X-Ray Annotation Enhancement (Part 2)
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Brightness/contrast sliders work in multi-view (Side by Side, 2×2 Grid)
-- Invert button and W/W slider removed from header
-- Flip button added to horizontally mirror X-rays
-- Scroll wheel only zooms with Ctrl/Cmd held (prevents accidental zoom)
-- Annotation page renders full-screen without dashboard sidebar/topbar
-- Annotation drawing and save/load cycle works end-to-end
+<!-- Define goals here -->
 
 ## Notes
 
-- Spec: `context/features/xray-enhance-2-spec.md`
-- Implementation order: Layout fix → Scroll zoom → Remove controls → Add Flip → Multi-view brightness → Annotation check
-- MultiViewGrid does not apply CSS filter from useImageAdjustments — needs cssFilter prop
-- DashboardShell wraps annotation page — use pathname check to skip shell for annotate routes
-- Wheel handler in useCanvasViewport captures all scroll events — need Ctrl/Cmd gate
+<!-- Additional context -->
 
 ## History
 
@@ -48,3 +39,4 @@ In Progress
 - 2026-04-11 **Patient Management Page** — Patient list at /dashboard/patients with Stripe-styled table (name, contact, last visit, visits, status), fuzzy search across name/email/phone, Add Patient dialog with form validation (defaults doctor to signed-in user), right-slide-in detail sheet with contact info/clinical data/stat cards, 8 mock patients with Malaysian context, shadcn Sheet + Dialog components (`context/features/patient-spec.md`)
 - 2026-04-11 **Patient X-Ray Upload & Neon DB Integration** — Removed all mock patient/xray data, created GET/POST /api/patients routes with auth session and Prisma queries (xray counts, visit history, doctor info), auto-branch creation for users without a branch, X-ray upload in patient detail sheet via XrayUpload component, X-ray gallery with new-tab annotation links (/dashboard/xrays/{id}/annotate), shared Patient type (src/types/patient.ts), verified end-to-end with Neon DB (`context/features/patient-spec.md`)
 - 2026-04-11 **X-Ray Annotation Enhancement (Part 1)** — Patient name breadcrumb links to /dashboard/[patientId] detail page, inline-editable X-ray title with pencil hint and pulse animation, default tool changed from Select to Pan with selection merged into hand tool, rich tooltips on all 14 toolbar tools, batch X-ray upload in PatientImageSidebar with drag-and-drop and sequential queue, enlarged sidebar previews (280px wide, 160px thumbnails) with infinite scroll pagination, upload success auto-clear after 3s (`context/features/xray-enhance-1-spec.md`)
+- 2026-04-11 **X-Ray Annotation Enhancement (Part 2)** — Full-screen annotation layout (DashboardShell skips sidebar/topbar for annotate routes), scroll zoom requires Ctrl/Cmd modifier, default tool changed to Freehand for immediate drawing, removed Invert + W/W controls, added Flip button for horizontal mirror, brightness/contrast now works in multi-view (cssFilter+flipped props to MultiViewGrid), verified drawing tools work end-to-end via Playwright (`context/features/xray-enhance-2-spec.md`)
