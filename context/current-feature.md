@@ -1,16 +1,22 @@
-# Current Feature
+# Current Feature: Patient X-Ray Upload & Annotation Link
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Define goals here -->
+- Add X-ray upload to patient detail sheet so doctors can upload X-rays for a specific patient
+- Display patient's X-rays in the detail sheet (thumbnails with metadata)
+- Clicking an X-ray opens the annotation page (`/dashboard/xrays/{xrayId}/annotate`) in a new tab
 
 ## Notes
 
-<!-- Additional context -->
+- Reuse existing `XrayUpload` component from `src/components/xray/XrayUpload.tsx`
+- Upload API: `POST /api/xrays/upload` (FormData with file, thumbnail, patientId, uploadedById)
+- Annotation URL: `/dashboard/xrays/{xrayId}/annotate`
+- Mock data needs xray entries per patient for the UI before DB is connected
+- Patient detail sheet is in `src/components/patients/PatientDetailSheet.tsx`
 
 ## History
 

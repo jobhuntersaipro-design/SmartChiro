@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { currentUser } from "@/lib/mock-data";
+import { X, Loader2 } from "lucide-react";
 
 interface AddPatientDialogProps {
   open: boolean;
@@ -15,8 +14,7 @@ interface AddPatientDialogProps {
     phone: string;
     dateOfBirth: string;
     gender: string;
-    doctorName: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -40,8 +38,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
   const [phone, setPhone] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
-  const [doctorName, setDoctorName] = useState(currentUser.name);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -56,33 +55,35 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    onAdd({ firstName: firstName.trim(), lastName: lastName.trim(), email, phone, dateOfBirth, gender, doctorName });
-    // Reset form
-    setFirstName("");
-    setLastName("");
-    setEmail("");
-    setPhone("");
-    setDateOfBirth("");
-    setGender("");
-    setDoctorName(currentUser.name);
-    setErrors({});
-    onOpenChange(false);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await onAdd({ firstName: firstName.trim(), lastName: lastName.trim(), email, phone, dateOfBirth, gender });
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setDateOfBirth("");
+      setGender("");
+      setErrors({});
+      onOpenChange(false);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to create patient");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => onOpenChange(false)} />
-
-      {/* Dialog */}
       <div
         className="relative z-10 w-full max-w-[520px] rounded-[8px] border border-[#E3E8EE] bg-white p-6"
         style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[18px] font-semibold text-[#0A2540]">Add New Patient</h2>
           <button
@@ -93,70 +94,39 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
           </button>
         </div>
 
+        {submitError && (
+          <div className="mb-4 rounded-[4px] border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2">
+            <p className="text-[13px] text-[#DF1B41]">{submitError}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name row */}
           <div className="grid grid-cols-2 gap-4">
             <FormField label="First Name" required>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="John"
-                className={inputClass}
-              />
+              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" className={inputClass} />
               {errors.firstName && <p className="text-[12px] text-[#DF1B41] mt-0.5">{errors.firstName}</p>}
             </FormField>
             <FormField label="Last Name" required>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
-                className={inputClass}
-              />
+              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" className={inputClass} />
               {errors.lastName && <p className="text-[12px] text-[#DF1B41] mt-0.5">{errors.lastName}</p>}
             </FormField>
           </div>
 
-          {/* Email */}
           <FormField label="Email">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="john.doe@email.com"
-              className={inputClass}
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john.doe@email.com" className={inputClass} />
             {errors.email && <p className="text-[12px] text-[#DF1B41] mt-0.5">{errors.email}</p>}
           </FormField>
 
-          {/* Phone */}
           <FormField label="Phone">
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+60 12-345 6789"
-              className={inputClass}
-            />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+60 12-345 6789" className={inputClass} />
           </FormField>
 
-          {/* DOB + Gender */}
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Date of Birth">
-              <input
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                className={inputClass}
-              />
+              <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inputClass} />
             </FormField>
             <FormField label="Gender">
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className={selectClass}
-              >
+              <select value={gender} onChange={(e) => setGender(e.target.value)} className={selectClass}>
                 <option value="">Select...</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -165,17 +135,6 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
             </FormField>
           </div>
 
-          {/* Assigned Doctor */}
-          <FormField label="Assigned Doctor">
-            <input
-              type="text"
-              value={doctorName}
-              onChange={(e) => setDoctorName(e.target.value)}
-              className={inputClass}
-            />
-          </FormField>
-
-          {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
@@ -185,10 +144,8 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="h-8 px-3 text-[15px] font-medium rounded-[4px]"
-            >
+            <Button type="submit" disabled={submitting} className="h-8 px-3 text-[15px] font-medium rounded-[4px]">
+              {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Add Patient
             </Button>
           </div>

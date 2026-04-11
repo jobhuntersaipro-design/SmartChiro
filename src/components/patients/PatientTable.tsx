@@ -1,16 +1,11 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MockPatient } from "@/lib/mock-data";
-
-const statusConfig = {
-  active: { label: "Active", bg: "bg-[#E8F5E8]", text: "text-[#30B130]" },
-  inactive: { label: "Inactive", bg: "bg-[#F0F3F7]", text: "text-[#697386]" },
-} as const;
+import { Patient } from "@/types/patient";
 
 interface PatientTableProps {
-  patients: MockPatient[];
-  onSelectPatient: (patient: MockPatient) => void;
+  patients: Patient[];
+  onSelectPatient: (patient: Patient) => void;
   selectedPatientId: string | null;
 }
 
@@ -45,13 +40,12 @@ export function PatientTable({ patients, onSelectPatient, selectedPatientId }: P
           Visits
         </span>
         <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#697386]">
-          Status
+          X-Rays
         </span>
       </div>
 
       {/* Table rows */}
       {patients.map((patient) => {
-        const status = statusConfig[patient.status];
         const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
         const fullName = `${patient.firstName} ${patient.lastName}`;
         const isSelected = selectedPatientId === patient.id;
@@ -100,11 +94,9 @@ export function PatientTable({ patients, onSelectPatient, selectedPatientId }: P
               {patient.totalVisits}
             </span>
 
-            {/* Status */}
-            <span
-              className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[13px] font-medium ${status.bg} ${status.text}`}
-            >
-              {status.label}
+            {/* X-Rays */}
+            <span className="text-[15px] text-[#425466]">
+              {patient.totalXrays}
             </span>
           </div>
         );

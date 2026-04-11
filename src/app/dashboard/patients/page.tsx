@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockPatients, MockPatient } from "@/lib/mock-data";
+import { Patient } from "@/types/patient";
 import { PatientSearch } from "@/components/patients/PatientSearch";
 import { PatientTable } from "@/components/patients/PatientTable";
 import { PatientDetailSheet } from "@/components/patients/PatientDetailSheet";
@@ -12,7 +12,6 @@ import { AddPatientDialog } from "@/components/patients/AddPatientDialog";
 function fuzzyMatch(text: string, query: string): boolean {
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase();
-  // Simple fuzzy: check if all characters in query appear in order
   let qi = 0;
   for (let i = 0; i < lowerText.length && qi < lowerQuery.length; i++) {
     if (lowerText[i] === lowerQuery[qi]) qi++;
@@ -22,10 +21,31 @@ function fuzzyMatch(text: string, query: string): boolean {
 
 export default function PatientsPage() {
   const [search, setSearch] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<MockPatient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [patients, setPatients] = useState<MockPatient[]>(mockPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPatients = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/patients");
+      if (!res.ok) throw new Error("Failed to fetch patients");
+      const data = await res.json();
+      setPatients(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load patients");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
 
   const filteredPatients = useMemo(() => {
     if (!search.trim()) return patients;
@@ -36,41 +56,31 @@ export default function PatientsPage() {
     });
   }, [patients, search]);
 
-  function handleSelectPatient(patient: MockPatient) {
+  function handleSelectPatient(patient: Patient) {
     setSelectedPatient(patient);
     setSheetOpen(true);
   }
 
-  function handleAddPatient(data: {
+  async function handleAddPatient(data: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
     dateOfBirth: string;
     gender: string;
-    doctorName: string;
   }) {
-    const newPatient: MockPatient = {
-      id: `pat_${Date.now()}`,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email || null,
-      phone: data.phone || null,
-      dateOfBirth: data.dateOfBirth || null,
-      gender: data.gender || null,
-      address: null,
-      emergencyContact: null,
-      medicalHistory: null,
-      notes: null,
-      doctorId: "user_1",
-      doctorName: data.doctorName,
-      branchId: "branch_1",
-      lastVisit: null,
-      totalVisits: 0,
-      totalXrays: 0,
-      status: "active",
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    const res = await fetch("/api/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to create patient");
+    }
+
+    const newPatient: Patient = await res.json();
     setPatients((prev) => [newPatient, ...prev]);
   }
 
@@ -83,7 +93,7 @@ export default function PatientsPage() {
             Patients
           </h1>
           <p className="text-[15px] text-[#697386] mt-0.5">
-            {patients.length} total patients — {filteredPatients.length} shown
+            {patients.length} total patients{search.trim() ? ` — ${filteredPatients.length} shown` : ""}
           </p>
         </div>
         <Button
@@ -100,12 +110,34 @@ export default function PatientsPage() {
         <PatientSearch value={search} onChange={setSearch} />
       </div>
 
+      {/* Loading state */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-5 w-5 animate-spin text-[#635BFF] mr-2" strokeWidth={2} />
+          <span className="text-[15px] text-[#697386]">Loading patients...</span>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-8 text-center"
+          style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
+        >
+          <p className="text-[15px] text-[#DF1B41] mb-2">{error}</p>
+          <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-[4px]">
+            Retry
+          </Button>
+        </div>
+      )}
+
       {/* Patient table */}
-      <PatientTable
-        patients={filteredPatients}
-        onSelectPatient={handleSelectPatient}
-        selectedPatientId={selectedPatient?.id ?? null}
-      />
+      {!loading && !error && (
+        <PatientTable
+          patients={filteredPatients}
+          onSelectPatient={handleSelectPatient}
+          selectedPatientId={selectedPatient?.id ?? null}
+        />
+      )}
 
       {/* Detail sheet */}
       <PatientDetailSheet
