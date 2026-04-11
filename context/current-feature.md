@@ -1,22 +1,16 @@
-# Current Feature: Patient X-Ray Upload & Annotation Link
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add X-ray upload to patient detail sheet so doctors can upload X-rays for a specific patient
-- Display patient's X-rays in the detail sheet (thumbnails with metadata)
-- Clicking an X-ray opens the annotation page (`/dashboard/xrays/{xrayId}/annotate`) in a new tab
+<!-- Define goals here -->
 
 ## Notes
 
-- Reuse existing `XrayUpload` component from `src/components/xray/XrayUpload.tsx`
-- Upload API: `POST /api/xrays/upload` (FormData with file, thumbnail, patientId, uploadedById)
-- Annotation URL: `/dashboard/xrays/{xrayId}/annotate`
-- Mock data needs xray entries per patient for the UI before DB is connected
-- Patient detail sheet is in `src/components/patients/PatientDetailSheet.tsx`
+<!-- Additional context -->
 
 ## History
 
@@ -43,3 +37,4 @@ In Progress
 - 2026-04-01 **Auth Middleware Fix & Test Coverage** — Fixed redirect loop caused by getToken using wrong cookie prefix (next-auth.* vs authjs.*), replaced with NextAuth v5 auth() middleware wrapper, added register API tests (10) and auth-utils tests (6), gitignored .playwright-mcp/
 - 2026-04-10 **Database Restructuring (Clinic → Branch)** — Renamed Clinic/ClinicMember/ClinicRole to Branch/BranchMember/BranchRole, new role enum (OWNER/ADMIN/DOCTOR), removed GlobalRole from User, added Patient.doctorId with proper FK for data isolation, added proper @relation FKs on Visit.doctorId, Appointment.doctorId, Xray.uploadedById, Annotation.createdById, renamed activeClinicId → activeBranchId, renamed CalibrationMethod.CLINIC_DEFAULT → BRANCH_DEFAULT, deleted unused RoleSelector component, removed loginRole from auth flow, updated 26+ files (schema, seed, auth, API routes, R2, export renderer, mock data, tests), migration with data backfill, 122 tests passing
 - 2026-04-11 **Patient Management Page** — Patient list at /dashboard/patients with Stripe-styled table (name, contact, last visit, visits, status), fuzzy search across name/email/phone, Add Patient dialog with form validation (defaults doctor to signed-in user), right-slide-in detail sheet with contact info/clinical data/stat cards, 8 mock patients with Malaysian context, shadcn Sheet + Dialog components (`context/features/patient-spec.md`)
+- 2026-04-11 **Patient X-Ray Upload & Neon DB Integration** — Removed all mock patient/xray data, created GET/POST /api/patients routes with auth session and Prisma queries (xray counts, visit history, doctor info), auto-branch creation for users without a branch, X-ray upload in patient detail sheet via XrayUpload component, X-ray gallery with new-tab annotation links (/dashboard/xrays/{id}/annotate), shared Patient type (src/types/patient.ts), verified end-to-end with Neon DB (`context/features/patient-spec.md`)
