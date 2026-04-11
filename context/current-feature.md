@@ -1,16 +1,25 @@
-# Current Feature
+# Current Feature: X-Ray Annotation Enhancement (Part 2)
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Define goals here -->
+- Brightness/contrast sliders work in multi-view (Side by Side, 2×2 Grid)
+- Invert button and W/W slider removed from header
+- Flip button added to horizontally mirror X-rays
+- Scroll wheel only zooms with Ctrl/Cmd held (prevents accidental zoom)
+- Annotation page renders full-screen without dashboard sidebar/topbar
+- Annotation drawing and save/load cycle works end-to-end
 
 ## Notes
 
-<!-- Additional context -->
+- Spec: `context/features/xray-enhance-2-spec.md`
+- Implementation order: Layout fix → Scroll zoom → Remove controls → Add Flip → Multi-view brightness → Annotation check
+- MultiViewGrid does not apply CSS filter from useImageAdjustments — needs cssFilter prop
+- DashboardShell wraps annotation page — use pathname check to skip shell for annotate routes
+- Wheel handler in useCanvasViewport captures all scroll events — need Ctrl/Cmd gate
 
 ## History
 

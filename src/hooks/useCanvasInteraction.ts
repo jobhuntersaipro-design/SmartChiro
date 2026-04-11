@@ -40,7 +40,7 @@ export function useCanvasInteraction({
   containerRef,
   onMoveShapes,
 }: UseCanvasInteractionOptions): UseCanvasInteractionReturn {
-  const [activeTool, setActiveToolState] = useState<ToolId>("hand");
+  const [activeTool, setActiveToolState] = useState<ToolId>("freehand");
   const [toolState, setToolState] = useState<ToolState>("idle");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState<Point | null>(null);
@@ -50,7 +50,7 @@ export function useCanvasInteraction({
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const dragRef = useRef<DragEvent | null>(null);
   const spaceHeldRef = useRef(false);
-  const previousToolRef = useRef<ToolId>("hand");
+  const previousToolRef = useRef<ToolId>("freehand");
 
   const setActiveTool = useCallback(
     (tool: ToolId) => {

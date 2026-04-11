@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ChevronRight, Save, X, Pencil, Check } from "lucide-react";
+import { ChevronRight, Save, X, Pencil, Check, FlipHorizontal2 } from "lucide-react";
 import Link from "next/link";
 import type { ImageAdjustments } from "@/types/annotation";
 
@@ -18,11 +18,12 @@ interface AnnotationHeaderProps {
   adjustments: ImageAdjustments;
   onBrightnessChange: (v: number) => void;
   onContrastChange: (v: number) => void;
-  onInvertChange: (v: boolean) => void;
   onWindowCenterChange: (v: number) => void;
-  onWindowWidthChange: (v: number) => void;
   onResetAdjustments: () => void;
   isAdjustmentsModified: boolean;
+  // Flip
+  flipped: boolean;
+  onFlipChange: (v: boolean) => void;
 }
 
 function AdjustmentSlider({
@@ -194,11 +195,11 @@ export function AnnotationHeader({
   adjustments,
   onBrightnessChange,
   onContrastChange,
-  onInvertChange,
   onWindowCenterChange,
-  onWindowWidthChange,
   onResetAdjustments,
   isAdjustmentsModified,
+  flipped,
+  onFlipChange,
 }: AnnotationHeaderProps) {
   return (
     <div
@@ -238,18 +239,6 @@ export function AnnotationHeader({
           max={100}
           onChange={onContrastChange}
         />
-        <button
-          onClick={() => onInvertChange(!adjustments.invert)}
-          className="flex items-center gap-1 px-2 py-1 text-xs transition-colors"
-          style={{
-            borderRadius: 4,
-            border: "1px solid #E3E8EE",
-            backgroundColor: adjustments.invert ? "#F0EEFF" : "#FFFFFF",
-            color: adjustments.invert ? "#635BFF" : "#425466",
-          }}
-        >
-          Invert
-        </button>
         <AdjustmentSlider
           label="W/C"
           value={adjustments.windowCenter}
@@ -257,13 +246,19 @@ export function AnnotationHeader({
           max={255}
           onChange={onWindowCenterChange}
         />
-        <AdjustmentSlider
-          label="W/W"
-          value={adjustments.windowWidth}
-          min={1}
-          max={512}
-          onChange={onWindowWidthChange}
-        />
+        <button
+          onClick={() => onFlipChange(!flipped)}
+          className="flex items-center gap-1 px-2 py-1 text-xs transition-colors"
+          style={{
+            borderRadius: 4,
+            border: "1px solid #E3E8EE",
+            backgroundColor: flipped ? "#F0EEFF" : "#FFFFFF",
+            color: flipped ? "#635BFF" : "#425466",
+          }}
+        >
+          <FlipHorizontal2 size={14} strokeWidth={1.5} />
+          Flip
+        </button>
         {isAdjustmentsModified && (
           <button
             onClick={onResetAdjustments}

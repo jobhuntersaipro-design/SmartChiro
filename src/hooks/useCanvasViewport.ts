@@ -115,10 +115,16 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     setTransform({ zoom: 1, panX, panY });
   }, [imageWidth, imageHeight]);
 
-  // Handle scroll wheel zoom
+  // Handle scroll wheel zoom — requires Ctrl/Cmd modifier (or pinch-to-zoom which sets ctrlKey)
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       e.preventDefault();
+
+      // Only zoom when Ctrl (Windows/Linux) or Cmd (Mac) is held, or pinch gesture
+      if (!e.ctrlKey && !e.metaKey) {
+        return;
+      }
+
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;

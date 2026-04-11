@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const pathname = usePathname();
+
+  // Full-screen mode for annotation pages — skip sidebar and topbar
+  const isAnnotatePage = pathname.includes("/annotate");
+  if (isAnnotatePage) {
+    return <>{children}</>;
+  }
 
   return (
     <TooltipProvider>

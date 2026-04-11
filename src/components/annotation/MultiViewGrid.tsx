@@ -14,16 +14,22 @@ interface MultiViewGridProps {
   slots: ViewportSlot[];
   activeSlotIndex: number;
   onSlotClick: (index: number) => void;
+  cssFilter?: string;
+  flipped?: boolean;
 }
 
 function ViewportCell({
   slot,
   isActive,
   onClick,
+  cssFilter,
+  flipped,
 }: {
   slot: ViewportSlot;
   isActive: boolean;
   onClick: () => void;
+  cssFilter?: string;
+  flipped?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewState, setViewState] = useState<ViewportState>({
@@ -61,6 +67,7 @@ function ViewportCell({
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       e.preventDefault();
+      if (!e.ctrlKey && !e.metaKey) return;
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -164,6 +171,8 @@ function ViewportCell({
           style={{
             display: "block",
             imageRendering: viewState.zoom > 2 ? "pixelated" : "auto",
+            filter: cssFilter || undefined,
+            transform: flipped ? "scaleX(-1)" : undefined,
           }}
           onLoad={() => setImageLoaded(true)}
           draggable={false}
@@ -197,6 +206,8 @@ export function MultiViewGrid({
   slots,
   activeSlotIndex,
   onSlotClick,
+  cssFilter,
+  flipped,
 }: MultiViewGridProps) {
   const gridCols = viewMode === "1x1" ? 2 : 2;
   const gridRows = viewMode === "1x1" ? 1 : 2;
@@ -225,6 +236,8 @@ export function MultiViewGrid({
             slot={slot}
             isActive={i === activeSlotIndex}
             onClick={() => onSlotClick(i)}
+            cssFilter={cssFilter}
+            flipped={flipped}
           />
         );
       })}

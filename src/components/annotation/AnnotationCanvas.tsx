@@ -75,6 +75,9 @@ export function AnnotationCanvas({
     ...DEFAULT_SHAPE_STYLE,
   });
 
+  // Flip (horizontal mirror)
+  const [flipped, setFlipped] = useState(false);
+
   // View mode & multi-view
   const [viewMode, setViewMode] = useState<ViewMode>("single");
   const [imageSidebarOpen, setImageSidebarOpen] = useState(true);
@@ -648,11 +651,11 @@ export function AnnotationCanvas({
         adjustments={imageAdj.adjustments}
         onBrightnessChange={imageAdj.setBrightness}
         onContrastChange={imageAdj.setContrast}
-        onInvertChange={imageAdj.setInvert}
         onWindowCenterChange={imageAdj.setWindowCenter}
-        onWindowWidthChange={imageAdj.setWindowWidth}
         onResetAdjustments={imageAdj.reset}
         isAdjustmentsModified={imageAdj.isModified}
+        flipped={flipped}
+        onFlipChange={setFlipped}
       />
 
       {/* Horizontal Toolbar */}
@@ -721,6 +724,7 @@ export function AnnotationCanvas({
                       filter: imageAdj.cssFilter,
                       imageRendering: viewport.transform.zoom > 2 ? "pixelated" : "auto",
                       display: "block",
+                      transform: flipped ? "scaleX(-1)" : undefined,
                     }}
                     onLoad={() => setImageLoaded(true)}
                     draggable={false}
@@ -806,6 +810,8 @@ export function AnnotationCanvas({
               slots={gridSlots}
               activeSlotIndex={activeSlotIndex}
               onSlotClick={setActiveSlotIndex}
+              cssFilter={imageAdj.cssFilter}
+              flipped={flipped}
             />
           )}
         </div>

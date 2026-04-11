@@ -61,15 +61,14 @@ export function useImageAdjustments(
     setAdjustments({ ...DEFAULT_IMAGE_ADJUSTMENTS });
   }, []);
 
-  // CSS filter string for brightness/contrast/invert
+  // CSS filter string for brightness/contrast
   // brightness: 0 → 1.0 (100%), -100 → 0.0, +100 → 2.0
   // contrast: 0 → 1.0, -100 → 0.0, +100 → 2.0
   const cssFilter = useMemo(() => {
     const b = 1 + adjustments.brightness / 100;
     const c = 1 + adjustments.contrast / 100;
-    const inv = adjustments.invert ? 1 : 0;
-    return `brightness(${b}) contrast(${c}) invert(${inv})`;
-  }, [adjustments.brightness, adjustments.contrast, adjustments.invert]);
+    return `brightness(${b}) contrast(${c})`;
+  }, [adjustments.brightness, adjustments.contrast]);
 
   const isModified = useMemo(() => {
     return (
