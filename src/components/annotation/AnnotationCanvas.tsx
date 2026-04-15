@@ -6,6 +6,7 @@ import type {
   AnnotationCanvasState,
   ImageAdjustments,
   ShapeStyle,
+  ToolId,
   ViewMode,
   ViewportSlot,
 } from "@/types/annotation";
@@ -30,7 +31,7 @@ import { ShapeRenderer } from "./ShapeRenderer";
 import { TextInput } from "./TextInput";
 import { ViewModeSwitcher } from "./ViewModeSwitcher";
 import { PatientImageSidebar } from "./PatientImageSidebar";
-import { MultiViewGrid } from "./MultiViewGrid";
+import { MultiViewGrid, ViewportCell, type ViewportState } from "./MultiViewGrid";
 import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
 import { DrawingConfirmation } from "./DrawingConfirmation";
 import { CalibrationDialog } from "./CalibrationDialog";
@@ -101,6 +102,18 @@ export function AnnotationCanvas({
     { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
   ]);
   const [activeSlotIndex, setActiveSlotIndex] = useState(0);
+  const defaultViewState: ViewportState = { zoom: 1, panX: 0, panY: 0 };
+  const [gridViewStates, setGridViewStates] = useState<ViewportState[]>([
+    defaultViewState, defaultViewState, defaultViewState, defaultViewState,
+  ]);
+
+  const handleGridViewStateChange = useCallback((index: number, state: ViewportState) => {
+    setGridViewStates((prev) => {
+      const next = [...prev];
+      next[index] = state;
+      return next;
+    });
+  }, []);
 
   // Force re-render counter for drawing preview
   const [, setRenderTick] = useState(0);
@@ -290,6 +303,11 @@ export function AnnotationCanvas({
       },
     };
   }, [shapes, viewport.transform]);
+
+  // Keep auto-save refs current so debounced/interval saves have latest data
+  useEffect(() => {
+    autoSave.updateState(buildCanvasState(), imageAdj.adjustments);
+  }, [shapes, imageAdj.adjustments]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Shape Operations ───
   const toggleShapeVisibility = useCallback((id: string) => {
@@ -806,15 +824,159 @@ export function AnnotationCanvas({
               />
             </>
           ) : (
-            /* Multi-View Grid */
-            <MultiViewGrid
-              viewMode={viewMode}
-              slots={gridSlots}
-              activeSlotIndex={activeSlotIndex}
-              onSlotClick={setActiveSlotIndex}
-              cssFilter={imageAdj.cssFilter}
-              flipped={flipped}
-            />
+            /* Multi-View Grid — active cell is a full canvas */
+            <>
+              <div
+                className="grid h-full w-full gap-1 p-1"
+                style={{
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gridTemplateRows: `repeat(${viewMode === "side-by-side" ? 1 : 2}, 1fr)`,
+                  backgroundColor: "#1A1F36",
+                }}
+              >
+                {Array.from({ length: viewMode === "side-by-side" ? 2 : 4 }).map((_, i) => {
+                  const slot = gridSlots[i] ?? { xrayId: null, imageUrl: null, imageWidth: 1024, imageHeight: 768, title: "" };
+
+                  if (i === activeSlotIndex && slot.imageUrl) {
+                    // ─── Active cell: full canvas with drawing ───
+                    return (
+                      <div
+                        key={i}
+                        ref={viewport.containerRef}
+                        className="relative overflow-hidden"
+                        style={{
+                          backgroundColor: "#1A1F36",
+                          border: "2px solid #635BFF",
+                          borderRadius: 4,
+                          cursor: getCursor(),
+                        }}
+                        onWheel={viewport.handleWheel}
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onDoubleClick={handleDoubleClick}
+                      >
+                        <div
+                          className="absolute origin-top-left"
+                          style={{
+                            transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
+                            willChange: "transform",
+                          }}
+                        >
+                          <img
+                            src={slot.imageUrl}
+                            alt={slot.title}
+                            width={slot.imageWidth}
+                            height={slot.imageHeight}
+                            style={{
+                              filter: imageAdj.cssFilter,
+                              imageRendering: viewport.transform.zoom > 2 ? "pixelated" : "auto",
+                              display: "block",
+                              transform: flipped ? "scaleX(-1)" : undefined,
+                            }}
+                            onLoad={() => setImageLoaded(true)}
+                            draggable={false}
+                          />
+                        </div>
+                        <div
+                          className="absolute origin-top-left"
+                          style={{
+                            transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
+                            willChange: "transform",
+                            pointerEvents: "none",
+                          }}
+                        >
+                          <svg
+                            width={slot.imageWidth}
+                            height={slot.imageHeight}
+                            className="absolute inset-0"
+                            style={{ overflow: "visible" }}
+                          >
+                            {allShapesToRender
+                              .filter((s) => s.visible)
+                              .sort((a, b) => a.zIndex - b.zIndex)
+                              .map((shape) => (
+                                <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} />
+                              ))}
+                          </svg>
+                        </div>
+                        <SelectionOverlay shapes={shapes} selectedShapeIds={interaction.selectedShapeIds} transform={viewport.transform} />
+                        {textScreenPos && (
+                          <TextInput
+                            x={textScreenPos.x}
+                            y={textScreenPos.y}
+                            zoom={viewport.transform.zoom}
+                            onCommit={(text) => { drawing.commitText(text); setRenderTick((n) => n + 1); }}
+                            onCancel={() => { drawing.cancelDrawing(); setRenderTick((n) => n + 1); }}
+                          />
+                        )}
+                        {drawing.pendingShape && (
+                          <DrawingConfirmation
+                            screenX={drawing.pendingShape.screenX}
+                            screenY={drawing.pendingShape.screenY}
+                            onAccept={drawing.acceptPending}
+                            onReject={drawing.rejectPending}
+                          />
+                        )}
+                        <div
+                          className="absolute bottom-1 left-1"
+                          style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.7)", backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 3, padding: "1px 6px" }}
+                        >
+                          {slot.title}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (!slot.imageUrl) {
+                    // ─── Empty cell ───
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => setActiveSlotIndex(i)}
+                        className="flex cursor-pointer items-center justify-center"
+                        style={{
+                          backgroundColor: "#1A1F36",
+                          border: i === activeSlotIndex ? "2px solid #635BFF" : "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 4,
+                        }}
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 9999, backgroundColor: "rgba(255,255,255,0.06)" }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M12 5v14M5 12h14" /></svg>
+                          </div>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Drop X-ray here</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ─── Non-active cell: simple viewer ───
+                  return (
+                    <ViewportCell
+                      key={i}
+                      slot={slot}
+                      isActive={false}
+                      onClick={() => setActiveSlotIndex(i)}
+                      cssFilter={imageAdj.cssFilter}
+                      flipped={flipped}
+                      viewState={gridViewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
+                      onViewStateChange={(state) => handleGridViewStateChange(i, state)}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Zoom Bar */}
+              <ZoomBar
+                zoomPercent={viewport.zoomPercent}
+                onFit={viewport.fitToViewport}
+                onActual={viewport.zoomToActual}
+                onZoomIn={viewport.zoomIn}
+                onZoomOut={viewport.zoomOut}
+                onCustomZoom={(z) => viewport.zoomAtCenter(z)}
+              />
+            </>
           )}
         </div>
 
@@ -863,6 +1025,7 @@ export function AnnotationCanvas({
         isCalibrated={isCalibrated}
         pixelsPerMm={pixelsPerMm}
         calibrationNote={calibrationNote}
+        viewMode={viewMode}
       />
     </div>
   );

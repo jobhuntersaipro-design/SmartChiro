@@ -14,6 +14,7 @@ import {
   Undo2,
   Redo2,
   RulerDimensionLine,
+  CircleDot,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -34,6 +35,7 @@ const tools: ToolItem[] = [
   { id: "text", label: "Text", shortcut: "T", description: "Click to add a text label", icon: <Type size={18} strokeWidth={1.5} /> },
   { id: "eraser", label: "Eraser", shortcut: "X", description: "Click on any annotation to remove it", icon: <Eraser size={18} strokeWidth={1.5} />, separator: true },
   { id: "ruler", label: "Ruler", shortcut: "M", description: "Measure distance between two points", icon: <Ruler size={18} strokeWidth={1.5} /> },
+  { id: "ruler_dot", label: "Ruler Dot", shortcut: "D", description: "Click point A then point B to measure distance with animation", icon: <CircleDot size={18} strokeWidth={1.5} /> },
   { id: "angle", label: "Angle", shortcut: "⇧M", description: "Measure the angle between three points", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
   { id: "cobb_angle", label: "Cobb Angle", shortcut: "⌘⇧M", description: "Measure Cobb angle between two lines", icon: <Scaling size={18} strokeWidth={1.5} /> },
   { id: "calibration", label: "Calibration", shortcut: "K", description: "Draw on a known-distance object to calibrate measurements", icon: <RulerDimensionLine size={18} strokeWidth={1.5} /> },

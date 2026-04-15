@@ -6,6 +6,7 @@ export type ShapeType =
   | "freehand"
   | "text"
   | "ruler"
+  | "ruler_dot"
   | "angle"
   | "cobb_angle";
 
@@ -164,6 +165,7 @@ export type ToolId =
   | "text"
   | "eraser"
   | "ruler"
+  | "ruler_dot"
   | "angle"
   | "cobb_angle"
   | "calibration";
@@ -186,7 +188,7 @@ export interface CanvasToolState {
 
 // ─── View Mode (Multi-View Grid) ───
 
-export type ViewMode = "single" | "1x1" | "2x2";
+export type ViewMode = "single" | "side-by-side" | "2x2";
 
 export interface ViewportSlot {
   xrayId: string | null;

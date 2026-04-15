@@ -25,6 +25,7 @@ const shapeIcons: Record<ShapeType, React.ReactNode> = {
   freehand: <Pencil size={14} strokeWidth={1.5} />,
   text: <Type size={14} strokeWidth={1.5} />,
   ruler: <Ruler size={14} strokeWidth={1.5} />,
+  ruler_dot: <Ruler size={14} strokeWidth={1.5} />,
   angle: <TriangleRight size={14} strokeWidth={1.5} />,
   cobb_angle: <Scaling size={14} strokeWidth={1.5} />,
 };

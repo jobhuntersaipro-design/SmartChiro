@@ -11,7 +11,7 @@ interface ViewModeSwitcherProps {
 
 const modes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
   { id: "single", label: "Single", icon: <Square size={14} strokeWidth={1.5} /> },
-  { id: "1x1", label: "Side by Side", icon: <Columns2 size={14} strokeWidth={1.5} /> },
+  { id: "side-by-side", label: "Side by Side", icon: <Columns2 size={14} strokeWidth={1.5} /> },
   { id: "2x2", label: "2×2 Grid", icon: <Grid2x2 size={14} strokeWidth={1.5} /> },
 ];
 

@@ -24,55 +24,60 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const email = credentials.email as string
-        const password = credentials.password as string
+        try {
+          const email = credentials.email as string
+          const password = credentials.password as string
 
-        if (!email || !password) return null
+          if (!email || !password) return null
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: {
-            branchMemberships: {
-              include: { branch: true },
+          const user = await prisma.user.findUnique({
+            where: { email },
+            include: {
+              branchMemberships: {
+                include: { branch: true },
+              },
             },
-          },
-        })
-
-        if (!user || !user.password) return null
-
-        const isValid = await compare(password, user.password)
-        if (!isValid) return null
-
-        // Block unverified users
-        if (!user.emailVerified) {
-          throw new EmailNotVerifiedError()
-        }
-
-        // Find branch membership — pick first available
-        let branchRole: string | null = null
-        let activeBranchId: string | null = null
-
-        const firstMembership = user.branchMemberships[0]
-        if (firstMembership) {
-          branchRole = firstMembership.role
-          activeBranchId = firstMembership.branchId
-        }
-
-        // Set active branch if user has a membership
-        if (activeBranchId) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { activeBranchId },
           })
-        }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          branchRole,
-          activeBranchId,
+          if (!user || !user.password) return null
+
+          const isValid = await compare(password, user.password)
+          if (!isValid) return null
+
+          // Block unverified users
+          if (!user.emailVerified) {
+            throw new EmailNotVerifiedError()
+          }
+
+          // Find branch membership — pick first available
+          let branchRole: string | null = null
+          let activeBranchId: string | null = null
+
+          const firstMembership = user.branchMemberships[0]
+          if (firstMembership) {
+            branchRole = firstMembership.role
+            activeBranchId = firstMembership.branchId
+          }
+
+          // Set active branch if user has a membership
+          if (activeBranchId) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { activeBranchId },
+            })
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            branchRole,
+            activeBranchId,
+          }
+        } catch (error) {
+          console.error('[AUTH] authorize error:', error)
+          throw error
         }
       },
     }),
@@ -98,7 +103,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session
     },
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile, credentials }) {
+      console.log('[AUTH] signIn callback:', { provider: account?.provider, userId: user?.id, hasCredentials: !!credentials })
       // For OAuth (Google), create or link user + require email verification
       if (account?.provider === 'google' && profile?.email) {
         let dbUser = await prisma.user.findUnique({

@@ -71,7 +71,7 @@ interface UseDrawingToolsReturn {
 
 const DRAWING_TOOLS: ToolId[] = [
   "line", "arrow", "freehand", "text", "eraser",
-  "ruler", "angle", "cobb_angle", "calibration",
+  "ruler", "ruler_dot", "angle", "cobb_angle", "calibration",
 ];
 
 function createInitialDrawingState(): DrawingState {
@@ -301,6 +301,46 @@ export function useDrawingTools({
         return true;
       }
 
+      // ─── Ruler Dot (2-click placement) ───
+      if (activeTool === "ruler_dot") {
+        if (!state.isDrawing) {
+          // First click — record point A
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          state.measurementClicks = [imagePos];
+          // Show dot preview at point A
+          const zIndex = getNextZIndex(shapes);
+          const preview = createBaseShape("ruler_dot", MEASUREMENT_STYLE, zIndex);
+          preview.id = state.shapeId;
+          preview.points = [imagePos];
+          const bb = computeBoundingBox([imagePos, imagePos]);
+          preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
+          drawingShapeRef.current = preview;
+          return true;
+        }
+        // Second click — record point B and commit
+        state.measurementClicks.push(imagePos);
+        const pointA = state.measurementClicks[0];
+        const pointB = state.measurementClicks[1];
+        const shape = createBaseShape("ruler_dot", MEASUREMENT_STYLE, getNextZIndex(shapes));
+        shape.id = state.shapeId!;
+        shape.points = [pointA, pointB];
+        shape.showEndTicks = false;
+        shape.labelPosition = "auto";
+        const bb = computeBoundingBox([pointA, pointB]);
+        shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
+        const m = computeRulerMeasurement(pointA, pointB);
+        const label = formatMeasurement(m.pixelLength, m.unit, pixelsPerMm ?? null);
+        shape.measurement = { value: m.pixelLength, unit: m.unit, calibrated: !!(pixelsPerMm && pixelsPerMm > 0), label };
+        // Commit directly (no pending confirmation)
+        onAddShape(shape);
+        drawingShapeRef.current = null;
+        state.isDrawing = false;
+        state.measurementClicks = [];
+        state.shapeId = null;
+        return true;
+      }
+
       // ─── Drag-based tools (line, arrow, freehand, ruler) ───
       state.isDrawing = true;
       state.startPoint = imagePos;
@@ -372,6 +412,23 @@ export function useDrawingTools({
       // Cobb preview cursor
       if (activeTool === "cobb_angle" && state.isDrawing) {
         updateCobbPreview(imagePos);
+        return;
+      }
+
+      // Ruler dot preview (after first click, show line to cursor)
+      if (activeTool === "ruler_dot" && state.isDrawing && state.measurementClicks.length === 1) {
+        const pointA = state.measurementClicks[0];
+        const preview = createBaseShape("ruler_dot", MEASUREMENT_STYLE, getNextZIndex(shapes));
+        preview.id = state.shapeId!;
+        preview.points = [pointA, imagePos];
+        preview.showEndTicks = false;
+        preview.labelPosition = "auto";
+        const bb = computeBoundingBox([pointA, imagePos]);
+        preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
+        const m = computeRulerMeasurement(pointA, imagePos);
+        const label = formatMeasurement(m.pixelLength, m.unit, pixelsPerMm ?? null);
+        preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: !!(pixelsPerMm && pixelsPerMm > 0), label };
+        drawingShapeRef.current = preview;
         return;
       }
 

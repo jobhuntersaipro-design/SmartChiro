@@ -2,20 +2,20 @@
 
 ## Status
 
-Implemented — Ready for review
+In Progress
 
 ## Goals
 
-1. **Calibration Reference Tool** — Draw a line on a known-distance object to compute pixelsPerMm
-2. **Calibration Dialog** — Enter real-world distance and reference label
-3. **Measurement Conversion** — All ruler/angle/cobb measurements display in mm when calibrated
-4. **Calibration API** — PUT/DELETE endpoints to persist calibration per X-ray
-5. **StatusBar Indicator** — Show calibration status at all times
-6. **Export Integration** — PNG/PDF exports use mm values when calibrated
+1. **Disable drawing tools in multi-view** — Grey out all drawing/measurement tools when view mode is Side by Side or 2x2 Grid
+2. **Comparison-only messaging** — Show clear UX feedback that multi-view is for comparison only
+3. **Auto-switch to single on tool select** — If user clicks a drawing tool while in multi-view, auto-switch back to single mode
+4. **Rename `1x1` view mode to `side-by-side`** — Fix confusing internal naming
+5. **Active slot zoom controls** — Wire ZoomBar to the active ViewportCell in multi-view
+6. **Zoom hint in multi-view** — Show "Ctrl + Scroll to zoom" tooltip on hover
 
 ## Spec
 
-See `context/features/xray-calibration-spec.md` for full spec.
+See `context/features/multiview-fix-spec.md` for full spec.
 
 ## Notes
 

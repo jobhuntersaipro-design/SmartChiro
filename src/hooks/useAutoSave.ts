@@ -19,6 +19,7 @@ interface UseAutoSaveReturn {
   saveError: string | null;
   sizeWarning: string | null;
   markDirty: () => void;
+  updateState: (state: AnnotationCanvasState, adjustments: ImageAdjustments) => void;
   saveNow: (state: AnnotationCanvasState, adjustments: ImageAdjustments) => Promise<void>;
   retrySave: () => void;
 }
@@ -136,6 +137,15 @@ export function useAutoSave({
     setIsDirty(true);
   }, []);
 
+  // Update the latest state refs so debounced/interval saves have current data
+  const updateState = useCallback(
+    (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
+      latestStateRef.current = state;
+      latestAdjustmentsRef.current = adjustments;
+    },
+    []
+  );
+
   // Auto-save on interval
   useEffect(() => {
     if (!annotationId) return;
@@ -204,6 +214,7 @@ export function useAutoSave({
     saveError,
     sizeWarning,
     markDirty,
+    updateState,
     saveNow,
     retrySave,
   };

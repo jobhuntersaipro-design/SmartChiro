@@ -1,6 +1,6 @@
 "use client";
 
-import type { Point } from "@/types/annotation";
+import type { Point, ViewMode } from "@/types/annotation";
 
 type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
 
@@ -17,6 +17,7 @@ interface StatusBarProps {
   isCalibrated?: boolean;
   pixelsPerMm?: number | null;
   calibrationNote?: string | null;
+  viewMode?: ViewMode;
 }
 
 export function StatusBar({
@@ -32,6 +33,7 @@ export function StatusBar({
   isCalibrated = false,
   pixelsPerMm = null,
   calibrationNote = null,
+  viewMode = "single",
 }: StatusBarProps) {
   const renderSaveStatus = () => {
     switch (saveStatus) {
@@ -76,11 +78,17 @@ export function StatusBar({
       }}
     >
       <div className="flex items-center gap-4">
-        <span className="tabular-nums">
-          {cursorPosition
-            ? `X: ${Math.round(cursorPosition.x)}  Y: ${Math.round(cursorPosition.y)}`
-            : "—"}
-        </span>
+        {viewMode !== "single" ? (
+          <span style={{ color: "#0570DE", fontWeight: 500 }}>
+            Comparison Mode — {viewMode === "side-by-side" ? "Side by Side" : "2\u00d72 Grid"}
+          </span>
+        ) : (
+          <span className="tabular-nums">
+            {cursorPosition
+              ? `X: ${Math.round(cursorPosition.x)}  Y: ${Math.round(cursorPosition.y)}`
+              : "—"}
+          </span>
+        )}
         {selectedCount > 0 && (
           <span>
             {selectedCount} shape{selectedCount !== 1 ? "s" : ""} selected

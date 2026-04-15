@@ -61,6 +61,11 @@ export function ShapeRenderer({ shape, zoom }: ShapeRendererProps) {
         <RulerRenderer shape={shape} zoom={zoom} sw={sw} />
       )}
 
+      {/* ─── Ruler Dot ─── */}
+      {shape.type === "ruler_dot" && shape.points.length >= 1 && (
+        <RulerDotRenderer shape={shape} zoom={zoom} sw={sw} />
+      )}
+
       {/* ─── Angle ─── */}
       {shape.type === "angle" && shape.points.length >= 2 && (
         <AngleRenderer shape={shape} zoom={zoom} sw={sw} />
@@ -202,6 +207,78 @@ function RulerRenderer({ shape, zoom, sw }: { shape: BaseShape; zoom: number; sw
           </text>
         </>
       )}
+    </>
+  );
+}
+
+// ─── Ruler Dot Renderer (animated line from A→B with dots) ───
+
+function RulerDotRenderer({ shape, zoom, sw }: { shape: BaseShape; zoom: number; sw: number }) {
+  const p1 = shape.points[0];
+  const p2 = shape.points.length >= 2 ? shape.points[1] : null;
+  const dotR = 5 / zoom;
+
+  if (!p2) {
+    // Single point — just show dot A
+    return (
+      <circle cx={p1.x} cy={p1.y} r={dotR} fill={shape.style.strokeColor} stroke="#FFFFFF" strokeWidth={1.5 / zoom} />
+    );
+  }
+
+  const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+  const mx = (p1.x + p2.x) / 2;
+  const my = (p1.y + p2.y) / 2;
+  const labelOffsetY = -14 / zoom;
+  const fontSize = 12 / zoom;
+  const pillPadX = 6 / zoom;
+  const pillPadY = 3 / zoom;
+  const pillRadius = 4 / zoom;
+  const label = shape.measurement?.label ?? `${Math.round(len)} px`;
+  const animId = `ruler-dot-${shape.id}`;
+
+  return (
+    <>
+      <style>{`
+        @keyframes ${animId} {
+          from { stroke-dashoffset: ${len}; }
+          to { stroke-dashoffset: 0; }
+        }
+      `}</style>
+      {/* Animated line from A to B */}
+      <line
+        x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+        stroke={shape.style.strokeColor}
+        strokeWidth={sw}
+        strokeLinecap="round"
+        strokeDasharray={len}
+        style={{ animation: `${animId} 0.5s ease-out forwards` }}
+      />
+      {/* Dot A */}
+      <circle cx={p1.x} cy={p1.y} r={dotR} fill={shape.style.strokeColor} stroke="#FFFFFF" strokeWidth={1.5 / zoom} />
+      {/* Dot B */}
+      <circle cx={p2.x} cy={p2.y} r={dotR} fill={shape.style.strokeColor} stroke="#FFFFFF" strokeWidth={1.5 / zoom} />
+      {/* Distance label with pill background */}
+      <rect
+        x={mx - (label.length * fontSize * 0.32) - pillPadX}
+        y={my + labelOffsetY - fontSize * 0.7 - pillPadY}
+        width={label.length * fontSize * 0.64 + pillPadX * 2}
+        height={fontSize + pillPadY * 2}
+        rx={pillRadius}
+        ry={pillRadius}
+        fill="#1A1F36"
+        fillOpacity={0.85}
+      />
+      <text
+        x={mx}
+        y={my + labelOffsetY}
+        fill="#FFFFFF"
+        fontSize={fontSize}
+        fontWeight={500}
+        textAnchor="middle"
+        fontFamily="system-ui, sans-serif"
+      >
+        {label}
+      </text>
     </>
   );
 }
