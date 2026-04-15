@@ -3,6 +3,8 @@ import {
   computeRulerMeasurement,
   computeAngleMeasurement,
   computeCobbAngle,
+  formatMeasurement,
+  recalibrateMeasurement,
 } from "@/lib/measurements";
 
 // ─── computeRulerMeasurement ───
@@ -187,5 +189,72 @@ describe("computeCobbAngle", () => {
       { x: 0, y: 200 }, { x: 100, y: 200 + tilt }
     );
     expect(result.classification).toBe("Moderate");
+  });
+});
+
+// ─── formatMeasurement ───
+
+describe("formatMeasurement", () => {
+  it("returns px when uncalibrated", () => {
+    expect(formatMeasurement(100, "px", null)).toBe("100 px");
+  });
+
+  it("returns mm when calibrated (small value)", () => {
+    // 20 px/mm → 100px = 5mm
+    expect(formatMeasurement(100, "px", 20)).toBe("5.0 mm");
+  });
+
+  it("returns cm for values >= 10mm", () => {
+    // 2 px/mm → 100px = 50mm = 5.0 cm
+    expect(formatMeasurement(100, "px", 2)).toBe("5.0 cm");
+  });
+
+  it("leaves degrees unchanged regardless of calibration", () => {
+    expect(formatMeasurement(45.2, "deg", null)).toBe("45.2°");
+    expect(formatMeasurement(45.2, "deg", 4)).toBe("45.2°");
+  });
+
+  it("returns px when pixelsPerMm is 0", () => {
+    expect(formatMeasurement(100, "px", 0)).toBe("100 px");
+  });
+
+  it("returns px when pixelsPerMm is negative", () => {
+    expect(formatMeasurement(100, "px", -1)).toBe("100 px");
+  });
+
+  it("handles very small pixelsPerMm", () => {
+    // 0.05 px/mm → 100px = 2000mm = 200.0 cm
+    expect(formatMeasurement(100, "px", 0.05)).toBe("200.0 cm");
+  });
+
+  it("handles very large pixelsPerMm", () => {
+    // 500 px/mm → 100px = 0.2mm
+    expect(formatMeasurement(100, "px", 500)).toBe("0.2 mm");
+  });
+});
+
+// ─── recalibrateMeasurement ───
+
+describe("recalibrateMeasurement", () => {
+  it("recalibrates a pixel measurement to mm", () => {
+    const m = { value: 100, unit: "px" as const, calibrated: false, label: "100 px" };
+    const result = recalibrateMeasurement(m, 20);
+    expect(result.calibrated).toBe(true);
+    expect(result.label).toBe("5.0 mm");
+    expect(result.value).toBe(100); // raw value unchanged
+  });
+
+  it("reverts to px when pixelsPerMm is null", () => {
+    const m = { value: 100, unit: "px" as const, calibrated: true, label: "25.0 mm" };
+    const result = recalibrateMeasurement(m, null);
+    expect(result.calibrated).toBe(false);
+    expect(result.label).toBe("100 px");
+  });
+
+  it("does not calibrate degree measurements", () => {
+    const m = { value: 45, unit: "deg" as const, calibrated: false, label: "45.0°" };
+    const result = recalibrateMeasurement(m, 4);
+    expect(result.calibrated).toBe(false);
+    expect(result.label).toBe("45.0°");
   });
 });

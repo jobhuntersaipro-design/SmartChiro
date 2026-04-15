@@ -250,7 +250,10 @@ model Xray {
   // Thumbnail
   thumbnailUrl String?
 
-
+  // Calibration
+  isCalibrated    Boolean @default(false)
+  pixelsPerMm     Float?    // computed from calibration reference
+  calibrationNote String?   // e.g. "25mm coin" — what was used as reference
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)

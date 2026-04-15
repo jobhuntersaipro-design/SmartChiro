@@ -1,6 +1,6 @@
 "use client";
 
-import type { Point } from "@/types/annotation";
+import type { Point, ViewMode } from "@/types/annotation";
 
 type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
 
@@ -14,6 +14,10 @@ interface StatusBarProps {
   saveError?: string | null;
   sizeWarning?: string | null;
   onRetrySave?: () => void;
+  isCalibrated?: boolean;
+  pixelsPerMm?: number | null;
+  calibrationNote?: string | null;
+  viewMode?: ViewMode;
 }
 
 export function StatusBar({
@@ -26,6 +30,10 @@ export function StatusBar({
   saveError,
   sizeWarning,
   onRetrySave,
+  isCalibrated = false,
+  pixelsPerMm = null,
+  calibrationNote = null,
+  viewMode = "single",
 }: StatusBarProps) {
   const renderSaveStatus = () => {
     switch (saveStatus) {
@@ -70,16 +78,39 @@ export function StatusBar({
       }}
     >
       <div className="flex items-center gap-4">
-        <span className="tabular-nums">
-          {cursorPosition
-            ? `X: ${Math.round(cursorPosition.x)}  Y: ${Math.round(cursorPosition.y)}`
-            : "—"}
-        </span>
+        {viewMode !== "single" ? (
+          <span style={{ color: "#0570DE", fontWeight: 500 }}>
+            Comparison Mode — {viewMode === "side-by-side" ? "Side by Side" : "2\u00d72 Grid"}
+          </span>
+        ) : (
+          <span className="tabular-nums">
+            {cursorPosition
+              ? `X: ${Math.round(cursorPosition.x)}  Y: ${Math.round(cursorPosition.y)}`
+              : "—"}
+          </span>
+        )}
         {selectedCount > 0 && (
           <span>
             {selectedCount} shape{selectedCount !== 1 ? "s" : ""} selected
           </span>
         )}
+        <span
+          className="flex items-center gap-1"
+          title={calibrationNote ?? undefined}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              backgroundColor: isCalibrated ? "#30B130" : "#A3ACB9",
+              display: "inline-block",
+            }}
+          />
+          {isCalibrated && pixelsPerMm
+            ? `Calibrated: ${pixelsPerMm.toFixed(2)} px/mm`
+            : "Uncalibrated"}
+        </span>
         {sizeWarning && (
           <span style={{ color: "#F5A623" }}>{sizeWarning}</span>
         )}

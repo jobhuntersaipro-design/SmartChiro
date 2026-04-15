@@ -40,7 +40,7 @@ export function useCanvasInteraction({
   containerRef,
   onMoveShapes,
 }: UseCanvasInteractionOptions): UseCanvasInteractionReturn {
-  const [activeTool, setActiveToolState] = useState<ToolId>("freehand");
+  const [activeTool, setActiveToolState] = useState<ToolId>("hand");
   const [toolState, setToolState] = useState<ToolState>("idle");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState<Point | null>(null);
@@ -226,10 +226,8 @@ export function useCanvasInteraction({
         return;
       }
 
-      // Tool shortcuts (no modifier except Shift for polyline/angle)
+      // Tool shortcuts (no modifier except Shift for angle)
       if (!mod) {
-        // (Polyline removed)
-
         // Shift+M = Angle
         if (e.shiftKey && e.key.toLowerCase() === "m") {
           setActiveTool("angle");
@@ -259,6 +257,12 @@ export function useCanvasInteraction({
               return;
             case "m":
               setActiveTool("ruler");
+              return;
+            case "k":
+              setActiveTool("calibration");
+              return;
+            case "d":
+              setActiveTool("ruler_dot");
               return;
           }
         }

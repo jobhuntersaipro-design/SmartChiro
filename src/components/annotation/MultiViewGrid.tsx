@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ViewMode, ViewportSlot } from "@/types/annotation";
 
-interface ViewportState {
+export interface ViewportState {
   zoom: number;
   panX: number;
   panY: number;
@@ -16,30 +16,33 @@ interface MultiViewGridProps {
   onSlotClick: (index: number) => void;
   cssFilter?: string;
   flipped?: boolean;
+  viewStates: ViewportState[];
+  onViewStateChange: (index: number, state: ViewportState) => void;
 }
 
-function ViewportCell({
+export function ViewportCell({
   slot,
   isActive,
   onClick,
   cssFilter,
   flipped,
+  viewState,
+  onViewStateChange,
 }: {
   slot: ViewportSlot;
   isActive: boolean;
   onClick: () => void;
   cssFilter?: string;
   flipped?: boolean;
+  viewState: ViewportState;
+  onViewStateChange: (state: ViewportState) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [viewState, setViewState] = useState<ViewportState>({
-    zoom: 1,
-    panX: 0,
-    panY: 0,
-  });
   const [imageLoaded, setImageLoaded] = useState(false);
   const isPanning = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
+  const [showHint, setShowHint] = useState(true);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fit image to viewport when loaded or container resizes
   const fitToViewport = useCallback(() => {
@@ -51,7 +54,7 @@ function ViewportCell({
     const zoom = Math.min(scaleX, scaleY, 1);
     const panX = (rect.width - slot.imageWidth * zoom) / 2;
     const panY = (rect.height - slot.imageHeight * zoom) / 2;
-    setViewState({ zoom, panX, panY });
+    onViewStateChangeRef.current({ zoom, panX, panY });
   }, [slot.imageWidth, slot.imageHeight, slot.imageUrl]);
 
   useEffect(() => {
@@ -61,44 +64,71 @@ function ViewportCell({
   // Reset when slot changes
   useEffect(() => {
     setImageLoaded(false);
-    setViewState({ zoom: 1, panX: 0, panY: 0 });
+    onViewStateChangeRef.current({ zoom: 1, panX: 0, panY: 0 });
   }, [slot.xrayId]);
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      e.preventDefault();
+  // Auto-hide hint after 3 seconds
+  useEffect(() => {
+    if (showHint && slot.imageUrl) {
+      hintTimerRef.current = setTimeout(() => setShowHint(false), 3000);
+      return () => {
+        if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+      };
+    }
+  }, [showHint, slot.imageUrl]);
+
+  const dismissHint = useCallback(() => {
+    setShowHint(false);
+  }, []);
+
+  // Use refs for wheel handler to avoid stale closures with native listener
+  const viewStateRef = useRef(viewState);
+  viewStateRef.current = viewState;
+  const onViewStateChangeRef = useRef(onViewStateChange);
+  onViewStateChangeRef.current = onViewStateChange;
+
+  // Native wheel listener with { passive: false } so preventDefault() works
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      e.preventDefault();
+      setShowHint(false);
+      const rect = el.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
       const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-      setViewState((prev) => {
-        const newZoom = Math.max(0.05, Math.min(32, prev.zoom * factor));
-        const panX = mouseX - (mouseX - prev.panX) * (newZoom / prev.zoom);
-        const panY = mouseY - (mouseY - prev.panY) * (newZoom / prev.zoom);
-        return { zoom: newZoom, panX, panY };
-      });
-    },
-    []
-  );
+      const vs = viewStateRef.current;
+      const newZoom = Math.max(0.05, Math.min(32, vs.zoom * factor));
+      const panX = mouseX - (mouseX - vs.panX) * (newZoom / vs.zoom);
+      const panY = mouseY - (mouseY - vs.panY) * (newZoom / vs.zoom);
+      onViewStateChangeRef.current({ zoom: newZoom, panX, panY });
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    dismissHint();
     isPanning.current = true;
     lastPointer.current = { x: e.clientX, y: e.clientY };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  }, []);
+  }, [dismissHint]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isPanning.current) return;
     const dx = e.clientX - lastPointer.current.x;
     const dy = e.clientY - lastPointer.current.y;
     lastPointer.current = { x: e.clientX, y: e.clientY };
-    setViewState((prev) => ({
-      ...prev,
-      panX: prev.panX + dx,
-      panY: prev.panY + dy,
-    }));
-  }, []);
+    onViewStateChange({
+      ...viewState,
+      panX: viewState.panX + dx,
+      panY: viewState.panY + dy,
+    });
+  }, [viewState, onViewStateChange]);
 
   const handlePointerUp = useCallback(() => {
     isPanning.current = false;
@@ -150,7 +180,6 @@ function ViewportCell({
         borderRadius: 4,
         cursor: isPanning.current ? "grabbing" : "grab",
       }}
-      onWheel={handleWheel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -178,6 +207,27 @@ function ViewportCell({
           draggable={false}
         />
       </div>
+
+      {/* Zoom Hint */}
+      {showHint && (
+        <div
+          className="absolute"
+          style={{
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            fontSize: 10,
+            color: "rgba(255,255,255,0.6)",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            borderRadius: 4,
+            padding: "4px 10px",
+            whiteSpace: "nowrap",
+            pointerEvents: "none",
+          }}
+        >
+          Ctrl + Scroll to zoom &nbsp;|&nbsp; Drag to pan
+        </div>
+      )}
 
       {/* Title Label */}
       <div
@@ -208,9 +258,11 @@ export function MultiViewGrid({
   onSlotClick,
   cssFilter,
   flipped,
+  viewStates,
+  onViewStateChange,
 }: MultiViewGridProps) {
-  const gridCols = viewMode === "1x1" ? 2 : 2;
-  const gridRows = viewMode === "1x1" ? 1 : 2;
+  const gridCols = 2;
+  const gridRows = viewMode === "side-by-side" ? 1 : 2;
   const totalSlots = gridCols * gridRows;
 
   return (
@@ -238,6 +290,8 @@ export function MultiViewGrid({
             onClick={() => onSlotClick(i)}
             cssFilter={cssFilter}
             flipped={flipped}
+            viewState={viewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
+            onViewStateChange={(state) => onViewStateChange(i, state)}
           />
         );
       })}

@@ -2,15 +2,22 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Define goals here -->
+1. **Disable drawing tools in multi-view** — Grey out all drawing/measurement tools when view mode is Side by Side or 2x2 Grid
+2. **Comparison-only messaging** — Show clear UX feedback that multi-view is for comparison only
+3. **Auto-switch to single on tool select** — If user clicks a drawing tool while in multi-view, auto-switch back to single mode
+4. **Rename `1x1` view mode to `side-by-side`** — Fix confusing internal naming
+5. **Active slot zoom controls** — Wire ZoomBar to the active ViewportCell in multi-view
+6. **Zoom hint in multi-view** — Show "Ctrl + Scroll to zoom" tooltip on hover
+
+## Spec
+
+See `context/features/multiview-fix-spec.md` for full spec.
 
 ## Notes
-
-<!-- Additional context -->
 
 ## History
 
