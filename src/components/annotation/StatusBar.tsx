@@ -50,8 +50,8 @@ export function StatusBar({
             {onRetrySave && (
               <button
                 onClick={onRetrySave}
-                className="rounded-[4px] px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#F0F3F7]"
-                style={{ color: "#635BFF" }}
+                className="rounded-[4px] px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+                style={{ color: "#533afd" }}
               >
                 Retry
               </button>
@@ -72,9 +72,9 @@ export function StatusBar({
       style={{
         height: 28,
         backgroundColor: "#FFFFFF",
-        borderTop: "1px solid #E3E8EE",
+        borderTop: "1px solid #e5edf5",
         fontSize: 12,
-        color: "#697386",
+        color: "#64748d",
       }}
     >
       <div className="flex items-center gap-4">

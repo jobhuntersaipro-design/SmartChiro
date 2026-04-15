@@ -43,9 +43,9 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
           style={{
             padding: "6px 8px",
             borderRadius: 4,
-            backgroundColor: open ? "#F0EEFF" : "transparent",
-            color: "#635BFF",
-            border: "1px solid #E3E8EE",
+            backgroundColor: open ? "#ededfc" : "transparent",
+            color: "#533afd",
+            border: "1px solid #e5edf5",
           }}
         >
           {current.icon}
@@ -63,7 +63,7 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
               transform: "translateX(-50%)",
               marginTop: 4,
               backgroundColor: "#FFFFFF",
-              border: "1px solid #E3E8EE",
+              border: "1px solid #e5edf5",
               borderRadius: 6,
               boxShadow: "0 4px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(18, 42, 66, 0.06)",
               minWidth: 100,
@@ -82,16 +82,16 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
                   className="flex w-full items-center gap-2 transition-colors"
                   style={{
                     padding: "8px 12px",
-                    backgroundColor: isActive ? "#F0EEFF" : "transparent",
-                    color: isActive ? "#635BFF" : "#425466",
+                    backgroundColor: isActive ? "#ededfc" : "transparent",
+                    color: isActive ? "#533afd" : "#273951",
                     fontSize: 12,
                     fontWeight: isActive ? 600 : 400,
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "#F0F3F7";
+                    if (!isActive) e.currentTarget.style.backgroundColor = "#f6f9fc";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = isActive ? "#F0EEFF" : "transparent";
+                    e.currentTarget.style.backgroundColor = isActive ? "#ededfc" : "transparent";
                   }}
                 >
                   {mode.icon}

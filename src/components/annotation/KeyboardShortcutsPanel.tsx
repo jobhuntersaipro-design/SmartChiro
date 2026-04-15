@@ -30,7 +30,6 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     shortcuts: [
       { keys: ["P"], description: "Freehand" },
       { keys: ["L"], description: "Line" },
-      { keys: ["A"], description: "Arrow" },
       { keys: ["T"], description: "Text" },
       { keys: ["X"], description: "Eraser" },
     ],
@@ -117,17 +116,17 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
           className="sticky top-0 z-10 flex items-center justify-between px-6 py-4"
           style={{
             backgroundColor: "#FFFFFF",
-            borderBottom: "1px solid #E3E8EE",
+            borderBottom: "1px solid #e5edf5",
             borderRadius: "8px 8px 0 0",
           }}
         >
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0A2540" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#061b31" }}>
             Keyboard Shortcuts
           </h2>
           <button
             onClick={onClose}
-            className="flex items-center justify-center transition-colors hover:bg-[#F0F3F7]"
-            style={{ width: 32, height: 32, borderRadius: 4, color: "#697386" }}
+            className="flex items-center justify-center transition-colors hover:bg-[#f6f9fc]"
+            style={{ width: 32, height: 32, borderRadius: 4, color: "#64748d" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18" /><path d="M6 6l12 12" />
@@ -141,7 +140,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
             <div key={category.title}>
               <h3
                 className="mb-3"
-                style={{ fontSize: 13, fontWeight: 600, color: "#697386", textTransform: "uppercase", letterSpacing: "0.05em" }}
+                style={{ fontSize: 13, fontWeight: 600, color: "#64748d", textTransform: "uppercase", letterSpacing: "0.05em" }}
               >
                 {category.title}
               </h3>
@@ -151,7 +150,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
                     key={shortcut.description}
                     className="flex items-center justify-between py-1"
                   >
-                    <span style={{ fontSize: 14, color: "#0A2540" }}>
+                    <span style={{ fontSize: 14, color: "#061b31" }}>
                       {shortcut.description}
                     </span>
                     <div className="flex items-center gap-1">
@@ -166,9 +165,9 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
                             fontSize: 12,
                             fontFamily: "inherit",
                             fontWeight: 500,
-                            color: "#425466",
-                            backgroundColor: "#F6F9FC",
-                            border: "1px solid #E3E8EE",
+                            color: "#273951",
+                            backgroundColor: "#f6f9fc",
+                            border: "1px solid #e5edf5",
                             borderRadius: 4,
                             boxShadow: "0 1px 1px rgba(0,0,0,0.04)",
                           }}
@@ -188,13 +187,13 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
         <div
           className="px-6 py-3"
           style={{
-            borderTop: "1px solid #E3E8EE",
+            borderTop: "1px solid #e5edf5",
             fontSize: 12,
-            color: "#697386",
+            color: "#64748d",
             textAlign: "center",
           }}
         >
-          Press <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#F6F9FC", border: "1px solid #E3E8EE", borderRadius: 3, fontFamily: "inherit" }}>?</kbd> or <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#F6F9FC", border: "1px solid #E3E8EE", borderRadius: 3, fontFamily: "inherit" }}>Esc</kbd> to close
+          Press <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f6f9fc", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>?</kbd> or <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f6f9fc", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>Esc</kbd> to close
         </div>
       </div>
     </div>

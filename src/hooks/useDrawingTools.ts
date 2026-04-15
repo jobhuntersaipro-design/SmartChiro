@@ -70,8 +70,8 @@ interface UseDrawingToolsReturn {
 }
 
 const DRAWING_TOOLS: ToolId[] = [
-  "line", "arrow", "freehand", "text", "eraser",
-  "ruler", "ruler_dot", "angle", "cobb_angle", "calibration",
+  "line", "freehand", "text", "eraser",
+  "ruler", "angle", "cobb_angle", "calibration",
 ];
 
 function createInitialDrawingState(): DrawingState {
@@ -215,8 +215,8 @@ export function useDrawingTools({
   }, []);
 
   const buildLineShape = useCallback(
-    (start: Point, end: Point, type: "line" | "arrow"): BaseShape => {
-      const shape = createBaseShape(type, currentStyle, getNextZIndex(shapes));
+    (start: Point, end: Point): BaseShape => {
+      const shape = createBaseShape("line", currentStyle, getNextZIndex(shapes));
       shape.points = [start, end];
       const bb = computeBoundingBox([start, end]);
       shape.x = bb.x;
@@ -224,11 +224,6 @@ export function useDrawingTools({
       shape.width = bb.width;
       shape.height = bb.height;
       shape.lineCap = "round";
-      if (type === "arrow") {
-        shape.arrowStart = false;
-        shape.arrowEnd = true;
-        shape.arrowSize = 12;
-      }
       return shape;
     },
     [currentStyle, shapes]
@@ -301,47 +296,7 @@ export function useDrawingTools({
         return true;
       }
 
-      // ─── Ruler Dot (2-click placement) ───
-      if (activeTool === "ruler_dot") {
-        if (!state.isDrawing) {
-          // First click — record point A
-          state.isDrawing = true;
-          state.shapeId = generateId();
-          state.measurementClicks = [imagePos];
-          // Show dot preview at point A
-          const zIndex = getNextZIndex(shapes);
-          const preview = createBaseShape("ruler_dot", MEASUREMENT_STYLE, zIndex);
-          preview.id = state.shapeId;
-          preview.points = [imagePos];
-          const bb = computeBoundingBox([imagePos, imagePos]);
-          preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
-          drawingShapeRef.current = preview;
-          return true;
-        }
-        // Second click — record point B and commit
-        state.measurementClicks.push(imagePos);
-        const pointA = state.measurementClicks[0];
-        const pointB = state.measurementClicks[1];
-        const shape = createBaseShape("ruler_dot", MEASUREMENT_STYLE, getNextZIndex(shapes));
-        shape.id = state.shapeId!;
-        shape.points = [pointA, pointB];
-        shape.showEndTicks = false;
-        shape.labelPosition = "auto";
-        const bb = computeBoundingBox([pointA, pointB]);
-        shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
-        const m = computeRulerMeasurement(pointA, pointB);
-        const label = formatMeasurement(m.pixelLength, m.unit, pixelsPerMm ?? null);
-        shape.measurement = { value: m.pixelLength, unit: m.unit, calibrated: !!(pixelsPerMm && pixelsPerMm > 0), label };
-        // Commit directly (no pending confirmation)
-        onAddShape(shape);
-        drawingShapeRef.current = null;
-        state.isDrawing = false;
-        state.measurementClicks = [];
-        state.shapeId = null;
-        return true;
-      }
-
-      // ─── Drag-based tools (line, arrow, freehand, ruler) ───
+      // ─── Drag-based tools (line, freehand, ruler) ───
       state.isDrawing = true;
       state.startPoint = imagePos;
       state.shapeId = generateId();
@@ -358,8 +313,8 @@ export function useDrawingTools({
         preview.id = state.shapeId;
         preview.points = [imagePos];
         preview.tension = 0.3;
-      } else if (activeTool === "line" || activeTool === "arrow") {
-        preview = buildLineShape(imagePos, imagePos, activeTool);
+      } else if (activeTool === "line") {
+        preview = buildLineShape(imagePos, imagePos);
         preview.id = state.shapeId;
       } else if (activeTool === "ruler" || activeTool === "calibration") {
         preview = createBaseShape("ruler", MEASUREMENT_STYLE, zIndex);
@@ -415,23 +370,6 @@ export function useDrawingTools({
         return;
       }
 
-      // Ruler dot preview (after first click, show line to cursor)
-      if (activeTool === "ruler_dot" && state.isDrawing && state.measurementClicks.length === 1) {
-        const pointA = state.measurementClicks[0];
-        const preview = createBaseShape("ruler_dot", MEASUREMENT_STYLE, getNextZIndex(shapes));
-        preview.id = state.shapeId!;
-        preview.points = [pointA, imagePos];
-        preview.showEndTicks = false;
-        preview.labelPosition = "auto";
-        const bb = computeBoundingBox([pointA, imagePos]);
-        preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
-        const m = computeRulerMeasurement(pointA, imagePos);
-        const label = formatMeasurement(m.pixelLength, m.unit, pixelsPerMm ?? null);
-        preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: !!(pixelsPerMm && pixelsPerMm > 0), label };
-        drawingShapeRef.current = preview;
-        return;
-      }
-
       // Eraser drag
       if (activeTool === "eraser" && state.isDrawing) {
         const hit = hitTestEraser(imagePos, shapes, transform.zoom);
@@ -462,11 +400,11 @@ export function useDrawingTools({
       }
 
       // Apply modifiers
-      if (activeTool === "line" || activeTool === "arrow") {
+      if (activeTool === "line") {
         if (e.shiftKey) {
           endPoint = constrainAngle(state.startPoint, imagePos);
         }
-        const preview = buildLineShape(state.startPoint, endPoint, activeTool);
+        const preview = buildLineShape(state.startPoint, endPoint);
         preview.id = state.shapeId!;
         drawingShapeRef.current = preview;
         return;
@@ -544,7 +482,7 @@ export function useDrawingTools({
 
       // Validate minimum size
       let valid = true;
-      if (activeTool === "line" || activeTool === "arrow") {
+      if (activeTool === "line") {
         if (shape.points.length >= 2) {
           const dist = Math.hypot(
             shape.points[1].x - shape.points[0].x,
@@ -799,7 +737,6 @@ function hitTestEraser(
       // For line-based shapes, check distance to line segments
       if (
         shape.type === "line" ||
-        shape.type === "arrow" ||
         shape.type === "freehand" ||
         shape.type === "ruler"
       ) {

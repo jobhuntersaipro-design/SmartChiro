@@ -55,26 +55,26 @@ export function CalibrationDialog({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0A2540", marginBottom: 4 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: "#061b31", marginBottom: 4 }}>
           Calibrate Measurements
         </h3>
-        <p style={{ fontSize: 13, color: "#697386", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: "#64748d", marginBottom: 16 }}>
           Enter the real-world distance of the line you just drew.
         </p>
 
         {/* Pixel distance (read-only) */}
         <div className="mb-3">
-          <label className="block text-xs font-medium mb-1" style={{ color: "#0A2540" }}>
+          <label className="block text-xs font-medium mb-1" style={{ color: "#061b31" }}>
             Pixel distance
           </label>
-          <p className="text-sm tabular-nums" style={{ color: "#425466" }}>
+          <p className="text-sm tabular-nums" style={{ color: "#273951" }}>
             {Math.round(pixelDistance)} px
           </p>
         </div>
 
         {/* Real-world distance input */}
         <div className="mb-3">
-          <label className="block text-xs font-medium mb-1" style={{ color: "#0A2540" }}>
+          <label className="block text-xs font-medium mb-1" style={{ color: "#061b31" }}>
             Real-world distance
           </label>
           <div className="flex gap-2">
@@ -88,10 +88,10 @@ export function CalibrationDialog({
               autoFocus
               className="flex-1 text-sm px-2.5 py-1.5 tabular-nums"
               style={{
-                border: "1px solid #E3E8EE",
+                border: "1px solid #e5edf5",
                 borderRadius: 4,
-                backgroundColor: "#F6F9FC",
-                color: "#0A2540",
+                backgroundColor: "#f6f9fc",
+                color: "#061b31",
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCalibrate();
@@ -103,10 +103,10 @@ export function CalibrationDialog({
               onChange={(e) => setUnit(e.target.value as "mm" | "cm")}
               className="text-sm px-2 py-1.5"
               style={{
-                border: "1px solid #E3E8EE",
+                border: "1px solid #e5edf5",
                 borderRadius: 4,
-                backgroundColor: "#F6F9FC",
-                color: "#0A2540",
+                backgroundColor: "#f6f9fc",
+                color: "#061b31",
                 width: 64,
               }}
             >
@@ -118,7 +118,7 @@ export function CalibrationDialog({
 
         {/* Reference label */}
         <div className="mb-4">
-          <label className="block text-xs font-medium mb-1" style={{ color: "#0A2540" }}>
+          <label className="block text-xs font-medium mb-1" style={{ color: "#061b31" }}>
             Reference object (optional)
           </label>
           <input
@@ -129,10 +129,10 @@ export function CalibrationDialog({
             maxLength={100}
             className="w-full text-sm px-2.5 py-1.5"
             style={{
-              border: "1px solid #E3E8EE",
+              border: "1px solid #e5edf5",
               borderRadius: 4,
-              backgroundColor: "#F6F9FC",
-              color: "#0A2540",
+              backgroundColor: "#f6f9fc",
+              color: "#061b31",
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleCalibrate();
@@ -155,8 +155,8 @@ export function CalibrationDialog({
             className="px-3 py-1.5 text-sm font-medium transition-colors"
             style={{
               borderRadius: 4,
-              border: "1px solid #E3E8EE",
-              color: "#425466",
+              border: "1px solid #e5edf5",
+              color: "#273951",
               backgroundColor: "#FFFFFF",
             }}
           >
@@ -167,7 +167,7 @@ export function CalibrationDialog({
             className="px-3 py-1.5 text-sm font-medium transition-colors"
             style={{
               borderRadius: 4,
-              backgroundColor: "#635BFF",
+              backgroundColor: "#533afd",
               color: "#FFFFFF",
               border: "none",
             }}

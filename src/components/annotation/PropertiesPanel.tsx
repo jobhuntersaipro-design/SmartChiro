@@ -7,13 +7,13 @@ import {
   Lock,
   Unlock,
   Minus,
-  ArrowRight,
   Pencil,
   Type,
   Ruler,
   TriangleRight,
   GripVertical,
   Scaling,
+  Trash2,
 } from "lucide-react";
 import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
 import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotation";
@@ -21,11 +21,9 @@ import { formatMeasurement } from "@/lib/measurements";
 
 const shapeIcons: Record<ShapeType, React.ReactNode> = {
   line: <Minus size={14} strokeWidth={1.5} />,
-  arrow: <ArrowRight size={14} strokeWidth={1.5} />,
   freehand: <Pencil size={14} strokeWidth={1.5} />,
   text: <Type size={14} strokeWidth={1.5} />,
   ruler: <Ruler size={14} strokeWidth={1.5} />,
-  ruler_dot: <Ruler size={14} strokeWidth={1.5} />,
   angle: <TriangleRight size={14} strokeWidth={1.5} />,
   cobb_angle: <Scaling size={14} strokeWidth={1.5} />,
 };
@@ -49,6 +47,7 @@ interface PropertiesPanelProps {
   onSelectShape: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onToggleLock: (id: string) => void;
+  onDeleteShape: (id: string) => void;
   onUpdateShape: (id: string, updates: Partial<BaseShape>) => void;
   currentStyle: ShapeStyle;
   onStyleChange: (style: ShapeStyle) => void;
@@ -63,6 +62,7 @@ export function PropertiesPanel({
   onSelectShape,
   onToggleVisibility,
   onToggleLock,
+  onDeleteShape,
   onUpdateShape,
   currentStyle,
   onStyleChange,
@@ -86,20 +86,20 @@ export function PropertiesPanel({
       style={{
         width: 280,
         backgroundColor: "#FFFFFF",
-        borderLeft: "1px solid #E3E8EE",
+        borderLeft: "1px solid #e5edf5",
       }}
     >
       {/* Tab Header */}
       <div
         className="flex"
-        style={{ borderBottom: "1px solid #E3E8EE" }}
+        style={{ borderBottom: "1px solid #e5edf5" }}
       >
         <button
           onClick={() => setActiveTab("layers")}
           className="flex-1 py-2 text-xs font-medium transition-colors"
           style={{
-            color: activeTab === "layers" ? "#635BFF" : "#697386",
-            borderBottom: activeTab === "layers" ? "2px solid #635BFF" : "2px solid transparent",
+            color: activeTab === "layers" ? "#533afd" : "#64748d",
+            borderBottom: activeTab === "layers" ? "2px solid #533afd" : "2px solid transparent",
           }}
         >
           Layers
@@ -108,8 +108,8 @@ export function PropertiesPanel({
           onClick={() => setActiveTab("properties")}
           className="flex-1 py-2 text-xs font-medium transition-colors"
           style={{
-            color: activeTab === "properties" ? "#635BFF" : "#697386",
-            borderBottom: activeTab === "properties" ? "2px solid #635BFF" : "2px solid transparent",
+            color: activeTab === "properties" ? "#533afd" : "#64748d",
+            borderBottom: activeTab === "properties" ? "2px solid #533afd" : "2px solid transparent",
           }}
         >
           Properties
@@ -118,8 +118,8 @@ export function PropertiesPanel({
           onClick={() => setActiveTab("measurements")}
           className="flex-1 py-2 text-xs font-medium transition-colors"
           style={{
-            color: activeTab === "measurements" ? "#635BFF" : "#697386",
-            borderBottom: activeTab === "measurements" ? "2px solid #635BFF" : "2px solid transparent",
+            color: activeTab === "measurements" ? "#533afd" : "#64748d",
+            borderBottom: activeTab === "measurements" ? "2px solid #533afd" : "2px solid transparent",
           }}
         >
           Measurements
@@ -131,7 +131,7 @@ export function PropertiesPanel({
         {activeTab === "layers" && (
           <div role="listbox" aria-label="Annotation layers" className="py-1">
             {sortedShapes.length === 0 && (
-              <div className="px-3 py-6 text-center text-xs" style={{ color: "#697386" }}>
+              <div className="px-3 py-6 text-center text-xs" style={{ color: "#64748d" }}>
                 No annotations yet.
                 <br />
                 Use the toolbar to start drawing.
@@ -147,7 +147,7 @@ export function PropertiesPanel({
                   onClick={() => onSelectShape(shape.id)}
                   className="flex items-center gap-1.5 px-2 py-1 cursor-pointer transition-colors"
                   style={{
-                    backgroundColor: isSelected ? "#F0EEFF" : "transparent",
+                    backgroundColor: isSelected ? "#ededfc" : "transparent",
                   }}
                 >
                   <GripVertical
@@ -159,7 +159,7 @@ export function PropertiesPanel({
                     style={{
                       width: 20,
                       height: 20,
-                      color: isSelected ? "#635BFF" : "#697386",
+                      color: isSelected ? "#533afd" : "#64748d",
                       flexShrink: 0,
                     }}
                   >
@@ -168,7 +168,7 @@ export function PropertiesPanel({
                   <span
                     className="flex-1 truncate text-xs"
                     style={{
-                      color: isSelected ? "#0A2540" : "#425466",
+                      color: isSelected ? "#061b31" : "#273951",
                     }}
                   >
                     {getShapeDisplayName(shape, index)}
@@ -182,7 +182,7 @@ export function PropertiesPanel({
                     style={{
                       width: 20,
                       height: 20,
-                      color: shape.visible ? "#697386" : "#A3ACB9",
+                      color: shape.visible ? "#64748d" : "#A3ACB9",
                       flexShrink: 0,
                     }}
                     aria-label={shape.visible ? "Hide shape" : "Show shape"}
@@ -202,7 +202,7 @@ export function PropertiesPanel({
                     style={{
                       width: 20,
                       height: 20,
-                      color: shape.locked ? "#635BFF" : "#A3ACB9",
+                      color: shape.locked ? "#533afd" : "#A3ACB9",
                       flexShrink: 0,
                     }}
                     aria-label={shape.locked ? "Unlock shape" : "Lock shape"}
@@ -212,6 +212,24 @@ export function PropertiesPanel({
                     ) : (
                       <Unlock size={12} strokeWidth={1.5} />
                     )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteShape(shape.id);
+                    }}
+                    className="flex items-center justify-center transition-colors"
+                    style={{
+                      width: 20,
+                      height: 20,
+                      color: "#A3ACB9",
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#DF1B41")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#A3ACB9")}
+                    aria-label="Delete shape"
+                  >
+                    <Trash2 size={12} strokeWidth={1.5} />
                   </button>
                 </div>
               );
@@ -227,7 +245,7 @@ export function PropertiesPanel({
                 onUpdate={(updates) => onUpdateShape(selectedShape.id, updates)}
               />
             ) : selectedShapeIds.length > 1 ? (
-              <div className="py-6 text-center text-xs" style={{ color: "#697386" }}>
+              <div className="py-6 text-center text-xs" style={{ color: "#64748d" }}>
                 {selectedShapeIds.length} shapes selected
               </div>
             ) : (
@@ -271,17 +289,17 @@ function ShapeProperties({
           placeholder="Add label..."
           className="w-full text-xs px-2 py-1"
           style={{
-            border: "1px solid #E3E8EE",
+            border: "1px solid #e5edf5",
             borderRadius: 4,
-            backgroundColor: "#F6F9FC",
-            color: "#0A2540",
+            backgroundColor: "#f6f9fc",
+            color: "#061b31",
           }}
         />
       </PropertyField>
 
       {/* Type (read-only) */}
       <PropertyField label="Type">
-        <p className="text-xs" style={{ color: "#425466" }}>
+        <p className="text-xs" style={{ color: "#273951" }}>
           {shape.type.charAt(0).toUpperCase() + shape.type.slice(1).replace("_", " ")}
         </p>
       </PropertyField>
@@ -312,7 +330,7 @@ function ShapeProperties({
             }
             className="flex-1"
           />
-          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#273951" }}>
             {shape.style.strokeWidth}px
           </span>
         </div>
@@ -334,7 +352,7 @@ function ShapeProperties({
             }
             className="flex-1"
           />
-          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#273951" }}>
             {Math.round(shape.style.strokeOpacity * 100)}%
           </span>
         </div>
@@ -343,7 +361,7 @@ function ShapeProperties({
       {/* Fill Color */}
       <PropertyField label="Fill color">
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+          <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
             <input
               type="checkbox"
               checked={shape.style.fillColor !== null}
@@ -384,10 +402,10 @@ function ShapeProperties({
           }
           className="w-full text-xs px-2 py-1"
           style={{
-            border: "1px solid #E3E8EE",
+            border: "1px solid #e5edf5",
             borderRadius: 4,
-            backgroundColor: "#F6F9FC",
-            color: "#0A2540",
+            backgroundColor: "#f6f9fc",
+            color: "#061b31",
           }}
         >
           <option value="solid">Solid</option>
@@ -441,7 +459,7 @@ function ShapeProperties({
 
       {/* Locked */}
       <PropertyField label="Locked">
-        <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+        <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
           <input
             type="checkbox"
             checked={shape.locked}
@@ -452,48 +470,6 @@ function ShapeProperties({
       </PropertyField>
 
       {/* ─── Type-Specific Properties ─── */}
-
-      {/* Arrow */}
-      {shape.type === "arrow" && (
-        <>
-          <PropertyField label="Arrow start">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
-              <input
-                type="checkbox"
-                checked={shape.arrowStart ?? false}
-                onChange={(e) => onUpdate({ arrowStart: e.target.checked })}
-              />
-              Show arrowhead
-            </label>
-          </PropertyField>
-          <PropertyField label="Arrow end">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
-              <input
-                type="checkbox"
-                checked={shape.arrowEnd !== false}
-                onChange={(e) => onUpdate({ arrowEnd: e.target.checked })}
-              />
-              Show arrowhead
-            </label>
-          </PropertyField>
-          <PropertyField label="Arrow size">
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min={6}
-                max={32}
-                step={1}
-                value={shape.arrowSize ?? 12}
-                onChange={(e) => onUpdate({ arrowSize: parseInt(e.target.value) })}
-                className="flex-1"
-              />
-              <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
-                {shape.arrowSize ?? 12}px
-              </span>
-            </div>
-          </PropertyField>
-        </>
-      )}
 
       {/* Text */}
       {shape.type === "text" && (
@@ -513,10 +489,10 @@ function ShapeProperties({
               }
               className="w-full text-xs px-2 py-1"
               style={{
-                border: "1px solid #E3E8EE",
+                border: "1px solid #e5edf5",
                 borderRadius: 4,
-                backgroundColor: "#F6F9FC",
-                color: "#0A2540",
+                backgroundColor: "#f6f9fc",
+                color: "#061b31",
               }}
             >
               <option value={400}>Regular</option>
@@ -526,7 +502,7 @@ function ShapeProperties({
             </select>
           </PropertyField>
           <PropertyField label="Font style">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
               <input
                 type="checkbox"
                 checked={shape.fontStyle === "italic"}
@@ -543,10 +519,10 @@ function ShapeProperties({
                   onClick={() => onUpdate({ textAlign: align })}
                   className="flex-1 py-1 text-xs capitalize"
                   style={{
-                    border: "1px solid #E3E8EE",
+                    border: "1px solid #e5edf5",
                     borderRadius: 4,
-                    backgroundColor: (shape.textAlign ?? "left") === align ? "#F0EEFF" : "#F6F9FC",
-                    color: (shape.textAlign ?? "left") === align ? "#635BFF" : "#425466",
+                    backgroundColor: (shape.textAlign ?? "left") === align ? "#ededfc" : "#f6f9fc",
+                    color: (shape.textAlign ?? "left") === align ? "#533afd" : "#273951",
                   }}
                 >
                   {align}
@@ -556,7 +532,7 @@ function ShapeProperties({
           </PropertyField>
           <PropertyField label="Background">
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+              <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
                 <input
                   type="checkbox"
                   checked={shape.textBackground !== null && shape.textBackground !== undefined}
@@ -593,7 +569,7 @@ function ShapeProperties({
             </PropertyField>
           )}
           <PropertyField label="End ticks">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
               <input
                 type="checkbox"
                 checked={shape.showEndTicks !== false}
@@ -607,7 +583,7 @@ function ShapeProperties({
               value={shape.labelPosition ?? "auto"}
               onChange={(e) => onUpdate({ labelPosition: e.target.value as "above" | "below" | "auto" })}
               className="w-full text-xs px-2 py-1"
-              style={{ border: "1px solid #E3E8EE", borderRadius: 4, backgroundColor: "#F6F9FC", color: "#0A2540" }}
+              style={{ border: "1px solid #e5edf5", borderRadius: 4, backgroundColor: "#f6f9fc", color: "#061b31" }}
             >
               <option value="auto">Auto</option>
               <option value="above">Above</option>
@@ -626,12 +602,12 @@ function ShapeProperties({
             </p>
           </PropertyField>
           <PropertyField label="Supplementary">
-            <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
+            <p className="text-xs tabular-nums" style={{ color: "#273951" }}>
               {(180 - shape.measurement.value).toFixed(1)}°
             </p>
           </PropertyField>
           <PropertyField label="Show supplementary">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
               <input
                 type="checkbox"
                 checked={shape.showSupplementary ?? false}
@@ -648,7 +624,7 @@ function ShapeProperties({
                 onChange={(e) => onUpdate({ arcRadius: parseInt(e.target.value) })}
                 className="flex-1"
               />
-              <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+              <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#273951" }}>
                 {shape.arcRadius ?? 30}px
               </span>
             </div>
@@ -682,7 +658,7 @@ function ShapeProperties({
             </span>
           </PropertyField>
           <PropertyField label="Perpendiculars">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
               <input
                 type="checkbox"
                 checked={shape.showPerpendiculars !== false}
@@ -692,7 +668,7 @@ function ShapeProperties({
             </label>
           </PropertyField>
           <PropertyField label="Classification label">
-            <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
+            <label className="flex items-center gap-1 text-xs" style={{ color: "#273951" }}>
               <input
                 type="checkbox"
                 checked={shape.showClassification !== false}
@@ -708,7 +684,7 @@ function ShapeProperties({
       {shape.measurement && shape.type !== "ruler" && shape.type !== "angle"
         && shape.type !== "cobb_angle" && (
         <PropertyField label="Measurement">
-          <p className="text-sm font-medium tabular-nums" style={{ color: "#635BFF" }}>
+          <p className="text-sm font-medium tabular-nums" style={{ color: "#533afd" }}>
             {shape.measurement.label}
           </p>
         </PropertyField>
@@ -734,11 +710,11 @@ function MeasurementSummary({
 
   return (
     <div className="p-3">
-      <p className="text-xs font-medium mb-2" style={{ color: "#0A2540" }}>
+      <p className="text-xs font-medium mb-2" style={{ color: "#061b31" }}>
         Measurement Summary
       </p>
       {measurementShapes.length === 0 ? (
-        <div className="py-6 text-center text-xs" style={{ color: "#697386" }}>
+        <div className="py-6 text-center text-xs" style={{ color: "#64748d" }}>
           No measurements yet.
           <br />
           Use Ruler (M), Angle (Shift+M), or Cobb (Cmd+Shift+M).
@@ -746,10 +722,10 @@ function MeasurementSummary({
       ) : (
         <div className="space-y-0.5">
           {/* Header */}
-          <div className="flex items-center gap-2 pb-1 mb-1" style={{ borderBottom: "1px solid #E3E8EE" }}>
-            <span className="w-5 text-xs font-medium" style={{ color: "#697386" }}>#</span>
-            <span className="flex-1 text-xs font-medium" style={{ color: "#697386" }}>Type</span>
-            <span className="text-xs font-medium text-right" style={{ color: "#697386", minWidth: 60 }}>Value</span>
+          <div className="flex items-center gap-2 pb-1 mb-1" style={{ borderBottom: "1px solid #e5edf5" }}>
+            <span className="w-5 text-xs font-medium" style={{ color: "#64748d" }}>#</span>
+            <span className="flex-1 text-xs font-medium" style={{ color: "#64748d" }}>Type</span>
+            <span className="text-xs font-medium text-right" style={{ color: "#64748d", minWidth: 60 }}>Value</span>
           </div>
           {measurementShapes.map((s, i) => (
             <button
@@ -757,11 +733,11 @@ function MeasurementSummary({
               onClick={() => onSelectShape(s.id)}
               className="flex items-center gap-2 w-full py-1 px-0.5 rounded transition-colors text-left"
               style={{ backgroundColor: "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F0F3F7")}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f6f9fc")}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
-              <span className="w-5 text-xs tabular-nums" style={{ color: "#697386" }}>{i + 1}</span>
-              <span className="flex items-center gap-1 flex-1 text-xs" style={{ color: "#425466" }}>
+              <span className="w-5 text-xs tabular-nums" style={{ color: "#64748d" }}>{i + 1}</span>
+              <span className="flex items-center gap-1 flex-1 text-xs" style={{ color: "#273951" }}>
                 {shapeIcons[s.type]}
                 {s.label || s.type.replace("_", " ")}
               </span>
@@ -788,10 +764,10 @@ function DefaultStyleEditor({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-xs font-medium" style={{ color: "#0A2540" }}>
+      <p className="text-xs font-medium" style={{ color: "#061b31" }}>
         Default Style
       </p>
-      <p className="text-xs" style={{ color: "#697386" }}>
+      <p className="text-xs" style={{ color: "#64748d" }}>
         New shapes will use these settings.
       </p>
       <PropertyField label="Stroke color">
@@ -813,7 +789,7 @@ function DefaultStyleEditor({
             }
             className="flex-1"
           />
-          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
+          <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#273951" }}>
             {style.strokeWidth}px
           </span>
         </div>
@@ -833,7 +809,7 @@ function PropertyField({
 }) {
   return (
     <div>
-      <label className="text-xs font-medium block mb-1" style={{ color: "#0A2540" }}>
+      <label className="text-xs font-medium block mb-1" style={{ color: "#061b31" }}>
         {label}
       </label>
       {children}
@@ -861,7 +837,7 @@ function ColorPicker({
             height: 24,
             borderRadius: 4,
             backgroundColor: color,
-            border: value === color ? "2px solid #635BFF" : "1px solid #E3E8EE",
+            border: value === color ? "2px solid #533afd" : "1px solid #e5edf5",
           }}
         />
       ))}
@@ -888,7 +864,7 @@ function NumberInput({
 }) {
   return (
     <div className="flex items-center gap-1">
-      <span className="text-xs" style={{ color: "#697386" }}>
+      <span className="text-xs" style={{ color: "#64748d" }}>
         {label}
       </span>
       <input
@@ -900,10 +876,10 @@ function NumberInput({
         }}
         className="w-16 text-xs px-1.5 py-1 tabular-nums"
         style={{
-          border: "1px solid #E3E8EE",
+          border: "1px solid #e5edf5",
           borderRadius: 4,
-          backgroundColor: "#F6F9FC",
-          color: "#0A2540",
+          backgroundColor: "#f6f9fc",
+          color: "#061b31",
         }}
       />
     </div>

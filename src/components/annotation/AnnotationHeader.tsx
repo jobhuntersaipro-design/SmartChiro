@@ -43,7 +43,7 @@ function AdjustmentSlider({
     <div className="flex items-center gap-2">
       <span
         className="text-xs whitespace-nowrap"
-        style={{ color: "#425466", minWidth: 60 }}
+        style={{ color: "#273951", minWidth: 60 }}
       >
         {label}
       </span>
@@ -53,11 +53,11 @@ function AdjustmentSlider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1 w-20 cursor-pointer accent-[#635BFF]"
+        className="h-1 w-20 cursor-pointer accent-[#533afd]"
       />
       <span
         className="text-xs tabular-nums"
-        style={{ color: "#697386", minWidth: 28, textAlign: "right" }}
+        style={{ color: "#64748d", minWidth: 28, textAlign: "right" }}
       >
         {value}
       </span>
@@ -134,9 +134,9 @@ function InlineEditableTitle({
         onKeyDown={handleKeyDown}
         className="text-sm font-medium outline-none"
         style={{
-          color: "#0A2540",
-          backgroundColor: "#F6F9FC",
-          border: "1px solid #635BFF",
+          color: "#061b31",
+          backgroundColor: "#f6f9fc",
+          border: "1px solid #533afd",
           borderRadius: 4,
           padding: "2px 8px",
           width: Math.max(120, editValue.length * 8 + 32),
@@ -153,7 +153,7 @@ function InlineEditableTitle({
         setIsEditing(true);
       }}
       className="group flex items-center gap-1.5 text-sm font-medium"
-      style={{ color: "#0A2540", position: "relative" }}
+      style={{ color: "#061b31", position: "relative" }}
     >
       <span
         className={isUntitled ? "animate-title-hint" : ""}
@@ -207,7 +207,7 @@ export function AnnotationHeader({
       style={{
         height: 48,
         backgroundColor: "#FFFFFF",
-        borderBottom: "1px solid #E3E8EE",
+        borderBottom: "1px solid #e5edf5",
       }}
     >
       {/* Left: Breadcrumb */}
@@ -215,7 +215,7 @@ export function AnnotationHeader({
         <Link
           href={`/dashboard/${patientId}`}
           className="text-sm transition-colors hover:underline"
-          style={{ color: "#697386" }}
+          style={{ color: "#64748d" }}
         >
           {patientName}
         </Link>
@@ -251,9 +251,9 @@ export function AnnotationHeader({
           className="flex items-center gap-1 px-2 py-1 text-xs transition-colors"
           style={{
             borderRadius: 4,
-            border: "1px solid #E3E8EE",
-            backgroundColor: flipped ? "#F0EEFF" : "#FFFFFF",
-            color: flipped ? "#635BFF" : "#425466",
+            border: "1px solid #e5edf5",
+            backgroundColor: flipped ? "#ededfc" : "#FFFFFF",
+            color: flipped ? "#533afd" : "#273951",
           }}
         >
           <FlipHorizontal2 size={14} strokeWidth={1.5} />
@@ -266,7 +266,7 @@ export function AnnotationHeader({
             style={{
               borderRadius: 4,
               color: "#DF1B41",
-              border: "1px solid #E3E8EE",
+              border: "1px solid #e5edf5",
             }}
           >
             Reset
@@ -282,7 +282,7 @@ export function AnnotationHeader({
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors"
           style={{
             borderRadius: 4,
-            backgroundColor: "#635BFF",
+            backgroundColor: "#533afd",
             opacity: isSaving ? 0.6 : 1,
             position: "relative",
           }}
@@ -303,7 +303,7 @@ export function AnnotationHeader({
             width: 32,
             height: 32,
             borderRadius: 4,
-            color: "#697386",
+            color: "#64748d",
           }}
           aria-label="Close annotation editor"
         >

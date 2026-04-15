@@ -20,7 +20,7 @@ interface AddPatientDialogProps {
 function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[13px] font-medium text-[#425466] mb-1">
+      <label className="block text-[13px] font-medium text-[#273951] mb-1">
         {label} {required && <span className="text-[#DF1B41]">*</span>}
       </label>
       {children}
@@ -28,8 +28,8 @@ function FormField({ label, required, children }: { label: string; required?: bo
   );
 }
 
-const inputClass = "flex h-8 w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 text-[15px] text-[#0A2540] placeholder:text-[#697386] focus:outline-none focus:ring-1 focus:ring-[#635BFF] focus:border-[#635BFF] focus:bg-white transition-colors";
-const selectClass = "flex h-8 w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 text-[15px] text-[#0A2540] focus:outline-none focus:ring-1 focus:ring-[#635BFF] focus:border-[#635BFF] focus:bg-white transition-colors appearance-none";
+const inputClass = "flex h-8 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors";
+const selectClass = "flex h-8 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none";
 
 export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialogProps) {
   const [firstName, setFirstName] = useState("");
@@ -81,14 +81,14 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => onOpenChange(false)} />
       <div
-        className="relative z-10 w-full max-w-[520px] rounded-[8px] border border-[#E3E8EE] bg-white p-6"
-        style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
+        className="relative z-10 w-full max-w-[520px] rounded-[8px] border border-[#e5edf5] bg-white p-6"
+        style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[18px] font-semibold text-[#0A2540]">Add New Patient</h2>
+          <h2 className="text-[18px] font-light text-[#061b31]">Add New Patient</h2>
           <button
             onClick={() => onOpenChange(false)}
-            className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#697386] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]"
+            className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -140,7 +140,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd }: AddPatientDialog
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-8 px-3 text-[15px] font-medium rounded-[4px] border-[#E3E8EE] text-[#425466] hover:bg-[#F0F3F7]"
+              className="h-8 px-3 text-[15px] font-medium rounded-[4px] border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]"
             >
               Cancel
             </Button>

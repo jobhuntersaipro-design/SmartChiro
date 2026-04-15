@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ViewMode, ViewportSlot } from "@/types/annotation";
+import type { BaseShape, ViewMode, ViewportSlot } from "@/types/annotation";
+import { ShapeRenderer } from "./ShapeRenderer";
 
 export interface ViewportState {
   zoom: number;
@@ -28,6 +29,7 @@ export function ViewportCell({
   flipped,
   viewState,
   onViewStateChange,
+  shapes,
 }: {
   slot: ViewportSlot;
   isActive: boolean;
@@ -36,6 +38,8 @@ export function ViewportCell({
   flipped?: boolean;
   viewState: ViewportState;
   onViewStateChange: (state: ViewportState) => void;
+  /** Read-only shapes to render as annotation overlay */
+  shapes?: BaseShape[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -142,7 +146,7 @@ export function ViewportCell({
         style={{
           backgroundColor: "#1A1F36",
           border: isActive
-            ? "2px solid #635BFF"
+            ? "2px solid #533afd"
             : "1px solid rgba(255,255,255,0.08)",
           borderRadius: 4,
         }}
@@ -175,7 +179,7 @@ export function ViewportCell({
       style={{
         backgroundColor: "#1A1F36",
         border: isActive
-          ? "2px solid #635BFF"
+          ? "2px solid #533afd"
           : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 4,
         cursor: isPanning.current ? "grabbing" : "grab",
@@ -207,6 +211,36 @@ export function ViewportCell({
           draggable={false}
         />
       </div>
+
+      {/* Annotation Shapes Overlay (read-only) */}
+      {shapes && shapes.length > 0 && (
+        <div
+          className="absolute origin-top-left"
+          style={{
+            transform: `translate(${viewState.panX}px, ${viewState.panY}px) scale(${viewState.zoom})`,
+            willChange: "transform",
+            pointerEvents: "none",
+          }}
+        >
+          <svg
+            width={slot.imageWidth}
+            height={slot.imageHeight}
+            className="absolute inset-0"
+            style={{ overflow: "visible" }}
+          >
+            {shapes
+              .filter((s) => s.visible)
+              .sort((a, b) => a.zIndex - b.zIndex)
+              .map((shape) => (
+                <ShapeRenderer
+                  key={shape.id}
+                  shape={shape}
+                  zoom={viewState.zoom}
+                />
+              ))}
+          </svg>
+        </div>
+      )}
 
       {/* Zoom Hint */}
       {showHint && (

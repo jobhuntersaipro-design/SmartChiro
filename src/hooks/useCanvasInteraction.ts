@@ -246,9 +246,6 @@ export function useCanvasInteraction({
             case "l":
               setActiveTool("line");
               return;
-            case "a":
-              setActiveTool("arrow");
-              return;
             case "t":
               setActiveTool("text");
               return;
@@ -260,9 +257,6 @@ export function useCanvasInteraction({
               return;
             case "k":
               setActiveTool("calibration");
-              return;
-            case "d":
-              setActiveTool("ruler_dot");
               return;
           }
         }

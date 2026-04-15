@@ -19,7 +19,7 @@ function highlightName(description: string): React.ReactNode {
   return parts.map((part, i) => {
     if (/^(?:Dr\.\s)?[A-Z][a-z]+(?:\s[A-Z][a-z]+)+$/.test(part)) {
       return (
-        <span key={i} className="font-medium text-[#0A2540]">
+        <span key={i} className="font-medium text-[#061b31]">
           {part}
         </span>
       );
@@ -32,10 +32,10 @@ export function RecentActivity() {
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-[#0A2540]">
+        <h3 className="text-[18px] font-light tracking-[-0.01em] text-[#061b31]">
           Recent Activity
         </h3>
-        <button className="text-[13px] font-medium text-[#635BFF] hover:text-[#5851EB]">
+        <button className="text-[13px] font-medium text-[#533afd] hover:text-[#4434d4]">
           Filter
         </button>
       </div>
@@ -44,16 +44,16 @@ export function RecentActivity() {
         {recentActivity.map((activity) => (
           <div
             key={activity.id}
-            className="flex gap-3 py-3 border-b border-[#E3E8EE] last:border-b-0"
+            className="flex gap-3 py-3 border-b border-[#e5edf5] last:border-b-0"
           >
             {/* Dot indicator */}
-            <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#635BFF]" />
+            <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#533afd]" />
 
             <div className="min-w-0">
-              <p className="text-[15px] leading-relaxed text-[#425466]">
+              <p className="text-[15px] leading-relaxed text-[#273951]">
                 {highlightName(activity.description)}
               </p>
-              <p className="mt-0.5 text-[13px] text-[#697386]">
+              <p className="mt-0.5 text-[13px] text-[#64748d]">
                 {formatTimestamp(activity.timestamp)}
               </p>
             </div>

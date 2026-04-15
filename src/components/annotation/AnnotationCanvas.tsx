@@ -115,7 +115,20 @@ export function AnnotationCanvas({
     });
   }, []);
 
-  // Force re-render counter for drawing preview
+  // Per-xray cache: shapes, annotationId, and viewport state for multi-view isolation
+  interface XrayCache {
+    shapes: BaseShape[];
+    annotationId: string | null;
+    viewportState?: { zoom: number; panX: number; panY: number };
+  }
+  const shapesPerXrayRef = useRef<Map<string, XrayCache>>(
+    new Map([[xrayId, { shapes: initialCanvasState?.shapes ?? [], annotationId }]])
+  );
+
+  // Track the xray ID that the current shapes belong to
+  const activeXrayIdRef = useRef<string>(xrayId);
+
+  // Force re-render counter for drawing preview and annotation fetches
   const [, setRenderTick] = useState(0);
 
   // Clipboard for copy/paste
@@ -126,7 +139,7 @@ export function AnnotationCanvas({
   const imageAdj = useImageAdjustments(
     initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS }
   );
-  const autoSave = useAutoSave({ annotationId });
+  const autoSave = useAutoSave({ annotationId, xrayId, userId });
   const undoRedo = useUndoRedo({
     shapes,
     setShapes,
@@ -238,6 +251,93 @@ export function AnnotationCanvas({
     pixelsPerMm,
   });
 
+  // ─── Multi-View: Switch active slot → swap shapes per xray ───
+  const prevActiveSlotRef = useRef(activeSlotIndex);
+  useEffect(() => {
+    if (viewMode === "single") return;
+    const prevSlot = gridSlots[prevActiveSlotRef.current];
+    const newSlot = gridSlots[activeSlotIndex];
+    const prevXrayId = prevSlot?.xrayId ?? null;
+    const newXrayId = newSlot?.xrayId ?? null;
+
+    prevActiveSlotRef.current = activeSlotIndex;
+
+    // Same xray or no xray in new slot — nothing to do
+    if (!newXrayId || prevXrayId === newXrayId) return;
+
+    // Save current shapes + viewport state for the previous xray
+    if (prevXrayId) {
+      shapesPerXrayRef.current.set(prevXrayId, {
+        shapes: [...shapes],
+        annotationId: autoSave.currentAnnotationId,
+        viewportState: { ...viewport.transform },
+      });
+    }
+
+    // Load shapes for the new xray
+    const cached = shapesPerXrayRef.current.get(newXrayId);
+    if (cached) {
+      setShapes(cached.shapes);
+      autoSave.switchTarget(newXrayId, cached.annotationId);
+      activeXrayIdRef.current = newXrayId;
+      // Restore viewport state if previously saved
+      if (cached.viewportState) {
+        viewport.setTransform(cached.viewportState);
+      }
+    } else {
+      // Not yet loaded — start with empty and fetch from API
+      setShapes([]);
+      autoSave.switchTarget(newXrayId, null);
+      activeXrayIdRef.current = newXrayId;
+      fetchAnnotationForXray(newXrayId);
+    }
+    // Clear undo history when switching xrays
+    undoRedo.clear();
+    interaction.setSelectedShapeIds([]);
+  }, [activeSlotIndex, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch annotation for an xray that hasn't been loaded yet
+  const fetchAnnotationForXray = useCallback(async (targetXrayId: string) => {
+    try {
+      const res = await fetch(`/api/xrays/${targetXrayId}/annotations`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const annotations = data.annotations as { id: string }[];
+      if (annotations.length === 0) {
+        shapesPerXrayRef.current.set(targetXrayId, { shapes: [], annotationId: null });
+        return;
+      }
+      // Fetch the latest annotation's full canvas state
+      const latestId = annotations[0].id;
+      const fullRes = await fetch(`/api/xrays/${targetXrayId}/annotations/${latestId}`);
+      if (!fullRes.ok) return;
+      const fullData = await fullRes.json();
+      const loadedShapes: BaseShape[] = fullData.canvasState?.shapes ?? [];
+      shapesPerXrayRef.current.set(targetXrayId, { shapes: loadedShapes, annotationId: latestId });
+
+      // If this xray is still the active one, update shapes state
+      if (activeXrayIdRef.current === targetXrayId) {
+        setShapes(loadedShapes);
+        autoSave.switchTarget(targetXrayId, latestId);
+      } else {
+        // Non-active cell — trigger re-render so read-only overlay updates
+        setRenderTick((n) => n + 1);
+      }
+    } catch (err) {
+      console.error("Failed to fetch annotation for xray:", targetXrayId, err);
+    }
+  }, [autoSave]);
+
+  // ─── Pre-fetch annotations for all grid slots (non-active cells) ───
+  useEffect(() => {
+    if (viewMode === "single") return;
+    for (const slot of gridSlots) {
+      if (slot.xrayId && !shapesPerXrayRef.current.has(slot.xrayId)) {
+        fetchAnnotationForXray(slot.xrayId);
+      }
+    }
+  }, [gridSlots, viewMode, fetchAnnotationForXray]);
+
   // ─── Multi-View: Select X-ray from sidebar ───
   const handleSelectXrayForSlot = useCallback(
     (xray: { id: string; fileUrl: string; width: number | null; height: number | null; title: string | null }) => {
@@ -246,6 +346,16 @@ export function AnnotationCanvas({
         window.location.href = `/dashboard/xrays/${patientId}/${xray.id}/annotate`;
         return;
       }
+      // Save current shapes + viewport state before switching
+      const currentSlot = gridSlots[activeSlotIndex];
+      if (currentSlot?.xrayId) {
+        shapesPerXrayRef.current.set(currentSlot.xrayId, {
+          shapes: [...shapes],
+          annotationId: autoSave.currentAnnotationId,
+          viewportState: { ...viewport.transform },
+        });
+      }
+
       // In grid mode, place into the active slot
       setGridSlots((prev) => {
         const newSlots = [...prev];
@@ -263,8 +373,26 @@ export function AnnotationCanvas({
         newSlots[activeSlotIndex] = slot;
         return newSlots;
       });
+
+      // Load the new xray's shapes + viewport state
+      const cached = shapesPerXrayRef.current.get(xray.id);
+      if (cached) {
+        setShapes(cached.shapes);
+        autoSave.switchTarget(xray.id, cached.annotationId);
+        activeXrayIdRef.current = xray.id;
+        if (cached.viewportState) {
+          viewport.setTransform(cached.viewportState);
+        }
+      } else {
+        setShapes([]);
+        autoSave.switchTarget(xray.id, null);
+        activeXrayIdRef.current = xray.id;
+        fetchAnnotationForXray(xray.id);
+      }
+      undoRedo.clear();
+      interaction.setSelectedShapeIds([]);
     },
-    [viewMode, activeSlotIndex]
+    [viewMode, activeSlotIndex, gridSlots, shapes, autoSave, undoRedo, interaction, fetchAnnotationForXray, viewport]
   );
 
   // ─── Shape Update (from properties panel) ───
@@ -307,6 +435,16 @@ export function AnnotationCanvas({
   // Keep auto-save refs current so debounced/interval saves have latest data
   useEffect(() => {
     autoSave.updateState(buildCanvasState(), imageAdj.adjustments);
+    // Also keep per-xray cache in sync (shapes + viewport)
+    const currentXray = activeXrayIdRef.current;
+    if (currentXray) {
+      const existing = shapesPerXrayRef.current.get(currentXray);
+      shapesPerXrayRef.current.set(currentXray, {
+        shapes,
+        annotationId: autoSave.currentAnnotationId,
+        viewportState: existing?.viewportState ?? { ...viewport.transform },
+      });
+    }
   }, [shapes, imageAdj.adjustments]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Shape Operations ───
@@ -674,14 +812,14 @@ export function AnnotationCanvas({
         style={{
           height: 44,
           backgroundColor: "#FFFFFF",
-          borderBottom: "1px solid #E3E8EE",
+          borderBottom: "1px solid #e5edf5",
         }}
       >
         <ViewModeSwitcher
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
-        <div style={{ width: 1, height: 28, backgroundColor: "#E3E8EE", marginLeft: 4, marginRight: 4 }} />
+        <div style={{ width: 1, height: 28, backgroundColor: "#e5edf5", marginLeft: 4, marginRight: 4 }} />
         <AnnotationToolbar
           activeTool={interaction.activeTool}
           onToolChange={(tool) => {
@@ -846,7 +984,7 @@ export function AnnotationCanvas({
                         className="relative overflow-hidden"
                         style={{
                           backgroundColor: "#1A1F36",
-                          border: "2px solid #635BFF",
+                          border: "2px solid #533afd",
                           borderRadius: 4,
                           cursor: getCursor(),
                         }}
@@ -937,7 +1075,7 @@ export function AnnotationCanvas({
                         className="flex cursor-pointer items-center justify-center"
                         style={{
                           backgroundColor: "#1A1F36",
-                          border: i === activeSlotIndex ? "2px solid #635BFF" : "1px solid rgba(255,255,255,0.08)",
+                          border: i === activeSlotIndex ? "2px solid #533afd" : "1px solid rgba(255,255,255,0.08)",
                           borderRadius: 4,
                         }}
                       >
@@ -951,7 +1089,8 @@ export function AnnotationCanvas({
                     );
                   }
 
-                  // ─── Non-active cell: simple viewer ───
+                  // ─── Non-active cell: simple viewer with read-only annotations ───
+                  const cachedShapes = slot.xrayId ? shapesPerXrayRef.current.get(slot.xrayId)?.shapes : undefined;
                   return (
                     <ViewportCell
                       key={i}
@@ -962,6 +1101,7 @@ export function AnnotationCanvas({
                       flipped={flipped}
                       viewState={gridViewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
                       onViewStateChange={(state) => handleGridViewStateChange(i, state)}
+                      shapes={cachedShapes}
                     />
                   );
                 })}
@@ -987,6 +1127,7 @@ export function AnnotationCanvas({
           onSelectShape={(id) => interaction.setSelectedShapeIds([id])}
           onToggleVisibility={toggleShapeVisibility}
           onToggleLock={toggleShapeLock}
+          onDeleteShape={(id) => handleDeleteShapes([id])}
           onUpdateShape={handleUpdateShape}
           currentStyle={currentStyle}
           onStyleChange={setCurrentStyle}

@@ -23,10 +23,10 @@ function DetailRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ c
   if (!value) return null;
   return (
     <div className="flex items-start gap-2.5 py-2">
-      <Icon className="h-4 w-4 text-[#697386] mt-0.5 shrink-0" strokeWidth={1.5} />
+      <Icon className="h-4 w-4 text-[#64748d] mt-0.5 shrink-0" strokeWidth={1.5} />
       <div className="min-w-0">
-        <p className="text-[13px] text-[#697386]">{label}</p>
-        <p className="text-[15px] text-[#0A2540] break-words">{value}</p>
+        <p className="text-[13px] text-[#64748d]">{label}</p>
+        <p className="text-[15px] text-[#061b31] break-words">{value}</p>
       </div>
     </div>
   );
@@ -35,7 +35,7 @@ function DetailRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ c
 function SectionHeading({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-2 mt-4 first:mt-0">
-      <h4 className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#697386]">
+      <h4 className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
         {children}
       </h4>
       {action}
@@ -45,9 +45,9 @@ function SectionHeading({ children, action }: { children: React.ReactNode; actio
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 py-2 text-center">
-      <p className="text-[18px] font-semibold text-[#0A2540]">{value}</p>
-      <p className="text-[13px] text-[#697386]">{label}</p>
+    <div className="rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-center">
+      <p className="text-[18px] font-semibold text-[#061b31]">{value}</p>
+      <p className="text-[13px] text-[#64748d]">{label}</p>
     </div>
   );
 }
@@ -66,26 +66,26 @@ function XrayCard({ xray, patientId }: { xray: PatientXray; patientId: string })
       href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-3 rounded-[6px] border border-[#E3E8EE] bg-white p-3 transition-colors hover:bg-[#F0F3F7] hover:border-[#C1C9D2] cursor-pointer"
+      className="group flex items-center gap-3 rounded-[6px] border border-[#e5edf5] bg-white p-3 transition-colors hover:bg-[#f6f9fc] hover:border-[#C1C9D2] cursor-pointer"
     >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[4px] bg-[#1A1F36]">
-        <ScanLine className="h-5 w-5 text-[#697386]" strokeWidth={1.5} />
+        <ScanLine className="h-5 w-5 text-[#64748d]" strokeWidth={1.5} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] font-medium text-[#0A2540] truncate group-hover:text-[#635BFF] transition-colors">
+        <p className="text-[15px] font-medium text-[#061b31] truncate group-hover:text-[#533afd] transition-colors">
           {xray.title || "Untitled X-Ray"}
         </p>
-        <p className="text-[13px] text-[#697386]">
+        <p className="text-[13px] text-[#64748d]">
           {bodyRegionLabels[xray.bodyRegion || ""] || xray.bodyRegion || "—"} · {xray.viewType || "—"} · {new Date(xray.createdAt).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {xray.annotationCount > 0 && (
-          <span className="inline-flex items-center rounded-full bg-[#F0EEFF] px-1.5 py-0.5 text-[12px] font-medium text-[#635BFF]">
+          <span className="inline-flex items-center rounded-full bg-[#ededfc] px-1.5 py-0.5 text-[12px] font-medium text-[#533afd]">
             {xray.annotationCount} ann.
           </span>
         )}
-        <ExternalLink className="h-3.5 w-3.5 text-[#697386] opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
+        <ExternalLink className="h-3.5 w-3.5 text-[#64748d] opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={1.5} />
       </div>
     </a>
   );
@@ -112,18 +112,18 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
       }
     }}>
       <SheetContent side="right" className="w-[480px] sm:max-w-[480px] overflow-y-auto p-0">
-        <SheetHeader className="p-5 pb-4 border-b border-[#E3E8EE]">
+        <SheetHeader className="p-5 pb-4 border-b border-[#e5edf5]">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-[#F0EEFF] text-[#635BFF] text-[15px] font-medium">
+              <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[15px] font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div>
-              <SheetTitle className="text-[18px] font-semibold text-[#0A2540]">
+              <SheetTitle className="text-[18px] font-semibold text-[#061b31]">
                 {fullName}
               </SheetTitle>
-              <SheetDescription className="text-[13px] text-[#697386]">
+              <SheetDescription className="text-[13px] text-[#64748d]">
                 {age ? `${age} y/o` : ""} {patient.gender || ""} — Patient since {new Date(patient.createdAt).toLocaleDateString("en-MY", { month: "short", year: "numeric" })}
               </SheetDescription>
             </div>
@@ -149,7 +149,7 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
             action={
               <button
                 onClick={() => setShowUpload(!showUpload)}
-                className="flex items-center gap-1 rounded-[4px] px-2 py-1 text-[13px] font-medium text-[#635BFF] transition-colors hover:bg-[#F0EEFF]"
+                className="flex items-center gap-1 rounded-[4px] px-2 py-1 text-[13px] font-medium text-[#533afd] transition-colors hover:bg-[#ededfc]"
               >
                 <Upload className="h-3 w-3" strokeWidth={2} />
                 {showUpload ? "Cancel" : "Upload X-Ray"}
@@ -182,20 +182,20 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
                   href={`/dashboard/xrays/${patient.id}/${xrayId}/annotate`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-3 rounded-[6px] border border-[#E3E8EE] bg-[#E8F5E8] p-3 transition-colors hover:bg-[#d4edd4] cursor-pointer"
+                  className="group flex items-center gap-3 rounded-[6px] border border-[#e5edf5] bg-[#E8F5E8] p-3 transition-colors hover:bg-[#d4edd4] cursor-pointer"
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[4px] bg-[#1A1F36]">
-                    <ScanLine className="h-5 w-5 text-[#697386]" strokeWidth={1.5} />
+                    <ScanLine className="h-5 w-5 text-[#64748d]" strokeWidth={1.5} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-medium text-[#0A2540] group-hover:text-[#635BFF] transition-colors">
+                    <p className="text-[15px] font-medium text-[#061b31] group-hover:text-[#533afd] transition-colors">
                       New Upload
                     </p>
                     <p className="text-[13px] text-[#30B130]">
                       Just uploaded — click to annotate
                     </p>
                   </div>
-                  <ExternalLink className="h-3.5 w-3.5 text-[#697386] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" strokeWidth={1.5} />
+                  <ExternalLink className="h-3.5 w-3.5 text-[#64748d] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" strokeWidth={1.5} />
                 </a>
               ))}
             </div>
@@ -209,12 +209,12 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
               ))}
             </div>
           ) : uploadedXrayIds.length === 0 ? (
-            <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-4 text-center">
-              <ScanLine className="h-5 w-5 text-[#697386] mx-auto mb-1" strokeWidth={1.5} />
-              <p className="text-[13px] text-[#697386]">No X-rays yet</p>
+            <div className="rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] p-4 text-center">
+              <ScanLine className="h-5 w-5 text-[#64748d] mx-auto mb-1" strokeWidth={1.5} />
+              <p className="text-[13px] text-[#64748d]">No X-rays yet</p>
               <button
                 onClick={() => setShowUpload(true)}
-                className="mt-2 text-[13px] font-medium text-[#635BFF] hover:underline"
+                className="mt-2 text-[13px] font-medium text-[#533afd] hover:underline"
               >
                 Upload first X-ray
               </button>
@@ -241,8 +241,8 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
 
           {/* Recent Visits placeholder */}
           <SectionHeading>Recent Visits</SectionHeading>
-          <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-4 text-center">
-            <p className="text-[13px] text-[#697386]">Visit history will appear here once visits are recorded</p>
+          <div className="rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] p-4 text-center">
+            <p className="text-[13px] text-[#64748d]">Visit history will appear here once visits are recorded</p>
           </div>
         </div>
       </SheetContent>

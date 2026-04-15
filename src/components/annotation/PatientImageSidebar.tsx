@@ -300,7 +300,7 @@ export function PatientImageSidebar({
           style={{
             width: 280,
             backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #E3E8EE",
+            borderRight: "1px solid #e5edf5",
           }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -312,13 +312,13 @@ export function PatientImageSidebar({
               className="absolute inset-0 z-20 flex items-center justify-center"
               style={{
                 backgroundColor: "rgba(240, 238, 255, 0.9)",
-                border: "2px dashed #635BFF",
+                border: "2px dashed #533afd",
                 borderRadius: 4,
               }}
             >
               <div className="text-center">
-                <Upload size={24} style={{ color: "#635BFF", margin: "0 auto" }} />
-                <p className="mt-1 text-xs font-medium" style={{ color: "#635BFF" }}>
+                <Upload size={24} style={{ color: "#533afd", margin: "0 auto" }} />
+                <p className="mt-1 text-xs font-medium" style={{ color: "#533afd" }}>
                   Drop X-rays here
                 </p>
               </div>
@@ -328,16 +328,16 @@ export function PatientImageSidebar({
           {/* Header */}
           <div
             className="flex items-center gap-2 px-3 py-2"
-            style={{ borderBottom: "1px solid #E3E8EE" }}
+            style={{ borderBottom: "1px solid #e5edf5" }}
           >
-            <ImageIcon size={14} style={{ color: "#697386" }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#0A2540" }}>
+            <ImageIcon size={14} style={{ color: "#64748d" }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#061b31" }}>
               Patient X-Rays
             </span>
             <span
               style={{
                 fontSize: 11,
-                color: "#697386",
+                color: "#64748d",
                 marginLeft: "auto",
               }}
             >
@@ -352,12 +352,12 @@ export function PatientImageSidebar({
               className="flex w-full items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-colors"
               style={{
                 borderRadius: 4,
-                border: "1px solid #E3E8EE",
+                border: "1px solid #e5edf5",
                 backgroundColor: "#FFFFFF",
-                color: "#425466",
+                color: "#273951",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = "#F0F3F7";
+                (e.currentTarget as HTMLElement).style.backgroundColor = "#f6f9fc";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.backgroundColor = "#FFFFFF";
@@ -383,9 +383,9 @@ export function PatientImageSidebar({
               style={{
                 maxHeight: 160,
                 borderRadius: 4,
-                border: "1px solid #E3E8EE",
+                border: "1px solid #e5edf5",
                 padding: 6,
-                backgroundColor: "#F6F9FC",
+                backgroundColor: "#f6f9fc",
               }}
             >
               {uploadFiles.map((entry) => (
@@ -403,7 +403,7 @@ export function PatientImageSidebar({
                       size={10}
                       className="animate-spin"
                       style={{
-                        color: entry.status === "pending" ? "#A3ACB9" : "#635BFF",
+                        color: entry.status === "pending" ? "#A3ACB9" : "#533afd",
                         flexShrink: 0,
                       }}
                     />
@@ -411,20 +411,20 @@ export function PatientImageSidebar({
                   <div className="min-w-0 flex-1">
                     <p
                       className="truncate"
-                      style={{ fontSize: 10, color: "#0A2540" }}
+                      style={{ fontSize: 10, color: "#061b31" }}
                     >
                       {entry.file.name}
                     </p>
                     {entry.status === "uploading" && (
                       <div
                         className="mt-0.5 h-1 overflow-hidden rounded-full"
-                        style={{ backgroundColor: "#E3E8EE" }}
+                        style={{ backgroundColor: "#e5edf5" }}
                       >
                         <div
                           className="h-full rounded-full transition-all duration-300"
                           style={{
                             width: `${entry.progress}%`,
-                            backgroundColor: "#635BFF",
+                            backgroundColor: "#533afd",
                           }}
                         />
                       </div>
@@ -455,7 +455,7 @@ export function PatientImageSidebar({
                     setShowUpload(false);
                   }}
                   className="mt-1 text-center text-xs font-medium"
-                  style={{ color: "#635BFF" }}
+                  style={{ color: "#533afd" }}
                 >
                   Clear
                 </button>
@@ -472,13 +472,13 @@ export function PatientImageSidebar({
           >
             {loading && (
               <div className="flex items-center justify-center py-8">
-                <span style={{ fontSize: 12, color: "#697386" }}>Loading...</span>
+                <span style={{ fontSize: 12, color: "#64748d" }}>Loading...</span>
               </div>
             )}
 
             {!loading && xrays.length === 0 && (
               <div className="flex items-center justify-center py-8">
-                <span style={{ fontSize: 12, color: "#697386" }}>
+                <span style={{ fontSize: 12, color: "#64748d" }}>
                   No X-rays found
                 </span>
               </div>
@@ -501,9 +501,9 @@ export function PatientImageSidebar({
                   style={{
                     borderRadius: 4,
                     border: isCurrent
-                      ? "2px solid #635BFF"
-                      : "1px solid #E3E8EE",
-                    backgroundColor: isCurrent ? "#F0EEFF" : "#FFFFFF",
+                      ? "2px solid #533afd"
+                      : "1px solid #e5edf5",
+                    backgroundColor: isCurrent ? "#ededfc" : "#FFFFFF",
                     padding: 0,
                     flexShrink: 0,
                   }}
@@ -522,21 +522,6 @@ export function PatientImageSidebar({
                       className="h-full w-full object-contain"
                       draggable={false}
                     />
-                    {isCurrent && (
-                      <div
-                        className="absolute right-1 top-1"
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 600,
-                          color: "#FFFFFF",
-                          backgroundColor: "#635BFF",
-                          borderRadius: 9999,
-                          padding: "1px 6px",
-                        }}
-                      >
-                        Current
-                      </div>
-                    )}
                   </div>
 
                   {/* Info */}
@@ -546,14 +531,14 @@ export function PatientImageSidebar({
                       style={{
                         fontSize: 12,
                         fontWeight: 500,
-                        color: "#0A2540",
+                        color: "#061b31",
                       }}
                     >
                       {xray.title ?? "Untitled"}
                     </div>
                     <div
                       className="flex items-center gap-1"
-                      style={{ fontSize: 11, color: "#697386" }}
+                      style={{ fontSize: 11, color: "#64748d" }}
                     >
                       {xray.bodyRegion && (
                         <span className="capitalize">
@@ -573,7 +558,7 @@ export function PatientImageSidebar({
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-3" style={{ flexShrink: 0 }}>
-                <Loader2 size={14} className="animate-spin" style={{ color: "#697386" }} />
+                <Loader2 size={14} className="animate-spin" style={{ color: "#64748d" }} />
               </div>
             )}
           </div>
@@ -590,10 +575,10 @@ export function PatientImageSidebar({
           height: 32,
           backgroundColor: "#FFFFFF",
           borderRadius: "0 4px 4px 0",
-          borderTop: "1px solid #E3E8EE",
-          borderRight: "1px solid #E3E8EE",
-          borderBottom: "1px solid #E3E8EE",
-          color: "#697386",
+          borderTop: "1px solid #e5edf5",
+          borderRight: "1px solid #e5edf5",
+          borderBottom: "1px solid #e5edf5",
+          color: "#64748d",
           zIndex: 10,
         }}
         title={isOpen ? "Hide patient images" : "Show patient images"}

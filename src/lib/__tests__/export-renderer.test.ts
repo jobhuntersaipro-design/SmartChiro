@@ -90,17 +90,16 @@ describe("renderAnnotatedPng", () => {
     expect(meta.height).toBe(200);
   });
 
-  it("produces a valid PNG with an arrow annotation", async () => {
+  it("produces a valid PNG with a line annotation", async () => {
     const img = await createTestImage(200, 200);
-    const arrow = makeShape({
-      type: "arrow",
+    const line = makeShape({
+      type: "line",
       points: [
         { x: 20, y: 20 },
         { x: 180, y: 180 },
       ],
-      arrowSize: 12,
     });
-    const canvas = makeCanvasState([arrow]);
+    const canvas = makeCanvasState([line]);
     const result = await renderAnnotatedPng(img, canvas, 200, 200, false, null);
 
     const meta = await sharp(result).metadata();
@@ -250,7 +249,7 @@ describe("renderAnnotatedPng", () => {
   it("renders multiple shapes sorted by zIndex", async () => {
     const img = await createTestImage(200, 200);
     const shapes = [
-      makeShape({ type: "arrow", zIndex: 2, points: [{ x: 50, y: 50 }, { x: 100, y: 100 }] }),
+      makeShape({ type: "line", zIndex: 2, points: [{ x: 50, y: 50 }, { x: 100, y: 100 }] }),
       makeShape({ type: "line", zIndex: 0, points: [{ x: 0, y: 0 }, { x: 200, y: 200 }] }),
       makeShape({ type: "freehand", zIndex: 1, points: [{ x: 30, y: 30 }, { x: 60, y: 40 }, { x: 90, y: 50 }] }),
     ];
@@ -352,8 +351,8 @@ describe("renderAnnotatedPdf", () => {
         points: [{ x: 10, y: 10 }, { x: 190, y: 190 }],
       }),
       makeShape({
-        type: "arrow",
-        points: [{ x: 30, y: 30 }, { x: 130, y: 110 }],
+        type: "freehand",
+        points: [{ x: 30, y: 30 }, { x: 80, y: 70 }, { x: 130, y: 110 }],
       }),
     ];
     const canvas = makeCanvasState(shapes);

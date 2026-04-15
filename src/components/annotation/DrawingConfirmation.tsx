@@ -23,7 +23,7 @@ export function DrawingConfirmation({
         top: screenY + 12,
         transform: "translateX(-50%)",
         backgroundColor: "#FFFFFF",
-        border: "1px solid #E3E8EE",
+        border: "1px solid #e5edf5",
         borderRadius: 6,
         padding: 4,
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(18, 42, 66, 0.04)",

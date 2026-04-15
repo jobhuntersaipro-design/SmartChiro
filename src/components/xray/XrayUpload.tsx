@@ -177,15 +177,15 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onClick={() => fileInputRef.current?.click()}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-[6px] border-2 border-dashed border-[#E3E8EE] bg-[#F6F9FC] px-6 py-10 transition-colors hover:border-[#C1C9D2] hover:bg-[#F0F3F7]"
+          className="flex cursor-pointer flex-col items-center justify-center rounded-[6px] border-2 border-dashed border-[#e5edf5] bg-[#f6f9fc] px-6 py-10 transition-colors hover:border-[#C1C9D2] hover:bg-[#f6f9fc]"
         >
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0EEFF]">
-            <Upload className="h-5 w-5 text-[#635BFF]" strokeWidth={1.5} />
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#ededfc]">
+            <Upload className="h-5 w-5 text-[#533afd]" strokeWidth={1.5} />
           </div>
-          <p className="text-[16px] font-medium text-[#0A2540]">
+          <p className="text-[16px] font-medium text-[#061b31]">
             Drop an X-ray image here
           </p>
-          <p className="mt-1 text-[15px] text-[#697386]">
+          <p className="mt-1 text-[15px] text-[#64748d]">
             or click to browse — JPEG, PNG up to 300 MB
           </p>
           <input
@@ -200,10 +200,10 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
 
       {/* Upload progress */}
       {stage !== 'idle' && (
-        <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-4" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)' }}>
+        <div className="rounded-[6px] border border-[#e5edf5] bg-white p-4" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)' }}>
           <div className="flex items-start gap-3">
             {/* Preview */}
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-[4px] bg-[#F6F9FC]">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-[4px] bg-[#f6f9fc]">
               {preview ? (
                 <img
                   src={preview}
@@ -211,35 +211,35 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <ImageIcon className="h-6 w-6 text-[#697386]" strokeWidth={1.5} />
+                <ImageIcon className="h-6 w-6 text-[#64748d]" strokeWidth={1.5} />
               )}
             </div>
 
             {/* Info */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <p className="truncate text-[15px] font-medium text-[#0A2540]">
+                <p className="truncate text-[15px] font-medium text-[#061b31]">
                   {fileName}
                 </p>
                 {(stage === 'done' || stage === 'error') && (
                   <button
                     onClick={reset}
-                    className="ml-2 flex-shrink-0 rounded-[4px] p-1 text-[#697386] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]"
+                    className="ml-2 flex-shrink-0 rounded-[4px] p-1 text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
                   >
                     <X className="h-4 w-4" strokeWidth={1.5} />
                   </button>
                 )}
               </div>
-              <p className="mt-0.5 text-[14px] text-[#697386]">
+              <p className="mt-0.5 text-[14px] text-[#64748d]">
                 {formatFileSize(fileSize)}
               </p>
 
               {/* Progress bar */}
               {isUploading && (
                 <div className="mt-2">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#E3E8EE]">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e5edf5]">
                     <div
-                      className="h-full rounded-full bg-[#635BFF] transition-all duration-300"
+                      className="h-full rounded-full bg-[#533afd] transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -249,7 +249,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
               {/* Stage label */}
               <div className="mt-2 flex items-center gap-1.5">
                 {(isUploading || stage === 'validating' || stage === 'generating-thumbnail') && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#635BFF]" strokeWidth={2} />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#533afd]" strokeWidth={2} />
                 )}
                 {stage === 'done' && (
                   <CheckCircle className="h-3.5 w-3.5 text-[#30B130]" strokeWidth={2} />
@@ -263,7 +263,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
                       ? 'text-[#30B130]'
                       : stage === 'error'
                         ? 'text-[#DF1B41]'
-                        : 'text-[#697386]'
+                        : 'text-[#64748d]'
                   }`}
                 >
                   {stageLabel[stage]}

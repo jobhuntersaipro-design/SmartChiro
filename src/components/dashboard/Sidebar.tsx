@@ -50,10 +50,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
         {!collapsed && (
           <div className="flex flex-col">
-            <span className="text-[15px] font-semibold leading-tight text-[#0A2540]">
+            <span className="text-[15px] font-semibold leading-tight text-[#061b31]">
               SmartChiro
             </span>
-            <span className="text-[12px] font-medium tracking-[0.04em] text-[#697386] uppercase">
+            <span className="text-[12px] font-medium tracking-[0.04em] text-[#64748d] uppercase">
               Health Center
             </span>
           </div>
@@ -76,8 +76,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 className={cn(
                   "flex items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] transition-colors",
                   isActive
-                    ? "bg-[#F0EEFF] text-[#635BFF] font-medium"
-                    : "text-[#425466] hover:bg-[#F0F3F7] hover:text-[#0A2540] font-normal"
+                    ? "bg-[#ededfc] text-[#533afd] font-normal"
+                    : "text-[#273951] hover:bg-[#f6f9fc] hover:text-[#061b31] font-normal"
                 )}
               >
                 <item.icon
@@ -108,7 +108,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="my-2 h-px bg-border" />
 
         {/* Profile */}
-        <button className="flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] text-[#425466] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]">
+        <button className="flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] text-[#273951] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]">
           <User className="h-4 w-4 shrink-0" strokeWidth={1.5} />
           {!collapsed && <span>Profile</span>}
         </button>
@@ -116,7 +116,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {/* Logout */}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] text-[#425466] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]"
+          className="flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] text-[#273951] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
         >
           <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.5} />
           {!collapsed && <span>Logout</span>}
@@ -127,7 +127,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {/* Collapse toggle */}
         <button
           onClick={onToggle}
-          className="flex w-full items-center justify-center rounded-[4px] p-1.5 text-[#697386] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540]"
+          className="flex w-full items-center justify-center rounded-[4px] p-1.5 text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />

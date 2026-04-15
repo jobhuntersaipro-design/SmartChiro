@@ -40,35 +40,35 @@ export default async function VerifyEmailPage({
   }
 
   const current = config[status || ''] || {
-    icon: <Mail size={24} className="text-[#635BFF]" />,
+    icon: <Mail size={24} className="text-[#533afd]" />,
     title: 'Check your email',
     message: 'We sent you a verification link. Please check your inbox and click the link to verify your account.',
-    color: '#635BFF',
+    color: '#533afd',
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F6F9FC] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#f6f9fc] px-4">
       <div className="w-full max-w-[420px]">
         <div className="mb-8 text-center flex flex-col items-center">
-          <div className="mb-4 rounded-[6px] bg-[#635BFF] px-3 py-2">
+          <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
             <span className="text-[14px] font-bold text-white">Smart Chiro</span>
           </div>
         </div>
 
-        <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[var(--shadow-card)] text-center">
+        <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6 shadow-[var(--shadow-card)] text-center">
           <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center">
             {current.icon}
           </div>
-          <h1 className="text-[23px] font-semibold text-[#0A2540]">
+          <h1 className="text-[23px] font-semibold text-[#061b31]">
             {current.title}
           </h1>
-          <p className="mt-2 text-[15px] text-[#425466] leading-relaxed">
+          <p className="mt-2 text-[15px] text-[#273951] leading-relaxed">
             {current.message}
           </p>
 
           <Link
             href="/login"
-            className="mt-6 flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#635BFF] text-[15px] font-medium text-white transition-colors hover:bg-[#5851EB]"
+            className="mt-6 flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
           >
             {status === 'success' || status === 'already-verified'
               ? 'Sign in to your account'

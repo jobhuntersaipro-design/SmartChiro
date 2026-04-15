@@ -233,7 +233,7 @@ export function ComparePageClient({
             onClick={() => setLinked(!linked)}
             className={`flex items-center gap-1.5 rounded-[4px] px-2.5 py-1.5 text-[13px] transition-colors ${
               linked
-                ? "bg-[#635BFF]/20 text-[#635BFF]"
+                ? "bg-[#533afd]/20 text-[#533afd]"
                 : "text-[#8B93A7] hover:bg-[#2D3348] hover:text-white"
             }`}
           >
@@ -288,7 +288,7 @@ export function ComparePageClient({
 
         {/* Divider */}
         <div
-          className="z-20 flex w-[6px] shrink-0 cursor-col-resize items-center justify-center bg-[#2D3348] transition-colors hover:bg-[#635BFF]"
+          className="z-20 flex w-[6px] shrink-0 cursor-col-resize items-center justify-center bg-[#2D3348] transition-colors hover:bg-[#533afd]"
           onPointerDown={handleDividerPointerDown}
         >
           <div className="h-8 w-[2px] rounded-full bg-[#8B93A7]" />

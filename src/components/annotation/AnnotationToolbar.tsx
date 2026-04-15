@@ -4,7 +4,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Hand,
   Minus,
-  ArrowRight,
   Pencil,
   Type,
   Ruler,
@@ -14,7 +13,6 @@ import {
   Undo2,
   Redo2,
   RulerDimensionLine,
-  CircleDot,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -31,11 +29,9 @@ const tools: ToolItem[] = [
   { id: "hand", label: "Pan", shortcut: "H", description: "Click and drag to move around the X-ray. Click on shapes to select them.", icon: <Hand size={18} strokeWidth={1.5} /> },
   { id: "freehand", label: "Freehand", shortcut: "P", description: "Draw freely with your cursor", icon: <Pencil size={18} strokeWidth={1.5} />, separator: true },
   { id: "line", label: "Line", shortcut: "L", description: "Draw a straight line between two points", icon: <Minus size={18} strokeWidth={1.5} /> },
-  { id: "arrow", label: "Arrow", shortcut: "A", description: "Draw an arrow pointing in one direction", icon: <ArrowRight size={18} strokeWidth={1.5} /> },
   { id: "text", label: "Text", shortcut: "T", description: "Click to add a text label", icon: <Type size={18} strokeWidth={1.5} /> },
   { id: "eraser", label: "Eraser", shortcut: "X", description: "Click on any annotation to remove it", icon: <Eraser size={18} strokeWidth={1.5} />, separator: true },
   { id: "ruler", label: "Ruler", shortcut: "M", description: "Measure distance between two points", icon: <Ruler size={18} strokeWidth={1.5} /> },
-  { id: "ruler_dot", label: "Ruler Dot", shortcut: "D", description: "Click point A then point B to measure distance with animation", icon: <CircleDot size={18} strokeWidth={1.5} /> },
   { id: "angle", label: "Angle", shortcut: "⇧M", description: "Measure the angle between three points", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
   { id: "cobb_angle", label: "Cobb Angle", shortcut: "⌘⇧M", description: "Measure Cobb angle between two lines", icon: <Scaling size={18} strokeWidth={1.5} /> },
   { id: "calibration", label: "Calibration", shortcut: "K", description: "Draw on a known-distance object to calibrate measurements", icon: <RulerDimensionLine size={18} strokeWidth={1.5} /> },
@@ -65,7 +61,7 @@ function ToolTooltip({
         top: anchorRect.bottom + 6,
         left: anchorRect.left + anchorRect.width / 2,
         transform: "translateX(-50%)",
-        backgroundColor: "#0A2540",
+        backgroundColor: "#061b31",
         color: "#FFFFFF",
         borderRadius: 4,
         fontSize: 12,
@@ -156,7 +152,7 @@ export function AnnotationToolbar({
           width: 36,
           height: 36,
           borderRadius: 4,
-          color: canUndo ? "#425466" : "#A3ACB9",
+          color: canUndo ? "#273951" : "#A3ACB9",
         }}
       >
         <Undo2 size={18} strokeWidth={1.5} />
@@ -172,12 +168,12 @@ export function AnnotationToolbar({
           width: 36,
           height: 36,
           borderRadius: 4,
-          color: canRedo ? "#425466" : "#A3ACB9",
+          color: canRedo ? "#273951" : "#A3ACB9",
         }}
       >
         <Redo2 size={18} strokeWidth={1.5} />
       </button>
-      <div className="mx-1" style={{ width: 1, height: 28, backgroundColor: "#E3E8EE" }} />
+      <div className="mx-1" style={{ width: 1, height: 28, backgroundColor: "#e5edf5" }} />
 
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
@@ -187,7 +183,7 @@ export function AnnotationToolbar({
             {prevTool?.separator && (
               <div
                 className="mx-1"
-                style={{ width: 1, height: 28, backgroundColor: "#E3E8EE" }}
+                style={{ width: 1, height: 28, backgroundColor: "#e5edf5" }}
               />
             )}
             <button
@@ -203,8 +199,8 @@ export function AnnotationToolbar({
                 width: 36,
                 height: 36,
                 borderRadius: 4,
-                backgroundColor: isActive ? "#F0EEFF" : "transparent",
-                color: isActive ? "#635BFF" : "#425466",
+                backgroundColor: isActive ? "#ededfc" : "transparent",
+                color: isActive ? "#533afd" : "#273951",
               }}
             >
               {tool.icon}
@@ -224,7 +220,7 @@ export function AnnotationToolbar({
           width: 36,
           height: 36,
           borderRadius: 4,
-          color: "#697386",
+          color: "#64748d",
           fontSize: 16,
           fontWeight: 600,
         }}

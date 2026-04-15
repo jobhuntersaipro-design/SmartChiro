@@ -66,21 +66,6 @@ function shapeToSvg(shape: BaseShape): string {
       return svg;
     }
 
-    case "arrow": {
-      if (shape.points.length < 2) return "";
-      const p1 = shape.points[0];
-      const p2 = shape.points[1];
-      const arrowSize = shape.arrowSize ?? 10;
-      const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-      const a1x = p2.x - arrowSize * Math.cos(angle - Math.PI / 6);
-      const a1y = p2.y - arrowSize * Math.sin(angle - Math.PI / 6);
-      const a2x = p2.x - arrowSize * Math.cos(angle + Math.PI / 6);
-      const a2y = p2.y - arrowSize * Math.sin(angle + Math.PI / 6);
-
-      return `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" ${commonAttrs} />
-        <polygon points="${p2.x},${p2.y} ${a1x},${a1y} ${a2x},${a2y}" fill="${stroke}" fill-opacity="${strokeOpacity}" />`;
-    }
-
     case "freehand": {
       return `<path d="${pointsToSvgPath(shape.points, false)}" ${strokeAttrs} fill="none" fill-opacity="${fillOpacity}" />`;
     }

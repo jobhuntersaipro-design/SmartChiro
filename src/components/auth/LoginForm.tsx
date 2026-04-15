@@ -65,25 +65,25 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
     <div className="w-full max-w-[420px]">
       {/* Logo / Branding */}
       <div className="mb-8 text-center flex flex-col items-center">
-        <div className="mb-4 rounded-[6px] bg-[#635BFF] px-3 py-2">
+        <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
           <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
-        <h1 className="text-[23px] font-semibold text-[#0A2540]">
+        <h1 className="text-[23px] font-light text-[#061b31]">
           Sign in to SmartChiro
         </h1>
-        <p className="mt-1 text-[15px] text-[#697386]">
+        <p className="mt-1 text-[15px] text-[#64748d]">
           Enter your credentials to continue
         </p>
       </div>
 
       {/* Auth Card */}
-      <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[var(--shadow-card)]">
+      <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
         {/* Email/Password Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="mb-1.5 block text-[14px] font-medium text-[#0A2540]"
+              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
             >
               Email
             </label>
@@ -94,14 +94,14 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-[40px] w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 text-[15px] text-[#0A2540] placeholder-[#697386] transition-colors focus:border-[#635BFF] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+              className="h-[40px] w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="mb-1.5 block text-[14px] font-medium text-[#0A2540]"
+              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
             >
               Password
             </label>
@@ -113,12 +113,12 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="h-[40px] w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 pr-10 text-[15px] text-[#0A2540] placeholder-[#697386] transition-colors focus:border-[#635BFF] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+                className="h-[40px] w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#697386] hover:text-[#0A2540] cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] cursor-pointer"
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -132,15 +132,15 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
 
           {emailNotVerified && (
             <div className="rounded-[4px] border border-[#F5A623]/30 bg-[#FFF8ED] p-3">
-              <p className="text-[14px] text-[#0A2540] font-medium">Email not verified</p>
-              <p className="mt-1 text-[13px] text-[#425466]">
+              <p className="text-[14px] text-[#061b31] font-medium">Email not verified</p>
+              <p className="mt-1 text-[13px] text-[#273951]">
                 Please check your inbox and click the verification link.
               </p>
               <button
                 type="button"
                 onClick={handleResendVerification}
                 disabled={resending}
-                className="mt-2 text-[13px] font-medium text-[#635BFF] hover:text-[#5851EB] transition-colors cursor-pointer disabled:opacity-60"
+                className="mt-2 text-[13px] font-medium text-[#533afd] hover:text-[#4434d4] transition-colors cursor-pointer disabled:opacity-60"
               >
                 {resending ? 'Sending...' : 'Resend verification email'}
               </button>
@@ -154,7 +154,7 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
           <button
             type="submit"
             disabled={loading}
-            className="flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#635BFF] text-[15px] font-medium text-white transition-colors hover:bg-[#5851EB] disabled:opacity-60 cursor-pointer"
+            className="flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />
@@ -168,9 +168,9 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
         {googleEnabled && (
           <>
             <div className="my-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-[#E3E8EE]" />
-              <span className="text-[13px] text-[#697386]">or continue with</span>
-              <div className="h-px flex-1 bg-[#E3E8EE]" />
+              <div className="h-px flex-1 bg-[#e5edf5]" />
+              <span className="text-[13px] text-[#64748d]">or continue with</span>
+              <div className="h-px flex-1 bg-[#e5edf5]" />
             </div>
             <GoogleSignInButton />
           </>
@@ -178,9 +178,9 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
       </div>
 
       {/* Footer */}
-      <p className="mt-6 text-center text-[14px] text-[#697386]">
+      <p className="mt-6 text-center text-[14px] text-[#64748d]">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="text-[#635BFF] hover:text-[#5851EB] transition-colors">Register Here</Link>
+        <Link href="/register" className="text-[#533afd] hover:text-[#4434d4] transition-colors">Register Here</Link>
       </p>
     </div>
   )

@@ -89,10 +89,10 @@ export default function PatientsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[23px] font-semibold tracking-[-0.01em] text-[#0A2540]">
+          <h1 className="text-[23px] font-light tracking-[-0.01em] text-[#061b31]">
             Patients
           </h1>
-          <p className="text-[15px] text-[#697386] mt-0.5">
+          <p className="text-[15px] text-[#64748d] mt-0.5">
             {patients.length} total patients{search.trim() ? ` — ${filteredPatients.length} shown` : ""}
           </p>
         </div>
@@ -113,14 +113,14 @@ export default function PatientsPage() {
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-[#635BFF] mr-2" strokeWidth={2} />
-          <span className="text-[15px] text-[#697386]">Loading patients...</span>
+          <Loader2 className="h-5 w-5 animate-spin text-[#533afd] mr-2" strokeWidth={2} />
+          <span className="text-[15px] text-[#64748d]">Loading patients...</span>
         </div>
       )}
 
       {/* Error state */}
       {error && !loading && (
-        <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-8 text-center"
+        <div className="rounded-[6px] border border-[#e5edf5] bg-white p-8 text-center"
           style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
         >
           <p className="text-[15px] text-[#DF1B41] mb-2">{error}</p>

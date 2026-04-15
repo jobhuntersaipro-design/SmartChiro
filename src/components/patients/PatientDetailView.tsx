@@ -30,7 +30,7 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
       <Link
         href="/dashboard/patients"
         className="mb-6 inline-flex items-center gap-1.5 text-sm transition-colors hover:underline"
-        style={{ color: "#697386" }}
+        style={{ color: "#64748d" }}
       >
         <ArrowLeft size={14} />
         Back to Patients
@@ -43,8 +43,8 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
           style={{
             width: 56,
             height: 56,
-            backgroundColor: "#F0EEFF",
-            color: "#635BFF",
+            backgroundColor: "#ededfc",
+            color: "#533afd",
           }}
         >
           {patient.firstName[0]}
@@ -53,11 +53,11 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
         <div>
           <h1
             className="text-xl font-semibold"
-            style={{ color: "#0A2540" }}
+            style={{ color: "#061b31" }}
           >
             {fullName}
           </h1>
-          <p className="text-sm" style={{ color: "#697386" }}>
+          <p className="text-sm" style={{ color: "#64748d" }}>
             Patient since{" "}
             {new Date(patient.createdAt).toLocaleDateString("en-MY", {
               year: "numeric",
@@ -74,7 +74,7 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
         className="mb-6 p-5"
         style={{
           backgroundColor: "#FFFFFF",
-          border: "1px solid #E3E8EE",
+          border: "1px solid #e5edf5",
           borderRadius: 6,
           boxShadow:
             "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)",
@@ -82,39 +82,39 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
       >
         <h2
           className="mb-4 text-sm font-semibold"
-          style={{ color: "#0A2540" }}
+          style={{ color: "#061b31" }}
         >
           Contact Information
         </h2>
         <div className="grid grid-cols-2 gap-4">
           {patient.email && (
             <div className="flex items-center gap-2 text-sm">
-              <Mail size={14} style={{ color: "#697386" }} />
-              <span style={{ color: "#425466" }}>{patient.email}</span>
+              <Mail size={14} style={{ color: "#64748d" }} />
+              <span style={{ color: "#273951" }}>{patient.email}</span>
             </div>
           )}
           {patient.phone && (
             <div className="flex items-center gap-2 text-sm">
-              <Phone size={14} style={{ color: "#697386" }} />
-              <span style={{ color: "#425466" }}>{patient.phone}</span>
+              <Phone size={14} style={{ color: "#64748d" }} />
+              <span style={{ color: "#273951" }}>{patient.phone}</span>
             </div>
           )}
           {patient.address && (
             <div className="flex items-center gap-2 text-sm">
-              <MapPin size={14} style={{ color: "#697386" }} />
-              <span style={{ color: "#425466" }}>{patient.address}</span>
+              <MapPin size={14} style={{ color: "#64748d" }} />
+              <span style={{ color: "#273951" }}>{patient.address}</span>
             </div>
           )}
           {patient.gender && (
             <div className="flex items-center gap-2 text-sm">
-              <User size={14} style={{ color: "#697386" }} />
-              <span style={{ color: "#425466" }}>{patient.gender}</span>
+              <User size={14} style={{ color: "#64748d" }} />
+              <span style={{ color: "#273951" }}>{patient.gender}</span>
             </div>
           )}
           {patient.dateOfBirth && (
             <div className="flex items-center gap-2 text-sm">
-              <Calendar size={14} style={{ color: "#697386" }} />
-              <span style={{ color: "#425466" }}>
+              <Calendar size={14} style={{ color: "#64748d" }} />
+              <span style={{ color: "#273951" }}>
                 {new Date(patient.dateOfBirth).toLocaleDateString("en-MY", {
                   year: "numeric",
                   month: "long",
@@ -131,7 +131,7 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
         className="p-5"
         style={{
           backgroundColor: "#FFFFFF",
-          border: "1px solid #E3E8EE",
+          border: "1px solid #e5edf5",
           borderRadius: 6,
           boxShadow:
             "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)",
@@ -139,13 +139,13 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
       >
         <h2
           className="mb-4 text-sm font-semibold"
-          style={{ color: "#0A2540" }}
+          style={{ color: "#061b31" }}
         >
           X-Rays ({patient.xrays.length})
         </h2>
 
         {patient.xrays.length === 0 ? (
-          <p className="py-8 text-center text-sm" style={{ color: "#697386" }}>
+          <p className="py-8 text-center text-sm" style={{ color: "#64748d" }}>
             No X-rays uploaded yet
           </p>
         ) : (
@@ -156,7 +156,7 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
                 href={`/dashboard/xrays/${patient.id}/${xray.id}/annotate`}
                 className="group overflow-hidden transition-shadow hover:shadow-md"
                 style={{
-                  border: "1px solid #E3E8EE",
+                  border: "1px solid #e5edf5",
                   borderRadius: 6,
                 }}
               >
@@ -174,17 +174,17 @@ export function PatientDetailView({ patient }: { patient: PatientData }) {
                       className="h-full w-full object-contain"
                     />
                   ) : (
-                    <Image size={32} style={{ color: "#425466" }} />
+                    <Image size={32} style={{ color: "#273951" }} />
                   )}
                 </div>
                 <div className="p-3">
                   <p
                     className="text-sm font-medium truncate"
-                    style={{ color: "#0A2540" }}
+                    style={{ color: "#061b31" }}
                   >
                     {xray.title ?? "Untitled X-ray"}
                   </p>
-                  <p className="text-xs" style={{ color: "#697386" }}>
+                  <p className="text-xs" style={{ color: "#64748d" }}>
                     {new Date(xray.createdAt).toLocaleDateString("en-MY", {
                       month: "short",
                       day: "numeric",

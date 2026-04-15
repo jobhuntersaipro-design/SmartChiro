@@ -38,26 +38,26 @@ export async function sendVerificationEmail(email: string, name: string) {
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: #635BFF; border-radius: 6px; padding: 8px 12px; text-align: center;">
+          <div style="display: inline-block; background: #533afd; border-radius: 6px; padding: 8px 12px; text-align: center;">
             <span style="color: white; font-size: 14px; font-weight: bold;">Smart Chiro</span>
           </div>
         </div>
-        <h1 style="color: #0A2540; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
+        <h1 style="color: #061b31; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
           Verify your email
         </h1>
-        <p style="color: #425466; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
+        <p style="color: #273951; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
           Hi ${name}, thanks for signing up for SmartChiro. Please verify your email address to get started.
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
-          <a href="${verifyUrl}" style="display: inline-block; background: #635BFF; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
+          <a href="${verifyUrl}" style="display: inline-block; background: #533afd; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
             Verify email address
           </a>
         </div>
-        <p style="color: #697386; font-size: 13px; line-height: 1.5; text-align: center;">
+        <p style="color: #64748d; font-size: 13px; line-height: 1.5; text-align: center;">
           This link expires in ${TOKEN_EXPIRY_HOURS} hours. If you didn't create a SmartChiro account, you can safely ignore this email.
         </p>
-        <hr style="border: none; border-top: 1px solid #E3E8EE; margin: 32px 0;" />
-        <p style="color: #697386; font-size: 13px; text-align: center;">
+        <hr style="border: none; border-top: 1px solid #e5edf5; margin: 32px 0;" />
+        <p style="color: #64748d; font-size: 13px; text-align: center;">
           SmartChiro — See More. Treat Better.
         </p>
       </div>

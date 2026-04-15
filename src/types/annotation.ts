@@ -2,11 +2,9 @@
 
 export type ShapeType =
   | "line"
-  | "arrow"
   | "freehand"
   | "text"
   | "ruler"
-  | "ruler_dot"
   | "angle"
   | "cobb_angle";
 
@@ -160,12 +158,10 @@ export interface UndoRedoStack {
 export type ToolId =
   | "hand"
   | "line"
-  | "arrow"
   | "freehand"
   | "text"
   | "eraser"
   | "ruler"
-  | "ruler_dot"
   | "angle"
   | "cobb_angle"
   | "calibration";
