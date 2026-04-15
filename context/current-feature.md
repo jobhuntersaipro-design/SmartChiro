@@ -2,21 +2,15 @@
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-1. **Keyboard Shortcuts Help Panel** -- `?` key or toolbar button opens categorized shortcut overlay (Navigation, Drawing, Measurement, Editing, UI groups)
-2. **Drawing Confirmation UI** -- Accept/reject floating bar after drawing a line or shape (Enter/Y to accept, Escape/N to reject, auto-accept on tool change)
-3. **Undo/Redo Toolbar Buttons** -- Move undo/redo from StatusBar into main AnnotationToolbar (left side, before drawing tools)
+<!-- Define goals here -->
 
 ## Notes
 
-- Spec: `context/features/xray-enhance-3-spec.md`
-- MedDream research: no undo/redo, no shortcuts panel, no drawing confirmation -- all three are differentiators for SmartChiro
-- Implementation order: (1) Undo/Redo toolbar, (2) Shortcuts panel, (3) Drawing confirmation
-- New files: `KeyboardShortcutsPanel.tsx`, `DrawingConfirmation.tsx`
-- Modified files: `AnnotationToolbar.tsx`, `AnnotationCanvas.tsx`, `StatusBar.tsx`, `useDrawingTools.ts`, `useCanvasInteraction.ts`
+<!-- Additional context -->
 
 ## History
 
@@ -46,3 +40,4 @@ In Progress
 - 2026-04-11 **Patient X-Ray Upload & Neon DB Integration** — Removed all mock patient/xray data, created GET/POST /api/patients routes with auth session and Prisma queries (xray counts, visit history, doctor info), auto-branch creation for users without a branch, X-ray upload in patient detail sheet via XrayUpload component, X-ray gallery with new-tab annotation links (/dashboard/xrays/{id}/annotate), shared Patient type (src/types/patient.ts), verified end-to-end with Neon DB (`context/features/patient-spec.md`)
 - 2026-04-11 **X-Ray Annotation Enhancement (Part 1)** — Patient name breadcrumb links to /dashboard/[patientId] detail page, inline-editable X-ray title with pencil hint and pulse animation, default tool changed from Select to Pan with selection merged into hand tool, rich tooltips on all 14 toolbar tools, batch X-ray upload in PatientImageSidebar with drag-and-drop and sequential queue, enlarged sidebar previews (280px wide, 160px thumbnails) with infinite scroll pagination, upload success auto-clear after 3s (`context/features/xray-enhance-1-spec.md`)
 - 2026-04-11 **X-Ray Annotation Enhancement (Part 2)** — Full-screen annotation layout (DashboardShell skips sidebar/topbar for annotate routes), scroll zoom requires Ctrl/Cmd modifier, default tool changed to Freehand for immediate drawing, removed Invert + W/W controls, added Flip button for horizontal mirror, brightness/contrast now works in multi-view (cssFilter+flipped props to MultiViewGrid), verified drawing tools work end-to-end via Playwright (`context/features/xray-enhance-2-spec.md`)
+- 2026-04-15 **X-Ray Annotation Enhancement (Part 3)** — Keyboard shortcuts panel (? key), drawing confirmation accept/reject bar, undo/redo toolbar buttons, removed polyline/rectangle/ellipse/bezier/calibration tools, deleted CalibrationDialog + calibrate API route, removed CalibrationMethod enum + calibration fields from Prisma schema, simplified measurements to pixel-only, 117 tests passing (`context/features/xray-enhance-3-spec.md`)
