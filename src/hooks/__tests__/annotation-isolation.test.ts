@@ -255,3 +255,175 @@ describe("Per-xray viewport state persistence", () => {
     expect(cache.get("xray-C")!.viewportState).toEqual(zoomC);
   });
 });
+
+// ─── Grid View State Sync ───
+
+/**
+ * Simulates syncing the active cell's viewport to gridViewStates when switching slots.
+ * This is needed because the active cell uses viewport.transform (from useCanvasViewport),
+ * not gridViewStates[i]. When it becomes non-active, its zoom/pan must be written to
+ * gridViewStates so the ViewportCell renders at the correct zoom level.
+ */
+function syncActiveViewportToGrid(
+  gridViewStates: ViewportState[],
+  prevActiveIndex: number,
+  activeViewportTransform: ViewportState
+): ViewportState[] {
+  const next = [...gridViewStates];
+  next[prevActiveIndex] = { ...activeViewportTransform };
+  return next;
+}
+
+describe("Grid view state sync on slot switch", () => {
+  const defaultState: ViewportState = { zoom: 1, panX: 0, panY: 0 };
+
+  it("syncs active cell zoom to gridViewStates when switching to another slot", () => {
+    const states = [defaultState, defaultState];
+    const activeZoom: ViewportState = { zoom: 1.74, panX: -200, panY: -100 };
+
+    // User zoomed slot 0 to 174%, then clicks slot 1
+    const result = syncActiveViewportToGrid(states, 0, activeZoom);
+
+    expect(result[0]).toEqual(activeZoom);
+    expect(result[1]).toEqual(defaultState); // slot 1 untouched
+  });
+
+  it("preserves other slots when syncing", () => {
+    const zoomSlot1: ViewportState = { zoom: 0.5, panX: 30, panY: 40 };
+    const states = [defaultState, zoomSlot1, defaultState, defaultState];
+    const activeZoom: ViewportState = { zoom: 2.0, panX: -50, panY: -75 };
+
+    // Slot 0 was active at 200%, switching away
+    const result = syncActiveViewportToGrid(states, 0, activeZoom);
+
+    expect(result[0]).toEqual(activeZoom);
+    expect(result[1]).toEqual(zoomSlot1); // preserved
+  });
+
+  it("handles syncing from slot index > 0", () => {
+    const states = [defaultState, defaultState, defaultState, defaultState];
+    const activeZoom: ViewportState = { zoom: 0.7, panX: 10, panY: 20 };
+
+    // Slot 2 was active
+    const result = syncActiveViewportToGrid(states, 2, activeZoom);
+
+    expect(result[2]).toEqual(activeZoom);
+    expect(result[0]).toEqual(defaultState);
+    expect(result[1]).toEqual(defaultState);
+    expect(result[3]).toEqual(defaultState);
+  });
+});
+
+// ─── Sidebar Highlight Logic ───
+
+/**
+ * Replicates the sidebar thumbnail highlight logic from PatientImageSidebar.
+ * Three visual states: active (current grid slot), loaded (in any grid slot), default.
+ */
+function getSidebarItemState(
+  xrayId: string,
+  currentXrayId: string,
+  loadedXrayIds: string[] | undefined,
+  activeGridXrayId: string | null | undefined
+): { isActive: boolean; isLoadedInGrid: boolean } {
+  const isCurrent = xrayId === currentXrayId;
+  const isActive = activeGridXrayId ? xrayId === activeGridXrayId : isCurrent;
+  const isLoadedInGrid = loadedXrayIds ? loadedXrayIds.includes(xrayId) : isCurrent;
+  return { isActive, isLoadedInGrid };
+}
+
+describe("Sidebar thumbnail highlight in multi-view", () => {
+  it("marks the active grid slot xray as active", () => {
+    const result = getSidebarItemState(
+      "xray-B",
+      "xray-A", // initial page xray
+      ["xray-A", "xray-B", "xray-C"],
+      "xray-B" // active slot
+    );
+    expect(result.isActive).toBe(true);
+    expect(result.isLoadedInGrid).toBe(true);
+  });
+
+  it("marks non-active but loaded xrays as loaded (not active)", () => {
+    const result = getSidebarItemState(
+      "xray-A",
+      "xray-A",
+      ["xray-A", "xray-B"],
+      "xray-B" // different slot is active
+    );
+    expect(result.isActive).toBe(false);
+    expect(result.isLoadedInGrid).toBe(true);
+  });
+
+  it("marks xrays not in any grid slot as neither active nor loaded", () => {
+    const result = getSidebarItemState(
+      "xray-D",
+      "xray-A",
+      ["xray-A", "xray-B"],
+      "xray-A"
+    );
+    expect(result.isActive).toBe(false);
+    expect(result.isLoadedInGrid).toBe(false);
+  });
+
+  it("falls back to currentXrayId when no grid props provided (single mode)", () => {
+    const result = getSidebarItemState("xray-A", "xray-A", undefined, undefined);
+    expect(result.isActive).toBe(true);
+    expect(result.isLoadedInGrid).toBe(true);
+
+    const result2 = getSidebarItemState("xray-B", "xray-A", undefined, undefined);
+    expect(result2.isActive).toBe(false);
+    expect(result2.isLoadedInGrid).toBe(false);
+  });
+
+  it("handles all 4 grid slots loaded with correct active indicator", () => {
+    const loaded = ["xray-A", "xray-B", "xray-C", "xray-D"];
+    const active = "xray-C";
+
+    for (const id of loaded) {
+      const result = getSidebarItemState(id, "xray-A", loaded, active);
+      expect(result.isLoadedInGrid).toBe(true);
+      expect(result.isActive).toBe(id === "xray-C");
+    }
+  });
+
+  it("handles empty grid slots (no loaded xrays) — falls back to currentXrayId for active", () => {
+    // When activeGridXrayId is null, isActive falls back to currentXrayId match
+    const result = getSidebarItemState("xray-A", "xray-A", [], null);
+    expect(result.isActive).toBe(true); // falls back to isCurrent
+    expect(result.isLoadedInGrid).toBe(false); // not in loadedXrayIds array
+
+    // Different xray should not be active
+    const result2 = getSidebarItemState("xray-B", "xray-A", [], null);
+    expect(result2.isActive).toBe(false);
+    expect(result2.isLoadedInGrid).toBe(false);
+  });
+});
+
+// ─── Viewport Cell Cache Behavior ───
+
+/**
+ * Simulates the ViewportCell logic: should a cell fit-to-viewport on image load,
+ * or should it preserve its existing viewport state?
+ */
+function shouldFitToViewport(viewState: ViewportState): boolean {
+  return viewState.zoom === 1 && viewState.panX === 0 && viewState.panY === 0;
+}
+
+describe("ViewportCell cache preservation", () => {
+  it("fits to viewport when state is default (new image, no cache)", () => {
+    expect(shouldFitToViewport({ zoom: 1, panX: 0, panY: 0 })).toBe(true);
+  });
+
+  it("preserves viewport when zoom has been changed", () => {
+    expect(shouldFitToViewport({ zoom: 0.7, panX: 0, panY: 0 })).toBe(false);
+  });
+
+  it("preserves viewport when pan has been changed", () => {
+    expect(shouldFitToViewport({ zoom: 1, panX: 50, panY: -30 })).toBe(false);
+  });
+
+  it("preserves viewport when both zoom and pan have been changed", () => {
+    expect(shouldFitToViewport({ zoom: 1.5, panX: 100, panY: 200 })).toBe(false);
+  });
+});

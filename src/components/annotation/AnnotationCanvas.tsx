@@ -78,6 +78,8 @@ export function AnnotationCanvas({
   );
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
+  // Prevents flash of full-size image before fitToViewport runs
+  const [viewportReady, setViewportReady] = useState(false);
   const [currentStyle, setCurrentStyle] = useState<ShapeStyle>({
     ...DEFAULT_SHAPE_STYLE,
   });
@@ -255,7 +257,8 @@ export function AnnotationCanvas({
   const prevActiveSlotRef = useRef(activeSlotIndex);
   useEffect(() => {
     if (viewMode === "single") return;
-    const prevSlot = gridSlots[prevActiveSlotRef.current];
+    const prevIndex = prevActiveSlotRef.current;
+    const prevSlot = gridSlots[prevIndex];
     const newSlot = gridSlots[activeSlotIndex];
     const prevXrayId = prevSlot?.xrayId ?? null;
     const newXrayId = newSlot?.xrayId ?? null;
@@ -274,6 +277,14 @@ export function AnnotationCanvas({
       });
     }
 
+    // Sync the active cell's viewport.transform → gridViewStates for the
+    // previous slot so it renders at the correct zoom/pan as a non-active cell
+    setGridViewStates((prev) => {
+      const next = [...prev];
+      next[prevIndex] = { ...viewport.transform };
+      return next;
+    });
+
     // Load shapes for the new xray
     const cached = shapesPerXrayRef.current.get(newXrayId);
     if (cached) {
@@ -283,12 +294,16 @@ export function AnnotationCanvas({
       // Restore viewport state if previously saved
       if (cached.viewportState) {
         viewport.setTransform(cached.viewportState);
+      } else {
+        // No cached viewport — fit to viewport
+        viewport.fitToViewport();
       }
     } else {
       // Not yet loaded — start with empty and fetch from API
       setShapes([]);
       autoSave.switchTarget(newXrayId, null);
       activeXrayIdRef.current = newXrayId;
+      viewport.fitToViewport();
       fetchAnnotationForXray(newXrayId);
     }
     // Clear undo history when switching xrays
@@ -382,11 +397,19 @@ export function AnnotationCanvas({
         activeXrayIdRef.current = xray.id;
         if (cached.viewportState) {
           viewport.setTransform(cached.viewportState);
+          // Cached viewport — no flash, stay visible
+        } else {
+          // No cached viewport — hide until image loads and fitToViewport runs
+          setViewportReady(false);
+          setImageLoaded(false);
         }
       } else {
         setShapes([]);
         autoSave.switchTarget(xray.id, null);
         activeXrayIdRef.current = xray.id;
+        // Hide until image loads and fitToViewport runs
+        setViewportReady(false);
+        setImageLoaded(false);
         fetchAnnotationForXray(xray.id);
       }
       undoRedo.clear();
@@ -706,8 +729,21 @@ export function AnnotationCanvas({
   useEffect(() => {
     if (imageLoaded) {
       viewport.fitToViewport();
+      setViewportReady(true);
     }
   }, [imageLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-fit when viewMode changes (container size changes)
+  useEffect(() => {
+    // Brief opacity hide to prevent flash during layout change
+    setViewportReady(false);
+    // Small delay to let the grid CSS layout settle before measuring container
+    const timer = setTimeout(() => {
+      viewport.fitToViewport();
+      setViewportReady(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Pointer Handlers (drawing tools + interaction) ───
   const containerRectRef = useRef<DOMRect | null>(null);
@@ -841,6 +877,8 @@ export function AnnotationCanvas({
           patientId={patientId}
           userId={userId}
           currentXrayId={xrayId}
+          loadedXrayIds={viewMode !== "single" ? gridSlots.filter(s => s.xrayId).map(s => s.xrayId!) : undefined}
+          activeGridXrayId={viewMode !== "single" ? (gridSlots[activeSlotIndex]?.xrayId ?? null) : undefined}
           onSelectXray={handleSelectXrayForSlot}
           isOpen={imageSidebarOpen}
           onToggle={() => setImageSidebarOpen((prev) => !prev)}
@@ -869,6 +907,7 @@ export function AnnotationCanvas({
                   style={{
                     transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
                     willChange: "transform",
+                    opacity: viewportReady ? 1 : 0,
                   }}
                 >
                   <img
@@ -894,6 +933,7 @@ export function AnnotationCanvas({
                     transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
                     willChange: "transform",
                     pointerEvents: "none",
+                    opacity: viewportReady ? 1 : 0,
                   }}
                 >
                   <svg
@@ -999,6 +1039,7 @@ export function AnnotationCanvas({
                           style={{
                             transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
                             willChange: "transform",
+                            opacity: viewportReady ? 1 : 0,
                           }}
                         >
                           <img
@@ -1022,6 +1063,7 @@ export function AnnotationCanvas({
                             transform: `translate(${viewport.transform.panX}px, ${viewport.transform.panY}px) scale(${viewport.transform.zoom})`,
                             willChange: "transform",
                             pointerEvents: "none",
+                            opacity: viewportReady ? 1 : 0,
                           }}
                         >
                           <svg

@@ -24,6 +24,10 @@ interface PatientImageSidebarProps {
   patientId: string;
   userId: string;
   currentXrayId: string;
+  /** X-ray IDs currently loaded in multi-view grid slots */
+  loadedXrayIds?: string[];
+  /** The X-ray ID in the currently active grid slot */
+  activeGridXrayId?: string | null;
   onSelectXray: (xray: PatientXray) => void;
   isOpen: boolean;
   onToggle: () => void;
@@ -43,6 +47,8 @@ export function PatientImageSidebar({
   patientId,
   userId,
   currentXrayId,
+  loadedXrayIds,
+  activeGridXrayId,
   onSelectXray,
   isOpen,
   onToggle,
@@ -486,12 +492,26 @@ export function PatientImageSidebar({
 
             {xrays.map((xray) => {
               const isCurrent = xray.id === currentXrayId;
+              const isActive = activeGridXrayId ? xray.id === activeGridXrayId : isCurrent;
+              const isLoadedInGrid = loadedXrayIds ? loadedXrayIds.includes(xray.id) : isCurrent;
               const src = xray.thumbnailUrl ?? xray.fileUrl;
               const date = new Date(xray.createdAt);
               const dateStr = date.toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
               });
+
+              // Active = purple border + bg, loaded in grid = subtle purple border, default = gray border
+              const borderStyle = isActive
+                ? "2px solid #533afd"
+                : isLoadedInGrid
+                  ? "2px solid rgba(83, 58, 253, 0.4)"
+                  : "1px solid #e5edf5";
+              const bgColor = isActive
+                ? "#ededfc"
+                : isLoadedInGrid
+                  ? "#f5f3ff"
+                  : "#FFFFFF";
 
               return (
                 <button
@@ -500,10 +520,8 @@ export function PatientImageSidebar({
                   className="flex flex-col overflow-hidden text-left transition-colors"
                   style={{
                     borderRadius: 4,
-                    border: isCurrent
-                      ? "2px solid #533afd"
-                      : "1px solid #e5edf5",
-                    backgroundColor: isCurrent ? "#ededfc" : "#FFFFFF",
+                    border: borderStyle,
+                    backgroundColor: bgColor,
                     padding: 0,
                     flexShrink: 0,
                   }}

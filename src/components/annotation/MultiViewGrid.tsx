@@ -61,14 +61,24 @@ export function ViewportCell({
     onViewStateChangeRef.current({ zoom, panX, panY });
   }, [slot.imageWidth, slot.imageHeight, slot.imageUrl]);
 
+  // Fit to viewport on first load, but skip if parent already has cached viewport state
   useEffect(() => {
-    if (imageLoaded) fitToViewport();
+    if (!imageLoaded) return;
+    const vs = viewStateRef.current;
+    const hasExistingState = vs.zoom !== 1 || vs.panX !== 0 || vs.panY !== 0;
+    if (!hasExistingState) {
+      fitToViewport();
+    }
   }, [imageLoaded, fitToViewport]);
 
-  // Reset when slot changes
+  // When slot changes, reset image loaded state but DON'T reset viewport —
+  // the parent manages cached viewport state per xray via gridViewStates
+  const prevXrayIdRef = useRef(slot.xrayId);
   useEffect(() => {
-    setImageLoaded(false);
-    onViewStateChangeRef.current({ zoom: 1, panX: 0, panY: 0 });
+    if (prevXrayIdRef.current !== slot.xrayId) {
+      setImageLoaded(false);
+      prevXrayIdRef.current = slot.xrayId;
+    }
   }, [slot.xrayId]);
 
   // Auto-hide hint after 3 seconds
