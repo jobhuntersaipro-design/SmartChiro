@@ -2,20 +2,9 @@
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
-
-1. **Disable drawing tools in multi-view** — Grey out all drawing/measurement tools when view mode is Side by Side or 2x2 Grid
-2. **Comparison-only messaging** — Show clear UX feedback that multi-view is for comparison only
-3. **Auto-switch to single on tool select** — If user clicks a drawing tool while in multi-view, auto-switch back to single mode
-4. **Rename `1x1` view mode to `side-by-side`** — Fix confusing internal naming
-5. **Active slot zoom controls** — Wire ZoomBar to the active ViewportCell in multi-view
-6. **Zoom hint in multi-view** — Show "Ctrl + Scroll to zoom" tooltip on hover
-
-## Spec
-
-See `context/features/multiview-fix-spec.md` for full spec.
 
 ## Notes
 
@@ -48,3 +37,4 @@ See `context/features/multiview-fix-spec.md` for full spec.
 - 2026-04-11 **X-Ray Annotation Enhancement (Part 1)** — Patient name breadcrumb links to /dashboard/[patientId] detail page, inline-editable X-ray title with pencil hint and pulse animation, default tool changed from Select to Pan with selection merged into hand tool, rich tooltips on all 14 toolbar tools, batch X-ray upload in PatientImageSidebar with drag-and-drop and sequential queue, enlarged sidebar previews (280px wide, 160px thumbnails) with infinite scroll pagination, upload success auto-clear after 3s (`context/features/xray-enhance-1-spec.md`)
 - 2026-04-11 **X-Ray Annotation Enhancement (Part 2)** — Full-screen annotation layout (DashboardShell skips sidebar/topbar for annotate routes), scroll zoom requires Ctrl/Cmd modifier, default tool changed to Freehand for immediate drawing, removed Invert + W/W controls, added Flip button for horizontal mirror, brightness/contrast now works in multi-view (cssFilter+flipped props to MultiViewGrid), verified drawing tools work end-to-end via Playwright (`context/features/xray-enhance-2-spec.md`)
 - 2026-04-15 **X-Ray Annotation Enhancement (Part 3)** — Keyboard shortcuts panel (? key), drawing confirmation accept/reject bar, undo/redo toolbar buttons, removed polyline/rectangle/ellipse/bezier/calibration tools, deleted CalibrationDialog + calibrate API route, removed CalibrationMethod enum + calibration fields from Prisma schema, simplified measurements to pixel-only, 117 tests passing (`context/features/xray-enhance-3-spec.md`)
+- 2026-04-15 **Multi-View Annotation Fix** — Drawing enabled in Side by Side and 2x2 Grid views (active cell becomes full canvas), Ruler Dot tool (D key) with click-click measurement and animated line, default tool changed to Pan, renamed ViewMode "1x1" to "side-by-side", ZoomBar wired to active slot viewport, zoom hint overlay in multi-view cells, auto-save fix (updateState keeps refs current for debounced saves), zoom fix with native wheel listener (passive: false), comparison mode status indicator (`context/features/multiview-fix-spec.md`)
