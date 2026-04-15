@@ -7,17 +7,12 @@ import {
   Lock,
   Unlock,
   Minus,
-  Pentagon,
-  Circle,
   ArrowRight,
   Pencil,
   Type,
   Ruler,
   TriangleRight,
   GripVertical,
-  Spline,
-  Share2,
-  Crosshair,
   Scaling,
 } from "lucide-react";
 import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
@@ -25,17 +20,12 @@ import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotati
 
 const shapeIcons: Record<ShapeType, React.ReactNode> = {
   line: <Minus size={14} strokeWidth={1.5} />,
-  polyline: <Share2 size={14} strokeWidth={1.5} />,
-  rectangle: <Pentagon size={14} strokeWidth={1.5} />,
-  ellipse: <Circle size={14} strokeWidth={1.5} />,
   arrow: <ArrowRight size={14} strokeWidth={1.5} />,
   freehand: <Pencil size={14} strokeWidth={1.5} />,
-  bezier: <Spline size={14} strokeWidth={1.5} />,
   text: <Type size={14} strokeWidth={1.5} />,
   ruler: <Ruler size={14} strokeWidth={1.5} />,
   angle: <TriangleRight size={14} strokeWidth={1.5} />,
   cobb_angle: <Scaling size={14} strokeWidth={1.5} />,
-  calibration_reference: <Crosshair size={14} strokeWidth={1.5} />,
 };
 
 function getShapeDisplayName(shape: BaseShape, index: number): string {
@@ -417,8 +407,8 @@ function ShapeProperties({
         </div>
       </PropertyField>
 
-      {/* Size (for rect, text) */}
-      {(shape.type === "rectangle" || shape.type === "text" || shape.type === "ellipse") && (
+      {/* Size (for text) */}
+      {shape.type === "text" && (
         <PropertyField label="Size">
           <div className="flex gap-2">
             <NumberInput
@@ -498,40 +488,6 @@ function ShapeProperties({
             </div>
           </PropertyField>
         </>
-      )}
-
-      {/* Rectangle */}
-      {shape.type === "rectangle" && (
-        <PropertyField label="Corner radius">
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={0}
-              max={50}
-              step={1}
-              value={shape.cornerRadius ?? 0}
-              onChange={(e) => onUpdate({ cornerRadius: parseInt(e.target.value) })}
-              className="flex-1"
-            />
-            <span className="text-xs tabular-nums w-8 text-right" style={{ color: "#425466" }}>
-              {shape.cornerRadius ?? 0}px
-            </span>
-          </div>
-        </PropertyField>
-      )}
-
-      {/* Polyline */}
-      {shape.type === "polyline" && (
-        <PropertyField label="Closed (polygon)">
-          <label className="flex items-center gap-1 text-xs" style={{ color: "#425466" }}>
-            <input
-              type="checkbox"
-              checked={shape.closed ?? false}
-              onChange={(e) => onUpdate({ closed: e.target.checked })}
-            />
-            Close path
-          </label>
-        </PropertyField>
       )}
 
       {/* Text */}
@@ -743,52 +699,9 @@ function ShapeProperties({
         </>
       )}
 
-      {/* Calibration Reference */}
-      {shape.type === "calibration_reference" && (
-        <>
-          <PropertyField label="Known distance">
-            <div className="flex items-center gap-1">
-              <input
-                type="number" step={0.1} min={0.1}
-                value={shape.knownDistance ?? ""}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  if (!isNaN(v) && v > 0 && shape.pixelDistance) {
-                    const spacing = v / shape.pixelDistance;
-                    onUpdate({
-                      knownDistance: v,
-                      computedPixelSpacing: spacing,
-                      measurement: {
-                        value: shape.pixelDistance,
-                        unit: "mm",
-                        calibrated: true,
-                        label: `${v.toFixed(1)} mm`,
-                      },
-                    });
-                  }
-                }}
-                className="w-20 text-xs px-1.5 py-1 tabular-nums"
-                style={{ border: "1px solid #E3E8EE", borderRadius: 4, backgroundColor: "#F6F9FC", color: "#0A2540" }}
-              />
-              <span className="text-xs" style={{ color: "#697386" }}>mm</span>
-            </div>
-          </PropertyField>
-          <PropertyField label="Pixel distance">
-            <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
-              {shape.pixelDistance ? `${Math.round(shape.pixelDistance)} px` : "—"}
-            </p>
-          </PropertyField>
-          <PropertyField label="Pixel spacing">
-            <p className="text-xs tabular-nums" style={{ color: "#425466" }}>
-              {shape.computedPixelSpacing ? `${shape.computedPixelSpacing.toFixed(4)} mm/px` : "—"}
-            </p>
-          </PropertyField>
-        </>
-      )}
-
       {/* Generic measurement fallback */}
       {shape.measurement && shape.type !== "ruler" && shape.type !== "angle"
-        && shape.type !== "cobb_angle" && shape.type !== "calibration_reference" && (
+        && shape.type !== "cobb_angle" && (
         <PropertyField label="Measurement">
           <p className="text-sm font-medium tabular-nums" style={{ color: "#635BFF" }}>
             {shape.measurement.label}
@@ -809,7 +722,7 @@ function MeasurementSummary({
   onSelectShape: (id: string) => void;
 }) {
   const measurementShapes = shapes.filter(
-    (s) => s.measurement && s.visible && s.type !== "calibration_reference"
+    (s) => s.measurement && s.visible
   );
 
   return (
@@ -853,18 +766,6 @@ function MeasurementSummary({
         </div>
       )}
 
-      {/* Calibration status */}
-      {(() => {
-        const calRef = shapes.find((s) => s.type === "calibration_reference" && s.visible);
-        return calRef ? (
-          <div className="mt-3 p-2 rounded" style={{ backgroundColor: "#fef9e7", border: "1px solid #FFCC00" }}>
-            <p className="text-xs font-medium" style={{ color: "#0A2540" }}>Calibration Active</p>
-            <p className="text-xs" style={{ color: "#425466" }}>
-              {calRef.computedPixelSpacing ? `${calRef.computedPixelSpacing.toFixed(4)} mm/px` : "Pending"}
-            </p>
-          </div>
-        ) : null;
-      })()}
     </div>
   );
 }

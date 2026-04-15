@@ -1,19 +1,15 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import type {
   BaseShape,
-  BezierControlPoint,
-  CalibrationData,
   Point,
   ShapeStyle,
   ToolId,
   ViewTransform,
 } from "@/types/annotation";
 import {
-  DEFAULT_SHAPE_STYLE,
   MEASUREMENT_STYLE,
-  CALIBRATION_STYLE,
   computeBoundingBox,
   screenToImage,
   simplifyPoints,
@@ -22,10 +18,7 @@ import {
 // ─── Constants ───
 
 const MIN_LINE_LENGTH = 3;
-const MIN_RECT_SIZE = 3;
-const MIN_ELLIPSE_RADIUS = 3;
 const MIN_FREEHAND_POINTS = 2;
-const POLYLINE_SNAP_RADIUS = 8;
 const ERASER_RADIUS = 8;
 const FREEHAND_SIMPLIFY_TOLERANCE = 1.5;
 
@@ -36,11 +29,6 @@ interface DrawingState {
   shapeId: string | null;
   startPoint: Point | null;
   currentPoints: Point[];
-  // For bezier
-  bezierAnchors: Point[];
-  bezierControlPoints: BezierControlPoint[];
-  // For polyline
-  polylineCommitted: Point[];
   // For text
   textInputActive: boolean;
   textPosition: Point | null;
@@ -53,10 +41,14 @@ interface UseDrawingToolsOptions {
   transform: ViewTransform;
   shapes: BaseShape[];
   currentStyle: ShapeStyle;
-  calibration: CalibrationData;
   onAddShape: (shape: BaseShape) => void;
   onDeleteShapes: (ids: string[]) => void;
-  onCalibrationRequest?: (shape: BaseShape) => void;
+}
+
+export interface PendingShape {
+  shape: BaseShape;
+  screenX: number;
+  screenY: number;
 }
 
 interface UseDrawingToolsReturn {
@@ -66,16 +58,18 @@ interface UseDrawingToolsReturn {
   handleDoubleClick: (e: React.MouseEvent, containerRect: DOMRect) => void;
   handleKeyDown: (e: KeyboardEvent) => boolean;
   drawingShape: BaseShape | null;
-  polylinePreview: Point | null;
   isDrawing: boolean;
   cancelDrawing: () => void;
   textInputState: { active: boolean; position: Point | null; shapeId: string | null };
   commitText: (text: string) => void;
+  pendingShape: PendingShape | null;
+  acceptPending: () => void;
+  rejectPending: () => void;
 }
 
 const DRAWING_TOOLS: ToolId[] = [
-  "line", "polyline", "rectangle", "ellipse", "arrow", "freehand", "bezier", "text", "eraser",
-  "ruler", "angle", "cobb_angle", "calibration_reference",
+  "line", "arrow", "freehand", "text", "eraser",
+  "ruler", "angle", "cobb_angle",
 ];
 
 function createInitialDrawingState(): DrawingState {
@@ -84,9 +78,6 @@ function createInitialDrawingState(): DrawingState {
     shapeId: null,
     startPoint: null,
     currentPoints: [],
-    bezierAnchors: [],
-    bezierControlPoints: [],
-    polylineCommitted: [],
     textInputActive: false,
     textPosition: null,
     measurementClicks: [],
@@ -143,19 +134,6 @@ function constrainAngle(origin: Point, point: Point): Point {
   };
 }
 
-/**
- * Constrain rectangle to square.
- */
-function constrainSquare(origin: Point, point: Point): Point {
-  const dx = point.x - origin.x;
-  const dy = point.y - origin.y;
-  const size = Math.max(Math.abs(dx), Math.abs(dy));
-  return {
-    x: origin.x + size * Math.sign(dx),
-    y: origin.y + size * Math.sign(dy),
-  };
-}
-
 import {
   computeRulerMeasurement,
   computeAngleMeasurement,
@@ -167,14 +145,53 @@ export function useDrawingTools({
   transform,
   shapes,
   currentStyle,
-  calibration,
   onAddShape,
   onDeleteShapes,
-  onCalibrationRequest,
 }: UseDrawingToolsOptions): UseDrawingToolsReturn {
   const stateRef = useRef<DrawingState>(createInitialDrawingState());
   const drawingShapeRef = useRef<BaseShape | null>(null);
-  const polylinePreviewRef = useRef<Point | null>(null);
+
+  // Pending shape for confirmation UI
+  const [pendingShape, setPendingShapeState] = useState<PendingShape | null>(null);
+  const pendingRef = useRef<PendingShape | null>(null);
+
+  const commitPending = useCallback(() => {
+    const p = pendingRef.current;
+    if (p) {
+      onAddShape(p.shape);
+      pendingRef.current = null;
+      setPendingShapeState(null);
+    }
+  }, [onAddShape]);
+
+  const acceptPending = useCallback(() => {
+    commitPending();
+  }, [commitPending]);
+
+  const rejectPending = useCallback(() => {
+    pendingRef.current = null;
+    setPendingShapeState(null);
+  }, []);
+
+  /** Set a shape as pending confirmation. Computes screen position from shape midpoint. */
+  const setPending = useCallback(
+    (shape: BaseShape) => {
+      let midX = shape.x + shape.width / 2;
+      let midY = shape.y + shape.height;
+      if (shape.points.length >= 2) {
+        const allX = shape.points.map((p) => p.x);
+        const allY = shape.points.map((p) => p.y);
+        midX = (Math.min(...allX) + Math.max(...allX)) / 2;
+        midY = Math.max(...allY);
+      }
+      const screenX = midX * transform.zoom + transform.panX;
+      const screenY = midY * transform.zoom + transform.panY;
+      const pending: PendingShape = { shape, screenX, screenY };
+      pendingRef.current = pending;
+      setPendingShapeState(pending);
+    },
+    [transform]
+  );
 
   const isDrawingTool = DRAWING_TOOLS.includes(activeTool);
 
@@ -190,7 +207,6 @@ export function useDrawingTools({
   const cancelDrawing = useCallback(() => {
     stateRef.current = createInitialDrawingState();
     drawingShapeRef.current = null;
-    polylinePreviewRef.current = null;
   }, []);
 
   const buildLineShape = useCallback(
@@ -213,49 +229,15 @@ export function useDrawingTools({
     [currentStyle, shapes]
   );
 
-  const buildRectShape = useCallback(
-    (start: Point, end: Point, fromCenter: boolean): BaseShape => {
-      const shape = createBaseShape("rectangle", currentStyle, getNextZIndex(shapes));
-      let x: number, y: number, w: number, h: number;
-      if (fromCenter) {
-        w = Math.abs(end.x - start.x) * 2;
-        h = Math.abs(end.y - start.y) * 2;
-        x = start.x - w / 2;
-        y = start.y - h / 2;
-      } else {
-        x = Math.min(start.x, end.x);
-        y = Math.min(start.y, end.y);
-        w = Math.abs(end.x - start.x);
-        h = Math.abs(end.y - start.y);
-      }
-      shape.x = x;
-      shape.y = y;
-      shape.width = w;
-      shape.height = h;
-      shape.cornerRadius = 0;
-      return shape;
-    },
-    [currentStyle, shapes]
-  );
-
-  const buildEllipseShape = useCallback(
-    (center: Point, radiusPoint: Point): BaseShape => {
-      const shape = createBaseShape("ellipse", currentStyle, getNextZIndex(shapes));
-      const rx = Math.abs(radiusPoint.x - center.x);
-      const ry = Math.abs(radiusPoint.y - center.y);
-      shape.x = center.x - rx;
-      shape.y = center.y - ry;
-      shape.width = rx * 2;
-      shape.height = ry * 2;
-      return shape;
-    },
-    [currentStyle, shapes]
-  );
-
   // ─── Pointer Down ───
   const handlePointerDown = useCallback(
     (e: React.PointerEvent, containerRect: DOMRect): boolean => {
       if (!isDrawingTool || e.button !== 0) return false;
+
+      // Auto-accept any pending shape when starting a new drawing
+      if (pendingRef.current) {
+        commitPending();
+      }
 
       const imagePos = toImage(e.clientX, e.clientY, containerRect);
       const state = stateRef.current;
@@ -275,31 +257,6 @@ export function useDrawingTools({
         state.textInputActive = true;
         state.textPosition = imagePos;
         state.shapeId = generateId();
-        return true;
-      }
-
-      // ─── Polyline (click-to-place) ───
-      if (activeTool === "polyline") {
-        if (!state.isDrawing) {
-          // First point
-          state.isDrawing = true;
-          state.shapeId = generateId();
-          state.polylineCommitted = [imagePos];
-          updatePolylinePreview(imagePos);
-          return true;
-        }
-        // Check if clicking near start to close
-        if (state.polylineCommitted.length >= 3) {
-          const first = state.polylineCommitted[0];
-          const dist = Math.hypot(imagePos.x - first.x, imagePos.y - first.y);
-          if (dist * transform.zoom < POLYLINE_SNAP_RADIUS) {
-            commitPolyline(true);
-            return true;
-          }
-        }
-        // Add point
-        state.polylineCommitted.push(imagePos);
-        updatePolylinePreview(imagePos);
         return true;
       }
 
@@ -339,31 +296,7 @@ export function useDrawingTools({
         return true;
       }
 
-      // ─── Bezier (click-to-place anchors) ───
-      if (activeTool === "bezier") {
-        if (!state.isDrawing) {
-          state.isDrawing = true;
-          state.shapeId = generateId();
-          state.bezierAnchors = [imagePos];
-          state.bezierControlPoints = [
-            { cp1x: imagePos.x, cp1y: imagePos.y, cp2x: imagePos.x, cp2y: imagePos.y },
-          ];
-          updateBezierPreview();
-          return true;
-        }
-        // Add new anchor
-        state.bezierAnchors.push(imagePos);
-        state.bezierControlPoints.push({
-          cp1x: imagePos.x,
-          cp1y: imagePos.y,
-          cp2x: imagePos.x,
-          cp2y: imagePos.y,
-        });
-        updateBezierPreview();
-        return true;
-      }
-
-      // ─── Drag-based tools (line, arrow, rect, ellipse, freehand) ───
+      // ─── Drag-based tools (line, arrow, freehand, ruler) ───
       state.isDrawing = true;
       state.startPoint = imagePos;
       state.shapeId = generateId();
@@ -383,15 +316,8 @@ export function useDrawingTools({
       } else if (activeTool === "line" || activeTool === "arrow") {
         preview = buildLineShape(imagePos, imagePos, activeTool);
         preview.id = state.shapeId;
-      } else if (activeTool === "rectangle") {
-        preview = buildRectShape(imagePos, imagePos, e.altKey);
-        preview.id = state.shapeId;
-      } else if (activeTool === "ellipse") {
-        preview = buildEllipseShape(imagePos, imagePos);
-        preview.id = state.shapeId;
-      } else if (activeTool === "ruler" || activeTool === "calibration_reference") {
-        const style = activeTool === "calibration_reference" ? CALIBRATION_STYLE : MEASUREMENT_STYLE;
-        preview = createBaseShape(activeTool === "ruler" ? "ruler" : "calibration_reference", style, zIndex);
+      } else if (activeTool === "ruler") {
+        preview = createBaseShape("ruler", MEASUREMENT_STYLE, zIndex);
         preview.id = state.shapeId;
         preview.points = [imagePos, imagePos];
         preview.showEndTicks = true;
@@ -417,9 +343,7 @@ export function useDrawingTools({
       currentStyle,
       onDeleteShapes,
       buildLineShape,
-      buildRectShape,
-      buildEllipseShape,
-      calibration,
+      commitPending,
     ]
   );
 
@@ -431,13 +355,6 @@ export function useDrawingTools({
       const imagePos = toImage(e.clientX, e.clientY, containerRect);
       const state = stateRef.current;
 
-      // Polyline preview cursor
-      if (activeTool === "polyline" && state.isDrawing) {
-        polylinePreviewRef.current = imagePos;
-        updatePolylinePreview(imagePos);
-        return;
-      }
-
       // Angle preview cursor
       if (activeTool === "angle" && state.isDrawing) {
         updateAnglePreview(imagePos);
@@ -447,24 +364,6 @@ export function useDrawingTools({
       // Cobb preview cursor
       if (activeTool === "cobb_angle" && state.isDrawing) {
         updateCobbPreview(imagePos);
-        return;
-      }
-
-      // Bezier: update last control point if dragging
-      if (activeTool === "bezier" && state.isDrawing && (e.buttons & 1)) {
-        const lastIdx = state.bezierAnchors.length - 1;
-        if (lastIdx >= 0) {
-          const anchor = state.bezierAnchors[lastIdx];
-          const cp = state.bezierControlPoints[lastIdx];
-          cp.cp2x = imagePos.x;
-          cp.cp2y = imagePos.y;
-          // Mirror for symmetric handles unless Alt held
-          if (!e.altKey) {
-            cp.cp1x = 2 * anchor.x - imagePos.x;
-            cp.cp1y = 2 * anchor.y - imagePos.y;
-          }
-          updateBezierPreview();
-        }
         return;
       }
 
@@ -508,41 +407,12 @@ export function useDrawingTools({
         return;
       }
 
-      if (activeTool === "rectangle") {
-        if (e.shiftKey) {
-          endPoint = constrainSquare(state.startPoint, imagePos);
-        }
-        const preview = buildRectShape(state.startPoint, endPoint, e.altKey);
-        preview.id = state.shapeId!;
-        drawingShapeRef.current = preview;
-        return;
-      }
-
-      if (activeTool === "ellipse") {
-        if (e.shiftKey) {
-          // Constrain to circle
-          const dx = imagePos.x - state.startPoint.x;
-          const dy = imagePos.y - state.startPoint.y;
-          const radius = Math.max(Math.abs(dx), Math.abs(dy));
-          endPoint = {
-            x: state.startPoint.x + radius * Math.sign(dx),
-            y: state.startPoint.y + radius * Math.sign(dy),
-          };
-        }
-        const preview = buildEllipseShape(state.startPoint, endPoint);
-        preview.id = state.shapeId!;
-        drawingShapeRef.current = preview;
-        return;
-      }
-
-      // Ruler / Calibration Reference (drag-based)
-      if (activeTool === "ruler" || activeTool === "calibration_reference") {
+      // Ruler (drag-based)
+      if (activeTool === "ruler") {
         if (e.shiftKey) {
           endPoint = constrainAngle(state.startPoint, imagePos);
         }
-        const style = activeTool === "calibration_reference" ? CALIBRATION_STYLE : MEASUREMENT_STYLE;
-        const shapeType = activeTool === "ruler" ? "ruler" as const : "calibration_reference" as const;
-        const preview = createBaseShape(shapeType, style, getNextZIndex(shapes));
+        const preview = createBaseShape("ruler", MEASUREMENT_STYLE, getNextZIndex(shapes));
         preview.id = state.shapeId!;
         preview.points = [state.startPoint, endPoint];
         preview.showEndTicks = true;
@@ -551,11 +421,8 @@ export function useDrawingTools({
         preview.lineCap = "round";
         const bb = computeBoundingBox([state.startPoint, endPoint]);
         preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
-        // Compute measurement for ruler preview
-        if (activeTool === "ruler") {
-          const m = computeRulerMeasurement(state.startPoint, endPoint, calibration);
-          preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: m.unit === "mm", label: m.label };
-        }
+        const m = computeRulerMeasurement(state.startPoint, endPoint);
+        preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: false, label: m.label };
         drawingShapeRef.current = preview;
         return;
       }
@@ -568,9 +435,6 @@ export function useDrawingTools({
       transform.zoom,
       onDeleteShapes,
       buildLineShape,
-      buildRectShape,
-      buildEllipseShape,
-      calibration,
     ]
   );
 
@@ -585,8 +449,7 @@ export function useDrawingTools({
       }
 
       // Don't commit click-to-place tools on pointer up
-      if (activeTool === "polyline" || activeTool === "bezier" || activeTool === "text"
-        || activeTool === "angle" || activeTool === "cobb_angle") {
+      if (activeTool === "text" || activeTool === "angle" || activeTool === "cobb_angle") {
         return;
       }
 
@@ -606,14 +469,9 @@ export function useDrawingTools({
         } else {
           valid = false;
         }
-      } else if (activeTool === "rectangle") {
-        valid = shape.width >= MIN_RECT_SIZE && shape.height >= MIN_RECT_SIZE;
-      } else if (activeTool === "ellipse") {
-        valid = shape.width / 2 >= MIN_ELLIPSE_RADIUS || shape.height / 2 >= MIN_ELLIPSE_RADIUS;
       } else if (activeTool === "freehand") {
         valid = state.currentPoints.length >= MIN_FREEHAND_POINTS;
         if (valid) {
-          // Simplify freehand path
           const tolerance = FREEHAND_SIMPLIFY_TOLERANCE / transform.zoom;
           shape.points = simplifyPoints(state.currentPoints, tolerance);
           shape.simplify = true;
@@ -625,8 +483,8 @@ export function useDrawingTools({
         }
       }
 
-      // Ruler / Calibration Reference validation
-      if (activeTool === "ruler" || activeTool === "calibration_reference") {
+      // Ruler validation
+      if (activeTool === "ruler") {
         if (shape.points.length >= 2) {
           const dist = Math.hypot(
             shape.points[1].x - shape.points[0].x,
@@ -634,18 +492,8 @@ export function useDrawingTools({
           );
           valid = dist >= MIN_LINE_LENGTH;
           if (valid) {
-            if (activeTool === "ruler") {
-              const m = computeRulerMeasurement(shape.points[0], shape.points[1], calibration);
-              shape.measurement = { value: m.pixelLength, unit: m.unit, calibrated: m.unit === "mm", label: m.label };
-            } else {
-              // Calibration reference — compute pixel distance, request dialog
-              const pixDist = Math.hypot(
-                shape.points[1].x - shape.points[0].x,
-                shape.points[1].y - shape.points[0].y
-              );
-              shape.pixelDistance = pixDist;
-              shape.measurement = { value: pixDist, unit: "px", calibrated: false, label: `${Math.round(pixDist)} px` };
-            }
+            const m = computeRulerMeasurement(shape.points[0], shape.points[1]);
+            shape.measurement = { value: m.pixelLength, unit: m.unit, calibrated: false, label: m.label };
           }
         } else {
           valid = false;
@@ -653,11 +501,7 @@ export function useDrawingTools({
       }
 
       if (valid) {
-        onAddShape({ ...shape });
-        // For calibration reference, trigger calibration dialog
-        if (activeTool === "calibration_reference" && onCalibrationRequest) {
-          onCalibrationRequest({ ...shape });
-        }
+        setPending({ ...shape });
       }
 
       // Reset state
@@ -665,50 +509,22 @@ export function useDrawingTools({
       drawingShapeRef.current = null;
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     },
-    [activeTool, transform.zoom, onAddShape, calibration, onCalibrationRequest]
+    [activeTool, transform.zoom, setPending]
   );
 
   // ─── Double Click ───
   const handleDoubleClick = useCallback(
-    (e: React.MouseEvent, containerRect: DOMRect): void => {
-      // Commit polyline on double-click
-      if (activeTool === "polyline" && stateRef.current.isDrawing) {
-        e.preventDefault();
-        commitPolyline(false);
-        return;
-      }
-
-      // Commit bezier on double-click
-      if (activeTool === "bezier" && stateRef.current.isDrawing) {
-        e.preventDefault();
-        commitBezier();
-        return;
-      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_e: React.MouseEvent, _containerRect: DOMRect): void => {
+      // No click-to-place tools remaining that commit on double-click
     },
-    [activeTool]
+    []
   );
 
   // ─── Key Down ───
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): boolean => {
       const state = stateRef.current;
-
-      // Polyline-specific keys
-      if (activeTool === "polyline" && state.isDrawing) {
-        if (e.key === "Enter") {
-          commitPolyline(false);
-          return true;
-        }
-        if (e.key === "Escape") {
-          cancelDrawing();
-          return true;
-        }
-        if (e.key === "Backspace" && state.polylineCommitted.length > 1) {
-          state.polylineCommitted.pop();
-          updatePolylinePreview(polylinePreviewRef.current ?? state.polylineCommitted[state.polylineCommitted.length - 1]);
-          return true;
-        }
-      }
 
       // Angle-specific keys
       if (activeTool === "angle" && state.isDrawing) {
@@ -734,108 +550,10 @@ export function useDrawingTools({
         }
       }
 
-      // Bezier-specific keys
-      if (activeTool === "bezier" && state.isDrawing) {
-        if (e.key === "Enter") {
-          commitBezier();
-          return true;
-        }
-        if (e.key === "Escape") {
-          cancelDrawing();
-          return true;
-        }
-        if (e.key === "Backspace" && state.bezierAnchors.length > 1) {
-          state.bezierAnchors.pop();
-          state.bezierControlPoints.pop();
-          updateBezierPreview();
-          return true;
-        }
-      }
-
       return false;
     },
     [activeTool, cancelDrawing]
   );
-
-  // ─── Polyline Helpers ───
-  function updatePolylinePreview(cursorPos: Point) {
-    const state = stateRef.current;
-    if (state.polylineCommitted.length === 0) return;
-    const allPoints = [...state.polylineCommitted, cursorPos];
-    const shape = createBaseShape("polyline", currentStyle, getNextZIndex(shapes));
-    shape.id = state.shapeId!;
-    shape.points = allPoints;
-    shape.closed = false;
-    shape.lineCap = "round";
-    const bb = computeBoundingBox(allPoints);
-    shape.x = bb.x;
-    shape.y = bb.y;
-    shape.width = bb.width;
-    shape.height = bb.height;
-    drawingShapeRef.current = shape;
-  }
-
-  function commitPolyline(closed: boolean) {
-    const state = stateRef.current;
-    if (state.polylineCommitted.length < 2) {
-      cancelDrawing();
-      return;
-    }
-    const shape = createBaseShape("polyline", currentStyle, getNextZIndex(shapes));
-    shape.id = state.shapeId!;
-    shape.points = [...state.polylineCommitted];
-    shape.closed = closed;
-    shape.lineCap = "round";
-    const bb = computeBoundingBox(shape.points);
-    shape.x = bb.x;
-    shape.y = bb.y;
-    shape.width = bb.width;
-    shape.height = bb.height;
-    onAddShape(shape);
-
-    stateRef.current = createInitialDrawingState();
-    drawingShapeRef.current = null;
-    polylinePreviewRef.current = null;
-  }
-
-  // ─── Bezier Helpers ───
-  function updateBezierPreview() {
-    const state = stateRef.current;
-    if (state.bezierAnchors.length === 0) return;
-    const shape = createBaseShape("bezier", currentStyle, getNextZIndex(shapes));
-    shape.id = state.shapeId!;
-    shape.points = [...state.bezierAnchors];
-    shape.controlPoints = [...state.bezierControlPoints];
-    shape.lineCap = "round";
-    const bb = computeBoundingBox(state.bezierAnchors);
-    shape.x = bb.x;
-    shape.y = bb.y;
-    shape.width = bb.width;
-    shape.height = bb.height;
-    drawingShapeRef.current = shape;
-  }
-
-  function commitBezier() {
-    const state = stateRef.current;
-    if (state.bezierAnchors.length < 2) {
-      cancelDrawing();
-      return;
-    }
-    const shape = createBaseShape("bezier", currentStyle, getNextZIndex(shapes));
-    shape.id = state.shapeId!;
-    shape.points = [...state.bezierAnchors];
-    shape.controlPoints = [...state.bezierControlPoints];
-    shape.lineCap = "round";
-    const bb = computeBoundingBox(state.bezierAnchors);
-    shape.x = bb.x;
-    shape.y = bb.y;
-    shape.width = bb.width;
-    shape.height = bb.height;
-    onAddShape(shape);
-
-    stateRef.current = createInitialDrawingState();
-    drawingShapeRef.current = null;
-  }
 
   // ─── Angle Helpers ───
   function updateAnglePreview(cursorPos: Point) {
@@ -869,7 +587,7 @@ export function useDrawingTools({
     shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
     const m = computeAngleMeasurement(pts[0], pts[1], pts[2]);
     shape.measurement = { value: m.degrees, unit: "deg", calibrated: false, label: m.label };
-    onAddShape(shape);
+    setPending(shape);
     stateRef.current = createInitialDrawingState();
     drawingShapeRef.current = null;
   }
@@ -886,7 +604,6 @@ export function useDrawingTools({
     shape.showClassification = true;
     const bb = computeBoundingBox(allPoints);
     shape.x = bb.x; shape.y = bb.y; shape.width = bb.width; shape.height = bb.height;
-    // If we have 4+ points, compute the cobb angle
     if (allPoints.length >= 4) {
       const cobb = computeCobbAngle(allPoints[0], allPoints[1], allPoints[2], allPoints[3]);
       shape.line1 = [allPoints[0].x, allPoints[0].y, allPoints[1].x, allPoints[1].y];
@@ -919,7 +636,7 @@ export function useDrawingTools({
     shape.intersection = cobb.intersection;
     shape.cobbClassification = cobb.classification;
     shape.measurement = { value: cobb.degrees, unit: "deg", calibrated: false, label: `${cobb.degrees.toFixed(1)}° — ${cobb.classification}` };
-    onAddShape(shape);
+    setPending(shape);
     stateRef.current = createInitialDrawingState();
     drawingShapeRef.current = null;
   }
@@ -944,9 +661,7 @@ export function useDrawingTools({
       shape.textBackground = null;
       shape.x = state.textPosition.x;
       shape.y = state.textPosition.y;
-      // Text stroke is the text color
       shape.style.strokeColor = "#FFFFFF";
-      // Estimate size based on text length
       shape.width = Math.max(text.length * 10, 40);
       shape.height = 24;
       onAddShape(shape);
@@ -963,7 +678,6 @@ export function useDrawingTools({
     handleDoubleClick,
     handleKeyDown,
     drawingShape: drawingShapeRef.current,
-    polylinePreview: polylinePreviewRef.current,
     isDrawing: stateRef.current.isDrawing || stateRef.current.textInputActive,
     cancelDrawing,
     textInputState: {
@@ -972,6 +686,9 @@ export function useDrawingTools({
       shapeId: stateRef.current.shapeId,
     },
     commitText,
+    pendingShape,
+    acceptPending,
+    rejectPending,
   };
 }
 
@@ -983,13 +700,11 @@ function hitTestEraser(
   zoom: number
 ): BaseShape | null {
   const radius = ERASER_RADIUS / zoom;
-  // Check from top to bottom (highest zIndex first)
   const sorted = [...shapes]
     .filter((s) => s.visible && !s.locked)
     .sort((a, b) => b.zIndex - a.zIndex);
 
   for (const shape of sorted) {
-    // Check if point is within expanded bounding box
     if (
       imagePos.x >= shape.x - radius &&
       imagePos.x <= shape.x + shape.width + radius &&
@@ -1001,10 +716,7 @@ function hitTestEraser(
         shape.type === "line" ||
         shape.type === "arrow" ||
         shape.type === "freehand" ||
-        shape.type === "polyline" ||
-        shape.type === "bezier" ||
-        shape.type === "ruler" ||
-        shape.type === "calibration_reference"
+        shape.type === "ruler"
       ) {
         for (let i = 0; i < shape.points.length - 1; i++) {
           const dist = pointToSegmentDistance(
@@ -1015,7 +727,7 @@ function hitTestEraser(
           if (dist <= radius) return shape;
         }
       } else {
-        // Bounding box hit for rect, ellipse, text
+        // Bounding box hit for text
         return shape;
       }
     }

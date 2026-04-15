@@ -4,18 +4,15 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Hand,
   Minus,
-  Pentagon,
-  Circle,
   ArrowRight,
   Pencil,
   Type,
   Ruler,
   TriangleRight,
-  Spline,
   Eraser,
-  Share2,
-  Crosshair,
   Scaling,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -32,22 +29,22 @@ const tools: ToolItem[] = [
   { id: "hand", label: "Pan", shortcut: "H", description: "Click and drag to move around the X-ray. Click on shapes to select them.", icon: <Hand size={18} strokeWidth={1.5} /> },
   { id: "freehand", label: "Freehand", shortcut: "P", description: "Draw freely with your cursor", icon: <Pencil size={18} strokeWidth={1.5} />, separator: true },
   { id: "line", label: "Line", shortcut: "L", description: "Draw a straight line between two points", icon: <Minus size={18} strokeWidth={1.5} /> },
-  { id: "polyline", label: "Polyline", shortcut: "⇧L", description: "Draw connected line segments, double-click to finish", icon: <Share2 size={18} strokeWidth={1.5} /> },
   { id: "arrow", label: "Arrow", shortcut: "A", description: "Draw an arrow pointing in one direction", icon: <ArrowRight size={18} strokeWidth={1.5} /> },
-  { id: "rectangle", label: "Rectangle", shortcut: "R", description: "Draw a rectangle by clicking and dragging", icon: <Pentagon size={18} strokeWidth={1.5} /> },
-  { id: "ellipse", label: "Ellipse", shortcut: "E", description: "Draw an ellipse or circle (hold Shift for circle)", icon: <Circle size={18} strokeWidth={1.5} /> },
-  { id: "bezier", label: "Bezier", shortcut: "B", description: "Draw a smooth curve with control points", icon: <Spline size={18} strokeWidth={1.5} /> },
   { id: "text", label: "Text", shortcut: "T", description: "Click to add a text label", icon: <Type size={18} strokeWidth={1.5} /> },
   { id: "eraser", label: "Eraser", shortcut: "X", description: "Click on any annotation to remove it", icon: <Eraser size={18} strokeWidth={1.5} />, separator: true },
   { id: "ruler", label: "Ruler", shortcut: "M", description: "Measure distance between two points", icon: <Ruler size={18} strokeWidth={1.5} /> },
   { id: "angle", label: "Angle", shortcut: "⇧M", description: "Measure the angle between three points", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
   { id: "cobb_angle", label: "Cobb Angle", shortcut: "⌘⇧M", description: "Measure Cobb angle between two lines", icon: <Scaling size={18} strokeWidth={1.5} /> },
-  { id: "calibration_reference", label: "Calibration", shortcut: "K", description: "Set a known distance for accurate measurements", icon: <Crosshair size={18} strokeWidth={1.5} /> },
 ];
 
 interface AnnotationToolbarProps {
   activeTool: ToolId;
   onToolChange: (tool: ToolId) => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  onToggleShortcuts?: () => void;
 }
 
 function ToolTooltip({
@@ -87,7 +84,15 @@ function ToolTooltip({
   );
 }
 
-export function AnnotationToolbar({ activeTool, onToolChange }: AnnotationToolbarProps) {
+export function AnnotationToolbar({
+  activeTool,
+  onToolChange,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
+  onToggleShortcuts,
+}: AnnotationToolbarProps) {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -122,10 +127,54 @@ export function AnnotationToolbar({ activeTool, onToolChange }: AnnotationToolba
     };
   }, []);
 
-  const hoveredToolData = hoveredTool ? tools.find((t) => t.id === hoveredTool) : null;
+  // Undo/redo pseudo tool items for tooltips
+  const undoRedoTooltips: Record<string, ToolItem> = {
+    __undo: { id: "hand" as ToolId, label: "Undo", shortcut: "⌘Z", description: "Undo the last action", icon: null },
+    __redo: { id: "hand" as ToolId, label: "Redo", shortcut: "⌘⇧Z", description: "Redo the last undone action", icon: null },
+    __shortcuts: { id: "hand" as ToolId, label: "Keyboard Shortcuts", shortcut: "?", description: "Show all keyboard shortcuts", icon: null },
+  };
+
+  const hoveredToolData = hoveredTool
+    ? undoRedoTooltips[hoveredTool] ?? tools.find((t) => t.id === hoveredTool)
+    : null;
 
   return (
     <div className="flex items-center gap-1 px-2">
+      {/* Undo/Redo */}
+      <button
+        onClick={onUndo}
+        disabled={!canUndo}
+        onMouseEnter={() => handleMouseEnter("__undo")}
+        onMouseLeave={handleMouseLeave}
+        ref={(el) => { if (el) buttonRefsMap.current.set("__undo", el); }}
+        className="flex items-center justify-center transition-colors disabled:cursor-not-allowed"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          color: canUndo ? "#425466" : "#A3ACB9",
+        }}
+      >
+        <Undo2 size={18} strokeWidth={1.5} />
+      </button>
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        onMouseEnter={() => handleMouseEnter("__redo")}
+        onMouseLeave={handleMouseLeave}
+        ref={(el) => { if (el) buttonRefsMap.current.set("__redo", el); }}
+        className="flex items-center justify-center transition-colors disabled:cursor-not-allowed"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          color: canRedo ? "#425466" : "#A3ACB9",
+        }}
+      >
+        <Redo2 size={18} strokeWidth={1.5} />
+      </button>
+      <div className="mx-1" style={{ width: 1, height: 28, backgroundColor: "#E3E8EE" }} />
+
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
         const prevTool = i > 0 ? tools[i - 1] : null;
@@ -159,6 +208,26 @@ export function AnnotationToolbar({ activeTool, onToolChange }: AnnotationToolba
           </div>
         );
       })}
+      {/* Spacer to push ? button to the right */}
+      <div className="flex-1" />
+      <button
+        onClick={onToggleShortcuts}
+        onMouseEnter={() => handleMouseEnter("__shortcuts")}
+        onMouseLeave={handleMouseLeave}
+        ref={(el) => { if (el) buttonRefsMap.current.set("__shortcuts", el); }}
+        className="flex items-center justify-center transition-colors"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 4,
+          color: "#697386",
+          fontSize: 16,
+          fontWeight: 600,
+        }}
+      >
+        ?
+      </button>
+
       {hoveredToolData && tooltipRect && (
         <ToolTooltip tool={hoveredToolData} anchorRect={tooltipRect} />
       )}

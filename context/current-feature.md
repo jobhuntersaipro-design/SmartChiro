@@ -2,15 +2,21 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Define goals here -->
+1. **Keyboard Shortcuts Help Panel** -- `?` key or toolbar button opens categorized shortcut overlay (Navigation, Drawing, Measurement, Editing, UI groups)
+2. **Drawing Confirmation UI** -- Accept/reject floating bar after drawing a line or shape (Enter/Y to accept, Escape/N to reject, auto-accept on tool change)
+3. **Undo/Redo Toolbar Buttons** -- Move undo/redo from StatusBar into main AnnotationToolbar (left side, before drawing tools)
 
 ## Notes
 
-<!-- Additional context -->
+- Spec: `context/features/xray-enhance-3-spec.md`
+- MedDream research: no undo/redo, no shortcuts panel, no drawing confirmation -- all three are differentiators for SmartChiro
+- Implementation order: (1) Undo/Redo toolbar, (2) Shortcuts panel, (3) Drawing confirmation
+- New files: `KeyboardShortcutsPanel.tsx`, `DrawingConfirmation.tsx`
+- Modified files: `AnnotationToolbar.tsx`, `AnnotationCanvas.tsx`, `StatusBar.tsx`, `useDrawingTools.ts`, `useCanvasInteraction.ts`
 
 ## History
 

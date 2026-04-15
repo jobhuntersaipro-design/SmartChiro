@@ -228,11 +228,7 @@ export function useCanvasInteraction({
 
       // Tool shortcuts (no modifier except Shift for polyline/angle)
       if (!mod) {
-        // Shift+L = Polyline
-        if (e.shiftKey && e.key.toLowerCase() === "l") {
-          setActiveTool("polyline");
-          return;
-        }
+        // (Polyline removed)
 
         // Shift+M = Angle
         if (e.shiftKey && e.key.toLowerCase() === "m") {
@@ -255,15 +251,6 @@ export function useCanvasInteraction({
             case "a":
               setActiveTool("arrow");
               return;
-            case "r":
-              setActiveTool("rectangle");
-              return;
-            case "e":
-              setActiveTool("ellipse");
-              return;
-            case "b":
-              setActiveTool("bezier");
-              return;
             case "t":
               setActiveTool("text");
               return;
@@ -272,9 +259,6 @@ export function useCanvasInteraction({
               return;
             case "m":
               setActiveTool("ruler");
-              return;
-            case "k":
-              setActiveTool("calibration_reference");
               return;
           }
         }

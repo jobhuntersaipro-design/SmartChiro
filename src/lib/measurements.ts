@@ -1,19 +1,14 @@
-import type { CalibrationData, Point } from "@/types/annotation";
+import type { Point } from "@/types/annotation";
 
 /**
- * Compute ruler (distance) measurement between two points.
+ * Compute ruler (distance) measurement between two points (pixel-based).
  */
 export function computeRulerMeasurement(
   p1: Point,
-  p2: Point,
-  calibration: CalibrationData
-): { pixelLength: number; calibratedLength: number | null; label: string; unit: "px" | "mm" } {
+  p2: Point
+): { pixelLength: number; label: string; unit: "px" } {
   const pixelLength = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-  if (calibration.isCalibrated && calibration.pixelSpacing) {
-    const mm = pixelLength * calibration.pixelSpacing;
-    return { pixelLength, calibratedLength: mm, label: `${mm.toFixed(1)} mm`, unit: "mm" };
-  }
-  return { pixelLength, calibratedLength: null, label: `${Math.round(pixelLength)} px`, unit: "px" };
+  return { pixelLength, label: `${Math.round(pixelLength)} px`, unit: "px" };
 }
 
 /**

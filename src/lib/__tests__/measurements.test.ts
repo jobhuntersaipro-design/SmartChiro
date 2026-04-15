@@ -8,35 +8,20 @@ import {
 // ─── computeRulerMeasurement ───
 
 describe("computeRulerMeasurement", () => {
-  it("computes pixel distance for uncalibrated measurement", () => {
+  it("computes pixel distance", () => {
     const result = computeRulerMeasurement(
       { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { isCalibrated: false, pixelSpacing: null }
+      { x: 100, y: 0 }
     );
     expect(result.pixelLength).toBe(100);
-    expect(result.calibratedLength).toBeNull();
     expect(result.unit).toBe("px");
     expect(result.label).toBe("100 px");
-  });
-
-  it("computes calibrated mm distance", () => {
-    const result = computeRulerMeasurement(
-      { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { isCalibrated: true, pixelSpacing: 0.5 }
-    );
-    expect(result.pixelLength).toBe(100);
-    expect(result.calibratedLength).toBe(50);
-    expect(result.unit).toBe("mm");
-    expect(result.label).toBe("50.0 mm");
   });
 
   it("computes diagonal distance correctly", () => {
     const result = computeRulerMeasurement(
       { x: 0, y: 0 },
-      { x: 3, y: 4 },
-      { isCalibrated: false, pixelSpacing: null }
+      { x: 3, y: 4 }
     );
     expect(result.pixelLength).toBe(5);
     expect(result.label).toBe("5 px");
@@ -45,31 +30,19 @@ describe("computeRulerMeasurement", () => {
   it("handles zero-length line", () => {
     const result = computeRulerMeasurement(
       { x: 50, y: 50 },
-      { x: 50, y: 50 },
-      { isCalibrated: false, pixelSpacing: null }
+      { x: 50, y: 50 }
     );
     expect(result.pixelLength).toBe(0);
     expect(result.label).toBe("0 px");
   });
 
-  it("falls back to px when calibrated but pixelSpacing is null", () => {
+  it("rounds pixel values", () => {
     const result = computeRulerMeasurement(
       { x: 0, y: 0 },
-      { x: 100, y: 0 },
-      { isCalibrated: true, pixelSpacing: null }
+      { x: 142, y: 0 }
     );
-    expect(result.unit).toBe("px");
-    expect(result.calibratedLength).toBeNull();
-  });
-
-  it("uses precise decimal in mm label", () => {
-    const result = computeRulerMeasurement(
-      { x: 0, y: 0 },
-      { x: 142, y: 0 },
-      { isCalibrated: true, pixelSpacing: 0.269 }
-    );
-    expect(result.calibratedLength).toBeCloseTo(38.198, 2);
-    expect(result.label).toBe("38.2 mm");
+    expect(result.pixelLength).toBe(142);
+    expect(result.label).toBe("142 px");
   });
 });
 
@@ -158,7 +131,6 @@ describe("computeCobbAngle", () => {
   });
 
   it("classifies mild (<10°)", () => {
-    // Small tilt: line2 tilted ~5° from horizontal
     const tilt = Math.tan(5 * Math.PI / 180) * 100;
     const result = computeCobbAngle(
       { x: 0, y: 0 }, { x: 100, y: 0 },
@@ -193,10 +165,8 @@ describe("computeCobbAngle", () => {
       { x: 0, y: 0 }, { x: 100, y: 0 },
       { x: 0, y: 200 }, { x: 100, y: 200 }
     );
-    // Perp1 starts at midpoint of line1
     expect(result.perp1[0]).toBe(50);
     expect(result.perp1[1]).toBe(0);
-    // Perp2 starts at midpoint of line2
     expect(result.perp2[0]).toBe(50);
     expect(result.perp2[1]).toBe(200);
   });

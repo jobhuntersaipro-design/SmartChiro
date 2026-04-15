@@ -2,17 +2,12 @@
 
 export type ShapeType =
   | "line"
-  | "polyline"
-  | "rectangle"
-  | "ellipse"
   | "arrow"
   | "freehand"
-  | "bezier"
   | "text"
   | "ruler"
   | "angle"
-  | "cobb_angle"
-  | "calibration_reference";
+  | "cobb_angle";
 
 export interface ShapeStyle {
   strokeColor: string;
@@ -26,13 +21,6 @@ export interface ShapeStyle {
 export interface Point {
   x: number;
   y: number;
-}
-
-export interface BezierControlPoint {
-  cp1x: number;
-  cp1y: number;
-  cp2x: number;
-  cp2y: number;
 }
 
 export interface BaseShape {
@@ -53,7 +41,7 @@ export interface BaseShape {
   points: Point[]; // vertices, control points, etc.
   text: string | null; // for text shapes
   fontSize: number | null;
-  // Measurement data (for ruler, angle, cobb_angle, calibration_reference shapes)
+  // Measurement data (for ruler, angle, cobb_angle shapes)
   measurement: ShapeMeasurement | null;
 
   // ─── Extended shape-specific fields ───
@@ -80,28 +68,14 @@ export interface BaseShape {
   showClassification?: boolean;
   cobbClassification?: string;
 
-  // Calibration Reference
-  knownDistance?: number;
-  pixelDistance?: number;
-  computedPixelSpacing?: number;
-
-  // Polyline
-  closed?: boolean;
-
   // Arrow
   arrowStart?: boolean;
   arrowEnd?: boolean;
   arrowSize?: number;
 
-  // Rectangle
-  cornerRadius?: number;
-
   // Freehand
   tension?: number;
   simplify?: boolean;
-
-  // Bezier
-  controlPoints?: BezierControlPoint[];
 
   // Text (extended)
   fontFamily?: string;
@@ -185,18 +159,13 @@ export interface UndoRedoStack {
 export type ToolId =
   | "hand"
   | "line"
-  | "polyline"
-  | "rectangle"
-  | "ellipse"
   | "arrow"
   | "freehand"
-  | "bezier"
   | "text"
   | "eraser"
   | "ruler"
   | "angle"
-  | "cobb_angle"
-  | "calibration_reference";
+  | "cobb_angle";
 
 export type ToolState =
   | "idle"
@@ -261,22 +230,6 @@ export const MEASUREMENT_STYLE: ShapeStyle = {
   fillOpacity: 0,
   lineDash: [],
 };
-
-export const CALIBRATION_STYLE: ShapeStyle = {
-  strokeColor: "#FFCC00",       // yellow — distinct from measurements
-  strokeWidth: 2,
-  strokeOpacity: 1,
-  fillColor: null,
-  fillOpacity: 0,
-  lineDash: [],
-};
-
-// ─── Calibration Data (passed to canvas) ───
-
-export interface CalibrationData {
-  isCalibrated: boolean;
-  pixelSpacing: number | null;  // mm per pixel
-}
 
 // ─── Color Presets ───
 

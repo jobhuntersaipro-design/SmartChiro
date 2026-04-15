@@ -1,0 +1,288 @@
+- generic [ref=e5]:
+  - navigation [ref=e6]:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - list [ref=e11]:
+          - listitem [ref=e12]
+          - listitem [ref=e19]
+          - listitem [ref=e26]
+          - listitem [ref=e33]
+          - listitem [ref=e39]
+          - listitem [ref=e43]
+          - listitem [ref=e49]
+          - listitem [ref=e55]
+          - listitem [ref=e61]
+          - listitem [ref=e67]
+          - listitem [ref=e73]
+          - listitem [ref=e77]
+          - listitem [ref=e83]
+          - listitem [ref=e89]
+          - listitem [ref=e93]
+        - listitem [ref=e329]:
+          - generic "More buttons" [ref=e330] [cursor=pointer]
+      - generic [ref=e104]:
+        - generic "Languages" [ref=e105]:
+          - generic [ref=e106]
+        - listitem [ref=e116]:
+          - generic "Notifications" [ref=e117] [cursor=pointer]
+        - list [ref=e119]:
+          - listitem [ref=e120]
+        - list [ref=e127]:
+          - listitem [ref=e128]
+  - generic [ref=e134]:
+    - generic [ref=e136]:
+      - generic "Drag and drop to open the study in overview layout" [ref=e137] [cursor=pointer]:
+        - generic [ref=e138]:
+          - generic "bilateral_left-TKA, ID - IBL_LAMA_007_en" [ref=e139]
+          - generic [ref=e143]
+      - generic [ref=e150]:
+        - generic [ref=e151]:
+          - generic "Drag and drop to preload series" [ref=e152]
+          - generic [ref=e161] [cursor=pointer]: "1"
+        - generic [ref=e162]:
+          - generic "Drag and drop to preload series" [ref=e163]
+          - generic [ref=e172] [cursor=pointer]: "1"
+        - generic [ref=e173]:
+          - generic "Drag and drop to preload series" [ref=e174]
+          - generic [ref=e183] [cursor=pointer]: "1"
+        - generic [ref=e184]:
+          - generic "Drag and drop to preload series" [ref=e185]
+          - generic [ref=e194] [cursor=pointer]: "1"
+        - generic [ref=e195]:
+          - generic "Drag and drop to preload series" [ref=e196]
+          - generic [ref=e205] [cursor=pointer]: "1"
+        - generic [ref=e207]:
+          - generic "Drag and drop to preload series" [ref=e208]
+          - generic [ref=e217] [cursor=pointer]: "1"
+        - generic [ref=e218]:
+          - generic "Drag and drop to preload series" [ref=e219]
+          - generic [ref=e228] [cursor=pointer]: "1"
+    - generic [ref=e231]:
+      - generic [ref=e234]:
+        - button "All | Protocol 4 per panel" [ref=e236]:
+          - generic "All | Protocol 4 per panel" [ref=e237]
+        - button "Prev. HP (Alt + C)" [ref=e240]
+        - button "Next HP (Alt + V)" [ref=e242]
+        - button "Prev. CP (Comparison study)" [disabled] [ref=e244]
+        - generic [ref=e247]: 1/1
+        - button "Next CP (Comparison study)" [disabled] [ref=e248]
+        - button "Layout" [ref=e253]
+        - button "Overview Layout" [ref=e257]
+        - button "Previous Page (Pageup)" [disabled] [ref=e259]
+        - generic [ref=e262]: 1/2
+        - button "Next Page (Pagedown)" [ref=e263]
+      - generic [ref=e265]:
+        - checkbox "Adjust smoothing" [checked] [ref=e282]
+        - generic:
+          - generic
+      - iframe [ref=e295]:
+        
+      - generic [ref=e300]:
+        - text: Radiology Diagnostic Study Note
+        - text: 2025-09-22 11:59:27
+        - text: Patient
+        - text: "Patient's Name: bilateral_left-TKA"
+        - text: "Patient ID: IBL_LAMA_007_en"
+        - text: "Patient's Birth Date: 1945-01-01"
+        - text: "Patient's Sex: M"
+        - text: Study
+        - text: "Study Date: 2025-02-02 10:23:26"
+        - text: "Study ID:"
+        - text: "Accession Number: L07"
+        - text: "Referring Physician's Name:"
+        - text: Report Status
+        - text: "Completion Flag: PARTIAL"
+        - text: "Verification Flag: UNVERIFIED"
+        - text: 1. Clinical Finding
+        - text: "1. Performed Procedure Step SOP Instance UID: 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2"
+        - text: "2. Series Instance UID: 1.3.46.670589.30.1.6.1.1625470099.1499675119210.1"
+        - text: "3. SOP Class UID: 1.2.840.10008.5.1.4.1.1.1"
+        - text: "4. Study Instance UID: 1.3.12.2.1107.5.8.3.485251.869087.67797783.2017070916223065"
+        - text: 5. Clinical Finding
+        - text: "1. anatomical structure: Lower Extremity-Right"
+        - text: "2. Radiology Diagnostic Study Note: All report findings reported by the IB Lab LAMA Software have to be checked for errors by a healthcare professional trained in radiology."
+        - text: 3. Finding mechanical medial proximal tibia angle
+        - text: "1. Value mechanical medial proximal tibia angle: 88.3 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 4. Finding joint-line convergence angle
+        - text: "1. Value joint-line convergence angle: 1.3 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 5. Finding mechanical lateral proximal femur angle
+        - text: "1. Value mechanical lateral proximal femur angle: 81.9 deg"
+        - text: "2. Point: 908.0, 743.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 6. Finding anatomical medial proximal femur angle
+        - text: "1. Value anatomical medial proximal femur angle: 86.8 deg"
+        - text: "2. Point: 512.0, 794.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 7. Finding anatomical tibia-femur angle
+        - text: "1. Value anatomical tibia-femur angle: -5.0 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 8. Finding anatomical-mechanical angle
+        - text: "1. Value anatomical-mechanical angle: 4.9 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 9. Finding hip-knee angle
+        - text: "1. Value hip-knee angle: 1.6 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 10. Finding anatomical lateral distal femur angle
+        - text: "1. Value anatomical lateral distal femur angle: 83.7 deg"
+        - text: "2. Point: 679.0, 3954.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 11. Finding intermedullary angle
+        - text: "1. Value intermedullary angle: 5.5 deg"
+        - text: "2. Point: 868.0, 3960.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 12. Finding anatomical lateral distal tibia angle
+        - text: "1. Value anatomical lateral distal tibia angle: 86.3 deg"
+        - text: "2. Point: 900.0, 6682.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 13. Finding mechanical tibia-femur angle
+        - text: "1. Value mechanical tibia-femur angle: 178.4 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 14. Finding mechanical lateral distal femur angle
+        - text: "1. Value mechanical lateral distal femur angle: 88.6 deg"
+        - text: "2. Point: 863.0, 3974.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 15. Finding anatomical medial proximal tibia angle
+        - text: "1. Value anatomical medial proximal tibia angle: 90.0 deg"
+        - text: "2. Point: 1141.0, 3992.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 16. Finding mechanical lateral distal tibia angle
+        - text: "1. Value mechanical lateral distal tibia angle: 84.5 deg"
+        - text: "2. Point: 900.0, 6682.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 17. Finding medial axis deviation (mad)
+        - text: "1. Finding medial axis deviation (mad): 5.0 millimeter"
+        - text: "2. Multipoint: 903.0, 3960.0, 1141.0, 3992.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 18. Finding mechanical tibia length
+        - text: "1. Finding mechanical tibia length: 36.4 centimeter"
+        - text: "2. Multipoint: 900.0, 6682.0, 859.0, 3988.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 19. Finding femur length
+        - text: "1. Finding femur length: 46.1 centimeter"
+        - text: "2. Multipoint: 919.0, 560.0, 1024.0, 3967.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 20. Finding tibia length
+        - text: "1. Finding tibia length: 36.7 centimeter"
+        - text: "2. Multipoint: 900.0, 6682.0, 1024.0, 3967.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 21. Finding full leg length
+        - text: "1. Finding full leg length: 82.8 centimeter"
+        - text: "2. Multipoint: 919.0, 560.0, 900.0, 6682.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 22. Finding mechanical femur length
+        - text: "1. Finding mechanical femur length: 43.5 centimeter"
+        - text: "2. Multipoint: 908.0, 743.0, 868.0, 3960.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 23. Finding full mechanical leg length (Mikulicz)
+        - text: "1. Finding full mechanical leg length (Mikulicz): 80.3 centimeter"
+        - text: "2. Multipoint: 908.0, 743.0, 900.0, 6682.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 6. Clinical Finding
+        - text: "1. anatomical structure: Lower Extremity-Left"
+        - text: "2. Radiology Diagnostic Study Note: All report findings reported by the IB Lab LAMA Software have to be checked for errors by a healthcare professional trained in radiology."
+        - text: 3. Finding mechanical medial proximal tibia angle
+        - text: "1. Value mechanical medial proximal tibia angle: 90.2 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 4. Finding joint-line convergence angle
+        - text: "1. Value joint-line convergence angle: 0.5 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 5. Finding mechanical lateral proximal femur angle
+        - text: "1. Value mechanical lateral proximal femur angle: 88.1 deg"
+        - text: "2. Point: 2247.0, 851.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 6. Finding anatomical medial proximal femur angle
+        - text: "1. Value anatomical medial proximal femur angle: 93.9 deg"
+        - text: "2. Point: 2631.0, 871.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 7. Finding anatomical tibia-femur angle
+        - text: "1. Value anatomical tibia-femur angle: -7.6 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 8. Finding anatomical-mechanical angle
+        - text: "1. Value anatomical-mechanical angle: 5.8 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 9. Finding hip-knee angle
+        - text: "1. Value hip-knee angle: -0.9 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 10. Finding anatomical lateral distal femur angle
+        - text: "1. Value anatomical lateral distal femur angle: 83.0 deg"
+        - text: "2. Point: 2376.0, 4079.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 11. Finding intermedullary angle
+        - text: "1. Value intermedullary angle: 5.8 deg"
+        - text: "2. Point: 2190.0, 4079.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 12. Finding anatomical lateral distal tibia angle
+        - text: "1. Value anatomical lateral distal tibia angle: 90.3 deg"
+        - text: "2. Point: 2198.0, 6842.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 13. Finding mechanical tibia-femur angle
+        - text: "1. Value mechanical tibia-femur angle: 179.1 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 14. Finding mechanical lateral distal femur angle
+        - text: "1. Value mechanical lateral distal femur angle: 88.8 deg"
+        - text: "2. Point: 2196.0, 4095.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 15. Finding anatomical medial proximal tibia angle
+        - text: "1. Value anatomical medial proximal tibia angle: 91.1 deg"
+        - text: "2. Point: 1983.0, 4110.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 16. Finding mechanical lateral distal tibia angle
+        - text: "1. Value mechanical lateral distal tibia angle: 89.4 deg"
+        - text: "2. Point: 2198.0, 6842.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 17. Finding medial axis deviation (mad)
+        - text: "1. Finding medial axis deviation (mad): -3.0 millimeter"
+        - text: "2. Multipoint: 2220.0, 4095.0, 1926.0, 4109.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 18. Finding mechanical tibia length
+        - text: "1. Finding mechanical tibia length: 36.9 centimeter"
+        - text: "2. Multipoint: 2198.0, 6842.0, 2202.0, 4112.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 19. Finding femur length
+        - text: "1. Finding femur length: 46.3 centimeter"
+        - text: "2. Multipoint: 2234.0, 665.0, 1979.0, 4079.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 20. Finding tibia length
+        - text: "1. Finding tibia length: 37.4 centimeter"
+        - text: "2. Multipoint: 2198.0, 6842.0, 1979.0, 4079.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 21. Finding full leg length
+        - text: "1. Finding full leg length: 83.4 centimeter"
+        - text: "2. Multipoint: 2234.0, 665.0, 2198.0, 6842.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 22. Finding mechanical femur length
+        - text: "1. Finding mechanical femur length: 43.6 centimeter"
+        - text: "2. Multipoint: 2247.0, 851.0, 2190.0, 4079.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: 23. Finding full mechanical leg length (Mikulicz)
+        - text: "1. Finding full mechanical leg length (Mikulicz): 80.9 centimeter"
+        - text: "2. Multipoint: 2247.0, 851.0, 2198.0, 6842.0"
+        - text: 1. image 1.3.46.670589.30.1.6.1.1625470099.1499675119163.2 referred by 1.2.40.0.38.3.30.211362470826183934801584015828368270140
+        - text: "7. Finding leg length difference: right leg minus left leg"
+        - text: "1. Finding leg length difference: right leg minus left leg: -6.0 millimeter"
+        - text: 8. Radiology Diagnostic Study Note
+        - text: "1. Radiology diagnostic study note: Calibration Device (Sphere)"
+        - text: 2. Finding Configured Calibration Ball Diameter
+        - text: "1. Value Configured Calibration Ball Diameter: 2.5 centimeter"
+        - text: 3. Finding Apparent Calibration Ball Diameter
+        - text: "1. Value Apparent Calibration Ball Diameter: 2.6 centimeter"
+        - text: 4. Finding Length Rescaling Ratio
+        - text: "1. Value Length Rescaling Ratio: 1.0 1"
+      - generic [ref=e301]:
+        - checkbox "Adjust smoothing" [checked] [ref=e318]
+        - generic:
+          - generic

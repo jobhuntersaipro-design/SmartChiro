@@ -5,7 +5,6 @@ import type { AnnotationCanvasState, BaseShape } from "@/types/annotation";
 import {
   DEFAULT_SHAPE_STYLE,
   MEASUREMENT_STYLE,
-  CALIBRATION_STYLE,
 } from "@/types/annotation";
 
 // Helper to create a minimal test image buffer (100x100 red PNG)
@@ -89,38 +88,6 @@ describe("renderAnnotatedPng", () => {
     expect(meta.format).toBe("png");
     expect(meta.width).toBe(200);
     expect(meta.height).toBe(200);
-  });
-
-  it("produces a valid PNG with a rectangle annotation", async () => {
-    const img = await createTestImage(200, 200);
-    const rect = makeShape({
-      type: "rectangle",
-      x: 20,
-      y: 20,
-      width: 80,
-      height: 60,
-    });
-    const canvas = makeCanvasState([rect]);
-    const result = await renderAnnotatedPng(img, canvas, 200, 200, false, null);
-
-    const meta = await sharp(result).metadata();
-    expect(meta.format).toBe("png");
-  });
-
-  it("produces a valid PNG with an ellipse annotation", async () => {
-    const img = await createTestImage(200, 200);
-    const ellipse = makeShape({
-      type: "ellipse",
-      x: 30,
-      y: 30,
-      width: 100,
-      height: 60,
-    });
-    const canvas = makeCanvasState([ellipse]);
-    const result = await renderAnnotatedPng(img, canvas, 200, 200, false, null);
-
-    const meta = await sharp(result).metadata();
-    expect(meta.format).toBe("png");
   });
 
   it("produces a valid PNG with an arrow annotation", async () => {
@@ -231,38 +198,10 @@ describe("renderAnnotatedPng", () => {
     expect(meta.format).toBe("png");
   });
 
-  it("produces a valid PNG with calibration reference", async () => {
-    const img = await createTestImage(200, 200);
-    const cal = makeShape({
-      type: "calibration_reference",
-      style: { ...CALIBRATION_STYLE },
-      points: [
-        { x: 30, y: 100 },
-        { x: 170, y: 100 },
-      ],
-      showEndTicks: true,
-      tickLength: 10,
-      knownDistance: 25.4,
-      pixelDistance: 140,
-      computedPixelSpacing: 0.1814,
-      measurement: {
-        value: 25.4,
-        unit: "mm",
-        calibrated: true,
-        label: "25.4 mm",
-      },
-    });
-    const canvas = makeCanvasState([cal]);
-    const result = await renderAnnotatedPng(img, canvas, 200, 200, false, null);
-
-    const meta = await sharp(result).metadata();
-    expect(meta.format).toBe("png");
-  });
-
   it("skips invisible shapes", async () => {
     const img = await createTestImage();
     const hidden = makeShape({
-      type: "rectangle",
+      type: "line",
       visible: false,
       x: 10,
       y: 10,
@@ -311,9 +250,9 @@ describe("renderAnnotatedPng", () => {
   it("renders multiple shapes sorted by zIndex", async () => {
     const img = await createTestImage(200, 200);
     const shapes = [
-      makeShape({ type: "rectangle", zIndex: 2, x: 50, y: 50, width: 50, height: 50 }),
+      makeShape({ type: "arrow", zIndex: 2, points: [{ x: 50, y: 50 }, { x: 100, y: 100 }] }),
       makeShape({ type: "line", zIndex: 0, points: [{ x: 0, y: 0 }, { x: 200, y: 200 }] }),
-      makeShape({ type: "ellipse", zIndex: 1, x: 30, y: 30, width: 80, height: 60 }),
+      makeShape({ type: "freehand", zIndex: 1, points: [{ x: 30, y: 30 }, { x: 60, y: 40 }, { x: 90, y: 50 }] }),
     ];
     const canvas = makeCanvasState(shapes);
     const result = await renderAnnotatedPng(img, canvas, 200, 200, false, null);
@@ -413,11 +352,8 @@ describe("renderAnnotatedPdf", () => {
         points: [{ x: 10, y: 10 }, { x: 190, y: 190 }],
       }),
       makeShape({
-        type: "rectangle",
-        x: 30,
-        y: 30,
-        width: 100,
-        height: 80,
+        type: "arrow",
+        points: [{ x: 30, y: 30 }, { x: 130, y: 110 }],
       }),
     ];
     const canvas = makeCanvasState(shapes);

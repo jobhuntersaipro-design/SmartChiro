@@ -128,12 +128,6 @@ enum ViewType {
   OTHER
 }
 
-enum CalibrationMethod {
-  BRANCH_DEFAULT    // inherited from Branch.defaultPixelSpacing
-  REFERENCE_MARKER  // user placed a known-size marker on the image
-  MANUAL            // user entered mm/px directly
-}
-
 // ─── Organization ───
 
 model Branch {
@@ -143,10 +137,6 @@ model Branch {
   phone   String?
   email   String?
   logo    String?
-
-  // X-ray calibration defaults
-  calibrationEnabled  Boolean @default(false)
-  defaultPixelSpacing Float?
 
   members      BranchMember[]
   patients     Patient[]
@@ -260,10 +250,7 @@ model Xray {
   // Thumbnail
   thumbnailUrl String?
 
-  // Calibration (written by measurement tools)
-  isCalibrated      Boolean            @default(false)
-  pixelSpacing      Float?             // mm per pixel
-  calibrationMethod CalibrationMethod?
+
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)

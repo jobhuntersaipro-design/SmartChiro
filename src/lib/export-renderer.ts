@@ -37,8 +37,7 @@ function shapeToSvg(shape: BaseShape): string {
 
   switch (shape.type) {
     case "line":
-    case "ruler":
-    case "calibration_reference": {
+    case "ruler": {
       if (shape.points.length < 2) return "";
       const p1 = shape.points[0];
       const p2 = shape.points[1];
@@ -52,7 +51,7 @@ function shapeToSvg(shape: BaseShape): string {
       }
 
       // End ticks for ruler
-      if (shape.showEndTicks !== false && (shape.type === "ruler" || shape.type === "calibration_reference")) {
+      if (shape.showEndTicks !== false && shape.type === "ruler") {
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const len = Math.sqrt(dx * dx + dy * dy);
@@ -82,22 +81,8 @@ function shapeToSvg(shape: BaseShape): string {
         <polygon points="${p2.x},${p2.y} ${a1x},${a1y} ${a2x},${a2y}" fill="${stroke}" fill-opacity="${strokeOpacity}" />`;
     }
 
-    case "rectangle": {
-      const r = shape.cornerRadius ?? 0;
-      return `<rect x="${shape.x}" y="${shape.y}" width="${shape.width}" height="${shape.height}" rx="${r}" ${commonAttrs} />`;
-    }
-
-    case "ellipse": {
-      const cx = shape.x + shape.width / 2;
-      const cy = shape.y + shape.height / 2;
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${shape.width / 2}" ry="${shape.height / 2}" ${commonAttrs} />`;
-    }
-
-    case "freehand":
-    case "polyline": {
-      const closed = shape.type === "polyline" && shape.closed;
-      const pathFill = closed ? fill : "none";
-      return `<path d="${pointsToSvgPath(shape.points, closed)}" ${strokeAttrs} fill="${pathFill}" fill-opacity="${fillOpacity}" />`;
+    case "freehand": {
+      return `<path d="${pointsToSvgPath(shape.points, false)}" ${strokeAttrs} fill="none" fill-opacity="${fillOpacity}" />`;
     }
 
     case "text": {
@@ -135,17 +120,6 @@ function shapeToSvg(shape: BaseShape): string {
         svg += `<text x="${shape.intersection[0] + 15}" y="${shape.intersection[1] - 5}" font-size="12" fill="${stroke}" font-family="Arial, sans-serif">${shape.measurement.label}</text>`;
       }
       return svg;
-    }
-
-    case "bezier": {
-      if (shape.points.length < 2 || !shape.controlPoints) return "";
-      let d = `M ${shape.points[0].x} ${shape.points[0].y}`;
-      for (let i = 0; i < shape.controlPoints.length && i < shape.points.length - 1; i++) {
-        const cp = shape.controlPoints[i];
-        const next = shape.points[i + 1];
-        d += ` C ${cp.cp1x} ${cp.cp1y} ${cp.cp2x} ${cp.cp2y} ${next.x} ${next.y}`;
-      }
-      return `<path d="${d}" ${strokeAttrs} fill="none" />`;
     }
 
     default:

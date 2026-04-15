@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   BaseShape,
   AnnotationCanvasState,
-  CalibrationData,
   ImageAdjustments,
   ShapeStyle,
   ViewMode,
@@ -29,10 +28,11 @@ import { StatusBar } from "./StatusBar";
 import { SelectionOverlay } from "./SelectionOverlay";
 import { ShapeRenderer } from "./ShapeRenderer";
 import { TextInput } from "./TextInput";
-import { CalibrationDialog } from "./CalibrationDialog";
 import { ViewModeSwitcher } from "./ViewModeSwitcher";
 import { PatientImageSidebar } from "./PatientImageSidebar";
 import { MultiViewGrid } from "./MultiViewGrid";
+import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
+import { DrawingConfirmation } from "./DrawingConfirmation";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -46,7 +46,6 @@ interface AnnotationCanvasProps {
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
-  initialCalibration: CalibrationData;
   onClose: () => void;
 }
 
@@ -62,7 +61,6 @@ export function AnnotationCanvas({
   initialCanvasState,
   initialAdjustments,
   xrayId,
-  initialCalibration,
   onClose,
 }: AnnotationCanvasProps) {
   // ─── State ───
@@ -78,6 +76,9 @@ export function AnnotationCanvas({
   // Flip (horizontal mirror)
   const [flipped, setFlipped] = useState(false);
 
+  // Keyboard shortcuts panel
+  const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
+
   // View mode & multi-view
   const [viewMode, setViewMode] = useState<ViewMode>("single");
   const [imageSidebarOpen, setImageSidebarOpen] = useState(true);
@@ -85,10 +86,6 @@ export function AnnotationCanvas({
     { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
   ]);
   const [activeSlotIndex, setActiveSlotIndex] = useState(0);
-
-  // Calibration
-  const [calibration, setCalibration] = useState<CalibrationData>(initialCalibration);
-  const [calibrationDialogShape, setCalibrationDialogShape] = useState<BaseShape | null>(null);
 
   // Force re-render counter for drawing preview
   const [, setRenderTick] = useState(0);
@@ -164,97 +161,14 @@ export function AnnotationCanvas({
     [undoRedo, autoSave]
   );
 
-  const handleCalibrationRequest = useCallback((shape: BaseShape) => {
-    setCalibrationDialogShape(shape);
-  }, []);
-
   const drawing = useDrawingTools({
     activeTool: interaction.activeTool,
     transform: viewport.transform,
     shapes,
     currentStyle,
-    calibration,
     onAddShape: handleAddShape,
     onDeleteShapes: handleDeleteShapes,
-    onCalibrationRequest: handleCalibrationRequest,
   });
-
-  // Apply calibration from dialog
-  const handleApplyCalibration = useCallback(
-    async (knownDistanceMm: number) => {
-      if (!calibrationDialogShape) return;
-      const pixDist = calibrationDialogShape.pixelDistance;
-      if (!pixDist || pixDist <= 0) return;
-      const spacing = knownDistanceMm / pixDist;
-
-      // Remove any existing calibration reference shapes
-      setShapes((prev) => {
-        const existingCalRefs = prev.filter(
-          (s) => s.type === "calibration_reference" && s.id !== calibrationDialogShape.id
-        );
-        for (const old of existingCalRefs) {
-          undoRedo.pushCommand("DELETE_SHAPE", old.id, old, null);
-        }
-        return prev
-          .filter((s) => !(s.type === "calibration_reference" && s.id !== calibrationDialogShape.id))
-          .map((s) => {
-            if (s.id === calibrationDialogShape.id) {
-              return {
-                ...s,
-                knownDistance: knownDistanceMm,
-                computedPixelSpacing: spacing,
-                measurement: {
-                  value: pixDist,
-                  unit: "mm" as const,
-                  calibrated: true,
-                  label: `${knownDistanceMm.toFixed(1)} mm`,
-                },
-              };
-            }
-            // Recalculate all ruler measurements
-            if (s.type === "ruler" && s.points.length >= 2) {
-              const rulerPixelLen = Math.hypot(
-                s.points[1].x - s.points[0].x,
-                s.points[1].y - s.points[0].y
-              );
-              const mmVal = rulerPixelLen * spacing;
-              return {
-                ...s,
-                measurement: {
-                  value: rulerPixelLen,
-                  unit: "mm" as const,
-                  calibrated: true,
-                  label: `${mmVal.toFixed(1)} mm`,
-                },
-              };
-            }
-            return s;
-          });
-      });
-
-      // Update calibration state
-      const newCalibration: CalibrationData = { isCalibrated: true, pixelSpacing: spacing };
-      setCalibration(newCalibration);
-      autoSave.markDirty();
-
-      // Persist to backend
-      try {
-        await fetch(`/api/xrays/${xrayId}/calibrate`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pixelSpacing: spacing,
-            calibrationMethod: "REFERENCE_MARKER",
-          }),
-        });
-      } catch {
-        // Calibration applied locally even if API fails
-      }
-
-      setCalibrationDialogShape(null);
-    },
-    [calibrationDialogShape, undoRedo, autoSave, xrayId]
-  );
 
   // ─── Multi-View: Select X-ray from sidebar ───
   const handleSelectXrayForSlot = useCallback(
@@ -315,7 +229,7 @@ export function AnnotationCanvas({
       metadata: {
         shapeCount: shapes.length,
         measurementCount: shapes.filter(
-          (s) => s.type === "ruler" || s.type === "angle" || s.type === "cobb_angle" || s.type === "calibration_reference"
+          (s) => s.type === "ruler" || s.type === "angle" || s.type === "cobb_angle"
         ).length,
         lastModifiedShapeId: shapes.length > 0 ? shapes[shapes.length - 1].id : null,
       },
@@ -429,6 +343,20 @@ export function AnnotationCanvas({
         return;
       }
 
+      // Handle pending shape confirmation
+      if (drawing.pendingShape) {
+        if (e.key === "Enter" || e.key.toLowerCase() === "y") {
+          e.preventDefault();
+          drawing.acceptPending();
+          return;
+        }
+        if (e.key === "Escape" || e.key.toLowerCase() === "n") {
+          e.preventDefault();
+          drawing.rejectPending();
+          return;
+        }
+      }
+
       // Let drawing tools handle keys first
       if (drawing.handleKeyDown(e)) return;
 
@@ -479,6 +407,12 @@ export function AnnotationCanvas({
       // Toggle properties panel
       if (e.key === "\\") {
         setPropertiesPanelOpen((prev) => !prev);
+        return;
+      }
+
+      // Toggle keyboard shortcuts panel
+      if (e.key === "?") {
+        setShortcutsPanelOpen((prev) => !prev);
         return;
       }
 
@@ -622,10 +556,13 @@ export function AnnotationCanvas({
     return "crosshair";
   };
 
-  // Collect all shapes to render (committed + drawing preview)
+  // Collect all shapes to render (committed + drawing preview + pending)
   const allShapesToRender = [...shapes];
   if (drawing.drawingShape) {
     allShapesToRender.push(drawing.drawingShape);
+  }
+  if (drawing.pendingShape) {
+    allShapesToRender.push(drawing.pendingShape.shape);
   }
 
   // Text input screen position
@@ -674,7 +611,15 @@ export function AnnotationCanvas({
         <div style={{ width: 1, height: 28, backgroundColor: "#E3E8EE", marginLeft: 4, marginRight: 4 }} />
         <AnnotationToolbar
           activeTool={interaction.activeTool}
-          onToolChange={interaction.setActiveTool}
+          onToolChange={(tool) => {
+            if (drawing.pendingShape) drawing.acceptPending();
+            interaction.setActiveTool(tool);
+          }}
+          canUndo={undoRedo.canUndo}
+          canRedo={undoRedo.canRedo}
+          onUndo={undoRedo.undo}
+          onRedo={undoRedo.redo}
+          onToggleShortcuts={() => setShortcutsPanelOpen((prev) => !prev)}
         />
       </div>
 
@@ -783,14 +728,16 @@ export function AnnotationCanvas({
                   />
                 )}
 
-                {/* Calibration Dialog */}
-                {calibrationDialogShape && calibrationDialogShape.pixelDistance && (
-                  <CalibrationDialog
-                    pixelDistance={calibrationDialogShape.pixelDistance}
-                    onApply={handleApplyCalibration}
-                    onCancel={() => setCalibrationDialogShape(null)}
+                {/* Drawing Confirmation (accept/reject) */}
+                {drawing.pendingShape && (
+                  <DrawingConfirmation
+                    screenX={drawing.pendingShape.screenX}
+                    screenY={drawing.pendingShape.screenY}
+                    onAccept={drawing.acceptPending}
+                    onReject={drawing.rejectPending}
                   />
                 )}
+
               </div>
 
               {/* Zoom Bar */}
@@ -831,6 +778,12 @@ export function AnnotationCanvas({
         />
       </div>
 
+      {/* Keyboard Shortcuts Panel */}
+      <KeyboardShortcutsPanel
+        isOpen={shortcutsPanelOpen}
+        onClose={() => setShortcutsPanelOpen(false)}
+      />
+
       {/* Status Bar */}
       <StatusBar
         cursorPosition={interaction.cursorPosition}
@@ -842,10 +795,6 @@ export function AnnotationCanvas({
         saveError={autoSave.saveError}
         sizeWarning={autoSave.sizeWarning}
         onRetrySave={autoSave.retrySave}
-        canUndo={undoRedo.canUndo}
-        canRedo={undoRedo.canRedo}
-        onUndo={undoRedo.undo}
-        onRedo={undoRedo.redo}
       />
     </div>
   );

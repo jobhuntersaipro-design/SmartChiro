@@ -16,46 +16,6 @@ export function ShapeRenderer({ shape, zoom }: ShapeRendererProps) {
 
   return (
     <g opacity={shape.style.strokeOpacity}>
-      {shape.type === "rectangle" && (
-        <rect
-          x={shape.x}
-          y={shape.y}
-          width={shape.width}
-          height={shape.height}
-          rx={shape.cornerRadius ? shape.cornerRadius : undefined}
-          ry={shape.cornerRadius ? shape.cornerRadius : undefined}
-          fill={shape.style.fillColor ?? "none"}
-          fillOpacity={shape.style.fillOpacity}
-          stroke={shape.style.strokeColor}
-          strokeWidth={sw}
-          strokeDasharray={dashArray}
-          transform={
-            shape.rotation
-              ? `rotate(${shape.rotation} ${shape.x + shape.width / 2} ${shape.y + shape.height / 2})`
-              : undefined
-          }
-        />
-      )}
-
-      {shape.type === "ellipse" && (
-        <ellipse
-          cx={shape.x + shape.width / 2}
-          cy={shape.y + shape.height / 2}
-          rx={shape.width / 2}
-          ry={shape.height / 2}
-          fill={shape.style.fillColor ?? "none"}
-          fillOpacity={shape.style.fillOpacity}
-          stroke={shape.style.strokeColor}
-          strokeWidth={sw}
-          strokeDasharray={dashArray}
-          transform={
-            shape.rotation
-              ? `rotate(${shape.rotation} ${shape.x + shape.width / 2} ${shape.y + shape.height / 2})`
-              : undefined
-          }
-        />
-      )}
-
       {(shape.type === "line" || shape.type === "arrow") &&
         shape.points.length >= 2 && (
           <>
@@ -101,11 +61,6 @@ export function ShapeRenderer({ shape, zoom }: ShapeRendererProps) {
         <RulerRenderer shape={shape} zoom={zoom} sw={sw} />
       )}
 
-      {/* ─── Calibration Reference ─── */}
-      {shape.type === "calibration_reference" && shape.points.length >= 2 && (
-        <RulerRenderer shape={shape} zoom={zoom} sw={sw} />
-      )}
-
       {/* ─── Angle ─── */}
       {shape.type === "angle" && shape.points.length >= 2 && (
         <AngleRenderer shape={shape} zoom={zoom} sw={sw} />
@@ -127,47 +82,6 @@ export function ShapeRenderer({ shape, zoom }: ShapeRendererProps) {
           strokeDasharray={dashArray}
         />
       )}
-
-      {shape.type === "polyline" && shape.points.length >= 2 && (
-        <>
-          {shape.closed ? (
-            <polygon
-              points={shape.points.map((p) => `${p.x},${p.y}`).join(" ")}
-              fill={shape.style.fillColor ?? "none"}
-              fillOpacity={shape.style.fillOpacity}
-              stroke={shape.style.strokeColor}
-              strokeWidth={sw}
-              strokeLinecap={shape.lineCap ?? "round"}
-              strokeLinejoin="round"
-              strokeDasharray={dashArray}
-            />
-          ) : (
-            <polyline
-              points={shape.points.map((p) => `${p.x},${p.y}`).join(" ")}
-              fill="none"
-              stroke={shape.style.strokeColor}
-              strokeWidth={sw}
-              strokeLinecap={shape.lineCap ?? "round"}
-              strokeLinejoin="round"
-              strokeDasharray={dashArray}
-            />
-          )}
-        </>
-      )}
-
-      {shape.type === "bezier" &&
-        shape.points.length >= 2 &&
-        shape.controlPoints &&
-        shape.controlPoints.length >= 2 && (
-          <path
-            d={buildBezierPath(shape.points, shape.controlPoints)}
-            fill="none"
-            stroke={shape.style.strokeColor}
-            strokeWidth={sw}
-            strokeLinecap={shape.lineCap ?? "round"}
-            strokeDasharray={dashArray}
-          />
-        )}
 
       {shape.type === "text" && shape.text && (
         <>
@@ -557,16 +471,3 @@ function getArrowheadPoints(
   return `${to.x},${to.y} ${p1x},${p1y} ${p2x},${p2y}`;
 }
 
-function buildBezierPath(
-  anchors: Point[],
-  controlPoints: { cp1x: number; cp1y: number; cp2x: number; cp2y: number }[]
-): string {
-  if (anchors.length < 2) return "";
-  let d = `M ${anchors[0].x} ${anchors[0].y}`;
-  for (let i = 1; i < anchors.length; i++) {
-    const prevCp = controlPoints[i - 1];
-    const currCp = controlPoints[i];
-    d += ` C ${prevCp.cp2x} ${prevCp.cp2y}, ${currCp.cp1x} ${currCp.cp1y}, ${anchors[i].x} ${anchors[i].y}`;
-  }
-  return d;
-}
