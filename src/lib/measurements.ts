@@ -1,4 +1,4 @@
-import type { Point } from "@/types/annotation";
+import type { Point, ShapeMeasurement } from "@/types/annotation";
 
 /**
  * Compute ruler (distance) measurement between two points (pixel-based).
@@ -80,4 +80,41 @@ export function computeCobbAngle(
   const perp2Line: [number, number, number, number] = [mid2.x, mid2.y, intersectionPt[0], intersectionPt[1]];
 
   return { degrees, classification, perp1: perp1Line, perp2: perp2Line, intersection: intersectionPt };
+}
+
+/**
+ * Format a measurement value for display.
+ * Converts pixel values to mm/cm when calibrated. Leaves degrees unchanged.
+ */
+export function formatMeasurement(
+  pixelValue: number,
+  unit: "px" | "mm" | "deg",
+  pixelsPerMm: number | null
+): string {
+  if (unit === "deg") {
+    return `${pixelValue.toFixed(1)}\u00B0`;
+  }
+  if (pixelsPerMm && pixelsPerMm > 0) {
+    const mmValue = pixelValue / pixelsPerMm;
+    if (mmValue >= 10) {
+      return `${(mmValue / 10).toFixed(1)} cm`;
+    }
+    return `${mmValue.toFixed(1)} mm`;
+  }
+  return `${Math.round(pixelValue)} px`;
+}
+
+/**
+ * Recompute a measurement's display label based on calibration state.
+ */
+export function recalibrateMeasurement(
+  measurement: ShapeMeasurement,
+  pixelsPerMm: number | null
+): ShapeMeasurement {
+  const label = formatMeasurement(measurement.value, measurement.unit, pixelsPerMm);
+  return {
+    ...measurement,
+    calibrated: pixelsPerMm !== null && pixelsPerMm > 0 && measurement.unit !== "deg",
+    label,
+  };
 }

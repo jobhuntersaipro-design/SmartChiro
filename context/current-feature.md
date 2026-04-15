@@ -2,15 +2,22 @@
 
 ## Status
 
-Not Started
+Implemented — Ready for review
 
 ## Goals
 
-<!-- Define goals here -->
+1. **Calibration Reference Tool** — Draw a line on a known-distance object to compute pixelsPerMm
+2. **Calibration Dialog** — Enter real-world distance and reference label
+3. **Measurement Conversion** — All ruler/angle/cobb measurements display in mm when calibrated
+4. **Calibration API** — PUT/DELETE endpoints to persist calibration per X-ray
+5. **StatusBar Indicator** — Show calibration status at all times
+6. **Export Integration** — PNG/PDF exports use mm values when calibrated
+
+## Spec
+
+See `context/features/xray-calibration-spec.md` for full spec.
 
 ## Notes
-
-<!-- Additional context -->
 
 ## History
 
