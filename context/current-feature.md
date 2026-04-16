@@ -1,27 +1,12 @@
-# Current Feature: Dashboard Redesign
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Replace generic Stripe-clone dashboard with role-aware command center
-- Owner view: greeting bar, branch picker, 4 clinic stat cards, branch management table, doctor assignment sheet, create branch dialog, quick actions, schedule, activity feed
-- Doctor view: greeting bar, branch label, 4 personal stat cards, my schedule, recent patients, recent X-rays grid
-- Handle edge cases: no-branch onboarding, doctor removed, multi-branch doctor, empty states, loading skeletons
-- API endpoints: /api/dashboard/stats, /api/dashboard/branches, /api/dashboard/schedule, /api/dashboard/activity, /api/dashboard/recent-patients, /api/dashboard/recent-xrays, /api/branches CRUD + members
-- Delete OverviewSection, TodaysSchedule, RecentActivity components
-- Keep DashboardShell, Sidebar, TopBar, layout unchanged
-
 ## Notes
-
-- Full spec: `context/features/dashboard-redesign-spec.md`
-- Session already provides `branchRole` and `activeBranchId` via auth types
-- Roles: OWNER (all branches, create/manage), ADMIN (all branches, no create/delete), DOCTOR (assigned branch only)
-- Design: Stripe-inspired tokens from project-overview.md (4px radius, #635BFF primary, #0A2540 text, #E3E8EE borders)
-- 12-step implementation order in spec
-- Out of scope: appointment CRUD, invoicing, AI stats, real-time, notifications, dark mode
 
 ## History
 
@@ -53,3 +38,4 @@ In Progress
 - 2026-04-11 **X-Ray Annotation Enhancement (Part 2)** — Full-screen annotation layout (DashboardShell skips sidebar/topbar for annotate routes), scroll zoom requires Ctrl/Cmd modifier, default tool changed to Freehand for immediate drawing, removed Invert + W/W controls, added Flip button for horizontal mirror, brightness/contrast now works in multi-view (cssFilter+flipped props to MultiViewGrid), verified drawing tools work end-to-end via Playwright (`context/features/xray-enhance-2-spec.md`)
 - 2026-04-15 **X-Ray Annotation Enhancement (Part 3)** — Keyboard shortcuts panel (? key), drawing confirmation accept/reject bar, undo/redo toolbar buttons, removed polyline/rectangle/ellipse/bezier/calibration tools, deleted CalibrationDialog + calibrate API route, removed CalibrationMethod enum + calibration fields from Prisma schema, simplified measurements to pixel-only, 117 tests passing (`context/features/xray-enhance-3-spec.md`)
 - 2026-04-15 **Multi-View Annotation Fix** — Drawing enabled in Side by Side and 2x2 Grid views (active cell becomes full canvas), Ruler Dot tool (D key) with click-click measurement and animated line, default tool changed to Pan, renamed ViewMode "1x1" to "side-by-side", ZoomBar wired to active slot viewport, zoom hint overlay in multi-view cells, auto-save fix (updateState keeps refs current for debounced saves), zoom fix with native wheel listener (passive: false), comparison mode status indicator (`context/features/multiview-fix-spec.md`)
+- 2026-04-16 **Dashboard Redesign** — Role-aware command center replacing generic Stripe-clone dashboard. Owner view: branch picker, 4 clinic stat cards, branch management table with doctor assignment sheet, create branch dialog, quick actions panel, schedule table, activity feed. Doctor view: branch label, personal stat cards, my schedule, recent patients, recent X-rays grid. Onboarding prompt for no-branch users. 8 API endpoints (dashboard stats/branches/schedule/activity/recent-patients/recent-xrays, branch CRUD, member CRUD with RBAC). Design aligned to DESIGN.md Stripe spec (#533afd purple, #061b31 headings, weight 300, blue-tinted shadows). 38 files changed (`context/features/dashboard-redesign-spec.md`)
