@@ -1,9 +1,27 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardShell>{children}</DashboardShell>;
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  return (
+    <DashboardShell
+      user={{
+        name: session.user.name ?? null,
+        email: session.user.email,
+        image: session.user.image ?? null,
+        branchRole: session.user.branchRole ?? null,
+      }}
+    >
+      {children}
+    </DashboardShell>
+  );
 }
