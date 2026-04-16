@@ -2,17 +2,58 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const patients = await prisma.patient.findMany({
-      where: {
-        doctorId: session.user.id,
+    const userId = session.user.id
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')?.trim() || null
+    const branchIdFilter = searchParams.get('branchId') || null
+
+    // Determine user's role in their active branch
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        activeBranchId: true,
+        branchMemberships: {
+          select: { branchId: true, role: true },
+        },
       },
+    })
+
+    const activeBranchId = branchIdFilter || user?.activeBranchId || user?.branchMemberships[0]?.branchId
+    const membershipInBranch = user?.branchMemberships.find(
+      (m) => m.branchId === activeBranchId
+    )
+    const isOwnerOrAdmin = membershipInBranch?.role === 'OWNER' || membershipInBranch?.role === 'ADMIN'
+
+    // Build where clause
+    const where: Record<string, unknown> = {}
+
+    if (isOwnerOrAdmin && activeBranchId) {
+      // OWNER/ADMIN: see all patients in the branch
+      where.branchId = activeBranchId
+    } else {
+      // DOCTOR: see only own patients
+      where.doctorId = userId
+    }
+
+    // Search filter
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const patients = await prisma.patient.findMany({
+      where,
       include: {
         doctor: { select: { id: true, name: true } },
         _count: { select: { visits: true, xrays: true } },

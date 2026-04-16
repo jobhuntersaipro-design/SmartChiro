@@ -33,10 +33,10 @@ export function TopBar() {
           <button
             key={tab}
             className={cn(
-              "rounded-[4px] px-3 py-1.5 text-[15px] font-normal transition-colors",
+              "rounded-[4px] px-3 py-1.5 text-[15px] font-normal transition-all duration-200",
               i === 0
                 ? "bg-[#ededfc] text-[#533afd]"
-                : "text-[#273951] hover:bg-[#f6f9fc] hover:text-[#061b31]"
+                : "text-[#273951] hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-105"
             )}
           >
             {tab}
@@ -51,7 +51,7 @@ export function TopBar() {
           <span className="hidden sm:inline">New</span>
         </Button>
 
-        <button className="relative flex items-center justify-center h-8 w-8 rounded-[4px] text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]">
+        <button className="relative flex items-center justify-center h-8 w-8 rounded-[4px] text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 active:scale-95">
           <Bell className="h-4 w-4" strokeWidth={1.5} />
         </button>
 

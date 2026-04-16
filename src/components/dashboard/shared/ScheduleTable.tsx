@@ -73,7 +73,7 @@ export function ScheduleTable({
             return (
               <tr
                 key={appt.id}
-                className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors"
+                className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer"
               >
                 <td className="px-4 py-3 text-[15px] text-[#061b31] font-medium whitespace-nowrap">
                   {time}
@@ -96,7 +96,7 @@ export function ScheduleTable({
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[13px] font-medium"
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[13px] font-medium transition-transform duration-200 hover:scale-105"
                     style={{ backgroundColor: status.bg, color: status.text }}
                   >
                     {status.label}

@@ -134,9 +134,27 @@ model Branch {
   id      String  @id @default(cuid())
   name    String
   address String?
+  city    String?
+  state   String?
+  zip     String?
   phone   String?
   email   String?
   logo    String?
+
+  // Practitioner / business
+  ownerName       String?
+  licenseNumber   String?  // Business license or NPI
+  operatingHours  String?  // e.g. "Mon-Fri 9am-6pm"
+  treatmentRooms  Int?
+  clinicType      String?  // solo, group, franchise
+
+  // Nice-to-have
+  website             String?
+  insuranceProviders   String?  // comma-separated
+  specialties          String?  // comma-separated
+  billingContactName   String?
+  billingContactEmail  String?
+  billingContactPhone  String?
 
   members      BranchMember[]
   patients     Patient[]

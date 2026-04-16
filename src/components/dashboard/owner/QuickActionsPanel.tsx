@@ -19,7 +19,7 @@ export function QuickActionsPanel({
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white p-4"
+      className="rounded-[6px] border border-[#e5edf5] bg-white p-4 transition-all duration-200 ease-out hover:border-[#c1c9d2]"
       style={{
         boxShadow:
           "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
@@ -71,9 +71,9 @@ function QuickActionButton({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3 py-2.5 rounded-[4px] text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+      className="flex w-full items-center gap-3 px-3 py-2.5 rounded-[4px] text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
     >
-      <Icon className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+      <Icon className="h-4 w-4 text-[#64748d] transition-colors duration-200 group-hover:text-[#533afd]" strokeWidth={1.5} />
       {label}
     </button>
   );
@@ -91,9 +91,9 @@ function QuickActionLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-[4px] text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-[4px] text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
     >
-      <Icon className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+      <Icon className="h-4 w-4 text-[#64748d] transition-colors duration-200 group-hover:text-[#533afd]" strokeWidth={1.5} />
       {label}
     </Link>
   );

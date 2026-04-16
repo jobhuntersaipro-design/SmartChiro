@@ -27,7 +27,7 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white p-5"
+      className="rounded-[6px] border border-[#e5edf5] bg-white p-5 transition-all duration-200 ease-out hover:scale-[1.02] hover:border-[#c1c9d2]"
       style={{
         boxShadow:
           "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",

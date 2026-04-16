@@ -22,7 +22,7 @@ export function PatientTable({ patients, onSelectPatient, selectedPatientId }: P
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden"
+      className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden transition-all duration-200 hover:border-[#c1c9d2]"
       style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
     >
       {/* Table header */}
@@ -54,8 +54,8 @@ export function PatientTable({ patients, onSelectPatient, selectedPatientId }: P
           <div
             key={patient.id}
             onClick={() => onSelectPatient(patient)}
-            className={`grid grid-cols-[1fr_160px_120px_100px_100px] gap-4 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-colors cursor-pointer ${
-              isSelected ? "bg-[#ededfc]" : "hover:bg-[#f6f9fc]"
+            className={`grid grid-cols-[1fr_160px_120px_100px_100px] gap-4 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 cursor-pointer ${
+              isSelected ? "bg-[#ededfc]" : "hover:bg-[#f6f9fc] hover:translate-x-0.5"
             }`}
           >
             {/* Patient */}

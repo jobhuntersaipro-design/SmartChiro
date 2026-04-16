@@ -88,6 +88,7 @@ export function ZoomBar({
             minWidth: 48,
           }}
           title="Click to enter custom zoom"
+          suppressHydrationWarning
         >
           {zoomPercent}%
         </button>

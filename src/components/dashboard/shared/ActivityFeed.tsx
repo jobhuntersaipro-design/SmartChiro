@@ -56,7 +56,7 @@ export function ActivityFeed({ activities, showBranch = false }: ActivityFeedPro
         return (
           <div
             key={item.id}
-            className="flex items-start gap-3 px-4 py-3 border-b border-[#e5edf5] last:border-b-0"
+            className="flex items-start gap-3 px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 hover:bg-[#f6f9fc] hover:translate-x-1 cursor-default"
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F6F9FC] mt-0.5">
               <Icon className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />

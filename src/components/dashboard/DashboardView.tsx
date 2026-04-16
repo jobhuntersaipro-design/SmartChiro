@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { BranchRole } from "@prisma/client";
 import type {
   BranchSummary,
@@ -9,6 +10,7 @@ import type {
   RecentPatient,
   RecentXray,
 } from "@/types/dashboard";
+import type { CreateBranchData } from "@/types/branch";
 import type { ScheduleAppointment } from "./shared/ScheduleTable";
 import type { ActivityItem } from "./shared/ActivityFeed";
 
@@ -45,8 +47,19 @@ export function DashboardView({
   const isDoctor = branchRole === "DOCTOR";
   const isOwner = branchRole === "OWNER";
 
-  // Branch filter state
-  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Branch filter state — synced with URL ?branch=xxx
+  const selectedBranchId = searchParams.get("branch") || null;
+
+  const setSelectedBranchId = useCallback((branchId: string | null) => {
+    if (branchId) {
+      router.push(`/dashboard?branch=${branchId}`, { scroll: false });
+    } else {
+      router.push("/dashboard", { scroll: false });
+    }
+  }, [router]);
 
   // Data states
   const [branches, setBranches] = useState<BranchSummary[]>([]);
@@ -168,12 +181,7 @@ export function DashboardView({
   }, [hasBranch, fetchStats, fetchSchedule, fetchActivity, fetchDoctorData]);
 
   // Handlers
-  async function handleCreateBranch(data: {
-    name: string;
-    address: string;
-    phone: string;
-    email: string;
-  }) {
+  async function handleCreateBranch(data: CreateBranchData) {
     const res = await fetch("/api/branches", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -262,6 +270,7 @@ export function DashboardView({
           open={createBranchOpen}
           onOpenChange={setCreateBranchOpen}
           onCreateBranch={handleCreateBranch}
+          ownerName={userName}
         />
       </>
     );
@@ -405,6 +414,7 @@ export function DashboardView({
         open={createBranchOpen}
         onOpenChange={setCreateBranchOpen}
         onCreateBranch={handleCreateBranch}
+        ownerName={userName}
       />
       <ManageDoctorsSheet
         open={manageDoctorsOpen}

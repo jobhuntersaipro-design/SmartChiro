@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "Branch" ADD COLUMN     "billingContactEmail" TEXT,
+ADD COLUMN     "billingContactName" TEXT,
+ADD COLUMN     "billingContactPhone" TEXT,
+ADD COLUMN     "city" TEXT,
+ADD COLUMN     "clinicType" TEXT,
+ADD COLUMN     "insuranceProviders" TEXT,
+ADD COLUMN     "licenseNumber" TEXT,
+ADD COLUMN     "operatingHours" TEXT,
+ADD COLUMN     "ownerName" TEXT,
+ADD COLUMN     "specialties" TEXT,
+ADD COLUMN     "state" TEXT,
+ADD COLUMN     "treatmentRooms" INTEGER,
+ADD COLUMN     "website" TEXT,
+ADD COLUMN     "zip" TEXT;

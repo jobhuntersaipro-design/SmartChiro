@@ -24,7 +24,7 @@ export function BranchManagementTable({
 }: BranchManagementTableProps) {
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white"
+      className="rounded-[6px] border border-[#e5edf5] bg-white transition-all duration-200 ease-out hover:border-[#c1c9d2]"
       style={{
         boxShadow:
           "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
@@ -175,7 +175,7 @@ function BranchRow({
               e.stopPropagation();
               setMenuOpen(!menuOpen);
             }}
-            className="flex h-8 w-8 items-center justify-center rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -190,7 +190,7 @@ function BranchRow({
                 }}
               />
               <div
-                className="absolute right-0 top-full mt-1 w-48 rounded-[6px] border border-[#e5edf5] bg-white py-1 z-50"
+                className="absolute right-0 top-full mt-1 w-48 rounded-[6px] border border-[#e5edf5] bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
                 style={{
                   boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
                 }}
@@ -201,7 +201,7 @@ function BranchRow({
                     setMenuOpen(false);
                     onEditBranch();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
                 >
                   <Pencil className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
                   Edit Branch
@@ -212,7 +212,7 @@ function BranchRow({
                     setMenuOpen(false);
                     onManageDoctors();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
                 >
                   <UserPlus className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
                   Manage Doctors
@@ -223,7 +223,7 @@ function BranchRow({
                     setMenuOpen(false);
                     onSelectBranch();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
                 >
                   <Eye className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
                   View Details
