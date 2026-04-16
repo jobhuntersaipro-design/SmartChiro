@@ -294,16 +294,23 @@ export function AnnotationCanvas({
       // Restore viewport state if previously saved
       if (cached.viewportState) {
         viewport.setTransform(cached.viewportState);
+        setViewportReady(true);
       } else {
-        // No cached viewport — fit to viewport
-        viewport.fitToViewport();
+        // No cached viewport — fit after container ref is attached
+        requestAnimationFrame(() => {
+          viewport.fitToViewport();
+          setViewportReady(true);
+        });
       }
     } else {
       // Not yet loaded — start with empty and fetch from API
       setShapes([]);
       autoSave.switchTarget(newXrayId, null);
       activeXrayIdRef.current = newXrayId;
-      viewport.fitToViewport();
+      requestAnimationFrame(() => {
+        viewport.fitToViewport();
+        setViewportReady(true);
+      });
       fetchAnnotationForXray(newXrayId);
     }
     // Clear undo history when switching xrays
@@ -458,17 +465,29 @@ export function AnnotationCanvas({
   // Keep auto-save refs current so debounced/interval saves have latest data
   useEffect(() => {
     autoSave.updateState(buildCanvasState(), imageAdj.adjustments);
-    // Also keep per-xray cache in sync (shapes + viewport)
+    // Keep per-xray shapes cache in sync (viewport synced separately below)
     const currentXray = activeXrayIdRef.current;
     if (currentXray) {
       const existing = shapesPerXrayRef.current.get(currentXray);
       shapesPerXrayRef.current.set(currentXray, {
         shapes,
         annotationId: autoSave.currentAnnotationId,
-        viewportState: existing?.viewportState ?? { ...viewport.transform },
+        viewportState: existing?.viewportState,
       });
     }
   }, [shapes, imageAdj.adjustments]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep per-xray viewport state in cache — only when zoom > min (fitToViewport has run)
+  useEffect(() => {
+    if (viewport.transform.zoom <= 0.01) return; // skip initial 0.001 state
+    const currentXray = activeXrayIdRef.current;
+    if (currentXray) {
+      const existing = shapesPerXrayRef.current.get(currentXray);
+      if (existing) {
+        existing.viewportState = { ...viewport.transform };
+      }
+    }
+  }, [viewport.transform]);
 
   // ─── Shape Operations ───
   const toggleShapeVisibility = useCallback((id: string) => {

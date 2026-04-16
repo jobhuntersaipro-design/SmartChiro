@@ -1,18 +1,19 @@
-import { OverviewSection } from "@/components/dashboard/OverviewSection";
-import { TodaysSchedule } from "@/components/dashboard/TodaysSchedule";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { DashboardView } from "@/components/dashboard/DashboardView";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Your Overview — full width */}
-      <OverviewSection />
-
-      {/* Today's Schedule + Recent Activity — side by side */}
-      <div className="grid grid-cols-[1fr_320px] gap-6">
-        <TodaysSchedule />
-        <RecentActivity />
-      </div>
-    </div>
+    <DashboardView
+      userId={session.user.id}
+      userName={session.user.name ?? null}
+      branchRole={session.user.branchRole ?? null}
+      activeBranchId={session.user.activeBranchId ?? null}
+    />
   );
 }

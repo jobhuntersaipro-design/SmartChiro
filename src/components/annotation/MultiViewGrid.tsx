@@ -61,12 +61,13 @@ export function ViewportCell({
     onViewStateChangeRef.current({ zoom, panX, panY });
   }, [slot.imageWidth, slot.imageHeight, slot.imageUrl]);
 
-  // Fit to viewport on first load, but skip if parent already has cached viewport state
+  // Fit to viewport on first image load. If the parent has cached viewport state
+  // (zoom > 1 or non-zero pan), skip fitting — the cached state is already applied via props.
   useEffect(() => {
     if (!imageLoaded) return;
     const vs = viewStateRef.current;
-    const hasExistingState = vs.zoom !== 1 || vs.panX !== 0 || vs.panY !== 0;
-    if (!hasExistingState) {
+    const isCachedState = vs.zoom > 1 || vs.panX !== 0 || vs.panY !== 0;
+    if (!isCachedState) {
       fitToViewport();
     }
   }, [imageLoaded, fitToViewport]);

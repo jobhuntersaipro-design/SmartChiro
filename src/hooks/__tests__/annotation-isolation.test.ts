@@ -405,22 +405,33 @@ describe("Sidebar thumbnail highlight in multi-view", () => {
 /**
  * Simulates the ViewportCell logic: should a cell fit-to-viewport on image load,
  * or should it preserve its existing viewport state?
+ * A "cached" state = zoom > 1 or non-zero pan (user has interacted).
  */
 function shouldFitToViewport(viewState: ViewportState): boolean {
-  return viewState.zoom === 1 && viewState.panX === 0 && viewState.panY === 0;
+  const isCachedState = viewState.zoom > 1 || viewState.panX !== 0 || viewState.panY !== 0;
+  return !isCachedState;
 }
 
 describe("ViewportCell cache preservation", () => {
-  it("fits to viewport when state is default (new image, no cache)", () => {
+  it("fits to viewport when state is default {1, 0, 0}", () => {
     expect(shouldFitToViewport({ zoom: 1, panX: 0, panY: 0 })).toBe(true);
   });
 
-  it("preserves viewport when zoom has been changed", () => {
-    expect(shouldFitToViewport({ zoom: 0.7, panX: 0, panY: 0 })).toBe(false);
+  it("fits to viewport when state is near-zero initial {0.001, 0, 0}", () => {
+    expect(shouldFitToViewport({ zoom: 0.001, panX: 0, panY: 0 })).toBe(true);
+  });
+
+  it("fits to viewport when zoom < 1 with zero pan (e.g. small fit)", () => {
+    // A zoom < 1 with zero pan is a fresh fit result, not user interaction
+    expect(shouldFitToViewport({ zoom: 0.7, panX: 0, panY: 0 })).toBe(true);
   });
 
   it("preserves viewport when pan has been changed", () => {
     expect(shouldFitToViewport({ zoom: 1, panX: 50, panY: -30 })).toBe(false);
+  });
+
+  it("preserves viewport when zoom > 1 (user zoomed in)", () => {
+    expect(shouldFitToViewport({ zoom: 1.5, panX: 0, panY: 0 })).toBe(false);
   });
 
   it("preserves viewport when both zoom and pan have been changed", () => {

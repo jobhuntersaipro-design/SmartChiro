@@ -19,8 +19,11 @@ interface UseCanvasViewportOptions {
 }
 
 export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewportOptions) {
+  // Start at zoom ~0 so the image is invisible (scale(0.001)) until fitToViewport runs.
+  // This prevents the "flash of full-size image" on page load.
+  // Using 0.001 instead of 0 to avoid division-by-zero in coordinate transforms.
   const [transform, setTransform] = useState<ViewTransform>({
-    zoom: 1,
+    zoom: 0.001,
     panX: 0,
     panY: 0,
   });

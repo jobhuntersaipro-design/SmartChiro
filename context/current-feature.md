@@ -1,12 +1,27 @@
-# Current Feature
+# Current Feature: Dashboard Redesign
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Replace generic Stripe-clone dashboard with role-aware command center
+- Owner view: greeting bar, branch picker, 4 clinic stat cards, branch management table, doctor assignment sheet, create branch dialog, quick actions, schedule, activity feed
+- Doctor view: greeting bar, branch label, 4 personal stat cards, my schedule, recent patients, recent X-rays grid
+- Handle edge cases: no-branch onboarding, doctor removed, multi-branch doctor, empty states, loading skeletons
+- API endpoints: /api/dashboard/stats, /api/dashboard/branches, /api/dashboard/schedule, /api/dashboard/activity, /api/dashboard/recent-patients, /api/dashboard/recent-xrays, /api/branches CRUD + members
+- Delete OverviewSection, TodaysSchedule, RecentActivity components
+- Keep DashboardShell, Sidebar, TopBar, layout unchanged
+
 ## Notes
+
+- Full spec: `context/features/dashboard-redesign-spec.md`
+- Session already provides `branchRole` and `activeBranchId` via auth types
+- Roles: OWNER (all branches, create/manage), ADMIN (all branches, no create/delete), DOCTOR (assigned branch only)
+- Design: Stripe-inspired tokens from project-overview.md (4px radius, #635BFF primary, #0A2540 text, #E3E8EE borders)
+- 12-step implementation order in spec
+- Out of scope: appointment CRUD, invoicing, AI stats, real-time, notifications, dark mode
 
 ## History
 
