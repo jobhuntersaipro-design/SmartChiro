@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { X, UserPlus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,9 +156,12 @@ export function ManageDoctorsSheet({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[14px] font-medium text-[#061b31] truncate">
+                      <Link
+                        href={`/dashboard/doctors/${member.userId}`}
+                        className="text-[14px] font-medium text-[#061b31] truncate hover:text-[#533afd] transition-colors"
+                      >
                         {member.name ?? member.email}
-                      </div>
+                      </Link>
                       <div className="text-[13px] text-[#64748d] truncate">
                         {member.email}
                       </div>

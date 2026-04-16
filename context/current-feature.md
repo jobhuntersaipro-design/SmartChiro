@@ -1,12 +1,31 @@
-# Current Feature
+# Current Feature: Doctor Profile CRUD
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Add DoctorProfile model (one-to-one with User) for professional, clinic-specific, and optional fields
+- GET /api/doctors/[userId] — fetch doctor with profile, branches, stats (shared-branch auth)
+- PUT /api/doctors/[userId] — create/update profile + user fields (upsert, Zod validation)
+- PATCH /api/doctors/[userId]/status — toggle active/inactive (owner/admin only)
+- POST /api/doctors/[userId]/photo — upload doctor photo to R2, update User.image
+- Doctor profile page at /dashboard/doctors/[userId] with two-column layout and 4 tabs
+- Permission-aware UI (self-edit, owner/admin-edit, read-only for others)
+- Link doctor names in ManageDoctorsSheet and Sidebar to profile page
+- 28 integration tests against Neon DB
+
 ## Notes
+
+- Spec: `context/features/doctor-profile-crud-spec.md`
+- DoctorProfile uses PostgreSQL arrays for specialties/languages/insurancePlans, Json for workingSchedule, Decimal for consultationFee
+- isActive is a soft toggle — inactive doctors hidden from assignment but data retained
+- Photo uses existing User.image field — no new column needed
+- No data backfill — profiles start empty and get populated on first edit
+- ScheduleGrid component for day-by-day working hours editor
+- TagInput component for multi-select free-text inputs (specialties, languages, insurance)
+- Only OWNER/ADMIN can toggle isActive; doctors cannot toggle their own status
 
 ## History
 

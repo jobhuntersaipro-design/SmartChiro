@@ -27,6 +27,9 @@ model User {
   sessions          Session[]
   branchMemberships BranchMember[]
 
+  // Doctor profile (one-to-one, optional)
+  doctorProfile DoctorProfile?
+
   // As doctor
   assignedPatients Patient[]      @relation("PatientDoctor")
   visits           Visit[]        @relation("VisitDoctor")
@@ -181,6 +184,36 @@ model BranchMember {
   @@index([userId])
   @@index([branchId])
   @@index([role])
+}
+
+// ─── Doctor Profile ───
+
+model DoctorProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Professional
+  licenseNumber   String?
+  specialties     String[]
+  yearsExperience Int?
+  education       String?
+
+  // Clinic-Specific
+  workingSchedule Json?
+  treatmentRoom   String?
+  consultationFee Decimal?
+
+  // Optional
+  bio            String?
+  languages      String[]
+  insurancePlans String[]
+
+  // System
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── Patient & Clinical ───

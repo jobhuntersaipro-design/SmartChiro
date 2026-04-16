@@ -36,6 +36,7 @@ const navItems = [
 ];
 
 interface SidebarUser {
+  id: string;
   name: string | null;
   email: string;
   image: string | null;
@@ -179,10 +180,12 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
               </p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 text-[14px] text-[#273951] cursor-pointer">
-              <User className="h-4 w-4" strokeWidth={1.5} />
-              Profile
-            </DropdownMenuItem>
+            <Link href={`/dashboard/doctors/${user.id}`}>
+              <DropdownMenuItem className="gap-2 text-[14px] text-[#273951] cursor-pointer">
+                <User className="h-4 w-4" strokeWidth={1.5} />
+                Profile
+              </DropdownMenuItem>
+            </Link>
             <DropdownMenuItem className="gap-2 text-[14px] text-[#273951] cursor-pointer">
               <Link href="/dashboard/settings" className="flex items-center gap-2 w-full">
                 <Settings className="h-4 w-4" strokeWidth={1.5} />

@@ -15,6 +15,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShell
       user={{
+        id: session.user.id,
         name: session.user.name ?? null,
         email: session.user.email,
         image: session.user.image ?? null,

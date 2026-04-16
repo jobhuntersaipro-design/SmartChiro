@@ -8,6 +8,7 @@ import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
 interface SidebarUser {
+  id: string;
   name: string | null;
   email: string;
   image: string | null;
