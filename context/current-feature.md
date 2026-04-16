@@ -1,31 +1,12 @@
-# Current Feature: Doctor Profile CRUD
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add DoctorProfile model (one-to-one with User) for professional, clinic-specific, and optional fields
-- GET /api/doctors/[userId] — fetch doctor with profile, branches, stats (shared-branch auth)
-- PUT /api/doctors/[userId] — create/update profile + user fields (upsert, Zod validation)
-- PATCH /api/doctors/[userId]/status — toggle active/inactive (owner/admin only)
-- POST /api/doctors/[userId]/photo — upload doctor photo to R2, update User.image
-- Doctor profile page at /dashboard/doctors/[userId] with two-column layout and 4 tabs
-- Permission-aware UI (self-edit, owner/admin-edit, read-only for others)
-- Link doctor names in ManageDoctorsSheet and Sidebar to profile page
-- 28 integration tests against Neon DB
-
 ## Notes
-
-- Spec: `context/features/doctor-profile-crud-spec.md`
-- DoctorProfile uses PostgreSQL arrays for specialties/languages/insurancePlans, Json for workingSchedule, Decimal for consultationFee
-- isActive is a soft toggle — inactive doctors hidden from assignment but data retained
-- Photo uses existing User.image field — no new column needed
-- No data backfill — profiles start empty and get populated on first edit
-- ScheduleGrid component for day-by-day working hours editor
-- TagInput component for multi-select free-text inputs (specialties, languages, insurance)
-- Only OWNER/ADMIN can toggle isActive; doctors cannot toggle their own status
 
 ## History
 
@@ -59,3 +40,4 @@ In Progress
 - 2026-04-15 **Multi-View Annotation Fix** — Drawing enabled in Side by Side and 2x2 Grid views (active cell becomes full canvas), Ruler Dot tool (D key) with click-click measurement and animated line, default tool changed to Pan, renamed ViewMode "1x1" to "side-by-side", ZoomBar wired to active slot viewport, zoom hint overlay in multi-view cells, auto-save fix (updateState keeps refs current for debounced saves), zoom fix with native wheel listener (passive: false), comparison mode status indicator (`context/features/multiview-fix-spec.md`)
 - 2026-04-16 **Dashboard Redesign** — Role-aware command center replacing generic Stripe-clone dashboard. Owner view: branch picker, 4 clinic stat cards, branch management table with doctor assignment sheet, create branch dialog, quick actions panel, schedule table, activity feed. Doctor view: branch label, personal stat cards, my schedule, recent patients, recent X-rays grid. Onboarding prompt for no-branch users. 8 API endpoints (dashboard stats/branches/schedule/activity/recent-patients/recent-xrays, branch CRUD, member CRUD with RBAC). Design aligned to DESIGN.md Stripe spec (#533afd purple, #061b31 headings, weight 300, blue-tinted shadows). 38 files changed (`context/features/dashboard-redesign-spec.md`)
 - 2026-04-16 **CRUD: Branches, Doctors & Patients** — Full CRUD API for Branches (list/get/create/update/delete with RBAC), Doctor/Member management (get detail, ownership transfer), Patients (role-aware listing with search, get/update/delete). 4-step clinic registration wizard with required field validation, auto-set owner name from session, day-by-day operating hours UI. 15 new Branch schema columns via migration. Subtle hover/animation effects across all dashboard components (scale, translate, fade-in). Branch URL routing via query params (/dashboard?branch=xxx). Daily chiropractic motivation quote card with refresh. ZoomBar hydration fix. 57 new integration tests hitting Neon DB (TDD), 230 total passing. 32 files changed (`context/features/crud-branches-doctors-patients-spec.md`)
+- 2026-04-16 **Doctor Profile CRUD** — DoctorProfile model (one-to-one with User) for license, specialties, schedule, fees, bio, languages, insurance. GET/PUT /api/doctors/[userId] with shared-branch auth and upsert validation. PATCH status toggle (owner/admin only). POST photo upload to R2. Profile page at /dashboard/doctors/[userId] with two-column layout and 4 tabbed sections (Professional, Schedule & Clinic, Additional, Contact). ScheduleGrid and TagInput components. Doctor name links in ManageDoctorsSheet and Sidebar. 28 new integration tests, 258 total passing. 18 files changed (`context/features/doctor-profile-crud-spec.md`)
