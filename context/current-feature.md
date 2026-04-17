@@ -1,41 +1,14 @@
-# Current Feature: Patients Page Overhaul
+# Current Feature
 
 ## Status
 
-In Progress
+Complete
 
 ## Feature
 
-Overhaul `/dashboard/patients` into a full-featured patient management hub matching Doctors/Branches page quality.
-
 ## Goals
 
-- Add new Patient schema fields: IC number, occupation, race, marital status, blood type, allergies, referral source, address breakdown (line1/line2/city/state/postcode/country), emergency contact breakdown (name/phone/relation), status (active/inactive/discharged)
-- Enhance GET /api/patients with status and doctorId filters, new fields in response
-- Enhance POST /api/patients with all new fields, IC number validation, blood type/marital status enums, IC→DOB auto-extraction, doctorId assignment with branch membership check
-- Enhance PATCH /api/patients/[patientId] with all new fields + status updates
-- Enhance GET /api/patients/[patientId] to include new fields
-- Build PatientListView with grid/list toggle, search (name/email/phone/IC), doctor filter (OWNER/ADMIN), status filter, summary stats bar
-- Build PatientCard for grid view, PatientSummaryStats component
-- Enhance AddPatientDialog with 3-section layout (Personal, Contact & Address, Emergency & Medical)
-- Build EditPatientDialog for full inline editing
-- Build DeletePatientDialog with cascade warning (visits, X-rays, appointments)
-- Enhance PatientDetailSheet with edit/delete actions, status dropdown, all new fields
-- Enhance PatientTable with status column, doctor column, IC number, actions menu
-- Convert page.tsx to server component + PatientListView pattern
-- Role-based visibility (OWNER/ADMIN full CRUD vs DOCTOR own-patients only)
-- Malaysian context: IC format validation, state dropdown, race options, referral sources
-- 30 integration tests (TDD)
-
 ## Notes
-
-- All new fields are optional — non-breaking migration
-- Old `address` and `emergencyContact` fields kept for backward compat
-- IC format: YYMMDD-SS-XXXX (12 digits, dashes optional), auto-extract DOB
-- Status defaults to "active"
-- Country defaults to "Malaysia"
-- Spec file: `context/features/patients-page-overhaul-spec.md`
-- Implementation order: Schema → Types → API (GET/POST/PATCH) → Tests → UI components → Integration
 
 ## History
 
@@ -72,3 +45,4 @@ Overhaul `/dashboard/patients` into a full-featured patient management hub match
 - 2026-04-16 **Doctor Profile CRUD** — DoctorProfile model (one-to-one with User) for license, specialties, schedule, fees, bio, languages, insurance. GET/PUT /api/doctors/[userId] with shared-branch auth and upsert validation. PATCH status toggle (owner/admin only). POST photo upload to R2. Profile page at /dashboard/doctors/[userId] with two-column layout and 4 tabbed sections (Professional, Schedule & Clinic, Additional, Contact). ScheduleGrid and TagInput components. Doctor name links in ManageDoctorsSheet and Sidebar. 28 new integration tests, 258 total passing. 18 files changed (`context/features/doctor-profile-crud-spec.md`)
 - 2026-04-17 **Dedicated Branches Page** — Moved branch management from dashboard to `/dashboard/branches` with grid/list toggle, search, summary stats (branches/doctors/patients). Branch detail at `/dashboard/branches/[branchId]` with 5 tabs: Overview (today's schedule + quick info + top doctors), Doctors (member list with role badges, patient/X-ray counts, add/remove), Schedule (week calendar with doctor colors, time slots, status indicators, prev/next navigation), Patients (server-side paginated table with search + doctor filter), Settings (full edit form: info, location, operating hours, practice, billing, danger zone). Enhanced GET /api/branches with `?include=stats`, enhanced GET/PATCH /api/branches/[branchId] with full field support + per-doctor stats. 2 new API routes: /branches/[id]/schedule, /branches/[id]/patients. Dashboard cleanup: removed BranchManagementTable, ManageDoctorsSheet, CreateBranchDialog from DashboardView. 15 new files, 4 modified (`context/features/branches-page-spec.md`)
 - 2026-04-17 **Doctor Management Page** — `/dashboard/doctors` with grid/list views, search, branch/status filters, summary stats. GET /api/doctors (list with batch stats), POST /api/doctors (create account with User+BranchMember+DoctorProfile transaction), DELETE /api/doctors/[userId] (remove from branch with OWNER protection). DoctorListView, DoctorCard, DoctorSummaryStats, CreateDoctorDialog, DoctorDetailSheet, RemoveDoctorDialog. Role-based visibility (OWNER/ADMIN CRUD vs DOCTOR read-only). Migrated profile editing to /dashboard/settings/[userId] with SettingsView and password change API. 22 files changed (`context/features/doctors-page-spec.md`)
+- 2026-04-17 **Patients Page Overhaul** — 16 new Patient schema fields (IC number, occupation, race, marital status, blood type, allergies, referral source, address breakdown, emergency contact breakdown, status). Enhanced 4 API routes with filters, validation, IC→DOB auto-extraction. PatientListView with grid/list toggle, search, doctor/status filters, summary stats. Multi-step AddPatientDialog wizard (3 steps with Lucide icons, per-step validation, progress indicator). EditPatientDialog, DeletePatientDialog with cascade warning. Enhanced PatientTable with IC/doctor/status columns and actions menu. Enhanced PatientDetailSheet with edit/delete/status controls. Server component page.tsx. 30 new integration tests, 288 total passing. 17 files changed (`context/features/patients-page-overhaul-spec.md`)
