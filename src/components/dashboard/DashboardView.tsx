@@ -10,7 +10,6 @@ import type {
   RecentPatient,
   RecentXray,
 } from "@/types/dashboard";
-import type { CreateBranchData } from "@/types/branch";
 import type { ScheduleAppointment } from "./shared/ScheduleTable";
 import type { ActivityItem } from "./shared/ActivityFeed";
 
@@ -23,10 +22,7 @@ import { OnboardingPrompt } from "./shared/OnboardingPrompt";
 import { SkeletonStatCards } from "./shared/SkeletonCard";
 import { SkeletonTable } from "./shared/SkeletonTable";
 
-import { BranchManagementTable } from "./owner/BranchManagementTable";
 import { QuickActionsPanel } from "./owner/QuickActionsPanel";
-import { CreateBranchDialog } from "./owner/CreateBranchDialog";
-import { ManageDoctorsSheet } from "./owner/ManageDoctorsSheet";
 
 import { RecentPatientsCard } from "./doctor/RecentPatientsCard";
 import { RecentXraysGrid } from "./doctor/RecentXraysGrid";
@@ -69,20 +65,11 @@ export function DashboardView({
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
   const [recentXrays, setRecentXrays] = useState<RecentXray[]>([]);
-  const [members, setMembers] = useState<
-    { id: string; userId: string; name: string | null; email: string; role: BranchRole; joinedAt: string }[]
-  >([]);
 
   // Loading
   const [statsLoading, setStatsLoading] = useState(true);
   const [scheduleLoading, setScheduleLoading] = useState(true);
   const [hasBranch, setHasBranch] = useState<boolean | null>(null);
-
-  // Dialogs
-  const [createBranchOpen, setCreateBranchOpen] = useState(false);
-  const [manageDoctorsOpen, setManageDoctorsOpen] = useState(false);
-  const [manageDoctorsBranchId, setManageDoctorsBranchId] = useState<string>("");
-  const [manageDoctorsBranchName, setManageDoctorsBranchName] = useState<string>("");
 
   const branchParam = selectedBranchId ?? "all";
 
@@ -180,99 +167,10 @@ export function DashboardView({
     fetchDoctorData();
   }, [hasBranch, fetchStats, fetchSchedule, fetchActivity, fetchDoctorData]);
 
-  // Handlers
-  async function handleCreateBranch(data: CreateBranchData) {
-    const res = await fetch("/api/branches", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error);
-    }
-    await fetchBranches();
-    await fetchStats();
-  }
-
-  function handleManageDoctors(branchId: string) {
-    const branch = branches.find((b) => b.id === branchId);
-    setManageDoctorsBranchId(branchId);
-    setManageDoctorsBranchName(branch?.name ?? "");
-    setManageDoctorsOpen(true);
-    fetchMembers(branchId);
-  }
-
-  async function fetchMembers(branchId: string) {
-    const res = await fetch(`/api/branches/${branchId}/members`);
-    if (res.ok) {
-      const data = await res.json();
-      setMembers(data.members);
-    }
-  }
-
-  async function handleAddDoctor(
-    branchId: string,
-    email: string,
-    role: BranchRole
-  ): Promise<{ success: boolean; error?: string }> {
-    const res = await fetch(`/api/branches/${branchId}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      return { success: false, error: err.error };
-    }
-    await fetchMembers(branchId);
-    await fetchBranches();
-    return { success: true };
-  }
-
-  async function handleRemoveDoctor(branchId: string, memberId: string) {
-    try {
-      const res = await fetch(`/api/branches/${branchId}/members/${memberId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) return;
-      await fetchMembers(branchId);
-      await fetchBranches();
-    } catch {
-      // Network error — silently fail, user can retry
-    }
-  }
-
-  async function handleChangeRole(
-    branchId: string,
-    memberId: string,
-    role: BranchRole
-  ) {
-    try {
-      const res = await fetch(`/api/branches/${branchId}/members/${memberId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
-      });
-      if (!res.ok) return;
-      await fetchMembers(branchId);
-    } catch {
-      // Network error — silently fail, user can retry
-    }
-  }
-
-  // No branch — onboarding
+  // No branch — onboarding (redirect to branches page)
   if (hasBranch === false) {
     return (
-      <>
-        <OnboardingPrompt onCreateBranch={() => setCreateBranchOpen(true)} />
-        <CreateBranchDialog
-          open={createBranchOpen}
-          onOpenChange={setCreateBranchOpen}
-          onCreateBranch={handleCreateBranch}
-          ownerName={userName}
-        />
-      </>
+      <OnboardingPrompt onCreateBranch={() => router.push("/dashboard/branches")} />
     );
   }
 
@@ -317,28 +215,13 @@ export function DashboardView({
         <OwnerStatCards stats={ownerStats} branchLabel={branchLabel} />
       ) : null}
 
-      {/* Owner: Branch Management + Quick Actions */}
+      {/* Owner: Quick Actions */}
       {isOwner && (
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-6">
-          <BranchManagementTable
-            branches={branches}
-            onCreateBranch={() => setCreateBranchOpen(true)}
-            onManageDoctors={handleManageDoctors}
-            onEditBranch={() => {
-              // TODO: Edit branch dialog
-            }}
-            onSelectBranch={(branchId) => setSelectedBranchId(branchId)}
-          />
-          <QuickActionsPanel
-            branchRole={branchRole}
-            onCreateBranch={() => setCreateBranchOpen(true)}
-            onAddDoctor={() => {
-              if (branches.length > 0) {
-                handleManageDoctors(branches[0].id);
-              }
-            }}
-          />
-        </div>
+        <QuickActionsPanel
+          branchRole={branchRole}
+          onCreateBranch={() => router.push("/dashboard/branches")}
+          onAddDoctor={() => router.push("/dashboard/branches")}
+        />
       )}
 
       {/* Schedule + Activity */}
@@ -408,24 +291,6 @@ export function DashboardView({
           </div>
         </div>
       )}
-
-      {/* Dialogs */}
-      <CreateBranchDialog
-        open={createBranchOpen}
-        onOpenChange={setCreateBranchOpen}
-        onCreateBranch={handleCreateBranch}
-        ownerName={userName}
-      />
-      <ManageDoctorsSheet
-        open={manageDoctorsOpen}
-        onOpenChange={setManageDoctorsOpen}
-        branchName={manageDoctorsBranchName}
-        branchId={manageDoctorsBranchId}
-        members={members}
-        onAddDoctor={handleAddDoctor}
-        onRemoveDoctor={handleRemoveDoctor}
-        onChangeRole={handleChangeRole}
-      />
     </div>
   );
 }

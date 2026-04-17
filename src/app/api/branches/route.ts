@@ -2,35 +2,114 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const includeStats = req.nextUrl.searchParams.get("include") === "stats";
+
+  if (!includeStats) {
+    // Basic list — backwards compatible
+    const memberships = await prisma.branchMember.findMany({
+      where: { userId: session.user.id },
+      include: {
+        branch: {
+          include: {
+            _count: { select: { members: true, patients: true } },
+          },
+        },
+      },
+      orderBy: { branch: { name: "asc" } },
+    });
+
+    const branches = memberships.map((m) => ({
+      id: m.branch.id,
+      name: m.branch.name,
+      address: m.branch.address,
+      phone: m.branch.phone,
+      email: m.branch.email,
+      memberCount: m.branch._count.members,
+      patientCount: m.branch._count.patients,
+      userRole: m.role,
+      createdAt: m.branch.createdAt.toISOString(),
+    }));
+
+    return NextResponse.json({ branches });
+  }
+
+  // With stats: full branch info + doctor list + appointment counts
   const memberships = await prisma.branchMember.findMany({
     where: { userId: session.user.id },
     include: {
       branch: {
         include: {
           _count: { select: { members: true, patients: true } },
+          members: {
+            include: {
+              user: { select: { id: true, name: true, image: true } },
+            },
+          },
         },
       },
     },
     orderBy: { branch: { name: "asc" } },
   });
 
-  const branches = memberships.map((m) => ({
-    id: m.branch.id,
-    name: m.branch.name,
-    address: m.branch.address,
-    phone: m.branch.phone,
-    email: m.branch.email,
-    memberCount: m.branch._count.members,
-    patientCount: m.branch._count.patients,
-    userRole: m.role,
-    createdAt: m.branch.createdAt.toISOString(),
-  }));
+  const branchIds = memberships.map((m) => m.branch.id);
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart.getTime() + 86400000);
+  const weekStart = new Date(todayStart);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+
+  const [todayCounts, weekCounts] = await Promise.all([
+    prisma.appointment.groupBy({
+      by: ["branchId"],
+      where: { branchId: { in: branchIds }, dateTime: { gte: todayStart, lt: todayEnd } },
+      _count: { id: true },
+    }),
+    prisma.appointment.groupBy({
+      by: ["branchId"],
+      where: { branchId: { in: branchIds }, dateTime: { gte: weekStart, lt: weekEnd } },
+      _count: { id: true },
+    }),
+  ]);
+
+  const todayMap = new Map(todayCounts.map((a) => [a.branchId, a._count.id]));
+  const weekMap = new Map(weekCounts.map((a) => [a.branchId, a._count.id]));
+
+  const branches = memberships.map((m) => {
+    const b = m.branch;
+    return {
+      id: b.id,
+      name: b.name,
+      address: b.address,
+      city: b.city,
+      state: b.state,
+      zip: b.zip,
+      phone: b.phone,
+      email: b.email,
+      website: b.website,
+      operatingHours: b.operatingHours,
+      treatmentRooms: b.treatmentRooms,
+      clinicType: b.clinicType,
+      doctorCount: b._count.members,
+      patientCount: b._count.patients,
+      todayAppointments: todayMap.get(b.id) ?? 0,
+      weekAppointments: weekMap.get(b.id) ?? 0,
+      doctors: b.members.map((mem) => ({
+        id: mem.user.id,
+        name: mem.user.name,
+        image: mem.user.image,
+      })),
+      userRole: m.role,
+      createdAt: b.createdAt.toISOString(),
+    };
+  });
 
   return NextResponse.json({ branches });
 }
