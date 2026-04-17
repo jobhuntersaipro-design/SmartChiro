@@ -45,6 +45,8 @@ export interface DoctorDetail {
     patientCount: number;
     totalVisits: number;
     totalXrays: number;
+    visitsThisMonth?: number;
+    avgVisitsPerPatient?: number;
   };
 }
 

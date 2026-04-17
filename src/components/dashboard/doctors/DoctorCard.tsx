@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { MoreHorizontal, MapPin } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -13,7 +14,6 @@ import type { DoctorListItem } from "@/types/doctor";
 interface DoctorCardProps {
   doctor: DoctorListItem;
   isAdmin: boolean;
-  onView: (doctor: DoctorListItem) => void;
   onToggleStatus: (doctor: DoctorListItem) => void;
   onRemove: (doctor: DoctorListItem) => void;
 }
@@ -35,17 +35,17 @@ function formatDate(iso: string): string {
 export function DoctorCard({
   doctor,
   isAdmin,
-  onView,
   onToggleStatus,
   onRemove,
 }: DoctorCardProps) {
+  const router = useRouter();
   const initials = getInitials(doctor.name, doctor.email);
 
   return (
     <div
       className="rounded-[6px] border border-[#e5edf5] bg-white p-5 transition-all duration-200 hover:border-[#c1c9d2] hover:translate-y-[-1px] cursor-pointer"
       style={{ boxShadow: "rgba(23,23,23,0.08) 0px 15px 35px" }}
-      onClick={() => onView(doctor)}
+      onClick={() => router.push(`/dashboard/doctors/${doctor.id}`)}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -100,7 +100,7 @@ export function DoctorCard({
                 className="text-[14px] text-[#273951] cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onView(doctor);
+                  router.push(`/dashboard/doctors/${doctor.id}`);
                 }}
               >
                 View Profile

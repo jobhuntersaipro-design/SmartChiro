@@ -2,13 +2,30 @@
 
 ## Status
 
-Complete
+In Progress
 
 ## Feature
 
+Doctor Detail Page — Replace DoctorDetailSheet slide-in with dedicated `/dashboard/doctors/[userId]` page
+
 ## Goals
 
+1. Navigate to `/dashboard/doctors/[userId]` on doctor card/row click (remove DoctorDetailSheet)
+2. Doctor profile header with avatar, name, status, contact, action buttons
+3. 4 stat cards: Patients, Visits This Month, X-Rays, Avg Visits/Patient
+4. Today's Agenda: appointments for today with patient name, time, status
+5. Patients tab: paginated table of assigned patients with search
+6. Schedule tab: weekly schedule grid from doctor profile
+7. Professional tab: license, education, specialties, languages, insurance, bio
+8. Recent Activity: recent visits with SOAP note previews
+9. 3 new API endpoints (appointments, patients, visits per doctor)
+10. 30 tests (13 API + 17 component)
+
 ## Notes
+
+- Spec: `context/features/doctor-detail-page-spec.md`
+- Follow branch detail page pattern (`BranchDetailView.tsx`)
+- Delete `DoctorDetailSheet.tsx` after migration
 
 ## History
 

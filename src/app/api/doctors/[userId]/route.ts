@@ -7,13 +7,14 @@ import type { BranchRole } from "@prisma/client";
 type RouteContext = { params: Promise<{ userId: string }> };
 
 // ─── GET /api/doctors/[userId] ───
-export async function GET(_req: NextRequest, { params }: RouteContext) {
+export async function GET(req: NextRequest, { params }: RouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { userId } = await params;
+  const includeDetail = req.nextUrl.searchParams.get("include") === "detail";
 
   // Fetch user with profile and branch memberships
   const user = await prisma.user.findUnique({
@@ -57,11 +58,31 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   }
 
   // Get stats
-  const [patientCount, totalVisits, totalXrays] = await Promise.all([
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const statQueries: Promise<number>[] = [
     prisma.patient.count({ where: { doctorId: userId } }),
     prisma.visit.count({ where: { doctorId: userId } }),
     prisma.xray.count({ where: { uploadedById: userId } }),
-  ]);
+  ];
+
+  if (includeDetail) {
+    statQueries.push(
+      prisma.visit.count({
+        where: { doctorId: userId, visitDate: { gte: monthStart } },
+      })
+    );
+  }
+
+  const statResults = await Promise.all(statQueries);
+  const patientCount = statResults[0];
+  const totalVisits = statResults[1];
+  const totalXrays = statResults[2];
+  const visitsThisMonth = includeDetail ? statResults[3] : undefined;
+  const avgVisitsPerPatient = includeDetail && patientCount > 0
+    ? Math.round((totalVisits / patientCount) * 10) / 10
+    : includeDetail ? 0 : undefined;
 
   const profile: DoctorProfile | null = user.doctorProfile
     ? {
@@ -93,7 +114,12 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       name: m.branch.name,
       role: m.role,
     })),
-    stats: { patientCount, totalVisits, totalXrays },
+    stats: {
+      patientCount,
+      totalVisits,
+      totalXrays,
+      ...(includeDetail ? { visitsThisMonth, avgVisitsPerPatient } : {}),
+    },
   };
 
   return NextResponse.json({ doctor }, { status: 200 });

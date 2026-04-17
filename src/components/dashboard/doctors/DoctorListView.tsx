@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Plus, LayoutGrid, List, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,6 @@ import type { DoctorListItem } from "@/types/doctor";
 import { DoctorSummaryStats } from "./DoctorSummaryStats";
 import { DoctorCard } from "./DoctorCard";
 import { CreateDoctorDialog } from "./CreateDoctorDialog";
-import { DoctorDetailSheet } from "./DoctorDetailSheet";
 import { RemoveDoctorDialog } from "./RemoveDoctorDialog";
 
 interface DoctorListViewProps {
@@ -35,7 +35,6 @@ export function DoctorListView({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [detailDoctor, setDetailDoctor] = useState<DoctorListItem | null>(null);
   const [removeDoctorState, setRemoveDoctorState] = useState<{
     doctor: DoctorListItem;
     branchId: string | null;
@@ -296,7 +295,6 @@ export function DoctorListView({
               key={d.id}
               doctor={d}
               isAdmin={isAdmin}
-              onView={setDetailDoctor}
               onToggleStatus={handleToggleStatus}
               onRemove={handleRemove}
             />
@@ -306,7 +304,6 @@ export function DoctorListView({
         <DoctorTable
           doctors={filtered}
           isAdmin={isAdmin}
-          onView={setDetailDoctor}
           onToggleStatus={handleToggleStatus}
           onRemove={handleRemove}
         />
@@ -320,19 +317,6 @@ export function DoctorListView({
         onCreated={() => {
           fetchDoctors();
           setToast({ type: "success", message: "Doctor created" });
-        }}
-      />
-
-      <DoctorDetailSheet
-        doctor={detailDoctor}
-        open={!!detailDoctor}
-        onOpenChange={(v) => {
-          if (!v) setDetailDoctor(null);
-        }}
-        isAdmin={isAdmin}
-        onRemove={(d) => {
-          setDetailDoctor(null);
-          handleRemove(d);
         }}
       />
 
@@ -398,16 +382,15 @@ function EmptyState({
 function DoctorTable({
   doctors,
   isAdmin,
-  onView,
   onToggleStatus,
   onRemove,
 }: {
   doctors: DoctorListItem[];
   isAdmin: boolean;
-  onView: (d: DoctorListItem) => void;
   onToggleStatus: (d: DoctorListItem) => void;
   onRemove: (d: DoctorListItem) => void;
 }) {
+  const router = useRouter();
   return (
     <div className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden">
       <table className="w-full">
@@ -438,7 +421,7 @@ function DoctorTable({
             <tr
               key={d.id}
               className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#F0F3F7] transition-colors cursor-pointer"
-              onClick={() => onView(d)}
+              onClick={() => router.push(`/dashboard/doctors/${d.id}`)}
             >
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
