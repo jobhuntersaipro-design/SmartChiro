@@ -157,7 +157,7 @@ export function ManageDoctorsSheet({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/dashboard/doctors/${member.userId}`}
+                        href={`/dashboard/settings/${member.userId}`}
                         className="text-[14px] font-medium text-[#061b31] truncate hover:text-[#533afd] transition-colors"
                       >
                         {member.name ?? member.email}

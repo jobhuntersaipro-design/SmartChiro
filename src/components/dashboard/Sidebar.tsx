@@ -9,11 +9,12 @@ import {
   FileText,
   Settings,
   Plus,
-  User,
   LogOut,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
+  Building2,
+  Stethoscope,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
@@ -31,6 +32,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/dashboard/patients", icon: Users },
+  { label: "Branches", href: "/dashboard/branches", icon: Building2 },
+  { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope },
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
   { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
 ];
@@ -180,18 +183,12 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
               </p>
             </div>
             <DropdownMenuSeparator />
-            <Link href={`/dashboard/doctors/${user.id}`}>
+            <Link href={`/dashboard/settings/${user.id}`}>
               <DropdownMenuItem className="gap-2 text-[14px] text-[#273951] cursor-pointer">
-                <User className="h-4 w-4" strokeWidth={1.5} />
-                Profile
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuItem className="gap-2 text-[14px] text-[#273951] cursor-pointer">
-              <Link href="/dashboard/settings" className="flex items-center gap-2 w-full">
                 <Settings className="h-4 w-4" strokeWidth={1.5} />
                 Settings
-              </Link>
-            </DropdownMenuItem>
+              </DropdownMenuItem>
+            </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 text-[14px] text-[#273951] cursor-pointer"

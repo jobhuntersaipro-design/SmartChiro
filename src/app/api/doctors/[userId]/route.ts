@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { DoctorDetail, DoctorProfile, WorkingSchedule } from "@/types/doctor";
+import type { BranchRole } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -417,6 +418,113 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json(
       { error: "Failed to update doctor profile" },
       { status: 500 }
+    );
+  }
+}
+
+// ─── DELETE /api/doctors/[userId] ─── Remove doctor from branch(es)
+export async function DELETE(req: NextRequest, { params }: RouteContext) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { userId } = await params;
+  const { searchParams } = req.nextUrl;
+  const branchId = searchParams.get("branchId");
+
+  // Cannot remove self
+  if (session.user.id === userId) {
+    return NextResponse.json({ error: "Cannot remove yourself" }, { status: 403 });
+  }
+
+  // Target user must exist
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      branchMemberships: { select: { id: true, branchId: true, role: true } },
+    },
+  });
+
+  if (!targetUser) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  // Get caller's memberships for auth check
+  const callerMemberships = await prisma.branchMember.findMany({
+    where: { userId: session.user.id },
+    select: { branchId: true, role: true },
+  });
+
+  const callerRoleMap = new Map<string, BranchRole>(
+    callerMemberships.map((m) => [m.branchId, m.role])
+  );
+
+  if (branchId) {
+    // Remove from specific branch
+    const targetMembership = targetUser.branchMemberships.find(
+      (m) => m.branchId === branchId
+    );
+
+    if (!targetMembership) {
+      return NextResponse.json(
+        { error: "User is not a member of this branch" },
+        { status: 404 }
+      );
+    }
+
+    // Cannot remove a branch OWNER
+    if (targetMembership.role === "OWNER") {
+      return NextResponse.json(
+        { error: "Cannot remove branch owner" },
+        { status: 403 }
+      );
+    }
+
+    // Caller must be OWNER or ADMIN of that branch
+    const callerRole = callerRoleMap.get(branchId);
+    if (!callerRole || (callerRole !== "OWNER" && callerRole !== "ADMIN")) {
+      return NextResponse.json(
+        { error: "Forbidden: must be branch owner or admin" },
+        { status: 403 }
+      );
+    }
+
+    await prisma.branchMember.delete({ where: { id: targetMembership.id } });
+
+    return NextResponse.json(
+      { success: true, removed: "branch" },
+      { status: 200 }
+    );
+  } else {
+    // Remove from ALL caller's branches
+    const membershipIds: string[] = [];
+
+    for (const m of targetUser.branchMemberships) {
+      const callerRole = callerRoleMap.get(m.branchId);
+      if (
+        callerRole &&
+        (callerRole === "OWNER" || callerRole === "ADMIN") &&
+        m.role !== "OWNER"
+      ) {
+        membershipIds.push(m.id);
+      }
+    }
+
+    if (membershipIds.length === 0) {
+      return NextResponse.json(
+        { error: "No removable memberships found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.branchMember.deleteMany({
+      where: { id: { in: membershipIds } },
+    });
+
+    return NextResponse.json(
+      { success: true, removed: "all" },
+      { status: 200 }
     );
   }
 }

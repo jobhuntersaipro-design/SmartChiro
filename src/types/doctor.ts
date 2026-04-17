@@ -63,3 +63,38 @@ export interface UpdateDoctorData {
   insurancePlans?: string[];
   isActive?: boolean;
 }
+
+export interface DoctorListItem {
+  id: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  image: string | null;
+  isActive: boolean;
+  specialties: string[];
+  branches: {
+    id: string;
+    name: string;
+    role: BranchRole;
+    memberId: string;
+  }[];
+  stats: {
+    patientCount: number;
+    visitCount: number;
+    xrayCount: number;
+  };
+  createdAt: string;
+}
+
+export interface CreateDoctorData {
+  name: string;
+  email: string;
+  password: string;
+  branchId: string;
+  role?: "DOCTOR" | "ADMIN";
+  phone?: string;
+  licenseNumber?: string;
+  specialties?: string[];
+  education?: string;
+  yearsExperience?: number;
+}

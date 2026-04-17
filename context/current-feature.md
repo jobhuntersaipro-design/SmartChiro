@@ -2,11 +2,36 @@
 
 ## Status
 
-Not Started
+In Progress
+
+## Feature
+
+**Doctor Management Page** (`context/features/doctors-page-spec.md`)
 
 ## Goals
 
+- Build `/dashboard/doctors` page for branch owners/admins to manage all doctors
+- API: GET /api/doctors — list all doctors across caller's branches with search, branch filter, status filter
+- API: POST /api/doctors — create doctor accounts (User + BranchMember + DoctorProfile in transaction)
+- API: DELETE /api/doctors/[userId] — remove doctor from branch or all branches
+- DoctorListView with grid/list toggle, search, branch filter, status filter
+- DoctorCard with avatar, name, email, specialties, status badge, stat mini cards, branch pills
+- DoctorSummaryStats bar (total/active/inactive doctors, total patients)
+- CreateDoctorDialog with account fields (name, email, password, branch, role) + optional professional fields
+- DoctorDetailSheet (right slide-in) with stats, professional info, branches, schedule
+- RemoveDoctorDialog with patient count warning
+- Role-based visibility: OWNER/ADMIN sees create/edit/remove; DOCTOR sees read-only team directory
+- 36 TDD integration tests (GET list, POST create, DELETE remove)
+
 ## Notes
+
+- No schema changes needed — existing User, DoctorProfile, BranchMember tables support full workflow
+- Creating a doctor = User INSERT + BranchMember INSERT + optional DoctorProfile INSERT (transaction)
+- Email already exists edge case: if user exists but not in branch, add BranchMember only
+- Cannot remove self, cannot remove branch OWNER
+- No /dashboard/doctors/[userId] detail page — clicking doctor opens settings page or detail sheet
+- Existing GET/PUT /api/doctors/[userId], PATCH status, POST photo endpoints remain unchanged
+- Design follows DESIGN.md Stripe spec (#533afd purple, #061b31 headings, weight 300, blue-tinted shadows)
 
 ## History
 
