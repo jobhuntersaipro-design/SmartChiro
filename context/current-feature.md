@@ -2,36 +2,13 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Feature
 
-**Doctor Management Page** (`context/features/doctors-page-spec.md`)
-
 ## Goals
 
-- Build `/dashboard/doctors` page for branch owners/admins to manage all doctors
-- API: GET /api/doctors — list all doctors across caller's branches with search, branch filter, status filter
-- API: POST /api/doctors — create doctor accounts (User + BranchMember + DoctorProfile in transaction)
-- API: DELETE /api/doctors/[userId] — remove doctor from branch or all branches
-- DoctorListView with grid/list toggle, search, branch filter, status filter
-- DoctorCard with avatar, name, email, specialties, status badge, stat mini cards, branch pills
-- DoctorSummaryStats bar (total/active/inactive doctors, total patients)
-- CreateDoctorDialog with account fields (name, email, password, branch, role) + optional professional fields
-- DoctorDetailSheet (right slide-in) with stats, professional info, branches, schedule
-- RemoveDoctorDialog with patient count warning
-- Role-based visibility: OWNER/ADMIN sees create/edit/remove; DOCTOR sees read-only team directory
-- 36 TDD integration tests (GET list, POST create, DELETE remove)
-
 ## Notes
-
-- No schema changes needed — existing User, DoctorProfile, BranchMember tables support full workflow
-- Creating a doctor = User INSERT + BranchMember INSERT + optional DoctorProfile INSERT (transaction)
-- Email already exists edge case: if user exists but not in branch, add BranchMember only
-- Cannot remove self, cannot remove branch OWNER
-- No /dashboard/doctors/[userId] detail page — clicking doctor opens settings page or detail sheet
-- Existing GET/PUT /api/doctors/[userId], PATCH status, POST photo endpoints remain unchanged
-- Design follows DESIGN.md Stripe spec (#533afd purple, #061b31 headings, weight 300, blue-tinted shadows)
 
 ## History
 
@@ -67,3 +44,4 @@ In Progress
 - 2026-04-16 **CRUD: Branches, Doctors & Patients** — Full CRUD API for Branches (list/get/create/update/delete with RBAC), Doctor/Member management (get detail, ownership transfer), Patients (role-aware listing with search, get/update/delete). 4-step clinic registration wizard with required field validation, auto-set owner name from session, day-by-day operating hours UI. 15 new Branch schema columns via migration. Subtle hover/animation effects across all dashboard components (scale, translate, fade-in). Branch URL routing via query params (/dashboard?branch=xxx). Daily chiropractic motivation quote card with refresh. ZoomBar hydration fix. 57 new integration tests hitting Neon DB (TDD), 230 total passing. 32 files changed (`context/features/crud-branches-doctors-patients-spec.md`)
 - 2026-04-16 **Doctor Profile CRUD** — DoctorProfile model (one-to-one with User) for license, specialties, schedule, fees, bio, languages, insurance. GET/PUT /api/doctors/[userId] with shared-branch auth and upsert validation. PATCH status toggle (owner/admin only). POST photo upload to R2. Profile page at /dashboard/doctors/[userId] with two-column layout and 4 tabbed sections (Professional, Schedule & Clinic, Additional, Contact). ScheduleGrid and TagInput components. Doctor name links in ManageDoctorsSheet and Sidebar. 28 new integration tests, 258 total passing. 18 files changed (`context/features/doctor-profile-crud-spec.md`)
 - 2026-04-17 **Dedicated Branches Page** — Moved branch management from dashboard to `/dashboard/branches` with grid/list toggle, search, summary stats (branches/doctors/patients). Branch detail at `/dashboard/branches/[branchId]` with 5 tabs: Overview (today's schedule + quick info + top doctors), Doctors (member list with role badges, patient/X-ray counts, add/remove), Schedule (week calendar with doctor colors, time slots, status indicators, prev/next navigation), Patients (server-side paginated table with search + doctor filter), Settings (full edit form: info, location, operating hours, practice, billing, danger zone). Enhanced GET /api/branches with `?include=stats`, enhanced GET/PATCH /api/branches/[branchId] with full field support + per-doctor stats. 2 new API routes: /branches/[id]/schedule, /branches/[id]/patients. Dashboard cleanup: removed BranchManagementTable, ManageDoctorsSheet, CreateBranchDialog from DashboardView. 15 new files, 4 modified (`context/features/branches-page-spec.md`)
+- 2026-04-17 **Doctor Management Page** — `/dashboard/doctors` with grid/list views, search, branch/status filters, summary stats. GET /api/doctors (list with batch stats), POST /api/doctors (create account with User+BranchMember+DoctorProfile transaction), DELETE /api/doctors/[userId] (remove from branch with OWNER protection). DoctorListView, DoctorCard, DoctorSummaryStats, CreateDoctorDialog, DoctorDetailSheet, RemoveDoctorDialog. Role-based visibility (OWNER/ADMIN CRUD vs DOCTOR read-only). Migrated profile editing to /dashboard/settings/[userId] with SettingsView and password change API. 22 files changed (`context/features/doctors-page-spec.md`)
