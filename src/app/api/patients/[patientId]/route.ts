@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
+const VALID_BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
+const VALID_MARITAL_STATUSES = ["Single", "Married", "Divorced", "Widowed"];
+const IC_REGEX = /^\d{6}-?\d{2}-?\d{4}$/;
+
 async function checkPatientAccess(userId: string, patientId: string) {
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
@@ -51,7 +55,7 @@ export async function GET(
     include: {
       doctor: { select: { id: true, name: true } },
       branch: { select: { id: true, name: true } },
-      _count: { select: { visits: true, xrays: true } },
+      _count: { select: { visits: true, xrays: true, appointments: true, documents: true } },
       visits: {
         select: { id: true, visitDate: true, subjective: true },
         orderBy: { visitDate: "desc" },
@@ -76,18 +80,37 @@ export async function GET(
       lastName: patient.lastName,
       email: patient.email,
       phone: patient.phone,
+      icNumber: patient.icNumber,
       dateOfBirth: patient.dateOfBirth?.toISOString() ?? null,
       gender: patient.gender,
+      occupation: patient.occupation,
+      race: patient.race,
+      maritalStatus: patient.maritalStatus,
+      bloodType: patient.bloodType,
+      allergies: patient.allergies,
+      referralSource: patient.referralSource,
+      addressLine1: patient.addressLine1,
+      addressLine2: patient.addressLine2,
+      city: patient.city,
+      state: patient.state,
+      postcode: patient.postcode,
+      country: patient.country,
+      emergencyName: patient.emergencyName,
+      emergencyPhone: patient.emergencyPhone,
+      emergencyRelation: patient.emergencyRelation,
       address: patient.address,
       emergencyContact: patient.emergencyContact,
       medicalHistory: patient.medicalHistory,
       notes: patient.notes,
+      status: patient.status ?? "active",
       doctorId: patient.doctorId,
       doctorName: patient.doctor?.name ?? "Unknown",
       branchId: patient.branchId,
       branchName: patient.branch?.name ?? "Unknown",
       totalVisits: patient._count.visits,
       totalXrays: patient._count.xrays,
+      totalAppointments: patient._count.appointments,
+      totalDocuments: patient._count.documents,
       recentVisits: patient.visits.map((v) => ({
         id: v.id,
         visitDate: v.visitDate.toISOString(),
@@ -128,6 +151,9 @@ export async function PATCH(
   const {
     firstName, lastName, email, phone, dateOfBirth,
     gender, address, emergencyContact, medicalHistory, notes, doctorId,
+    icNumber, occupation, race, maritalStatus, bloodType, allergies, referralSource,
+    addressLine1, addressLine2, city, state, postcode, country,
+    emergencyName, emergencyPhone, emergencyRelation, status,
   } = body;
 
   // Validate name fields if provided
@@ -139,6 +165,30 @@ export async function PATCH(
   }
   if (email !== undefined && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+  }
+
+  // Validate IC number
+  if (icNumber !== undefined && icNumber && !IC_REGEX.test(icNumber)) {
+    return NextResponse.json(
+      { error: "Invalid IC number format. Expected 12 digits (YYMMDD-SS-XXXX)." },
+      { status: 400 }
+    );
+  }
+
+  // Validate blood type
+  if (bloodType !== undefined && bloodType && !VALID_BLOOD_TYPES.includes(bloodType)) {
+    return NextResponse.json(
+      { error: `Invalid blood type. Must be one of: ${VALID_BLOOD_TYPES.join(", ")}` },
+      { status: 400 }
+    );
+  }
+
+  // Validate marital status
+  if (maritalStatus !== undefined && maritalStatus && !VALID_MARITAL_STATUSES.includes(maritalStatus)) {
+    return NextResponse.json(
+      { error: `Invalid marital status. Must be one of: ${VALID_MARITAL_STATUSES.join(", ")}` },
+      { status: 400 }
+    );
   }
 
   // Validate doctorId if changing
@@ -166,6 +216,24 @@ export async function PATCH(
   if (medicalHistory !== undefined) updateData.medicalHistory = medicalHistory || null;
   if (notes !== undefined) updateData.notes = notes || null;
   if (doctorId !== undefined) updateData.doctorId = doctorId;
+  // New fields
+  if (icNumber !== undefined) updateData.icNumber = icNumber?.trim() || null;
+  if (occupation !== undefined) updateData.occupation = occupation?.trim() || null;
+  if (race !== undefined) updateData.race = race || null;
+  if (maritalStatus !== undefined) updateData.maritalStatus = maritalStatus || null;
+  if (bloodType !== undefined) updateData.bloodType = bloodType || null;
+  if (allergies !== undefined) updateData.allergies = allergies?.trim() || null;
+  if (referralSource !== undefined) updateData.referralSource = referralSource || null;
+  if (addressLine1 !== undefined) updateData.addressLine1 = addressLine1?.trim() || null;
+  if (addressLine2 !== undefined) updateData.addressLine2 = addressLine2?.trim() || null;
+  if (city !== undefined) updateData.city = city?.trim() || null;
+  if (state !== undefined) updateData.state = state?.trim() || null;
+  if (postcode !== undefined) updateData.postcode = postcode?.trim() || null;
+  if (country !== undefined) updateData.country = country?.trim() || null;
+  if (emergencyName !== undefined) updateData.emergencyName = emergencyName?.trim() || null;
+  if (emergencyPhone !== undefined) updateData.emergencyPhone = emergencyPhone?.trim() || null;
+  if (emergencyRelation !== undefined) updateData.emergencyRelation = emergencyRelation || null;
+  if (status !== undefined) updateData.status = status || null;
 
   const updated = await prisma.patient.update({
     where: { id: patientId },
@@ -183,12 +251,29 @@ export async function PATCH(
       lastName: updated.lastName,
       email: updated.email,
       phone: updated.phone,
+      icNumber: updated.icNumber,
       dateOfBirth: updated.dateOfBirth?.toISOString() ?? null,
       gender: updated.gender,
+      occupation: updated.occupation,
+      race: updated.race,
+      maritalStatus: updated.maritalStatus,
+      bloodType: updated.bloodType,
+      allergies: updated.allergies,
+      referralSource: updated.referralSource,
+      addressLine1: updated.addressLine1,
+      addressLine2: updated.addressLine2,
+      city: updated.city,
+      state: updated.state,
+      postcode: updated.postcode,
+      country: updated.country,
+      emergencyName: updated.emergencyName,
+      emergencyPhone: updated.emergencyPhone,
+      emergencyRelation: updated.emergencyRelation,
       address: updated.address,
       emergencyContact: updated.emergencyContact,
       medicalHistory: updated.medicalHistory,
       notes: updated.notes,
+      status: updated.status ?? "active",
       doctorId: updated.doctorId,
       doctorName: updated.doctor?.name ?? "Unknown",
       branchId: updated.branchId,

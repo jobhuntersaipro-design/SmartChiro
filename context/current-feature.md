@@ -1,14 +1,41 @@
-# Current Feature
+# Current Feature: Patients Page Overhaul
 
 ## Status
 
-Complete
+In Progress
 
 ## Feature
 
+Overhaul `/dashboard/patients` into a full-featured patient management hub matching Doctors/Branches page quality.
+
 ## Goals
 
+- Add new Patient schema fields: IC number, occupation, race, marital status, blood type, allergies, referral source, address breakdown (line1/line2/city/state/postcode/country), emergency contact breakdown (name/phone/relation), status (active/inactive/discharged)
+- Enhance GET /api/patients with status and doctorId filters, new fields in response
+- Enhance POST /api/patients with all new fields, IC number validation, blood type/marital status enums, IC→DOB auto-extraction, doctorId assignment with branch membership check
+- Enhance PATCH /api/patients/[patientId] with all new fields + status updates
+- Enhance GET /api/patients/[patientId] to include new fields
+- Build PatientListView with grid/list toggle, search (name/email/phone/IC), doctor filter (OWNER/ADMIN), status filter, summary stats bar
+- Build PatientCard for grid view, PatientSummaryStats component
+- Enhance AddPatientDialog with 3-section layout (Personal, Contact & Address, Emergency & Medical)
+- Build EditPatientDialog for full inline editing
+- Build DeletePatientDialog with cascade warning (visits, X-rays, appointments)
+- Enhance PatientDetailSheet with edit/delete actions, status dropdown, all new fields
+- Enhance PatientTable with status column, doctor column, IC number, actions menu
+- Convert page.tsx to server component + PatientListView pattern
+- Role-based visibility (OWNER/ADMIN full CRUD vs DOCTOR own-patients only)
+- Malaysian context: IC format validation, state dropdown, race options, referral sources
+- 30 integration tests (TDD)
+
 ## Notes
+
+- All new fields are optional — non-breaking migration
+- Old `address` and `emergencyContact` fields kept for backward compat
+- IC format: YYMMDD-SS-XXXX (12 digits, dashes optional), auto-extract DOB
+- Status defaults to "active"
+- Country defaults to "Malaysia"
+- Spec file: `context/features/patients-page-overhaul-spec.md`
+- Implementation order: Schema → Types → API (GET/POST/PATCH) → Tests → UI components → Integration
 
 ## History
 

@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE "Patient" ADD COLUMN     "addressLine1" TEXT,
+ADD COLUMN     "addressLine2" TEXT,
+ADD COLUMN     "allergies" TEXT,
+ADD COLUMN     "bloodType" TEXT,
+ADD COLUMN     "city" TEXT,
+ADD COLUMN     "country" TEXT DEFAULT 'Malaysia',
+ADD COLUMN     "emergencyName" TEXT,
+ADD COLUMN     "emergencyPhone" TEXT,
+ADD COLUMN     "emergencyRelation" TEXT,
+ADD COLUMN     "icNumber" TEXT,
+ADD COLUMN     "maritalStatus" TEXT,
+ADD COLUMN     "occupation" TEXT,
+ADD COLUMN     "postcode" TEXT,
+ADD COLUMN     "race" TEXT,
+ADD COLUMN     "referralSource" TEXT,
+ADD COLUMN     "state" TEXT,
+ADD COLUMN     "status" TEXT DEFAULT 'active';

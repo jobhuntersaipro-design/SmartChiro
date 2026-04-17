@@ -231,6 +231,31 @@ model Patient {
   medicalHistory   String?
   notes            String?
 
+  // New fields
+  icNumber          String?
+  occupation        String?
+  race              String?
+  maritalStatus     String?
+  bloodType         String?
+  allergies         String?
+  referralSource    String?
+
+  // Address breakdown
+  addressLine1      String?
+  addressLine2      String?
+  city              String?
+  state             String?
+  postcode          String?
+  country           String?  @default("Malaysia")
+
+  // Emergency contact breakdown
+  emergencyName     String?
+  emergencyPhone    String?
+  emergencyRelation String?
+
+  // Status
+  status            String?  @default("active")
+
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 

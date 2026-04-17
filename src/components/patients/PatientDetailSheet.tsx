@@ -9,14 +9,18 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { Patient, PatientXray } from "@/types/patient";
-import { Mail, Phone, MapPin, Calendar, User, FileText, ScanLine, AlertCircle, Upload, ExternalLink } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, User, FileText, ScanLine, AlertCircle, Upload, ExternalLink, Pencil, Trash2, Droplets, Briefcase, Heart, Users } from "lucide-react";
 import { XrayUpload } from "@/components/xray/XrayUpload";
 
 interface PatientDetailSheetProps {
   patient: Patient | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEdit?: (patient: Patient) => void;
+  onDelete?: (patient: Patient) => void;
+  onStatusChange?: (patientId: string, status: string) => void;
 }
 
 function DetailRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; label: string; value: string | null }) {
@@ -49,6 +53,21 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
       <p className="text-[18px] font-semibold text-[#061b31]">{value}</p>
       <p className="text-[13px] text-[#64748d]">{label}</p>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+    active: { bg: "bg-[#E8F5E8]", text: "text-[#30B130]", dot: "bg-[#30B130]", label: "Active" },
+    inactive: { bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", dot: "bg-[#F5A623]", label: "Inactive" },
+    discharged: { bg: "bg-[#F0F0F0]", text: "text-[#64748d]", dot: "bg-[#64748d]", label: "Discharged" },
+  };
+  const c = config[status] || config.active;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium ${c.bg} ${c.text}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+      {c.label}
+    </span>
   );
 }
 
@@ -91,7 +110,23 @@ function XrayCard({ xray, patientId }: { xray: PatientXray; patientId: string })
   );
 }
 
-export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetailSheetProps) {
+function formatAddress(patient: Patient): string | null {
+  const parts = [patient.addressLine1, patient.addressLine2, patient.city, patient.state, patient.postcode].filter(Boolean);
+  if (parts.length > 0) return parts.join(", ");
+  return patient.address;
+}
+
+function formatEmergencyContact(patient: Patient): string | null {
+  if (patient.emergencyName) {
+    const parts = [patient.emergencyName];
+    if (patient.emergencyRelation) parts.push(`(${patient.emergencyRelation})`);
+    if (patient.emergencyPhone) parts.push(`— ${patient.emergencyPhone}`);
+    return parts.join(" ");
+  }
+  return patient.emergencyContact;
+}
+
+export function PatientDetailSheet({ patient, open, onOpenChange, onEdit, onDelete, onStatusChange }: PatientDetailSheetProps) {
   const [showUpload, setShowUpload] = useState(false);
   const [uploadedXrayIds, setUploadedXrayIds] = useState<string[]>([]);
 
@@ -103,6 +138,8 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
     ? Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
+  const statusSelectClass = "h-7 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-2 text-[13px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none";
+
   return (
     <Sheet open={open} onOpenChange={(isOpen) => {
       onOpenChange(isOpen);
@@ -113,25 +150,56 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
     }}>
       <SheetContent side="right" className="w-[480px] sm:max-w-[480px] overflow-y-auto p-0">
         <SheetHeader className="p-5 pb-4 border-b border-[#e5edf5]">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[15px] font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <SheetTitle className="text-[18px] font-semibold text-[#061b31]">
-                {fullName}
-              </SheetTitle>
-              <SheetDescription className="text-[13px] text-[#64748d]">
-                {age ? `${age} y/o` : ""} {patient.gender || ""} — Patient since {new Date(patient.createdAt).toLocaleDateString("en-MY", { month: "short", year: "numeric" })}
-              </SheetDescription>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[15px] font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <SheetTitle className="text-[18px] font-semibold text-[#061b31]">
+                    {fullName}
+                  </SheetTitle>
+                  <StatusBadge status={patient.status} />
+                </div>
+                <SheetDescription className="text-[13px] text-[#64748d]">
+                  {age ? `${age} y/o` : ""} {patient.gender || ""} {patient.icNumber ? `· ${patient.icNumber}` : ""} — Patient since {new Date(patient.createdAt).toLocaleDateString("en-MY", { month: "short", year: "numeric" })}
+                </SheetDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              {onEdit && (
+                <button onClick={() => onEdit(patient)} className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#533afd] transition-colors">
+                  <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+              )}
+              {onDelete && (
+                <button onClick={() => onDelete(patient)} className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] hover:bg-[#FDE8EC] hover:text-[#DF1B41] transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </button>
+              )}
             </div>
           </div>
         </SheetHeader>
 
         <div className="p-5 space-y-1">
-          {/* Stats */}
+          {/* Status & Stats */}
+          <div className="flex items-center gap-3 mb-4">
+            {onStatusChange && (
+              <select
+                value={patient.status}
+                onChange={(e) => onStatusChange(patient.id, e.target.value)}
+                className={statusSelectClass}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="discharged">Discharged</option>
+              </select>
+            )}
+          </div>
+
           <div className="grid grid-cols-3 gap-3 mb-4">
             <StatCard label="Visits" value={patient.totalVisits} />
             <StatCard label="X-Rays" value={patient.totalXrays + uploadedXrayIds.length} />
@@ -159,7 +227,6 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
             X-Rays
           </SectionHeading>
 
-          {/* Upload area */}
           {showUpload && (
             <div className="mb-3">
               <XrayUpload
@@ -173,7 +240,6 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
             </div>
           )}
 
-          {/* Newly uploaded X-rays */}
           {uploadedXrayIds.length > 0 && (
             <div className="space-y-2 mb-2">
               {uploadedXrayIds.map((xrayId) => (
@@ -201,7 +267,6 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
             </div>
           )}
 
-          {/* X-ray gallery */}
           {patient.xrays.length > 0 ? (
             <div className="space-y-2">
               {patient.xrays.map((xray) => (
@@ -212,38 +277,61 @@ export function PatientDetailSheet({ patient, open, onOpenChange }: PatientDetai
             <div className="rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] p-4 text-center">
               <ScanLine className="h-5 w-5 text-[#64748d] mx-auto mb-1" strokeWidth={1.5} />
               <p className="text-[13px] text-[#64748d]">No X-rays yet</p>
-              <button
-                onClick={() => setShowUpload(true)}
-                className="mt-2 text-[13px] font-medium text-[#533afd] hover:underline"
-              >
+              <button onClick={() => setShowUpload(true)} className="mt-2 text-[13px] font-medium text-[#533afd] hover:underline">
                 Upload first X-ray
               </button>
             </div>
           ) : null}
 
+          {/* Personal Information */}
+          <SectionHeading>Personal</SectionHeading>
+          <DetailRow icon={User} label="Assigned Doctor" value={patient.doctorName} />
+          <DetailRow icon={Calendar} label="Date of Birth" value={
+            patient.dateOfBirth
+              ? `${new Date(patient.dateOfBirth).toLocaleDateString("en-MY", { day: "numeric", month: "long", year: "numeric" })}${age ? ` (${age} y/o)` : ""}`
+              : null
+          } />
+          <DetailRow icon={Briefcase} label="Occupation" value={patient.occupation} />
+          <DetailRow icon={Users} label="Race" value={patient.race} />
+          <DetailRow icon={Heart} label="Marital Status" value={patient.maritalStatus} />
+          <DetailRow icon={Droplets} label="Blood Type" value={patient.bloodType} />
+
           {/* Contact Information */}
           <SectionHeading>Contact</SectionHeading>
           <DetailRow icon={Mail} label="Email" value={patient.email} />
           <DetailRow icon={Phone} label="Phone" value={patient.phone} />
-          <DetailRow icon={MapPin} label="Address" value={patient.address} />
-          <DetailRow icon={AlertCircle} label="Emergency Contact" value={patient.emergencyContact} />
+          <DetailRow icon={MapPin} label="Address" value={formatAddress(patient)} />
+
+          {/* Emergency Contact */}
+          <SectionHeading>Emergency Contact</SectionHeading>
+          <DetailRow icon={AlertCircle} label="Emergency Contact" value={formatEmergencyContact(patient)} />
 
           {/* Clinical */}
           <SectionHeading>Clinical</SectionHeading>
-          <DetailRow icon={User} label="Assigned Doctor" value={patient.doctorName} />
-          <DetailRow icon={Calendar} label="Date of Birth" value={
-            patient.dateOfBirth
-              ? new Date(patient.dateOfBirth).toLocaleDateString("en-MY", { day: "numeric", month: "long", year: "numeric" })
-              : null
-          } />
+          <DetailRow icon={AlertCircle} label="Allergies" value={patient.allergies} />
           <DetailRow icon={FileText} label="Medical History" value={patient.medicalHistory} />
           <DetailRow icon={ScanLine} label="Notes" value={patient.notes} />
+          <DetailRow icon={User} label="Referral Source" value={patient.referralSource} />
 
           {/* Recent Visits placeholder */}
           <SectionHeading>Recent Visits</SectionHeading>
           <div className="rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] p-4 text-center">
             <p className="text-[13px] text-[#64748d]">Visit history will appear here once visits are recorded</p>
           </div>
+
+          {/* Delete button at bottom */}
+          {onDelete && (
+            <div className="pt-4 mt-4 border-t border-[#e5edf5]">
+              <Button
+                variant="outline"
+                onClick={() => onDelete(patient)}
+                className="w-full h-8 text-[13px] font-medium rounded-[4px] border-[#DF1B41]/20 text-[#DF1B41] hover:bg-[#FDE8EC] hover:border-[#DF1B41]/40"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
+                Delete Patient
+              </Button>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
