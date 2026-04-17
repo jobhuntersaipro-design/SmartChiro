@@ -2,30 +2,13 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Feature
 
-Doctor Detail Page — Replace DoctorDetailSheet slide-in with dedicated `/dashboard/doctors/[userId]` page
-
 ## Goals
 
-1. Navigate to `/dashboard/doctors/[userId]` on doctor card/row click (remove DoctorDetailSheet)
-2. Doctor profile header with avatar, name, status, contact, action buttons
-3. 4 stat cards: Patients, Visits This Month, X-Rays, Avg Visits/Patient
-4. Today's Agenda: appointments for today with patient name, time, status
-5. Patients tab: paginated table of assigned patients with search
-6. Schedule tab: weekly schedule grid from doctor profile
-7. Professional tab: license, education, specialties, languages, insurance, bio
-8. Recent Activity: recent visits with SOAP note previews
-9. 3 new API endpoints (appointments, patients, visits per doctor)
-10. 30 tests (13 API + 17 component)
-
 ## Notes
-
-- Spec: `context/features/doctor-detail-page-spec.md`
-- Follow branch detail page pattern (`BranchDetailView.tsx`)
-- Delete `DoctorDetailSheet.tsx` after migration
 
 ## History
 
@@ -63,3 +46,4 @@ Doctor Detail Page — Replace DoctorDetailSheet slide-in with dedicated `/dashb
 - 2026-04-17 **Dedicated Branches Page** — Moved branch management from dashboard to `/dashboard/branches` with grid/list toggle, search, summary stats (branches/doctors/patients). Branch detail at `/dashboard/branches/[branchId]` with 5 tabs: Overview (today's schedule + quick info + top doctors), Doctors (member list with role badges, patient/X-ray counts, add/remove), Schedule (week calendar with doctor colors, time slots, status indicators, prev/next navigation), Patients (server-side paginated table with search + doctor filter), Settings (full edit form: info, location, operating hours, practice, billing, danger zone). Enhanced GET /api/branches with `?include=stats`, enhanced GET/PATCH /api/branches/[branchId] with full field support + per-doctor stats. 2 new API routes: /branches/[id]/schedule, /branches/[id]/patients. Dashboard cleanup: removed BranchManagementTable, ManageDoctorsSheet, CreateBranchDialog from DashboardView. 15 new files, 4 modified (`context/features/branches-page-spec.md`)
 - 2026-04-17 **Doctor Management Page** — `/dashboard/doctors` with grid/list views, search, branch/status filters, summary stats. GET /api/doctors (list with batch stats), POST /api/doctors (create account with User+BranchMember+DoctorProfile transaction), DELETE /api/doctors/[userId] (remove from branch with OWNER protection). DoctorListView, DoctorCard, DoctorSummaryStats, CreateDoctorDialog, DoctorDetailSheet, RemoveDoctorDialog. Role-based visibility (OWNER/ADMIN CRUD vs DOCTOR read-only). Migrated profile editing to /dashboard/settings/[userId] with SettingsView and password change API. 22 files changed (`context/features/doctors-page-spec.md`)
 - 2026-04-17 **Patients Page Overhaul** — 16 new Patient schema fields (IC number, occupation, race, marital status, blood type, allergies, referral source, address breakdown, emergency contact breakdown, status). Enhanced 4 API routes with filters, validation, IC→DOB auto-extraction. PatientListView with grid/list toggle, search, doctor/status filters, summary stats. Multi-step AddPatientDialog wizard (3 steps with Lucide icons, per-step validation, progress indicator). EditPatientDialog, DeletePatientDialog with cascade warning. Enhanced PatientTable with IC/doctor/status columns and actions menu. Enhanced PatientDetailSheet with edit/delete/status controls. Server component page.tsx. 30 new integration tests, 288 total passing. 17 files changed (`context/features/patients-page-overhaul-spec.md`)
+- 2026-04-17 **Doctor Detail Page** — Replaced DoctorDetailSheet slide-in with dedicated `/dashboard/doctors/[userId]` page. Doctor header with avatar/status/contact, 4 stat cards (patients, visits this month, X-rays, avg visits/patient), 4 tabs: Overview (today's agenda + recent visits + quick info/schedule/branches sidebar), Patients (paginated table with search + status filter), Schedule (weekly grid with today highlight + room/fee cards), Professional (bio, credentials, specialties/languages tag pills, branch memberships). DoctorCard/table rows navigate to detail page. 3 new API routes (doctor appointments/patients/visits), enhanced GET /api/doctors/[userId]?include=detail for extended stats. Seed expanded with 3 doctors, 18 patients, 8 visits, 12 appointments. Deleted DoctorDetailSheet. 23 new tests, 311 total passing. 18 files changed (`context/features/doctor-detail-page-spec.md`)
