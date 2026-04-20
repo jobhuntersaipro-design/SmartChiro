@@ -7,7 +7,6 @@ import { Patient, CreatePatientData } from "@/types/patient";
 import { PatientSearch } from "@/components/patients/PatientSearch";
 import { PatientTable } from "@/components/patients/PatientTable";
 import { PatientCard } from "@/components/patients/PatientCard";
-import { PatientDetailSheet } from "@/components/patients/PatientDetailSheet";
 import { PatientSummaryStats } from "@/components/patients/PatientSummaryStats";
 import { AddPatientDialog } from "@/components/patients/AddPatientDialog";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
@@ -54,8 +53,6 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   const [doctorFilter, setDoctorFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [addOpen, setAddOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [deletePatient, setDeletePatient] = useState<Patient | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -134,11 +131,6 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [patients]);
 
-  function handleSelectPatient(patient: Patient) {
-    setSelectedPatient(patient);
-    setSheetOpen(true);
-  }
-
   async function handleAddPatient(data: CreatePatientData) {
     const res = await fetch("/api/patients", {
       method: "POST",
@@ -174,23 +166,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       throw new Error(err.error || "Failed to delete patient");
     }
     setPatients((prev) => prev.filter((p) => p.id !== patientId));
-    setSheetOpen(false);
-    setSelectedPatient(null);
     setToast("Patient deleted");
-  }
-
-  async function handleStatusChange(patientId: string, status: string) {
-    const res = await fetch(`/api/patients/${patientId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      setPatients((prev) => prev.map((p) => p.id === patientId ? { ...p, status } : p));
-      if (selectedPatient?.id === patientId) {
-        setSelectedPatient((prev) => prev ? { ...prev, status } : prev);
-      }
-    }
   }
 
   const selectClass = "h-8 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none";
@@ -286,8 +262,6 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       {!loading && !error && viewMode === "list" && (
         <PatientTable
           patients={filtered}
-          onSelectPatient={handleSelectPatient}
-          selectedPatientId={selectedPatient?.id ?? null}
           onEdit={(p) => setEditPatient(p)}
           onDelete={(p) => setDeletePatient(p)}
         />
@@ -297,7 +271,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
         filtered.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((patient) => (
-              <PatientCard key={patient.id} patient={patient} onSelect={handleSelectPatient} />
+              <PatientCard key={patient.id} patient={patient} />
             ))}
           </div>
         ) : (
@@ -307,16 +281,6 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
           </div>
         )
       )}
-
-      {/* Detail sheet */}
-      <PatientDetailSheet
-        patient={selectedPatient}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onEdit={(p) => { setSheetOpen(false); setEditPatient(p); }}
-        onDelete={(p) => { setSheetOpen(false); setDeletePatient(p); }}
-        onStatusChange={handleStatusChange}
-      />
 
       {/* Add patient dialog */}
       <AddPatientDialog

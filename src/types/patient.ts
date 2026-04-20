@@ -24,6 +24,10 @@ export interface Patient {
   bloodType: string | null;
   allergies: string | null;
   referralSource: string | null;
+  // Pricing (MYR)
+  initialTreatmentFee: number | null;
+  firstTreatmentFee: number | null;
+  standardFollowUpFee: number | null;
   // Address
   addressLine1: string | null;
   addressLine2: string | null;
@@ -80,4 +84,7 @@ export interface CreatePatientData {
   medicalHistory?: string;
   notes?: string;
   doctorId?: string;
+  initialTreatmentFee?: number;
+  firstTreatmentFee?: number;
+  standardFollowUpFee?: number;
 }

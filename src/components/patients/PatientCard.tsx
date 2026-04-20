@@ -2,10 +2,10 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Patient } from "@/types/patient";
+import { useRouter } from "next/navigation";
 
 interface PatientCardProps {
   patient: Patient;
-  onSelect: (patient: Patient) => void;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -23,13 +23,14 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PatientCard({ patient, onSelect }: PatientCardProps) {
+export function PatientCard({ patient }: PatientCardProps) {
+  const router = useRouter();
   const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
   const fullName = `${patient.firstName} ${patient.lastName}`;
 
   return (
     <div
-      onClick={() => onSelect(patient)}
+      onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
       className="rounded-[6px] border border-[#e5edf5] bg-white p-4 cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:border-[#c1c9d2]"
       style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
     >

@@ -27,6 +27,9 @@ function mapPatientToResponse(p: {
   icNumber: string | null; occupation: string | null; race: string | null;
   maritalStatus: string | null; bloodType: string | null; allergies: string | null;
   referralSource: string | null;
+  initialTreatmentFee: number | null;
+  firstTreatmentFee: number | null;
+  standardFollowUpFee: number | null;
   addressLine1: string | null; addressLine2: string | null; city: string | null;
   state: string | null; postcode: string | null; country: string | null;
   emergencyName: string | null; emergencyPhone: string | null; emergencyRelation: string | null;
@@ -53,6 +56,9 @@ function mapPatientToResponse(p: {
     bloodType: p.bloodType,
     allergies: p.allergies,
     referralSource: p.referralSource,
+    initialTreatmentFee: p.initialTreatmentFee,
+    firstTreatmentFee: p.firstTreatmentFee,
+    standardFollowUpFee: p.standardFollowUpFee,
     addressLine1: p.addressLine1,
     addressLine2: p.addressLine2,
     city: p.city,
@@ -200,6 +206,7 @@ export async function POST(request: NextRequest) {
       addressLine1, addressLine2, city, state, postcode, country,
       emergencyName, emergencyPhone, emergencyRelation,
       medicalHistory, notes, doctorId,
+      initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
     } = body
 
     if (!firstName?.trim() || !lastName?.trim()) {
@@ -323,6 +330,9 @@ export async function POST(request: NextRequest) {
         emergencyRelation: emergencyRelation || null,
         medicalHistory: medicalHistory || null,
         notes: notes || null,
+        initialTreatmentFee: typeof initialTreatmentFee === 'number' ? initialTreatmentFee : null,
+        firstTreatmentFee: typeof firstTreatmentFee === 'number' ? firstTreatmentFee : null,
+        standardFollowUpFee: typeof standardFollowUpFee === 'number' ? standardFollowUpFee : null,
         status: 'active',
         branchId,
         doctorId: assignedDoctorId,
@@ -349,6 +359,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(mapPatientToResponse(patient), { status: 201 })
   } catch (error) {
     console.error('POST /api/patients error:', error)
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      const target = (error as { meta?: { target?: string[] } }).meta?.target?.join(', ') ?? 'field'
+      const field = target.includes('email') ? 'email address' : target.includes('icNumber') ? 'IC number' : target
+      return NextResponse.json(
+        { error: `A patient with this ${field} already exists.` },
+        { status: 409 }
+      )
+    }
     return NextResponse.json({ error: 'Failed to create patient.' }, { status: 500 })
   }
 }

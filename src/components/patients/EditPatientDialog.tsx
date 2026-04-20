@@ -74,6 +74,9 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         medicalHistory: patient.medicalHistory || "",
         notes: patient.notes || "",
         doctorId: patient.doctorId,
+        initialTreatmentFee: patient.initialTreatmentFee != null ? String(patient.initialTreatmentFee) : "",
+        firstTreatmentFee: patient.firstTreatmentFee != null ? String(patient.firstTreatmentFee) : "",
+        standardFollowUpFee: patient.standardFollowUpFee != null ? String(patient.standardFollowUpFee) : "",
       });
       setSubmitError(null);
     }
@@ -91,7 +94,13 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onSave(patient!.id, form);
+      const payload: Record<string, unknown> = { ...form };
+      // Convert pricing strings to numbers (or null if empty)
+      for (const key of ["initialTreatmentFee", "firstTreatmentFee", "standardFollowUpFee"] as const) {
+        const val = form[key];
+        payload[key] = val === "" || val === undefined ? null : Number(val);
+      }
+      await onSave(patient!.id, payload);
       onOpenChange(false);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to update patient");
@@ -266,6 +275,19 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                   </select>
                 </FormField>
               )}
+            </div>
+
+            <SectionHeading>Pricing (RM)</SectionHeading>
+            <div className="grid grid-cols-3 gap-3">
+              <FormField label="Initial Treatment Fee">
+                <input type="number" min={0} step="0.01" value={form.initialTreatmentFee || ""} onChange={(e) => update("initialTreatmentFee", e.target.value)} placeholder="250.00" className={inputClass} />
+              </FormField>
+              <FormField label="First Treatment">
+                <input type="number" min={0} step="0.01" value={form.firstTreatmentFee || ""} onChange={(e) => update("firstTreatmentFee", e.target.value)} placeholder="180.00" className={inputClass} />
+              </FormField>
+              <FormField label="Standard Follow-Up">
+                <input type="number" min={0} step="0.01" value={form.standardFollowUpFee || ""} onChange={(e) => update("standardFollowUpFee", e.target.value)} placeholder="120.00" className={inputClass} />
+              </FormField>
             </div>
 
             <div className="flex justify-end gap-2 pt-5">
