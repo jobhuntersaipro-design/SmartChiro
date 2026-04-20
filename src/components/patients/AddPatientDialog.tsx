@@ -7,6 +7,7 @@ import {
   Droplets, Briefcase, Megaphone, Mail, Phone, MapPin,
   Building2, Hash, ShieldAlert, Stethoscope, FileText,
   StickyNote, ChevronRight, ChevronLeft, Check, UserPlus,
+  Banknote,
 } from "lucide-react";
 import { CreatePatientData } from "@/types/patient";
 
@@ -534,6 +535,55 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                     <textarea value={form.notes || ""} onChange={(e) => updateField("notes", e.target.value)} placeholder="Patient prefers morning appointments, needs wheelchair access..." rows={2} className={textareaClass} />
                   </IconTextarea>
                 </FormField>
+
+                {/* Pricing section */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Banknote className="h-4 w-4 text-[#30B130]" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Pricing (RM)</span>
+                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField label="Initial Treatment Fee">
+                    <IconInput icon={Banknote}>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={form.initialTreatmentFee ?? ""}
+                        onChange={(e) => updateField("initialTreatmentFee", e.target.value === "" ? undefined : Number(e.target.value))}
+                        placeholder="250.00"
+                        className={inputClass}
+                      />
+                    </IconInput>
+                  </FormField>
+                  <FormField label="First Treatment">
+                    <IconInput icon={Banknote}>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={form.firstTreatmentFee ?? ""}
+                        onChange={(e) => updateField("firstTreatmentFee", e.target.value === "" ? undefined : Number(e.target.value))}
+                        placeholder="180.00"
+                        className={inputClass}
+                      />
+                    </IconInput>
+                  </FormField>
+                  <FormField label="Standard Follow-Up">
+                    <IconInput icon={Banknote}>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={form.standardFollowUpFee ?? ""}
+                        onChange={(e) => updateField("standardFollowUpFee", e.target.value === "" ? undefined : Number(e.target.value))}
+                        placeholder="120.00"
+                        className={inputClass}
+                      />
+                    </IconInput>
+                  </FormField>
+                </div>
 
                 {/* Doctor assignment (admin only) */}
                 {isAdmin && branchDoctors && branchDoctors.length > 0 && (

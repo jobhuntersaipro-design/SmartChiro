@@ -222,7 +222,7 @@ model Patient {
   id               String    @id @default(cuid())
   firstName        String
   lastName         String
-  email            String?
+  email            String?   @unique
   phone            String?
   dateOfBirth      DateTime?
   gender           String?
@@ -232,13 +232,18 @@ model Patient {
   notes            String?
 
   // New fields
-  icNumber          String?
+  icNumber          String?   @unique
   occupation        String?
   race              String?
   maritalStatus     String?
   bloodType         String?
   allergies         String?
   referralSource    String?
+
+  // Pricing (RM)
+  initialTreatmentFee Float?
+  firstTreatmentFee   Float?
+  standardFollowUpFee Float?
 
   // Address breakdown
   addressLine1      String?
@@ -281,12 +286,33 @@ model Visit {
   id        String   @id @default(cuid())
   visitDate DateTime @default(now())
 
+  // Visit classification
+  visitType      String?   // "initial", "follow_up", "emergency", "reassessment", "discharge"
+  chiefComplaint String?   // Primary reason for this visit
+
   // SOAP Notes
   subjective     String?
   objective      String?
   assessment     String?
   plan           String?
   treatmentNotes String?
+
+  // Clinical findings (structured)
+  areasAdjusted       String?   // Comma-separated: "C1, C5, T4, L5, SI"
+  techniqueUsed       String?   // "Gonstead", "Diversified", "Activator", "Thompson", etc.
+  subluxationFindings String?   // Specific subluxation patterns found
+
+  // Vitals
+  bloodPressureSys    Int?      // mmHg systolic
+  bloodPressureDia    Int?      // mmHg diastolic
+  heartRate           Int?      // bpm
+  weight              Float?    // kg
+  temperature         Float?    // celsius
+
+  // Recommendations
+  recommendations     String?   // Home exercises, ergonomic advice, lifestyle changes
+  referrals           String?   // External referrals (orthopedist, neurologist, etc.)
+  nextVisitDays       Int?      // Recommended days until next visit
 
   patientId     String
   patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
@@ -296,7 +322,8 @@ model Visit {
 
   appointmentId String? @unique
 
-  xrays Xray[]
+  xrays         Xray[]
+  questionnaire VisitQuestionnaire?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -304,6 +331,27 @@ model Visit {
   @@index([patientId])
   @@index([doctorId])
   @@index([visitDate])
+  @@index([visitType])
+}
+
+model VisitQuestionnaire {
+  id String @id @default(cuid())
+
+  // Recovery scores (0-10 scale)
+  painLevel          Int // 0 = no pain, 10 = worst pain
+  mobilityScore      Int // 0 = immobile, 10 = full range
+  sleepQuality       Int // 0 = no sleep, 10 = perfect sleep
+  dailyFunction      Int // 0 = cannot function, 10 = fully functional
+  overallImprovement Int // 0 = much worse, 5 = same, 10 = fully recovered
+
+  // Optional text
+  patientComments String? // free-form patient feedback
+
+  visitId String @unique
+  visit   Visit  @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── X-Ray & Annotations ───

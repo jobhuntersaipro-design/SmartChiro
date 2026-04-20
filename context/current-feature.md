@@ -1,14 +1,32 @@
-# Current Feature
+# Current Feature: Patient Detail Page
 
 ## Status
 
-Complete
-
-## Feature
+In Progress
 
 ## Goals
 
+- Replace PatientDetailSheet slide-in with dedicated page at `/dashboard/patients/[patientId]/details`
+- Patient header with avatar, status badge, demographics, contact info, action buttons (Edit, Delete, Status)
+- 4 stat cards: Total Visits, X-Rays, Next Appointment, Recovery Trend
+- 4-tab interface: Overview, Visits, X-Rays, Profile
+- Full visit recording with SOAP notes, categorized treatment data, vitals, recovery questionnaire (5 scores 0-10)
+- New `VisitQuestionnaire` Prisma model + 14 new fields on Visit model
+- 5 new API routes: visits CRUD (GET/POST/PUT/DELETE), appointments GET, enhanced patient GET with `?include=detail`
+- Seed data: 3-5 visits per patient with questionnaires showing recovery progression
+- 40 tests (17 API + 23 component)
+
 ## Notes
+
+- Spec: `context/features/patient-detail-page-spec.md`
+- Follows Doctor Detail Page pattern (server page wrapper + client component with tabs)
+- Recovery questionnaire per visit: painLevel, mobilityScore, sleepQuality, dailyFunction, overallImprovement (0-10)
+- Visit types: initial, follow_up, emergency, reassessment, discharge
+- Chiropractic-specific fields: areasAdjusted, techniqueUsed, subluxationFindings
+- Visit cards colored by type: purple (initial), blue (follow-up), red (emergency), amber (reassessment), green (discharge)
+- Delete PatientDetailSheet.tsx and PatientDetailView.tsx
+- Navigation: PatientTable/PatientCard row click → router.push to detail page
+- CreateVisitDialog: 6 collapsible sections (Visit Info, Questionnaire, SOAP, Treatment, Vitals, Recommendations)
 
 ## History
 

@@ -661,8 +661,17 @@ async function main() {
   ]
 
   let patientCount = 0
+  // Varied pricing tiers (RM) — some patients have custom rates
+  const pricingTiers = [
+    { initial: 250, first: 180, followup: 120 },
+    { initial: 300, first: 200, followup: 140 },
+    { initial: 220, first: 160, followup: 100 },
+    null, // some patients have no custom pricing (use branch default)
+  ]
+
   for (const p of patientsData) {
     const doctor = allDoctors[p.doctorIndex]
+    const pricing = pricingTiers[patientCount % pricingTiers.length]
 
     await prisma.patient.upsert({
       where: {
@@ -684,6 +693,9 @@ async function main() {
         bloodType: p.bloodType,
         allergies: p.allergies,
         referralSource: p.referralSource,
+        initialTreatmentFee: pricing?.initial ?? null,
+        firstTreatmentFee: pricing?.first ?? null,
+        standardFollowUpFee: pricing?.followup ?? null,
         addressLine1: p.addressLine1,
         addressLine2: (p as Record<string, unknown>).addressLine2 as string | undefined,
         city: p.city,
@@ -706,42 +718,240 @@ async function main() {
 
   console.log(`Seeded ${patientCount} patients`)
 
-  // ─── Visits (recent history for some patients) ───
+  // ─── Visits with questionnaires (enhanced) ───
   const now = new Date()
   const visitData = [
-    { patientIdx: 0, daysAgo: 3, subjective: 'Lower back pain improved since last visit. Pain 4/10 from 7/10.', objective: 'Lumbar ROM improved. L4-L5 still restricted on palpation.', assessment: 'Improving lumbar subluxation complex. Good response to Gonstead adjustments.', plan: 'Continue bi-weekly adjustments. Add core stability exercises.' },
-    { patientIdx: 0, daysAgo: 17, subjective: 'Acute lower back pain after prolonged sitting at work. Pain 7/10.', objective: 'Antalgic posture. Reduced lumbar lordosis. Positive Kemp test left.', assessment: 'Lumbar subluxation L4-L5 with disc involvement.', plan: 'Gonstead adjustment L4-L5. Ice 15min post-adjustment. Ergonomic desk review.' },
-    { patientIdx: 2, daysAgo: 1, subjective: 'Maintenance visit. Feeling good overall. Mild stiffness in thoracic region.', objective: 'T5-T7 fixation on palpation. Scoliotic curve stable.', assessment: 'Stable thoracic subluxation pattern. Scoliosis maintained.', plan: 'Thoracic adjustment T5-T7. Continue 2-week maintenance schedule.' },
-    { patientIdx: 2, daysAgo: 15, subjective: 'Thoracic stiffness after long weekend of marking exam papers.', objective: 'Increased T5-T7 fixation. Mild paraspinal muscle spasm.', assessment: 'Thoracic subluxation exacerbation from sustained flexion posture.', plan: 'Thompson technique adjustment. Postural awareness education.' },
-    { patientIdx: 3, daysAgo: 5, subjective: 'Shoulder pain reduced. Disc symptoms stable. Training at 70% intensity.', objective: 'Right shoulder ROM near full. Positive SLR at 60° (improved from 45°).', assessment: 'Improving L4-L5 disc herniation. Shoulder impingement resolving.', plan: 'Gradual return to full training. Adjustment focus on lumbar and shoulder girdle.' },
-    { patientIdx: 6, daysAgo: 7, subjective: 'Neck stiffness improved. No radiating arm symptoms this week.', objective: 'Cervical ROM restricted in rotation. C5-C6 fusion stable.', assessment: 'Stable post-surgical cervical spine. Compensatory patterns above and below fusion.', plan: 'Gentle Activator adjustment C3-C4 and C7-T1. Avoid manual cervical manipulation.' },
-    { patientIdx: 9, daysAgo: 10, subjective: 'Jaw clicking reduced. Neck tension still present after long court cases.', objective: 'TMJ dysfunction right side. Cervical subluxation C1-C2.', assessment: 'TMJ-cervical complex dysfunction. Stress-related muscle tension.', plan: 'Atlas adjustment. TMJ release technique. Stress management discussion.' },
-    { patientIdx: 4, daysAgo: 2, subjective: 'Sciatic pain much better. Baby very active. 30 weeks now.', objective: 'Webster technique assessment positive. SI joint dysfunction right.', assessment: 'Pregnancy-related SI joint dysfunction. Responding well to Webster technique.', plan: 'Continue Webster technique weekly until delivery. Pelvic support belt recommended.' },
+    {
+      patientIdx: 0, daysAgo: 3, visitType: 'follow_up', chiefComplaint: 'Lower back pain follow-up',
+      subjective: 'Lower back pain improved since last visit. Pain 4/10 from 7/10.', objective: 'Lumbar ROM improved. L4-L5 still restricted on palpation.', assessment: 'Improving lumbar subluxation complex. Good response to Gonstead adjustments.', plan: 'Continue bi-weekly adjustments. Add core stability exercises.',
+      areasAdjusted: 'L4, L5, SI', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 posterior body, PI ilium left',
+      bpSys: 125, bpDia: 82, hr: 68, weight: 78.5, temp: 36.6,
+      recommendations: 'Core stability exercises 3x/week. Ergonomic desk setup.', nextVisitDays: 14,
+      q: { painLevel: 4, mobilityScore: 6, sleepQuality: 7, dailyFunction: 7, overallImprovement: 7, patientComments: 'Much better than two weeks ago. Can sit longer without pain.' },
+    },
+    {
+      patientIdx: 0, daysAgo: 17, visitType: 'initial', chiefComplaint: 'Acute lower back pain',
+      subjective: 'Acute lower back pain after prolonged sitting at work. Pain 7/10.', objective: 'Antalgic posture. Reduced lumbar lordosis. Positive Kemp test left.', assessment: 'Lumbar subluxation L4-L5 with disc involvement.', plan: 'Gonstead adjustment L4-L5. Ice 15min post-adjustment. Ergonomic desk review.',
+      areasAdjusted: 'L4, L5', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 posterior disc, left rotation',
+      bpSys: 135, bpDia: 88, hr: 78, weight: 79.0, temp: 36.5,
+      recommendations: 'Ice 15min every 2 hours. Avoid prolonged sitting. Use lumbar support.', nextVisitDays: 14,
+      q: { painLevel: 7, mobilityScore: 3, sleepQuality: 4, dailyFunction: 4, overallImprovement: 3, patientComments: 'Pain is quite bad. Difficult to sleep on my side.' },
+    },
+    {
+      patientIdx: 0, daysAgo: 31, visitType: 'follow_up', chiefComplaint: 'Lower back pain progress check',
+      subjective: 'Pain reducing gradually. Down to 5/10. Sleeping better.', objective: 'Lumbar flexion improved 20%. L4-L5 less restricted.', assessment: 'Good progress. Subluxation pattern improving.', plan: 'Continue current adjustment protocol.',
+      areasAdjusted: 'L4, L5, T12', techniqueUsed: 'Gonstead', subluxationFindings: 'L4 posterior body improving',
+      bpSys: 128, bpDia: 84, hr: 72, weight: 78.8, temp: 36.5,
+      recommendations: 'Begin gentle stretching routine. Walking 20min daily.', nextVisitDays: 14,
+      q: { painLevel: 5, mobilityScore: 5, sleepQuality: 6, dailyFunction: 6, overallImprovement: 5, patientComments: 'Slowly getting better. The stretches help.' },
+    },
+    {
+      patientIdx: 2, daysAgo: 1, visitType: 'follow_up', chiefComplaint: 'Maintenance visit',
+      subjective: 'Maintenance visit. Feeling good overall. Mild stiffness in thoracic region.', objective: 'T5-T7 fixation on palpation. Scoliotic curve stable.', assessment: 'Stable thoracic subluxation pattern. Scoliosis maintained.', plan: 'Thoracic adjustment T5-T7. Continue 2-week maintenance schedule.',
+      areasAdjusted: 'T5, T6, T7', techniqueUsed: 'Thompson', subluxationFindings: 'T5-T7 bilateral restriction',
+      bpSys: 118, bpDia: 76, hr: 65, weight: 62.0, temp: 36.4,
+      recommendations: 'Continue yoga 2x/week. Posture breaks every 45min while teaching.', nextVisitDays: 14,
+      q: { painLevel: 2, mobilityScore: 8, sleepQuality: 8, dailyFunction: 9, overallImprovement: 8, patientComments: 'Feeling great. Yoga has been helping a lot.' },
+    },
+    {
+      patientIdx: 2, daysAgo: 15, visitType: 'follow_up', chiefComplaint: 'Thoracic stiffness after marking',
+      subjective: 'Thoracic stiffness after long weekend of marking exam papers.', objective: 'Increased T5-T7 fixation. Mild paraspinal muscle spasm.', assessment: 'Thoracic subluxation exacerbation from sustained flexion posture.', plan: 'Thompson technique adjustment. Postural awareness education.',
+      areasAdjusted: 'T5, T6, T7, T8', techniqueUsed: 'Thompson', subluxationFindings: 'T5-T8 increased fixation bilaterally',
+      bpSys: 120, bpDia: 78, hr: 68, weight: 62.2, temp: 36.5,
+      recommendations: 'Take breaks every 30min during marking. Use a standing desk.', nextVisitDays: 14,
+      q: { painLevel: 4, mobilityScore: 6, sleepQuality: 7, dailyFunction: 7, overallImprovement: 6, patientComments: 'Stiff from all the marking. Need to be more careful with posture.' },
+    },
+    {
+      patientIdx: 3, daysAgo: 5, visitType: 'follow_up', chiefComplaint: 'Sports rehab progress',
+      subjective: 'Shoulder pain reduced. Disc symptoms stable. Training at 70% intensity.', objective: 'Right shoulder ROM near full. Positive SLR at 60° (improved from 45°).', assessment: 'Improving L4-L5 disc herniation. Shoulder impingement resolving.', plan: 'Gradual return to full training. Adjustment focus on lumbar and shoulder girdle.',
+      areasAdjusted: 'L4, L5, Right shoulder', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 improving, right AC joint restriction',
+      bpSys: 122, bpDia: 75, hr: 58, weight: 82.0, temp: 36.6,
+      recommendations: 'Progress to 80% training intensity. Rotator cuff exercises daily.', nextVisitDays: 7,
+      q: { painLevel: 3, mobilityScore: 7, sleepQuality: 8, dailyFunction: 8, overallImprovement: 8, patientComments: 'Feeling strong. Ready to get back to full training soon.' },
+    },
+    {
+      patientIdx: 6, daysAgo: 7, visitType: 'follow_up', chiefComplaint: 'Cervical maintenance post-fusion',
+      subjective: 'Neck stiffness improved. No radiating arm symptoms this week.', objective: 'Cervical ROM restricted in rotation. C5-C6 fusion stable.', assessment: 'Stable post-surgical cervical spine. Compensatory patterns above and below fusion.', plan: 'Gentle Activator adjustment C3-C4 and C7-T1. Avoid manual cervical manipulation.',
+      areasAdjusted: 'C3, C4, C7, T1', techniqueUsed: 'Activator', subluxationFindings: 'C3-C4 restriction, C7-T1 compensatory fixation',
+      bpSys: 142, bpDia: 88, hr: 72, weight: 70.5, temp: 36.5,
+      recommendations: 'Gentle neck stretches only. No forceful movements. Heat pack 15min before bed.', nextVisitDays: 14,
+      q: { painLevel: 3, mobilityScore: 5, sleepQuality: 6, dailyFunction: 6, overallImprovement: 6, patientComments: 'Better than before. Arm numbness has stopped.' },
+    },
+    {
+      patientIdx: 4, daysAgo: 2, visitType: 'follow_up', chiefComplaint: 'Prenatal Webster technique',
+      subjective: 'Sciatic pain much better. Baby very active. 30 weeks now.', objective: 'Webster technique assessment positive. SI joint dysfunction right.', assessment: 'Pregnancy-related SI joint dysfunction. Responding well to Webster technique.', plan: 'Continue Webster technique weekly until delivery. Pelvic support belt recommended.',
+      areasAdjusted: 'SI joint, Sacrum', techniqueUsed: 'Diversified', subluxationFindings: 'Right SI joint posterior, sacral misalignment',
+      bpSys: 115, bpDia: 72, hr: 80, weight: 68.5, temp: 36.7,
+      recommendations: 'Pelvic support belt during walking. Pregnancy pillow for sleeping.', nextVisitDays: 7,
+      q: { painLevel: 3, mobilityScore: 6, sleepQuality: 5, dailyFunction: 7, overallImprovement: 7, patientComments: 'Sciatica is so much better! Baby is kicking a lot.' },
+    },
+    {
+      patientIdx: 9, daysAgo: 10, visitType: 'follow_up', chiefComplaint: 'TMJ and cervical tension',
+      subjective: 'Jaw clicking reduced. Neck tension still present after long court cases.', objective: 'TMJ dysfunction right side. Cervical subluxation C1-C2.', assessment: 'TMJ-cervical complex dysfunction. Stress-related muscle tension.', plan: 'Atlas adjustment. TMJ release technique. Stress management discussion.',
+      areasAdjusted: 'C1, C2, TMJ right', techniqueUsed: 'Gonstead', subluxationFindings: 'Atlas laterality right, C2 rotation left',
+      bpSys: 138, bpDia: 90, hr: 82, weight: 76.0, temp: 36.5,
+      recommendations: 'Jaw relaxation exercises. Reduce caffeine intake. Stress management techniques.', nextVisitDays: 10,
+      q: { painLevel: 4, mobilityScore: 6, sleepQuality: 5, dailyFunction: 7, overallImprovement: 6, patientComments: 'Jaw is better but work stress makes the neck tight again.' },
+    },
+    {
+      patientIdx: 1, daysAgo: 8, visitType: 'follow_up', chiefComplaint: 'Neck pain and headaches follow-up',
+      subjective: 'Headaches reduced from daily to 2x/week. Neck pain improving.', objective: 'Cervical ROM improved. C4-C5 still restricted on left rotation.', assessment: 'Improving cervical subluxation. Headache frequency reducing.', plan: 'Continue cervical adjustments. Monitor headache diary.',
+      areasAdjusted: 'C4, C5, C6', techniqueUsed: 'Diversified', subluxationFindings: 'C4-C5 left lateral flexion restriction',
+      bpSys: 112, bpDia: 70, hr: 64, weight: 55.0, temp: 36.4,
+      recommendations: 'Continue headache diary. Screen break every 20 minutes. Neck stretches.', nextVisitDays: 10,
+      q: { painLevel: 4, mobilityScore: 6, sleepQuality: 6, dailyFunction: 7, overallImprovement: 6, patientComments: 'Headaches getting less. Thank you doctor.' },
+    },
+    {
+      patientIdx: 7, daysAgo: 4, visitType: 'follow_up', chiefComplaint: 'Lumbar disc follow-up',
+      subjective: 'Leg pain reduced. Can stand for longer periods at work.', objective: 'SLR improved to 70° from 50°. Lumbar flexion better.', assessment: 'L5-S1 disc bulge improving. Nerve root irritation reducing.', plan: 'Flexion-distraction protocol. Core strengthening.',
+      areasAdjusted: 'L5, S1', techniqueUsed: 'Flexion-Distraction', subluxationFindings: 'L5-S1 posterior disc bulge, reducing',
+      bpSys: 130, bpDia: 85, hr: 74, weight: 85.0, temp: 36.6,
+      recommendations: 'McKenzie exercises 2x daily. Avoid heavy lifting for 2 more weeks.', nextVisitDays: 7,
+      q: { painLevel: 4, mobilityScore: 5, sleepQuality: 6, dailyFunction: 6, overallImprovement: 6, patientComments: 'Can stand at work better now. Leg pain still there but less.' },
+    },
+    {
+      patientIdx: 5, daysAgo: 12, visitType: 'follow_up', chiefComplaint: 'Shoulder and wrist pain check',
+      subjective: 'Shoulder improving after last session. Wrist still bothering during shifts.', objective: 'Right shoulder elevation improved. Carpal tunnel signs positive right wrist.', assessment: 'Improving shoulder strain. Persistent wrist symptoms need attention.', plan: 'Shoulder adjustment. Wrist brace recommendation. Ergonomic assessment for patient handling.',
+      areasAdjusted: 'Right shoulder, T2, T3', techniqueUsed: 'Gonstead', subluxationFindings: 'T2-T3 bilateral restriction, right shoulder girdle',
+      bpSys: 110, bpDia: 68, hr: 62, weight: 58.0, temp: 36.4,
+      recommendations: 'Wrist brace during heavy lifting shifts. Shoulder stretches before shift.', nextVisitDays: 14,
+      q: { painLevel: 5, mobilityScore: 6, sleepQuality: 7, dailyFunction: 6, overallImprovement: 5, patientComments: 'Shoulder is better but wrist still sore during night shifts.' },
+    },
+    // Extended history for patient 0 (Ahmad) — showing long recovery arc
+    {
+      patientIdx: 0, daysAgo: 45, visitType: 'follow_up', chiefComplaint: 'Lower back pain — mid-treatment check',
+      subjective: 'Pain 6/10. Some improvement but still restrictive.', objective: 'Mild improvement in lumbar ROM. L4-L5 remains restricted.', assessment: 'Gradual improvement. Need patience with chronic pattern.', plan: 'Continue Gonstead 2x/week for 2 more weeks.',
+      areasAdjusted: 'L4, L5', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 persistent restriction',
+      bpSys: 132, bpDia: 86, hr: 75, weight: 79.2, temp: 36.6,
+      recommendations: 'Heat pack 20 min before adjustment. Swim 2x/week.', nextVisitDays: 7,
+      q: { painLevel: 6, mobilityScore: 4, sleepQuality: 5, dailyFunction: 5, overallImprovement: 4 },
+    },
+    {
+      patientIdx: 0, daysAgo: 60, visitType: 'follow_up', chiefComplaint: 'Weekly maintenance adjustment',
+      subjective: 'Acute flare after long flight. Pain 8/10 at worst, now 6/10.', objective: 'Myofascial tightness throughout lumbar paraspinals. Sacroiliac inflammation suspected.', assessment: 'Flare-up from prolonged sitting. No neurological red flags.', plan: 'Aggressive adjustment. Add SI mobilization.',
+      areasAdjusted: 'L4, L5, SI bilateral', techniqueUsed: 'Gonstead',
+      // No vitals, no recommendations — doctor was rushed
+    },
+    // Patient 11 (Lee Jia Hui) — text neck, no questionnaire on brief visits
+    {
+      patientIdx: 11, daysAgo: 2, visitType: 'initial', chiefComplaint: 'Text neck and mouse shoulder',
+      subjective: 'Neck hurts after long design sessions. Right shoulder tight.', objective: 'Forward head posture. Upper cross syndrome signs.', assessment: 'Postural distortion pattern from prolonged screen use.', plan: 'Postural correction exercises. Ergonomic assessment of workstation.',
+      areasAdjusted: 'C5, C6, T1, Right shoulder', techniqueUsed: 'Diversified',
+      recommendations: 'Monitor height raise. 20-20-20 rule for screen breaks. Chin tucks every hour.', nextVisitDays: 14,
+      q: { painLevel: 5, mobilityScore: 6, sleepQuality: 7, dailyFunction: 7, overallImprovement: 5, patientComments: 'Never realized my posture was so bad.' },
+    },
+    // Patient 13 (Hafiz) — athlete, no questionnaire (performance visit)
+    {
+      patientIdx: 13, daysAgo: 6, visitType: 'initial', chiefComplaint: 'Performance optimization — no pain complaint',
+      subjective: 'No pain. Wants performance tune-up before tournament next month.', objective: 'Minor T4-T6 asymmetry. Hip flexor tightness bilaterally.', assessment: 'Healthy athlete with minor functional asymmetries.', plan: 'Performance adjustment series. 4 visits over 4 weeks.',
+      areasAdjusted: 'T4, T5, T6, Bilateral hips', techniqueUsed: 'Diversified', subluxationFindings: 'T4-T6 right rotation pattern',
+      bpSys: 118, bpDia: 72, hr: 52, weight: 72.0,
+      recommendations: 'Dynamic stretching routine. Stick to existing training plan.', nextVisitDays: 7,
+    },
+    // Patient 12 (Arjun) — recent initial visit, just pain, no questionnaire
+    {
+      patientIdx: 12, daysAgo: 9, visitType: 'initial', chiefComplaint: 'Sciatica and hip tightness',
+      subjective: 'Right-side sciatica radiating down leg. Driver all day.', objective: 'Positive SLR 50° right. Tight hip flexors. Lumbar flexion limited.', assessment: 'L5-S1 lumbar subluxation with sciatic nerve irritation.', plan: 'Gonstead L5-S1. Piriformis release. Stretching program.',
+      areasAdjusted: 'L5, S1, Right piriformis', techniqueUsed: 'Gonstead', subluxationFindings: 'L5-S1 right posterior body',
+      bpSys: 135, bpDia: 86, hr: 76, weight: 72.5,
+      recommendations: 'Piriformis stretch 3x daily. Hip flexor stretches. Reduce driving to 2hr stretches.', nextVisitDays: 4,
+      q: { painLevel: 7, mobilityScore: 4, sleepQuality: 5, dailyFunction: 4, overallImprovement: 3, patientComments: 'Pain wakes me up at night.' },
+    },
+    // Patient 8 (Nurul Izzati) — student, 2 visits
+    {
+      patientIdx: 8, daysAgo: 5, visitType: 'initial', chiefComplaint: 'Tension headaches and neck pain',
+      subjective: 'Daily headaches during exam period. Neck pain from studying.', objective: 'Suboccipital tension. C1-C2 restriction. Upper trap trigger points.', assessment: 'Cervicogenic headaches from study posture.', plan: 'Cervical adjustment. Suboccipital release. Study posture education.',
+      areasAdjusted: 'C1, C2, C3', techniqueUsed: 'Diversified', subluxationFindings: 'C1 right lateral, C2-C3 fixation',
+      bpSys: 112, bpDia: 70, hr: 68, weight: 52.0,
+      recommendations: 'Study breaks every 45 min. Neck stretches. Adequate sleep.', nextVisitDays: 7,
+      q: { painLevel: 6, mobilityScore: 5, sleepQuality: 4, dailyFunction: 6, overallImprovement: 4 },
+    },
+    {
+      patientIdx: 8, daysAgo: 20, visitType: 'follow_up', chiefComplaint: 'Headache frequency check',
+      subjective: 'Headaches down to 2x/week. Much better during exams.', objective: 'C1-C2 mobility improved. Less trigger point tenderness.', assessment: 'Good response to treatment. Study strategy working.', plan: 'Continue current protocol.',
+      areasAdjusted: 'C1, C2', techniqueUsed: 'Diversified',
+      // No vitals, quick follow-up
+    },
+    // Patient 14 (Chong Siew Mei) — elderly, gentle
+    {
+      patientIdx: 14, daysAgo: 11, visitType: 'initial', chiefComplaint: 'Frozen shoulder left side',
+      subjective: 'Cannot lift arm above shoulder. 3 months now. Very frustrated.', objective: 'Left shoulder abduction 60°. External rotation 10°. Cervical compensation.', assessment: 'Adhesive capsulitis left shoulder with cervical compensation.', plan: 'Gentle mobilization. Activator for cervical. Home exercises.',
+      areasAdjusted: 'C5, C6, Left shoulder capsule', techniqueUsed: 'Activator', subluxationFindings: 'Left shoulder capsular restriction, C5-C6 compensatory fixation',
+      bpSys: 148, bpDia: 88, hr: 78, weight: 58.0, temp: 36.5,
+      recommendations: 'Pendulum exercises 3x daily. Heat before exercises. Very gradual progression.', referrals: 'Consider orthopedic consult if no improvement in 8 weeks.', nextVisitDays: 7,
+      q: { painLevel: 6, mobilityScore: 3, sleepQuality: 5, dailyFunction: 4, overallImprovement: 3, patientComments: 'Cannot comb my hair. Very worried about driving.' },
+    },
+    // Patient 16 (Ganesh Rao) — chef, no questionnaire on first visit
+    {
+      patientIdx: 16, daysAgo: 4, visitType: 'initial', chiefComplaint: 'Plantar fasciitis and low back pain',
+      subjective: 'Feet hurt when waking up. Lower back tight after long shifts.', objective: 'Plantar fascia tenderness bilaterally. Lumbar paraspinal tightness.', assessment: 'Foot-to-back biomechanical chain dysfunction.', plan: 'Lumbar adjustment. Foot mobilization. Arch support recommendation.',
+      areasAdjusted: 'L5, SI, Both feet', techniqueUsed: 'Diversified', subluxationFindings: 'Pronated feet contributing to pelvic unleveling',
+      recommendations: 'Orthotic arch supports. Night splints. Anti-fatigue mats at work.', nextVisitDays: 7,
+    },
   ]
 
   let visitCount = 0
+  let qCount = 0
   for (const v of visitData) {
+    const vAny = v as Record<string, unknown>
     const patientId = `seed-patient-${String(v.patientIdx + 1).padStart(3, '0')}`
     const patient = patientsData[v.patientIdx]
     const doctor = allDoctors[patient.doctorIndex]
     const visitDate = new Date(now)
     visitDate.setDate(visitDate.getDate() - v.daysAgo)
 
+    const q = vAny.q as {
+      painLevel: number
+      mobilityScore: number
+      sleepQuality: number
+      dailyFunction: number
+      overallImprovement: number
+      patientComments?: string
+    } | undefined
+
     await prisma.visit.create({
       data: {
         visitDate,
-        subjective: v.subjective,
-        objective: v.objective,
-        assessment: v.assessment,
-        plan: v.plan,
+        visitType: v.visitType,
+        chiefComplaint: v.chiefComplaint,
+        subjective: (vAny.subjective as string | undefined) ?? null,
+        objective: (vAny.objective as string | undefined) ?? null,
+        assessment: (vAny.assessment as string | undefined) ?? null,
+        plan: (vAny.plan as string | undefined) ?? null,
+        areasAdjusted: v.areasAdjusted,
+        techniqueUsed: v.techniqueUsed,
+        subluxationFindings: (vAny.subluxationFindings as string | undefined) ?? null,
+        bloodPressureSys: (vAny.bpSys as number | undefined) ?? null,
+        bloodPressureDia: (vAny.bpDia as number | undefined) ?? null,
+        heartRate: (vAny.hr as number | undefined) ?? null,
+        weight: (vAny.weight as number | undefined) ?? null,
+        temperature: (vAny.temp as number | undefined) ?? null,
+        recommendations: (vAny.recommendations as string | undefined) ?? null,
+        referrals: (vAny.referrals as string | undefined) ?? null,
+        nextVisitDays: (vAny.nextVisitDays as number | undefined) ?? null,
         patientId,
         doctorId: doctor.id,
+        ...(q
+          ? {
+              questionnaire: {
+                create: {
+                  painLevel: q.painLevel,
+                  mobilityScore: q.mobilityScore,
+                  sleepQuality: q.sleepQuality,
+                  dailyFunction: q.dailyFunction,
+                  overallImprovement: q.overallImprovement,
+                  patientComments: q.patientComments ?? null,
+                },
+              },
+            }
+          : {}),
       },
     })
     visitCount++
+    if (q) qCount++
   }
 
-  console.log(`Seeded ${visitCount} visits`)
+  console.log(`Seeded ${visitCount} visits (${qCount} with questionnaires, ${visitCount - qCount} without)`)
 
   // ─── Appointments (upcoming + today) ───
   const appointmentData = [

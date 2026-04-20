@@ -32,7 +32,7 @@ async function checkPatientAccess(userId: string, patientId: string) {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: RouteContext
 ) {
   const session = await auth();
@@ -50,6 +50,9 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const url = new URL(req.url);
+  const includeDetail = url.searchParams.get("include") === "detail";
+
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
     include: {
@@ -57,20 +60,69 @@ export async function GET(
       branch: { select: { id: true, name: true } },
       _count: { select: { visits: true, xrays: true, appointments: true, documents: true } },
       visits: {
-        select: { id: true, visitDate: true, subjective: true },
+        select: { id: true, visitDate: true, subjective: true, visitType: true },
         orderBy: { visitDate: "desc" },
         take: 5,
       },
       xrays: {
-        select: { id: true, title: true, bodyRegion: true, createdAt: true },
+        select: { id: true, title: true, bodyRegion: true, viewType: true, status: true, thumbnailUrl: true, createdAt: true },
+        where: { status: { not: "ARCHIVED" } },
         orderBy: { createdAt: "desc" },
-        take: 10,
       },
     },
   });
 
   if (!patient) {
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+  }
+
+  // Build detail stats if requested
+  let recoveryTrend: number | null = null;
+  let nextAppointment: string | null = null;
+  let visitsByType: Record<string, number> | null = null;
+
+  if (includeDetail) {
+    // Recovery trend: average overallImprovement from last 5 questionnaires
+    const recentQuestionnaires = await prisma.visitQuestionnaire.findMany({
+      where: { visit: { patientId } },
+      orderBy: { visit: { visitDate: "desc" } },
+      take: 5,
+      select: { overallImprovement: true },
+    });
+
+    if (recentQuestionnaires.length > 0) {
+      const sum = recentQuestionnaires.reduce((acc, q) => acc + q.overallImprovement, 0);
+      recoveryTrend = Math.round((sum / recentQuestionnaires.length) * 10) / 10;
+    }
+
+    // Next upcoming appointment
+    const upcoming = await prisma.appointment.findFirst({
+      where: {
+        patientId,
+        dateTime: { gte: new Date() },
+        status: { in: ["SCHEDULED", "CHECKED_IN"] },
+      },
+      orderBy: { dateTime: "asc" },
+      select: { dateTime: true },
+    });
+    nextAppointment = upcoming?.dateTime.toISOString() ?? null;
+
+    // Visit counts by type
+    const allVisits = await prisma.visit.findMany({
+      where: { patientId },
+      select: { visitType: true },
+    });
+    visitsByType = {
+      initial: 0,
+      follow_up: 0,
+      emergency: 0,
+      reassessment: 0,
+      discharge: 0,
+    };
+    for (const v of allVisits) {
+      const t = v.visitType ?? "follow_up";
+      if (t in visitsByType) visitsByType[t]++;
+    }
   }
 
   return NextResponse.json({
@@ -89,6 +141,9 @@ export async function GET(
       bloodType: patient.bloodType,
       allergies: patient.allergies,
       referralSource: patient.referralSource,
+      initialTreatmentFee: patient.initialTreatmentFee,
+      firstTreatmentFee: patient.firstTreatmentFee,
+      standardFollowUpFee: patient.standardFollowUpFee,
       addressLine1: patient.addressLine1,
       addressLine2: patient.addressLine2,
       city: patient.city,
@@ -115,15 +170,24 @@ export async function GET(
         id: v.id,
         visitDate: v.visitDate.toISOString(),
         subjective: v.subjective,
+        visitType: v.visitType,
       })),
-      recentXrays: patient.xrays.map((x) => ({
+      xrays: patient.xrays.map((x) => ({
         id: x.id,
         title: x.title,
         bodyRegion: x.bodyRegion,
+        viewType: x.viewType,
+        status: x.status,
+        thumbnailUrl: x.thumbnailUrl,
         createdAt: x.createdAt.toISOString(),
       })),
       createdAt: patient.createdAt.toISOString(),
       updatedAt: patient.updatedAt.toISOString(),
+      ...(includeDetail && {
+        recoveryTrend,
+        nextAppointment,
+        visitsByType,
+      }),
     },
   });
 }
@@ -154,6 +218,7 @@ export async function PATCH(
     icNumber, occupation, race, maritalStatus, bloodType, allergies, referralSource,
     addressLine1, addressLine2, city, state, postcode, country,
     emergencyName, emergencyPhone, emergencyRelation, status,
+    initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
   } = body;
 
   // Validate name fields if provided
@@ -234,15 +299,37 @@ export async function PATCH(
   if (emergencyPhone !== undefined) updateData.emergencyPhone = emergencyPhone?.trim() || null;
   if (emergencyRelation !== undefined) updateData.emergencyRelation = emergencyRelation || null;
   if (status !== undefined) updateData.status = status || null;
+  if (initialTreatmentFee !== undefined) {
+    updateData.initialTreatmentFee = typeof initialTreatmentFee === 'number' ? initialTreatmentFee : null;
+  }
+  if (firstTreatmentFee !== undefined) {
+    updateData.firstTreatmentFee = typeof firstTreatmentFee === 'number' ? firstTreatmentFee : null;
+  }
+  if (standardFollowUpFee !== undefined) {
+    updateData.standardFollowUpFee = typeof standardFollowUpFee === 'number' ? standardFollowUpFee : null;
+  }
 
-  const updated = await prisma.patient.update({
-    where: { id: patientId },
-    data: updateData,
-    include: {
-      doctor: { select: { id: true, name: true } },
-      branch: { select: { id: true, name: true } },
-    },
-  });
+  let updated;
+  try {
+    updated = await prisma.patient.update({
+      where: { id: patientId },
+      data: updateData,
+      include: {
+        doctor: { select: { id: true, name: true } },
+        branch: { select: { id: true, name: true } },
+      },
+    });
+  } catch (err) {
+    if (err && typeof err === "object" && "code" in err && err.code === "P2002") {
+      const target = (err as { meta?: { target?: string[] } }).meta?.target?.join(", ") ?? "field";
+      const field = target.includes("email") ? "email address" : target.includes("icNumber") ? "IC number" : target;
+      return NextResponse.json(
+        { error: `A patient with this ${field} already exists.` },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 
   return NextResponse.json({
     patient: {
@@ -260,6 +347,9 @@ export async function PATCH(
       bloodType: updated.bloodType,
       allergies: updated.allergies,
       referralSource: updated.referralSource,
+      initialTreatmentFee: updated.initialTreatmentFee,
+      firstTreatmentFee: updated.firstTreatmentFee,
+      standardFollowUpFee: updated.standardFollowUpFee,
       addressLine1: updated.addressLine1,
       addressLine2: updated.addressLine2,
       city: updated.city,

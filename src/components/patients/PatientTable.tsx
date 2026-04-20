@@ -4,11 +4,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Patient } from "@/types/patient";
 import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface PatientTableProps {
   patients: Patient[];
-  onSelectPatient: (patient: Patient) => void;
-  selectedPatientId: string | null;
   onEdit?: (patient: Patient) => void;
   onDelete?: (patient: Patient) => void;
 }
@@ -86,7 +85,9 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
   );
 }
 
-export function PatientTable({ patients, onSelectPatient, selectedPatientId, onEdit, onDelete }: PatientTableProps) {
+export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) {
+  const router = useRouter();
+
   if (patients.length === 0) {
     return (
       <div className="rounded-[6px] border border-[#e5edf5] bg-white p-12 text-center"
@@ -117,15 +118,12 @@ export function PatientTable({ patients, onSelectPatient, selectedPatientId, onE
       {patients.map((patient) => {
         const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
         const fullName = `${patient.firstName} ${patient.lastName}`;
-        const isSelected = selectedPatientId === patient.id;
 
         return (
           <div
             key={patient.id}
-            onClick={() => onSelectPatient(patient)}
-            className={`grid grid-cols-[1fr_140px_130px_90px_80px_80px_40px] gap-3 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 cursor-pointer ${
-              isSelected ? "bg-[#ededfc]" : "hover:bg-[#f6f9fc] hover:translate-x-0.5"
-            }`}
+            onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
+            className="grid grid-cols-[1fr_140px_130px_90px_80px_80px_40px] gap-3 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5"
           >
             {/* Patient name + IC */}
             <div className="flex items-center gap-2.5">
@@ -167,7 +165,7 @@ export function PatientTable({ patients, onSelectPatient, selectedPatientId, onE
             {/* Actions */}
             <ActionsMenu
               patient={patient}
-              onView={() => onSelectPatient(patient)}
+              onView={() => router.push(`/dashboard/patients/${patient.id}/details`)}
               onEdit={onEdit}
               onDelete={onDelete}
             />
