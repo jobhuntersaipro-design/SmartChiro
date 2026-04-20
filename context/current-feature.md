@@ -1,32 +1,16 @@
-# Current Feature: Patient Detail Page
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Replace PatientDetailSheet slide-in with dedicated page at `/dashboard/patients/[patientId]/details`
-- Patient header with avatar, status badge, demographics, contact info, action buttons (Edit, Delete, Status)
-- 4 stat cards: Total Visits, X-Rays, Next Appointment, Recovery Trend
-- 4-tab interface: Overview, Visits, X-Rays, Profile
-- Full visit recording with SOAP notes, categorized treatment data, vitals, recovery questionnaire (5 scores 0-10)
-- New `VisitQuestionnaire` Prisma model + 14 new fields on Visit model
-- 5 new API routes: visits CRUD (GET/POST/PUT/DELETE), appointments GET, enhanced patient GET with `?include=detail`
-- Seed data: 3-5 visits per patient with questionnaires showing recovery progression
-- 40 tests (17 API + 23 component)
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- Spec: `context/features/patient-detail-page-spec.md`
-- Follows Doctor Detail Page pattern (server page wrapper + client component with tabs)
-- Recovery questionnaire per visit: painLevel, mobilityScore, sleepQuality, dailyFunction, overallImprovement (0-10)
-- Visit types: initial, follow_up, emergency, reassessment, discharge
-- Chiropractic-specific fields: areasAdjusted, techniqueUsed, subluxationFindings
-- Visit cards colored by type: purple (initial), blue (follow-up), red (emergency), amber (reassessment), green (discharge)
-- Delete PatientDetailSheet.tsx and PatientDetailView.tsx
-- Navigation: PatientTable/PatientCard row click → router.push to detail page
-- CreateVisitDialog: 6 collapsible sections (Visit Info, Questionnaire, SOAP, Treatment, Vitals, Recommendations)
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -65,3 +49,4 @@ In Progress
 - 2026-04-17 **Doctor Management Page** — `/dashboard/doctors` with grid/list views, search, branch/status filters, summary stats. GET /api/doctors (list with batch stats), POST /api/doctors (create account with User+BranchMember+DoctorProfile transaction), DELETE /api/doctors/[userId] (remove from branch with OWNER protection). DoctorListView, DoctorCard, DoctorSummaryStats, CreateDoctorDialog, DoctorDetailSheet, RemoveDoctorDialog. Role-based visibility (OWNER/ADMIN CRUD vs DOCTOR read-only). Migrated profile editing to /dashboard/settings/[userId] with SettingsView and password change API. 22 files changed (`context/features/doctors-page-spec.md`)
 - 2026-04-17 **Patients Page Overhaul** — 16 new Patient schema fields (IC number, occupation, race, marital status, blood type, allergies, referral source, address breakdown, emergency contact breakdown, status). Enhanced 4 API routes with filters, validation, IC→DOB auto-extraction. PatientListView with grid/list toggle, search, doctor/status filters, summary stats. Multi-step AddPatientDialog wizard (3 steps with Lucide icons, per-step validation, progress indicator). EditPatientDialog, DeletePatientDialog with cascade warning. Enhanced PatientTable with IC/doctor/status columns and actions menu. Enhanced PatientDetailSheet with edit/delete/status controls. Server component page.tsx. 30 new integration tests, 288 total passing. 17 files changed (`context/features/patients-page-overhaul-spec.md`)
 - 2026-04-17 **Doctor Detail Page** — Replaced DoctorDetailSheet slide-in with dedicated `/dashboard/doctors/[userId]` page. Doctor header with avatar/status/contact, 4 stat cards (patients, visits this month, X-rays, avg visits/patient), 4 tabs: Overview (today's agenda + recent visits + quick info/schedule/branches sidebar), Patients (paginated table with search + status filter), Schedule (weekly grid with today highlight + room/fee cards), Professional (bio, credentials, specialties/languages tag pills, branch memberships). DoctorCard/table rows navigate to detail page. 3 new API routes (doctor appointments/patients/visits), enhanced GET /api/doctors/[userId]?include=detail for extended stats. Seed expanded with 3 doctors, 18 patients, 8 visits, 12 appointments. Deleted DoctorDetailSheet. 23 new tests, 311 total passing. 18 files changed (`context/features/doctor-detail-page-spec.md`)
+- 2026-04-20 **Patient Detail Page** — Replaced PatientDetailSheet slide-in with dedicated `/dashboard/patients/[patientId]/details` page. Patient header (avatar, status badge, demographics, contact, edit/delete/status actions), 4 stat cards (Total Visits, X-Rays, Next Appointment, Recovery Trend), 4 tabs: Overview (recovery trend chart + quick info sidebar), Visits (visit list with type/score badges, filters, CRUD via dialogs), X-Rays (gallery grid with upload — `uploadedById` passed as prop, no `useSession` since app has no SessionProvider), Profile (personal/contact/medical sections). New VisitQuestionnaire model + 14 Visit fields (chiropractic + vitals + recovery scores 0-10). 5 API routes: visits CRUD (GET/POST/PUT/DELETE), appointments GET, enhanced patient GET `?include=detail`. CreateVisitDialog with 6 collapsible sections (Visit Info, Questionnaire, SOAP, Treatment, Vitals, Recommendations). Seed expanded with 3-5 visits per patient + questionnaires. 40 tests (17 API + 23 component). Deleted PatientDetailSheet/PatientDetailView. 33 files changed (`context/features/patient-detail-page-spec.md`)
