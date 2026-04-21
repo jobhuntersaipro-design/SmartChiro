@@ -2,26 +2,15 @@
 
 ## Status
 
-Spec written — awaiting approval to start RED phase.
-
-## Spec
-
-`context/features/patient-detail-hyperlinks-spec.md`
+Not Started
 
 ## Goals
 
-- Make every actionable data point on `/dashboard/patients/[patientId]/details` a hyperlink that opens in a **new tab** (doctor → doctor detail; branch → branch detail; phone → WhatsApp `wa.me`; email → `mailto:`; address → Google Maps).
-- Apply across all tabs: header card, Overview (Quick Info, Emergency Contact, Upcoming Appointments), Visits list, X-Rays (verify existing new-tab), Profile.
-- Reformat Date of Birth to `DD-MM-YYYY (Age)` wherever it appears on this page.
+<!-- Bullet points of what success looks like -->
 
 ## Notes
 
-- New shared util: `src/lib/format.ts` — pure functions: `formatDobWithAge`, `buildWhatsAppUrl`, `buildMailtoUrl`, `buildMapsUrl`, `buildDoctorHref`, `buildBranchHref`.
-- New tiny wrapper: `src/components/patients/ExternalLink.tsx` — always `target="_blank" rel="noopener noreferrer"`.
-- No API, schema, or migration changes.
-- Sensitive fields (IC number, Patient ID, Status) are **not** linked.
-- Phone normalization: strip non-digits → if leading `0`, replace with `60`; if `< 7` digits, return null and render as plain text.
-- TDD order: util tests (15) → `ExternalLink` tests (5) → component-level tests (12) → manual browser verification.
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -61,3 +50,4 @@ Spec written — awaiting approval to start RED phase.
 - 2026-04-17 **Patients Page Overhaul** — 16 new Patient schema fields (IC number, occupation, race, marital status, blood type, allergies, referral source, address breakdown, emergency contact breakdown, status). Enhanced 4 API routes with filters, validation, IC→DOB auto-extraction. PatientListView with grid/list toggle, search, doctor/status filters, summary stats. Multi-step AddPatientDialog wizard (3 steps with Lucide icons, per-step validation, progress indicator). EditPatientDialog, DeletePatientDialog with cascade warning. Enhanced PatientTable with IC/doctor/status columns and actions menu. Enhanced PatientDetailSheet with edit/delete/status controls. Server component page.tsx. 30 new integration tests, 288 total passing. 17 files changed (`context/features/patients-page-overhaul-spec.md`)
 - 2026-04-17 **Doctor Detail Page** — Replaced DoctorDetailSheet slide-in with dedicated `/dashboard/doctors/[userId]` page. Doctor header with avatar/status/contact, 4 stat cards (patients, visits this month, X-rays, avg visits/patient), 4 tabs: Overview (today's agenda + recent visits + quick info/schedule/branches sidebar), Patients (paginated table with search + status filter), Schedule (weekly grid with today highlight + room/fee cards), Professional (bio, credentials, specialties/languages tag pills, branch memberships). DoctorCard/table rows navigate to detail page. 3 new API routes (doctor appointments/patients/visits), enhanced GET /api/doctors/[userId]?include=detail for extended stats. Seed expanded with 3 doctors, 18 patients, 8 visits, 12 appointments. Deleted DoctorDetailSheet. 23 new tests, 311 total passing. 18 files changed (`context/features/doctor-detail-page-spec.md`)
 - 2026-04-20 **Patient Detail Page** — Replaced PatientDetailSheet slide-in with dedicated `/dashboard/patients/[patientId]/details` page. Patient header (avatar, status badge, demographics, contact, edit/delete/status actions), 4 stat cards (Total Visits, X-Rays, Next Appointment, Recovery Trend), 4 tabs: Overview (recovery trend chart + quick info sidebar), Visits (visit list with type/score badges, filters, CRUD via dialogs), X-Rays (gallery grid with upload — `uploadedById` passed as prop, no `useSession` since app has no SessionProvider), Profile (personal/contact/medical sections). New VisitQuestionnaire model + 14 Visit fields (chiropractic + vitals + recovery scores 0-10). 5 API routes: visits CRUD (GET/POST/PUT/DELETE), appointments GET, enhanced patient GET `?include=detail`. CreateVisitDialog with 6 collapsible sections (Visit Info, Questionnaire, SOAP, Treatment, Vitals, Recommendations). Seed expanded with 3-5 visits per patient + questionnaires. 40 tests (17 API + 23 component). Deleted PatientDetailSheet/PatientDetailView. 33 files changed (`context/features/patient-detail-page-spec.md`)
+- 2026-04-21 **Patient Detail — Deep-Linked Info & DOB Format** — Every actionable field on `/dashboard/patients/[patientId]/details` opens in a new tab: phone → WhatsApp `wa.me`, email → `mailto:`, doctor name → `/dashboard/doctors/[id]`, branch name → `/dashboard/branches/[id]`, address → Google Maps search. Emergency contact phone converted from `tel:` to WhatsApp. Date of Birth reformatted to `DD-MM-YYYY (Age)` in header, Overview Quick Info, and Profile tab. New `src/lib/format.ts` with 6 pure helpers (`formatDobWithAge`, `buildWhatsAppUrl`, `buildMailtoUrl`, `buildMapsUrl`, `buildDoctorHref`, `buildBranchHref`) + 17 tests. New `ExternalLink` wrapper enforcing `target="_blank" rel="noopener noreferrer"`. MY phone normalization (strip non-digits → leading `0` becomes `60`). Visits tab card header converted from `<button>` to `<div role=button tabIndex=0>` so nested doctor `<a>` is valid HTML; click-propagation stopped on link so card toggle still works. X-ray gallery already opened in new tab (verified). No API, schema, or migration changes. 8 files changed (`context/features/patient-detail-hyperlinks-spec.md`)
