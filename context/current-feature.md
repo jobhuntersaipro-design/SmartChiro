@@ -2,15 +2,26 @@
 
 ## Status
 
-Not Started
+Spec written — awaiting approval to start RED phase.
+
+## Spec
+
+`context/features/patient-detail-hyperlinks-spec.md`
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Make every actionable data point on `/dashboard/patients/[patientId]/details` a hyperlink that opens in a **new tab** (doctor → doctor detail; branch → branch detail; phone → WhatsApp `wa.me`; email → `mailto:`; address → Google Maps).
+- Apply across all tabs: header card, Overview (Quick Info, Emergency Contact, Upcoming Appointments), Visits list, X-Rays (verify existing new-tab), Profile.
+- Reformat Date of Birth to `DD-MM-YYYY (Age)` wherever it appears on this page.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- New shared util: `src/lib/format.ts` — pure functions: `formatDobWithAge`, `buildWhatsAppUrl`, `buildMailtoUrl`, `buildMapsUrl`, `buildDoctorHref`, `buildBranchHref`.
+- New tiny wrapper: `src/components/patients/ExternalLink.tsx` — always `target="_blank" rel="noopener noreferrer"`.
+- No API, schema, or migration changes.
+- Sensitive fields (IC number, Patient ID, Status) are **not** linked.
+- Phone normalization: strip non-digits → if leading `0`, replace with `60`; if `< 7` digits, return null and render as plain text.
+- TDD order: util tests (15) → `ExternalLink` tests (5) → component-level tests (12) → manual browser verification.
 
 ## History
 

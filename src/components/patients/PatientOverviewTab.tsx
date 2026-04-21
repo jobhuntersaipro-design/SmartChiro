@@ -17,6 +17,12 @@ import {
   AlertTriangle,
   Phone,
 } from "lucide-react";
+import { ExternalLink } from "@/components/patients/ExternalLink";
+import {
+  formatDobWithAge,
+  buildWhatsAppUrl,
+  buildDoctorHref,
+} from "@/lib/format";
 
 interface PatientOverviewTabProps {
   patientId: string;
@@ -94,17 +100,6 @@ function formatDateTime(iso: string): string {
 
 function formatVisitType(type: string): string {
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function calculateAge(dob: string): number {
-  const birth = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
 }
 
 function getScoreColor(score: number): { bg: string; text: string } {
@@ -342,6 +337,7 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
             ) : (
               appointments.map((a) => {
                 const colors = statusColors[a.status] ?? statusColors.SCHEDULED;
+                const doctorName = a.doctor.name ?? "Unknown Doctor";
                 return (
                   <div
                     key={a.id}
@@ -350,8 +346,14 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                     <span className="text-[13px] text-[#273951] w-32 shrink-0">
                       {formatDateTime(a.dateTime)}
                     </span>
-                    <span className="text-[14px] text-[#061b31] truncate flex-1 min-w-0">
-                      {a.doctor.name ?? "Unknown Doctor"}
+                    <span className="text-[14px] truncate flex-1 min-w-0">
+                      {a.doctor.id ? (
+                        <ExternalLink href={buildDoctorHref(a.doctor.id)}>
+                          {doctorName}
+                        </ExternalLink>
+                      ) : (
+                        <span className="text-[#061b31]">{doctorName}</span>
+                      )}
                     </span>
                     <span className="text-[13px] text-[#64748d] shrink-0">{a.duration}min</span>
                     <span
@@ -380,7 +382,7 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
               <InfoRow
                 icon={CalendarDays}
                 label="Date of Birth"
-                value={`${formatShortDate(patient.dateOfBirth)} (${calculateAge(patient.dateOfBirth)} yrs)`}
+                value={formatDobWithAge(patient.dateOfBirth) ?? "-"}
               />
             )}
             {patient.gender && (
@@ -422,12 +424,16 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                 <div className="flex items-start gap-2.5">
                   <Phone className="h-3.5 w-3.5 text-[#64748d] mt-0.5 shrink-0" strokeWidth={1.5} />
                   <span className="text-[13px] text-[#64748d] shrink-0 w-20">Phone</span>
-                  <a
-                    href={`tel:${patient.emergencyPhone}`}
-                    className="text-[13px] text-[#533afd] hover:underline"
-                  >
-                    {patient.emergencyPhone}
-                  </a>
+                  {(() => {
+                    const href = buildWhatsAppUrl(patient.emergencyPhone);
+                    return href ? (
+                      <ExternalLink href={href} className="text-[13px] text-[#533afd] hover:underline">
+                        {patient.emergencyPhone}
+                      </ExternalLink>
+                    ) : (
+                      <span className="text-[13px] text-[#273951]">{patient.emergencyPhone}</span>
+                    );
+                  })()}
                 </div>
               )}
               {patient.emergencyRelation && (
