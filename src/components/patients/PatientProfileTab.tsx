@@ -1,6 +1,15 @@
 "use client";
 
-import { AlertTriangle, Copy } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { ExternalLink } from "@/components/patients/ExternalLink";
+import {
+  formatDobWithAge,
+  buildWhatsAppUrl,
+  buildMailtoUrl,
+  buildMapsUrl,
+  buildDoctorHref,
+  buildBranchHref,
+} from "@/lib/format";
 
 interface PatientProfileTabProps {
   patient: {
@@ -42,26 +51,6 @@ interface PatientProfileTabProps {
   };
 }
 
-function calculateAge(dateOfBirth: string): number {
-  const dob = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - dob.getFullYear();
-  const monthDiff = today.getMonth() - dob.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-MY", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 function formatDateTime(dateStr: string): string {
   const date = new Date(dateStr);
   return date.toLocaleDateString("en-MY", {
@@ -97,28 +86,41 @@ function DetailRow({
   mono,
   danger,
   icon,
+  href,
 }: {
   label: string;
   value: string | null | undefined;
   mono?: boolean;
   danger?: boolean;
   icon?: React.ReactNode;
+  href?: string | null;
 }) {
+  const display = value || "-";
+  const shouldLink = !!href && !!value;
+  const valueClasses = `text-[14px] mt-0.5 ${
+    danger ? "text-[#DF1B41] font-medium" : "text-[#061b31]"
+  } ${mono ? "font-mono text-[13px]" : ""}`;
+
+  const inner = shouldLink ? (
+    <ExternalLink href={href!} className="text-[#533afd] hover:underline break-words">
+      {display}
+    </ExternalLink>
+  ) : (
+    display
+  );
+
   return (
     <div>
       <p className="text-[13px] text-[#64748d]">{label}</p>
-      <p
-        className={`text-[14px] mt-0.5 ${
-          danger ? "text-[#DF1B41] font-medium" : "text-[#061b31]"
-        } ${mono ? "font-mono text-[13px]" : ""}`}
-      >
-        {icon && (
+      <p className={valueClasses}>
+        {icon ? (
           <span className="inline-flex items-center gap-1">
             {icon}
-            {value || "-"}
+            {inner}
           </span>
+        ) : (
+          inner
         )}
-        {!icon && (value || "-")}
       </p>
     </div>
   );
@@ -140,11 +142,14 @@ function Section({
 }
 
 export function PatientProfileTab({ patient }: PatientProfileTabProps) {
-  const dobDisplay = patient.dateOfBirth
-    ? `${formatDate(patient.dateOfBirth)} (${calculateAge(patient.dateOfBirth)} years old)`
-    : null;
-
+  const dobDisplay = formatDobWithAge(patient.dateOfBirth);
   const hasAllergies = !!patient.allergies && patient.allergies.trim().length > 0;
+  const fullAddress = buildFullAddress(patient);
+  const addressForLink = fullAddress === "-" ? null : fullAddress;
+  const phoneHref = buildWhatsAppUrl(patient.phone);
+  const emailHref = buildMailtoUrl(patient.email);
+  const mapsHref = buildMapsUrl(addressForLink);
+  const emergencyPhoneHref = buildWhatsAppUrl(patient.emergencyPhone);
 
   return (
     <div>
@@ -168,10 +173,10 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
       {/* Contact Information */}
       <Section title="Contact Information">
         <div className="grid grid-cols-2 gap-y-3 gap-x-8">
-          <DetailRow label="Email" value={patient.email} />
-          <DetailRow label="Phone" value={patient.phone} />
+          <DetailRow label="Email" value={patient.email} href={emailHref} />
+          <DetailRow label="Phone" value={patient.phone} href={phoneHref} />
           <div className="col-span-2">
-            <DetailRow label="Address" value={buildFullAddress(patient)} />
+            <DetailRow label="Address" value={fullAddress} href={mapsHref} />
           </div>
         </div>
       </Section>
@@ -180,7 +185,7 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
       <Section title="Emergency Contact">
         <div className="grid grid-cols-2 gap-y-3 gap-x-8">
           <DetailRow label="Name" value={patient.emergencyName} />
-          <DetailRow label="Phone" value={patient.emergencyPhone} />
+          <DetailRow label="Phone" value={patient.emergencyPhone} href={emergencyPhoneHref} />
           <DetailRow label="Relationship" value={patient.emergencyRelation} />
         </div>
       </Section>
@@ -230,8 +235,16 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
       <Section title="Administrative">
         <div className="grid grid-cols-2 gap-y-3 gap-x-8">
           <DetailRow label="Patient ID" value={patient.id} mono />
-          <DetailRow label="Doctor" value={patient.doctorName} />
-          <DetailRow label="Branch" value={patient.branchName || "-"} />
+          <DetailRow
+            label="Doctor"
+            value={patient.doctorName}
+            href={patient.doctorId ? buildDoctorHref(patient.doctorId) : null}
+          />
+          <DetailRow
+            label="Branch"
+            value={patient.branchName || null}
+            href={patient.branchId ? buildBranchHref(patient.branchId) : null}
+          />
           <DetailRow label="Status" value={formatStatus(patient.status)} />
           <DetailRow label="Created" value={formatDateTime(patient.createdAt)} />
           <DetailRow

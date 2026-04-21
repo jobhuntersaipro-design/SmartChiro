@@ -12,6 +12,8 @@ import { RecoveryScoreBar } from "@/components/patients/RecoveryScoreBar";
 import { CreateVisitDialog } from "@/components/patients/CreateVisitDialog";
 import { EditVisitDialog } from "@/components/patients/EditVisitDialog";
 import { DeleteVisitDialog } from "@/components/patients/DeleteVisitDialog";
+import { ExternalLink } from "@/components/patients/ExternalLink";
+import { buildDoctorHref } from "@/lib/format";
 import type { Visit } from "@/types/visit";
 
 interface PatientVisitsTabProps {
@@ -130,10 +132,18 @@ function VisitCard({
       style={{ borderLeft: `4px solid ${config.border}` }}
     >
       {/* Collapsed Header */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left"
       >
         {/* Date */}
         <span className="text-[14px] font-medium text-[#061b31] whitespace-nowrap">
@@ -144,8 +154,17 @@ function VisitCard({
         <VisitTypeBadge type={visit.visitType} />
 
         {/* Doctor */}
-        <span className="text-[13px] text-[#64748d] whitespace-nowrap">
-          Dr. {visit.doctor.name || "Unknown"}
+        <span
+          className="text-[13px] whitespace-nowrap"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {visit.doctor.id && visit.doctor.name ? (
+            <ExternalLink href={buildDoctorHref(visit.doctor.id)}>
+              Dr. {visit.doctor.name}
+            </ExternalLink>
+          ) : (
+            <span className="text-[#64748d]">Dr. {visit.doctor.name || "Unknown"}</span>
+          )}
         </span>
 
         {/* Chief Complaint (truncated) */}
@@ -192,7 +211,7 @@ function VisitCard({
         ) : (
           <ChevronDown className="h-4 w-4 text-[#64748d] flex-shrink-0" strokeWidth={1.5} />
         )}
-      </button>
+      </div>
 
       {/* Expanded Content */}
       {expanded && (

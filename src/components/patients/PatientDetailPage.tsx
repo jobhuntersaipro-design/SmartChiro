@@ -26,6 +26,14 @@ import { PatientOverviewTab } from "@/components/patients/PatientOverviewTab";
 import { PatientVisitsTab } from "@/components/patients/PatientVisitsTab";
 import { PatientXraysTab } from "@/components/patients/PatientXraysTab";
 import { PatientProfileTab } from "@/components/patients/PatientProfileTab";
+import { ExternalLink } from "@/components/patients/ExternalLink";
+import {
+  buildWhatsAppUrl,
+  buildMailtoUrl,
+  buildDoctorHref,
+  buildBranchHref,
+  formatDobWithAge,
+} from "@/lib/format";
 
 interface PatientDetailPageProps {
   patientId: string;
@@ -54,18 +62,6 @@ function getInitials(firstName: string, lastName: string): string {
   if (f && l) return (f[0] + l[0]).toUpperCase();
   if (f) return f.slice(0, 2).toUpperCase();
   return "PT";
-}
-
-function formatAge(dateOfBirth: string | null): string | null {
-  if (!dateOfBirth) return null;
-  const dob = new Date(dateOfBirth);
-  const now = new Date();
-  let age = now.getFullYear() - dob.getFullYear();
-  const monthDiff = now.getMonth() - dob.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) {
-    age--;
-  }
-  return `${age}y`;
 }
 
 function formatGender(gender: string | null): string | null {
@@ -202,9 +198,11 @@ export function PatientDetailPage({ patientId, currentUserId }: PatientDetailPag
 
   const initials = getInitials(patient.firstName, patient.lastName);
   const fullName = `${patient.firstName} ${patient.lastName}`;
-  const age = formatAge(patient.dateOfBirth);
+  const dobDisplay = formatDobWithAge(patient.dateOfBirth);
   const gender = formatGender(patient.gender);
   const isActive = patient.status.toLowerCase() === "active";
+  const whatsappHref = buildWhatsAppUrl(patient.phone);
+  const mailtoHref = buildMailtoUrl(patient.email);
 
   const statCards = [
     { label: "Total Visits", value: patient.totalVisits, icon: Users, color: "#533afd" },
@@ -264,31 +262,45 @@ export function PatientDetailPage({ patientId, currentUserId }: PatientDetailPag
                 {gender && (
                   <span>{gender}</span>
                 )}
-                {age && (
-                  <span>{age}</span>
+                {dobDisplay && (
+                  <span>{dobDisplay}</span>
                 )}
                 {patient.phone && (
                   <span className="flex items-center gap-1.5">
                     <Phone className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    {patient.phone}
+                    {whatsappHref ? (
+                      <ExternalLink href={whatsappHref}>{patient.phone}</ExternalLink>
+                    ) : (
+                      patient.phone
+                    )}
                   </span>
                 )}
                 {patient.email && (
                   <span className="flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    {patient.email}
+                    {mailtoHref ? (
+                      <ExternalLink href={mailtoHref}>{patient.email}</ExternalLink>
+                    ) : (
+                      patient.email
+                    )}
                   </span>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-4 mt-1 text-[13px] text-[#64748d]">
-                {patient.doctorName && (
+                {patient.doctorName && patient.doctorId && (
                   <span>
-                    Doctor: <span className="text-[#273951]">{patient.doctorName}</span>
+                    Doctor:{" "}
+                    <ExternalLink href={buildDoctorHref(patient.doctorId)}>
+                      {patient.doctorName}
+                    </ExternalLink>
                   </span>
                 )}
-                {patient.branchName && (
+                {patient.branchName && patient.branchId && (
                   <span>
-                    Branch: <span className="text-[#273951]">{patient.branchName}</span>
+                    Branch:{" "}
+                    <ExternalLink href={buildBranchHref(patient.branchId)}>
+                      {patient.branchName}
+                    </ExternalLink>
                   </span>
                 )}
               </div>
