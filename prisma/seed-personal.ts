@@ -93,7 +93,143 @@ async function main() {
   })
   console.log(`Linked owner → ${branches.length} branches`)
 
-  console.log('\n✓ Task 2 complete (owner + branches)')
+  // ─── Doctors ───
+  const doctorsData = [
+    {
+      id: 'personal-doctor-001',
+      email: 'dr.tan.personal@smartchiro.test',
+      name: 'Dr. Tan Wei Hong',
+      phone: '+60 12-321 4400',
+      branchIdx: 0,
+      role: 'ADMIN' as const,
+      profile: {
+        licenseNumber: 'DC-MY-2017-3201',
+        specialties: ['Gonstead Technique', 'Sports Chiropractic'],
+        yearsExperience: 9,
+        education: 'Doctor of Chiropractic, Murdoch University Perth',
+        bio: 'Sports-focused chiropractor with experience treating professional athletes.',
+        languages: ['English', 'Mandarin', 'Malay'],
+        insurancePlans: ['AIA', 'Great Eastern'],
+        consultationFee: 160,
+        treatmentRoom: 'KLCC Room A',
+        workingSchedule: {
+          monday: { start: '09:00', end: '18:00' },
+          tuesday: { start: '09:00', end: '18:00' },
+          wednesday: { start: '09:00', end: '18:00' },
+          thursday: { start: '09:00', end: '18:00' },
+          friday: { start: '09:00', end: '17:00' },
+          saturday: { start: '09:00', end: '13:00' },
+        },
+      },
+    },
+    {
+      id: 'personal-doctor-002',
+      email: 'dr.fatimah.personal@smartchiro.test',
+      name: 'Dr. Fatimah Zahra',
+      phone: '+60 17-666 8821',
+      branchIdx: 1,
+      role: 'DOCTOR' as const,
+      profile: {
+        licenseNumber: 'DC-MY-2019-5610',
+        specialties: ['Diversified Technique', 'Prenatal Chiropractic', 'Webster Technique'],
+        yearsExperience: 6,
+        education: 'Doctor of Chiropractic, IMU Malaysia',
+        bio: 'Webster-certified prenatal specialist. Passionate about pregnancy care.',
+        languages: ['English', 'Malay'],
+        insurancePlans: ['AIA', 'Allianz'],
+        consultationFee: 140,
+        treatmentRoom: 'Bangsar Room 1',
+        workingSchedule: {
+          monday: { start: '10:00', end: '19:00' },
+          tuesday: { start: '10:00', end: '19:00' },
+          wednesday: null,
+          thursday: { start: '10:00', end: '19:00' },
+          friday: { start: '10:00', end: '18:00' },
+          saturday: { start: '10:00', end: '14:00' },
+        },
+      },
+    },
+    {
+      id: 'personal-doctor-003',
+      email: 'dr.suresh.personal@smartchiro.test',
+      name: 'Dr. Suresh Menon',
+      phone: '+60 16-244 7733',
+      branchIdx: 0,
+      role: 'DOCTOR' as const,
+      profile: {
+        licenseNumber: 'DC-MY-2014-1882',
+        specialties: ['Thompson Technique', 'Activator Method', 'Geriatric Chiropractic'],
+        yearsExperience: 12,
+        education: 'Doctor of Chiropractic, RMIT Melbourne',
+        bio: 'Senior chiropractor specialising in gentle techniques for elderly patients.',
+        languages: ['English', 'Tamil', 'Malay'],
+        insurancePlans: ['Great Eastern', 'Prudential', 'AXA'],
+        consultationFee: 180,
+        treatmentRoom: 'KLCC Room B',
+        workingSchedule: {
+          monday: { start: '08:00', end: '16:00' },
+          tuesday: { start: '08:00', end: '16:00' },
+          wednesday: { start: '08:00', end: '16:00' },
+          thursday: { start: '08:00', end: '16:00' },
+          friday: { start: '08:00', end: '14:00' },
+          saturday: null,
+        },
+      },
+    },
+  ]
+
+  const doctorUsers: { id: string; name: string; branchIdx: number }[] = []
+  for (const d of doctorsData) {
+    const user = await prisma.user.upsert({
+      where: { id: d.id },
+      update: {},
+      create: {
+        id: d.id,
+        email: d.email,
+        name: d.name,
+        password: hashedPassword,
+        phoneNumber: d.phone,
+        emailVerified: new Date(),
+        activeBranchId: branches[d.branchIdx].id,
+      },
+    })
+
+    await prisma.branchMember.upsert({
+      where: { userId_branchId: { userId: user.id, branchId: branches[d.branchIdx].id } },
+      update: { role: d.role },
+      create: { userId: user.id, branchId: branches[d.branchIdx].id, role: d.role },
+    })
+
+    await prisma.doctorProfile.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: {
+        userId: user.id,
+        licenseNumber: d.profile.licenseNumber,
+        specialties: d.profile.specialties,
+        yearsExperience: d.profile.yearsExperience,
+        education: d.profile.education,
+        bio: d.profile.bio,
+        languages: d.profile.languages,
+        insurancePlans: d.profile.insurancePlans,
+        consultationFee: d.profile.consultationFee,
+        treatmentRoom: d.profile.treatmentRoom,
+        workingSchedule: d.profile.workingSchedule,
+        isActive: true,
+      },
+    })
+
+    doctorUsers.push({ id: user.id, name: d.name, branchIdx: d.branchIdx })
+    console.log(`Seeded doctor: ${d.name} (${d.role} @ ${branches[d.branchIdx].name})`)
+  }
+
+  // Owner counts as a doctor too — assigned to first branch
+  const allDoctors = [
+    { id: owner.id, name: owner.name ?? 'Job Hunter', branchIdx: 0 },
+    ...doctorUsers,
+  ]
+
+  console.log('\n✓ Task 3 complete (doctors)')
 }
 
 main()
