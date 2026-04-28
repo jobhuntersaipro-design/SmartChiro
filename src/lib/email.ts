@@ -69,3 +69,71 @@ export async function sendVerificationEmail(email: string, name: string) {
     throw new Error('Failed to send verification email')
   }
 }
+
+const PASSWORD_RESET_EXPIRY_HOURS = 1
+
+export async function createPasswordResetToken(userId: string): Promise<string> {
+  const token = randomBytes(32).toString('hex')
+  const expires = new Date(Date.now() + PASSWORD_RESET_EXPIRY_HOURS * 60 * 60 * 1000)
+
+  // Single-active-token invariant: drop any prior tokens for this user
+  await prisma.passwordResetToken.deleteMany({
+    where: { userId },
+  })
+
+  await prisma.passwordResetToken.create({
+    data: {
+      userId,
+      token,
+      expires,
+    },
+  })
+
+  return token
+}
+
+export async function sendPasswordResetEmail(
+  email: string,
+  name: string,
+  token: string
+) {
+  const resetUrl = `${APP_URL}/reset-password?token=${token}`
+
+  const { error } = await resend.emails.send({
+    from: 'SmartChiro <noreply@smartchiro.org>',
+    to: email,
+    subject: 'Reset your SmartChiro password',
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background: #533afd; border-radius: 6px; padding: 8px 12px; text-align: center;">
+            <span style="color: white; font-size: 14px; font-weight: bold;">Smart Chiro</span>
+          </div>
+        </div>
+        <h1 style="color: #061b31; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
+          Reset your password
+        </h1>
+        <p style="color: #273951; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
+          Hi ${name}, we received a request to reset your SmartChiro password. Click the button below to choose a new one. If you didn't request this, you can safely ignore this email — your password won't change.
+        </p>
+        <div style="text-align: center; margin-bottom: 32px;">
+          <a href="${resetUrl}" style="display: inline-block; background: #533afd; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
+            Reset password
+          </a>
+        </div>
+        <p style="color: #64748d; font-size: 13px; line-height: 1.5; text-align: center;">
+          This link expires in ${PASSWORD_RESET_EXPIRY_HOURS} hour. If you didn't request a reset, you can safely ignore this email.
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5edf5; margin: 32px 0;" />
+        <p style="color: #64748d; font-size: 13px; text-align: center;">
+          SmartChiro — See More. Treat Better.
+        </p>
+      </div>
+    `,
+  })
+
+  if (error) {
+    console.error('Failed to send password reset email:', error)
+    throw new Error('Failed to send password reset email')
+  }
+}
