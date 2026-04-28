@@ -384,7 +384,59 @@ async function main() {
   }
   console.log(`Seeded ${visitCount} visits (${qCount} with questionnaires)`)
 
-  console.log('\n✓ Task 5 complete (visits)')
+  // ─── Appointments ───
+  // Clear & re-create for idempotency
+  await prisma.appointment.deleteMany({
+    where: { patient: { id: { startsWith: 'personal-patient-' } } },
+  })
+
+  const appointmentData = [
+    { patientIdx: 0, daysFromNow: 0, hour: 10, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 3, daysFromNow: 0, hour: 11, duration: 30, status: 'CHECKED_IN' as const },
+    { patientIdx: 5, daysFromNow: 0, hour: 14, duration: 45, status: 'SCHEDULED' as const },
+    { patientIdx: 9, daysFromNow: 0, hour: 16, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 1, daysFromNow: 1, hour: 9, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 4, daysFromNow: 1, hour: 11, duration: 45, status: 'SCHEDULED' as const },
+    { patientIdx: 7, daysFromNow: 1, hour: 14, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 10, daysFromNow: 2, hour: 9, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 2, daysFromNow: 2, hour: 15, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 6, daysFromNow: 3, hour: 10, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 11, daysFromNow: 3, hour: 14, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 8, daysFromNow: 4, hour: 11, duration: 45, status: 'SCHEDULED' as const },
+    { patientIdx: 13, daysFromNow: 5, hour: 10, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 12, daysFromNow: 6, hour: 9, duration: 30, status: 'SCHEDULED' as const },
+    { patientIdx: 0, daysFromNow: 14, hour: 10, duration: 30, status: 'SCHEDULED' as const },
+    // Past completed (for activity feed)
+    { patientIdx: 0, daysFromNow: -2, hour: 10, duration: 30, status: 'COMPLETED' as const },
+    { patientIdx: 1, daysFromNow: -5, hour: 11, duration: 30, status: 'COMPLETED' as const },
+    { patientIdx: 4, daysFromNow: -4, hour: 15, duration: 45, status: 'COMPLETED' as const },
+    { patientIdx: 14, daysFromNow: -25, hour: 14, duration: 30, status: 'COMPLETED' as const },
+  ]
+
+  let apptCount = 0
+  for (const a of appointmentData) {
+    const patientId = `personal-patient-${String(a.patientIdx + 1).padStart(3, '0')}`
+    const patient = patientsData[a.patientIdx]
+    const doctor = allDoctors[patient.doctorIdx]
+    const dateTime = new Date(now)
+    dateTime.setDate(dateTime.getDate() + a.daysFromNow)
+    dateTime.setHours(a.hour, 0, 0, 0)
+
+    await prisma.appointment.create({
+      data: {
+        dateTime,
+        duration: a.duration,
+        status: a.status,
+        patientId,
+        branchId: branches[patient.branchIdx].id,
+        doctorId: doctor.id,
+      },
+    })
+    apptCount++
+  }
+  console.log(`Seeded ${apptCount} appointments`)
+
+  console.log('\n✓ Task 6 complete (appointments)')
 }
 
 main()
