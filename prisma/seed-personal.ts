@@ -229,7 +229,80 @@ async function main() {
     ...doctorUsers,
   ]
 
-  console.log('\n✓ Task 3 complete (doctors)')
+  // ─── Patients ───
+  // doctorIdx: 0=owner, 1=Dr.Tan(KLCC), 2=Dr.Fatimah(Bangsar), 3=Dr.Suresh(KLCC)
+  const patientsData = [
+    { firstName: 'Adam', lastName: 'bin Yusoff', email: 'adam.yusoff.jh@example.com', phone: '+60 11-2200 0001', icNumber: '880101-14-1101', dob: new Date('1988-01-01'), gender: 'Male', occupation: 'Software Architect', race: 'Malay', maritalStatus: 'Married', bloodType: 'O+', allergies: null, referralSource: 'Google Search', addressLine1: '20, Jalan Pinang', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50450', emergencyName: 'Aishah Yusoff', emergencyPhone: '+60 12-300 1101', emergencyRelation: 'Wife', medicalHistory: 'Lower back pain from desk work. No prior chiropractic treatment.', notes: 'Prefers morning slots. Tech worker.', status: 'active', doctorIdx: 1, branchIdx: 0 },
+    { firstName: 'Bella', lastName: 'Chong', email: 'bella.chong.jh@example.com', phone: '+60 11-2200 0002', icNumber: '930512-10-2202', dob: new Date('1993-05-12'), gender: 'Female', occupation: 'UX Designer', race: 'Chinese', maritalStatus: 'Single', bloodType: 'A+', allergies: 'Penicillin', referralSource: 'Friend', addressLine1: '8, Jalan SS21/1', city: 'Petaling Jaya', state: 'Selangor', postcode: '47400', emergencyName: 'Chong Wei', emergencyPhone: '+60 12-300 1102', emergencyRelation: 'Brother', medicalHistory: 'Neck pain and tension headaches.', notes: 'First-time patient. Anxious about adjustments.', status: 'active', doctorIdx: 2, branchIdx: 1 },
+    { firstName: 'Carlos', lastName: 'Devaraj', email: 'carlos.devaraj.jh@example.com', phone: '+60 11-2200 0003', icNumber: '760822-08-3303', dob: new Date('1976-08-22'), gender: 'Male', occupation: 'Architect', race: 'Indian', maritalStatus: 'Married', bloodType: 'B+', allergies: null, referralSource: 'Wife is a patient', addressLine1: '14, Lorong Maarof', city: 'Bangsar', state: 'Wilayah Persekutuan', postcode: '59000', emergencyName: 'Anita Devaraj', emergencyPhone: '+60 12-300 1103', emergencyRelation: 'Wife', medicalHistory: 'Chronic thoracic stiffness. Cervical spondylosis.', notes: 'Comes biweekly for maintenance.', status: 'active', doctorIdx: 3, branchIdx: 0 },
+    { firstName: 'Diana', lastName: 'Ng', email: 'diana.ng.jh@example.com', phone: '+60 11-2200 0004', icNumber: '910630-14-4404', dob: new Date('1991-06-30'), gender: 'Female', occupation: 'Nurse', race: 'Chinese', maritalStatus: 'Married', bloodType: 'AB+', allergies: null, referralSource: 'Hospital colleague', addressLine1: '3, Jalan Tun Razak', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50400', emergencyName: 'Ng Boon Hock', emergencyPhone: '+60 12-300 1104', emergencyRelation: 'Husband', medicalHistory: '32 weeks pregnant. SI joint dysfunction.', notes: 'Webster Technique referral.', status: 'active', doctorIdx: 2, branchIdx: 1 },
+    { firstName: 'Ethan', lastName: 'bin Hashim', email: 'ethan.hashim.jh@example.com', phone: '+60 11-2200 0005', icNumber: '960215-01-5505', dob: new Date('1996-02-15'), gender: 'Male', occupation: 'Personal Trainer', race: 'Malay', maritalStatus: 'Single', bloodType: 'O+', allergies: null, referralSource: 'Instagram', addressLine1: '11, Jalan Ampang', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50450', emergencyName: 'Hashim bin Daud', emergencyPhone: '+60 12-300 1105', emergencyRelation: 'Father', medicalHistory: 'Sports injury — herniated disc L4-L5. Rotator cuff strain.', notes: 'Active lifestyle. Wants sports rehab program.', status: 'active', doctorIdx: 1, branchIdx: 0 },
+    { firstName: 'Farah', lastName: 'Hassan', email: 'farah.hassan.jh@example.com', phone: '+60 11-2200 0006', icNumber: '850903-14-6606', dob: new Date('1985-09-03'), gender: 'Female', occupation: 'Marketing Director', race: 'Malay', maritalStatus: 'Married', bloodType: 'A-', allergies: 'Ibuprofen', referralSource: 'Google Search', addressLine1: '7, Persiaran KLCC', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50088', emergencyName: 'Hassan bin Omar', emergencyPhone: '+60 12-300 1106', emergencyRelation: 'Husband', medicalHistory: 'Chronic stress-related neck and shoulder tension.', notes: 'Executive client. Prefers Saturday slots.', status: 'active', doctorIdx: 0, branchIdx: 0 },
+    { firstName: 'Gerald', lastName: 'Liew', email: 'gerald.liew.jh@example.com', phone: '+60 11-2200 0007', icNumber: '680407-07-7707', dob: new Date('1968-04-07'), gender: 'Male', occupation: 'Retired Engineer', race: 'Chinese', maritalStatus: 'Married', bloodType: 'B-', allergies: 'Aspirin', referralSource: 'Daughter', addressLine1: '22, Jalan Bangsar', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '59200', emergencyName: 'Liew Kar Mun', emergencyPhone: '+60 12-300 1107', emergencyRelation: 'Daughter', medicalHistory: 'Degenerative disc disease. Previous cervical fusion C5-C6.', notes: 'Gentle technique only.', status: 'active', doctorIdx: 3, branchIdx: 0 },
+    { firstName: 'Hana', lastName: 'binti Ramli', email: 'hana.ramli.jh@example.com', phone: '+60 11-2200 0008', icNumber: '020730-14-8808', dob: new Date('2002-07-30'), gender: 'Female', occupation: 'University Student', race: 'Malay', maritalStatus: 'Single', bloodType: 'A+', allergies: null, referralSource: 'University clinic', addressLine1: '5, Jalan Universiti', city: 'Petaling Jaya', state: 'Selangor', postcode: '46200', emergencyName: 'Ramli bin Ali', emergencyPhone: '+60 12-300 1108', emergencyRelation: 'Father', medicalHistory: 'Poor study posture. Tension headaches.', notes: 'Student rate.', status: 'active', doctorIdx: 2, branchIdx: 1 },
+    { firstName: 'Ian', lastName: 'McKenzie', email: 'ian.mckenzie.jh@example.com', phone: '+60 11-2200 0009', icNumber: '770612-10-9909', dob: new Date('1977-06-12'), gender: 'Male', occupation: 'Expat Consultant', race: 'Other', maritalStatus: 'Married', bloodType: 'O+', allergies: null, referralSource: 'Hotel concierge', addressLine1: '88, Jalan Sultan Ismail', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50250', emergencyName: 'Sarah McKenzie', emergencyPhone: '+60 12-300 1109', emergencyRelation: 'Wife', medicalHistory: 'Travel-related lumbar pain. Long-haul flights frequent.', notes: 'Prefers English-speaking doctor.', status: 'active', doctorIdx: 1, branchIdx: 0 },
+    { firstName: 'Jasmine', lastName: 'Lim', email: 'jasmine.lim.jh@example.com', phone: '+60 11-2200 0010', icNumber: '981125-14-1010', dob: new Date('1998-11-25'), gender: 'Female', occupation: 'Graphic Designer', race: 'Chinese', maritalStatus: 'Single', bloodType: 'O+', allergies: null, referralSource: 'TikTok', addressLine1: '14, Jalan Imbi', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '55100', emergencyName: 'Lim Ah Beng', emergencyPhone: '+60 12-300 1110', emergencyRelation: 'Father', medicalHistory: 'Text neck syndrome. Right wrist carpal tunnel signs.', notes: 'Digital creative.', status: 'active', doctorIdx: 2, branchIdx: 1 },
+    { firstName: 'Kishore', lastName: 'Pillai', email: 'kishore.pillai.jh@example.com', phone: '+60 11-2200 0011', icNumber: '820318-07-1111', dob: new Date('1982-03-18'), gender: 'Male', occupation: 'E-hailing Driver', race: 'Indian', maritalStatus: 'Married', bloodType: 'A+', allergies: null, referralSource: 'Family', addressLine1: '17, Jalan Sentul', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '51000', emergencyName: 'Lakshmi Pillai', emergencyPhone: '+60 12-300 1111', emergencyRelation: 'Wife', medicalHistory: 'Right-side sciatica. Hip flexor tightness.', notes: 'Walk-in preferred — irregular hours.', status: 'active', doctorIdx: 3, branchIdx: 0 },
+    { firstName: 'Lina', lastName: 'binti Salleh', email: 'lina.salleh.jh@example.com', phone: '+60 11-2200 0012', icNumber: '900418-14-1212', dob: new Date('1990-04-18'), gender: 'Female', occupation: 'Flight Attendant', race: 'Malay', maritalStatus: 'Married', bloodType: 'B+', allergies: null, referralSource: 'Crew member', addressLine1: '28, Jalan Kia Peng', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50450', emergencyName: 'Salleh bin Ahmad', emergencyPhone: '+60 12-300 1112', emergencyRelation: 'Husband', medicalHistory: 'Upper back pain from luggage handling. Jet lag tension.', notes: 'Travel-heavy schedule.', status: 'active', doctorIdx: 2, branchIdx: 1 },
+    { firstName: 'Marcus', lastName: 'Wong', email: 'marcus.wong.jh@example.com', phone: '+60 11-2200 0013', icNumber: '730922-10-1313', dob: new Date('1973-09-22'), gender: 'Male', occupation: 'Restaurant Owner', race: 'Chinese', maritalStatus: 'Married', bloodType: 'O-', allergies: null, referralSource: 'Walk-in', addressLine1: '11, Jalan Alor', city: 'Kuala Lumpur', state: 'Wilayah Persekutuan', postcode: '50200', emergencyName: 'Wong Mei', emergencyPhone: '+60 12-300 1113', emergencyRelation: 'Wife', medicalHistory: 'Prolonged standing — plantar fasciitis. Lower back pain.', notes: 'Only available before 11am or Mondays.', status: 'active', doctorIdx: 3, branchIdx: 0 },
+    { firstName: 'Nadia', lastName: 'binti Karim', email: 'nadia.karim.jh@example.com', phone: '+60 11-2200 0014', icNumber: '951030-14-1414', dob: new Date('1995-10-30'), gender: 'Female', occupation: 'Pilates Instructor', race: 'Malay', maritalStatus: 'Single', bloodType: 'A+', allergies: null, referralSource: 'Studio recommendation', addressLine1: '2, Jalan Bangsar Utama', city: 'Bangsar', state: 'Wilayah Persekutuan', postcode: '59100', emergencyName: 'Karim bin Hassan', emergencyPhone: '+60 12-300 1114', emergencyRelation: 'Father', medicalHistory: 'Hip impingement. Posture optimisation.', notes: 'Fitness professional. Wants performance-focused care.', status: 'active', doctorIdx: 2, branchIdx: 1 },
+    { firstName: 'Oliver', lastName: 'Tan', email: 'oliver.tan.jh@example.com', phone: '+60 11-2200 0015', icNumber: '670211-10-1515', dob: new Date('1967-02-11'), gender: 'Male', occupation: 'Retired Banker', race: 'Chinese', maritalStatus: 'Widowed', bloodType: 'B+', allergies: 'Codeine', referralSource: 'Newspaper ad', addressLine1: '6, Jalan Damansara', city: 'Petaling Jaya', state: 'Selangor', postcode: '47400', emergencyName: 'Tan Jing Wei', emergencyPhone: '+60 12-300 1115', emergencyRelation: 'Son', medicalHistory: 'Mild kyphosis. Lumbar stiffness. Hypertension (controlled).', notes: 'VIP — punctuality important.', status: 'inactive', doctorIdx: 3, branchIdx: 0 },
+  ]
+
+  const pricingTiers = [
+    { initial: 280, first: 200, followup: 130 },
+    { initial: 320, first: 220, followup: 150 },
+    { initial: 240, first: 170, followup: 110 },
+    null,
+  ]
+
+  let patientCount = 0
+  for (const p of patientsData) {
+    const doctor = allDoctors[p.doctorIdx]
+    const pricing = pricingTiers[patientCount % pricingTiers.length]
+    const id = `personal-patient-${String(patientCount + 1).padStart(3, '0')}`
+
+    await prisma.patient.upsert({
+      where: { id },
+      update: {},
+      create: {
+        id,
+        firstName: p.firstName,
+        lastName: p.lastName,
+        email: p.email,
+        phone: p.phone,
+        icNumber: p.icNumber,
+        dateOfBirth: p.dob,
+        gender: p.gender,
+        occupation: p.occupation,
+        race: p.race,
+        maritalStatus: p.maritalStatus,
+        bloodType: p.bloodType,
+        allergies: p.allergies,
+        referralSource: p.referralSource,
+        initialTreatmentFee: pricing?.initial ?? null,
+        firstTreatmentFee: pricing?.first ?? null,
+        standardFollowUpFee: pricing?.followup ?? null,
+        addressLine1: p.addressLine1,
+        city: p.city,
+        state: p.state,
+        postcode: p.postcode,
+        country: 'Malaysia',
+        emergencyName: p.emergencyName,
+        emergencyPhone: p.emergencyPhone,
+        emergencyRelation: p.emergencyRelation,
+        medicalHistory: p.medicalHistory,
+        notes: p.notes,
+        status: p.status,
+        branchId: branches[p.branchIdx].id,
+        doctorId: doctor.id,
+      },
+    })
+    patientCount++
+  }
+  console.log(`Seeded ${patientCount} patients`)
+
+  console.log('\n✓ Task 4 complete (patients)')
 }
 
 main()
