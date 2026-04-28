@@ -302,7 +302,89 @@ async function main() {
   }
   console.log(`Seeded ${patientCount} patients`)
 
-  console.log('\n✓ Task 4 complete (patients)')
+  // ─── Visits ───
+  // Cleared first to make re-runs idempotent (visits don't have natural unique keys)
+  await prisma.visit.deleteMany({
+    where: { patient: { id: { startsWith: 'personal-patient-' } } },
+  })
+
+  const now = new Date()
+  const visitsData = [
+    { patientIdx: 0, daysAgo: 2, visitType: 'follow_up', chiefComplaint: 'Lower back pain follow-up', subjective: 'Pain improved from 7/10 to 4/10. Sleeping better.', objective: 'Lumbar ROM improved 30%. L4-L5 still restricted.', assessment: 'Improving lumbar subluxation.', plan: 'Continue Gonstead biweekly.', areasAdjusted: 'L4, L5, SI', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 posterior body', bpSys: 124, bpDia: 80, hr: 70, weight: 75.0, temp: 36.6, recommendations: 'Core stability exercises.', nextVisitDays: 14, q: { painLevel: 4, mobilityScore: 6, sleepQuality: 7, dailyFunction: 7, overallImprovement: 7, patientComments: 'Much better than before.' } },
+    { patientIdx: 0, daysAgo: 16, visitType: 'initial', chiefComplaint: 'Acute lower back pain', subjective: 'Acute LBP after long flight. Pain 7/10.', objective: 'Antalgic posture. Reduced lordosis.', assessment: 'L4-L5 subluxation with disc involvement.', plan: 'Gonstead L4-L5. Ice protocol.', areasAdjusted: 'L4, L5', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 left rotation', bpSys: 134, bpDia: 86, hr: 78, weight: 75.5, temp: 36.5, recommendations: 'Ice 15min every 2 hrs. Avoid prolonged sitting.', nextVisitDays: 14, q: { painLevel: 7, mobilityScore: 3, sleepQuality: 4, dailyFunction: 4, overallImprovement: 3, patientComments: 'Pain quite bad after the flight.' } },
+    { patientIdx: 1, daysAgo: 5, visitType: 'follow_up', chiefComplaint: 'Neck pain & headaches', subjective: 'Headaches reduced from daily to 2x/week.', objective: 'Cervical ROM improved.', assessment: 'Improving cervicogenic headaches.', plan: 'Continue diversified.', areasAdjusted: 'C4, C5, C6', techniqueUsed: 'Diversified', subluxationFindings: 'C4-C5 left lateral flexion restriction', bpSys: 110, bpDia: 70, hr: 64, weight: 54.0, temp: 36.4, recommendations: 'Screen breaks every 20 min.', nextVisitDays: 10, q: { painLevel: 4, mobilityScore: 6, sleepQuality: 6, dailyFunction: 7, overallImprovement: 6, patientComments: 'Headaches getting better.' } },
+    { patientIdx: 2, daysAgo: 1, visitType: 'follow_up', chiefComplaint: 'Maintenance visit', subjective: 'Mild thoracic stiffness.', objective: 'T5-T7 fixation.', assessment: 'Stable thoracic pattern.', plan: 'Thompson adjustment.', areasAdjusted: 'T5, T6, T7', techniqueUsed: 'Thompson', subluxationFindings: 'T5-T7 bilateral restriction', bpSys: 120, bpDia: 78, hr: 66, weight: 72.0, temp: 36.5, recommendations: 'Posture breaks at work.', nextVisitDays: 14, q: { painLevel: 2, mobilityScore: 8, sleepQuality: 8, dailyFunction: 9, overallImprovement: 8, patientComments: 'Feeling great.' } },
+    { patientIdx: 3, daysAgo: 3, visitType: 'follow_up', chiefComplaint: 'Prenatal Webster technique', subjective: 'Sciatic pain much improved. 32 weeks.', objective: 'SI dysfunction right.', assessment: 'Pregnancy-related SI dysfunction.', plan: 'Continue Webster weekly.', areasAdjusted: 'SI joint, Sacrum', techniqueUsed: 'Diversified', subluxationFindings: 'Right SI posterior', bpSys: 116, bpDia: 72, hr: 82, weight: 72.0, temp: 36.7, recommendations: 'Pelvic support belt.', nextVisitDays: 7, q: { painLevel: 3, mobilityScore: 6, sleepQuality: 5, dailyFunction: 7, overallImprovement: 7, patientComments: 'Sciatica much better.' } },
+    { patientIdx: 4, daysAgo: 4, visitType: 'follow_up', chiefComplaint: 'Sports rehab progress', subjective: 'Disc symptoms stable. Training at 70% intensity.', objective: 'SLR 60° (improved from 45°).', assessment: 'L4-L5 disc improving.', plan: 'Adjustment + shoulder girdle work.', areasAdjusted: 'L4, L5, R shoulder', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 improving', bpSys: 122, bpDia: 75, hr: 58, weight: 80.0, temp: 36.6, recommendations: 'Progress to 80% training. Rotator cuff exercises.', nextVisitDays: 7, q: { painLevel: 3, mobilityScore: 7, sleepQuality: 8, dailyFunction: 8, overallImprovement: 8, patientComments: 'Feeling strong.' } },
+    { patientIdx: 5, daysAgo: 6, visitType: 'follow_up', chiefComplaint: 'Stress-related neck tension', subjective: 'Tension still present after long meetings.', objective: 'Atlas laterality right.', assessment: 'Stress-related cervical pattern.', plan: 'Atlas adjustment. Stress management.', areasAdjusted: 'C1, C2', techniqueUsed: 'Gonstead', subluxationFindings: 'Atlas right', bpSys: 130, bpDia: 84, hr: 76, weight: 60.0, temp: 36.5, recommendations: 'Reduce caffeine.', nextVisitDays: 10, q: { painLevel: 4, mobilityScore: 6, sleepQuality: 5, dailyFunction: 7, overallImprovement: 6 } },
+    { patientIdx: 6, daysAgo: 8, visitType: 'follow_up', chiefComplaint: 'Cervical maintenance post-fusion', subjective: 'Neck stiffness improved.', objective: 'C5-C6 fusion stable.', assessment: 'Stable post-surgical cervical.', plan: 'Activator C3-C4, C7-T1.', areasAdjusted: 'C3, C4, C7, T1', techniqueUsed: 'Activator', subluxationFindings: 'C3-C4 restriction', bpSys: 140, bpDia: 86, hr: 70, weight: 68.0, temp: 36.5, recommendations: 'Gentle stretches only.', nextVisitDays: 14, q: { painLevel: 3, mobilityScore: 5, sleepQuality: 6, dailyFunction: 6, overallImprovement: 6, patientComments: 'Better than before.' } },
+    { patientIdx: 7, daysAgo: 9, visitType: 'initial', chiefComplaint: 'Tension headaches and study posture', subjective: 'Daily headaches during exam period.', objective: 'Suboccipital tension. C1-C2 restriction.', assessment: 'Cervicogenic headaches.', plan: 'Cervical adjustment. Study posture education.', areasAdjusted: 'C1, C2, C3', techniqueUsed: 'Diversified', subluxationFindings: 'C1 right lateral, C2-C3 fixation', bpSys: 110, bpDia: 70, hr: 68, weight: 50.0, recommendations: 'Study breaks every 45 min.', nextVisitDays: 7, q: { painLevel: 6, mobilityScore: 5, sleepQuality: 4, dailyFunction: 6, overallImprovement: 4 } },
+    { patientIdx: 8, daysAgo: 10, visitType: 'initial', chiefComplaint: 'Travel-related lumbar pain', subjective: 'LBP after 14-hour flights.', objective: 'Tight lumbar paraspinals.', assessment: 'Travel-related lumbar dysfunction.', plan: 'Gonstead. Travel ergonomics.', areasAdjusted: 'L4, L5', techniqueUsed: 'Gonstead', subluxationFindings: 'L4-L5 fixation', bpSys: 128, bpDia: 80, hr: 72, weight: 82.0, recommendations: 'Inflight stretches. Lumbar pillow.', nextVisitDays: 14 },
+    { patientIdx: 9, daysAgo: 7, visitType: 'initial', chiefComplaint: 'Text neck and mouse shoulder', subjective: 'Neck hurts after long design sessions.', objective: 'Forward head posture.', assessment: 'Postural distortion.', plan: 'Postural correction. Workstation review.', areasAdjusted: 'C5, C6, T1, R shoulder', techniqueUsed: 'Diversified', recommendations: 'Monitor height raise. 20-20-20 rule.', nextVisitDays: 14, q: { painLevel: 5, mobilityScore: 6, sleepQuality: 7, dailyFunction: 7, overallImprovement: 5, patientComments: 'Posture is bad.' } },
+    { patientIdx: 10, daysAgo: 11, visitType: 'initial', chiefComplaint: 'Sciatica and hip tightness', subjective: 'Right-side sciatica.', objective: 'Positive SLR 50° right.', assessment: 'L5-S1 with sciatic irritation.', plan: 'Gonstead. Piriformis release.', areasAdjusted: 'L5, S1, R piriformis', techniqueUsed: 'Gonstead', subluxationFindings: 'L5-S1 right posterior body', bpSys: 134, bpDia: 86, hr: 76, weight: 70.0, recommendations: 'Piriformis stretch 3x daily.', nextVisitDays: 4, q: { painLevel: 7, mobilityScore: 4, sleepQuality: 5, dailyFunction: 4, overallImprovement: 3, patientComments: 'Pain wakes me at night.' } },
+    { patientIdx: 11, daysAgo: 12, visitType: 'follow_up', chiefComplaint: 'Upper back pain', subjective: 'Improving after last session.', objective: 'T2-T3 still restricted.', assessment: 'Improving thoracic pattern.', plan: 'Continue weekly.', areasAdjusted: 'T2, T3', techniqueUsed: 'Diversified', bpSys: 116, bpDia: 72, hr: 64, weight: 56.0, recommendations: 'Stretch routine.', nextVisitDays: 14, q: { painLevel: 3, mobilityScore: 7, sleepQuality: 7, dailyFunction: 8, overallImprovement: 7 } },
+    { patientIdx: 12, daysAgo: 14, visitType: 'initial', chiefComplaint: 'Plantar fasciitis & low back pain', subjective: 'Feet hurt waking up.', objective: 'Plantar fascia tenderness.', assessment: 'Foot-back biomechanical chain dysfunction.', plan: 'Lumbar adjustment. Foot mobilisation.', areasAdjusted: 'L5, SI, Both feet', techniqueUsed: 'Diversified', recommendations: 'Arch supports. Anti-fatigue mats.', nextVisitDays: 7 },
+    { patientIdx: 13, daysAgo: 6, visitType: 'initial', chiefComplaint: 'Hip impingement and posture optimisation', subjective: 'Tight hips after teaching all day.', objective: 'Bilateral hip flexor tightness.', assessment: 'Functional hip impingement.', plan: 'Hip mobility work.', areasAdjusted: 'Bilateral hips, L5', techniqueUsed: 'Diversified', subluxationFindings: 'Hip flexor tightness', bpSys: 110, bpDia: 68, hr: 56, weight: 54.0, recommendations: 'Hip mobility routine 2x daily.', nextVisitDays: 7, q: { painLevel: 3, mobilityScore: 7, sleepQuality: 8, dailyFunction: 8, overallImprovement: 6 } },
+    { patientIdx: 14, daysAgo: 25, visitType: 'follow_up', chiefComplaint: 'Lumbar maintenance', subjective: 'Stable. No new complaints.', objective: 'Mild lumbar stiffness.', assessment: 'Stable elderly lumbar pattern.', plan: 'Activator monthly.', areasAdjusted: 'L3, L4', techniqueUsed: 'Activator', bpSys: 144, bpDia: 86, hr: 78, weight: 65.0, recommendations: 'Daily walking.', nextVisitDays: 30 },
+  ]
+
+  let visitCount = 0
+  let qCount = 0
+  for (const v of visitsData) {
+    const vAny = v as Record<string, unknown>
+    const patientId = `personal-patient-${String(v.patientIdx + 1).padStart(3, '0')}`
+    const patient = patientsData[v.patientIdx]
+    const doctor = allDoctors[patient.doctorIdx]
+    const visitDate = new Date(now)
+    visitDate.setDate(visitDate.getDate() - v.daysAgo)
+
+    const q = vAny.q as
+      | { painLevel: number; mobilityScore: number; sleepQuality: number; dailyFunction: number; overallImprovement: number; patientComments?: string }
+      | undefined
+
+    await prisma.visit.create({
+      data: {
+        visitDate,
+        visitType: v.visitType,
+        chiefComplaint: v.chiefComplaint,
+        subjective: (vAny.subjective as string | undefined) ?? null,
+        objective: (vAny.objective as string | undefined) ?? null,
+        assessment: (vAny.assessment as string | undefined) ?? null,
+        plan: (vAny.plan as string | undefined) ?? null,
+        areasAdjusted: v.areasAdjusted,
+        techniqueUsed: v.techniqueUsed,
+        subluxationFindings: (vAny.subluxationFindings as string | undefined) ?? null,
+        bloodPressureSys: (vAny.bpSys as number | undefined) ?? null,
+        bloodPressureDia: (vAny.bpDia as number | undefined) ?? null,
+        heartRate: (vAny.hr as number | undefined) ?? null,
+        weight: (vAny.weight as number | undefined) ?? null,
+        temperature: (vAny.temp as number | undefined) ?? null,
+        recommendations: (vAny.recommendations as string | undefined) ?? null,
+        nextVisitDays: (vAny.nextVisitDays as number | undefined) ?? null,
+        patientId,
+        doctorId: doctor.id,
+        ...(q
+          ? {
+              questionnaire: {
+                create: {
+                  painLevel: q.painLevel,
+                  mobilityScore: q.mobilityScore,
+                  sleepQuality: q.sleepQuality,
+                  dailyFunction: q.dailyFunction,
+                  overallImprovement: q.overallImprovement,
+                  patientComments: q.patientComments ?? null,
+                },
+              },
+            }
+          : {}),
+      },
+    })
+    visitCount++
+    if (q) qCount++
+  }
+  console.log(`Seeded ${visitCount} visits (${qCount} with questionnaires)`)
+
+  console.log('\n✓ Task 5 complete (visits)')
 }
 
 main()
