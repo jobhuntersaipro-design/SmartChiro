@@ -436,7 +436,56 @@ async function main() {
   }
   console.log(`Seeded ${apptCount} appointments`)
 
-  console.log('\n✓ Task 6 complete (appointments)')
+  // ─── Invoices ───
+  // Clear & re-create for idempotency (invoiceNumber is unique)
+  await prisma.invoice.deleteMany({
+    where: { patient: { id: { startsWith: 'personal-patient-' } } },
+  })
+
+  const invoicesData = [
+    { patientIdx: 0, daysAgo: 2, status: 'PAID' as const, items: [{ description: 'Follow-up adjustment (Gonstead)', quantity: 1, unitPrice: 130, total: 130 }], amount: 130 },
+    { patientIdx: 0, daysAgo: 16, status: 'PAID' as const, items: [{ description: 'Initial consultation + adjustment', quantity: 1, unitPrice: 280, total: 280 }], amount: 280 },
+    { patientIdx: 1, daysAgo: 5, status: 'PAID' as const, items: [{ description: 'Follow-up adjustment (Diversified)', quantity: 1, unitPrice: 150, total: 150 }], amount: 150 },
+    { patientIdx: 2, daysAgo: 1, status: 'SENT' as const, items: [{ description: 'Maintenance adjustment (Thompson)', quantity: 1, unitPrice: 110, total: 110 }], amount: 110 },
+    { patientIdx: 3, daysAgo: 3, status: 'PAID' as const, items: [{ description: 'Webster Technique session', quantity: 1, unitPrice: 150, total: 150 }], amount: 150 },
+    { patientIdx: 4, daysAgo: 4, status: 'PAID' as const, items: [{ description: 'Sports rehab session', quantity: 1, unitPrice: 130, total: 130 }, { description: 'Soft tissue therapy', quantity: 1, unitPrice: 80, total: 80 }], amount: 210 },
+    { patientIdx: 5, daysAgo: 6, status: 'OVERDUE' as const, items: [{ description: 'Stress-related cervical adjustment', quantity: 1, unitPrice: 130, total: 130 }], amount: 130 },
+    { patientIdx: 6, daysAgo: 8, status: 'PAID' as const, items: [{ description: 'Activator gentle adjustment', quantity: 1, unitPrice: 150, total: 150 }], amount: 150 },
+    { patientIdx: 7, daysAgo: 9, status: 'PAID' as const, items: [{ description: 'Initial consultation (Student rate)', quantity: 1, unitPrice: 170, total: 170 }], amount: 170 },
+    { patientIdx: 8, daysAgo: 10, status: 'SENT' as const, items: [{ description: 'Initial consultation', quantity: 1, unitPrice: 320, total: 320 }], amount: 320 },
+    { patientIdx: 14, daysAgo: 25, status: 'PAID' as const, items: [{ description: 'Maintenance adjustment (gentle)', quantity: 1, unitPrice: 150, total: 150 }], amount: 150 },
+    { patientIdx: 12, daysAgo: 14, status: 'DRAFT' as const, items: [{ description: 'Initial consultation + foot work', quantity: 1, unitPrice: 280, total: 280 }], amount: 280 },
+  ]
+
+  let invCount = 0
+  for (const inv of invoicesData) {
+    const patientId = `personal-patient-${String(inv.patientIdx + 1).padStart(3, '0')}`
+    const patient = patientsData[inv.patientIdx]
+    const issued = new Date(now)
+    issued.setDate(issued.getDate() - inv.daysAgo)
+    const due = new Date(issued)
+    due.setDate(due.getDate() + 14)
+
+    await prisma.invoice.create({
+      data: {
+        invoiceNumber: `JH-INV-${String(invCount + 1).padStart(4, '0')}`,
+        amount: inv.amount,
+        currency: 'MYR',
+        status: inv.status,
+        dueDate: due,
+        paidAt: inv.status === 'PAID' ? issued : null,
+        lineItems: inv.items,
+        patientId,
+        branchId: branches[patient.branchIdx].id,
+        createdAt: issued,
+      },
+    })
+    invCount++
+  }
+  console.log(`Seeded ${invCount} invoices`)
+
+  console.log('\n✓ Personal seed complete!')
+  console.log(`   Login: ${SEED_EMAIL}`)
 }
 
 main()
