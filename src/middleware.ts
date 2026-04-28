@@ -12,8 +12,14 @@ export default auth((req) => {
     return Response.redirect(new URL('/login', req.url))
   }
 
-  // Redirect logged-in users away from login/register
-  if ((pathname === '/login' || pathname === '/register') && isLoggedIn) {
+  // Redirect logged-in users away from auth pages
+  if (
+    (pathname === '/login' ||
+      pathname === '/register' ||
+      pathname === '/forgot-password' ||
+      pathname === '/reset-password') &&
+    isLoggedIn
+  ) {
     return Response.redirect(new URL('/dashboard', req.url))
   }
 })
