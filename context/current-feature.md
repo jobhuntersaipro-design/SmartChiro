@@ -2,15 +2,18 @@
 
 ## Status
 
-Not Started
+In Progress — feat/forgot-password-and-verify-fix
 
 ## Goals
 
-<!-- Bullet points of what success looks like -->
+- Fix the verify email link freeze caused by Resend domain-level click tracking.
+- Add a self-service forgot-password / reset-password flow.
+- Allow Google-only users to set a password via the reset flow (gain dual sign-in).
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+Spec: `docs/superpowers/specs/2026-04-28-forgot-password-and-verify-fix-design.md`
+Plan: `docs/superpowers/plans/2026-04-28-forgot-password-and-verify-fix.md`
 
 ## History
 
