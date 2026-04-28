@@ -23,9 +23,10 @@ model User {
 
   activeBranchId String?
 
-  accounts          Account[]
-  sessions          Session[]
-  branchMemberships BranchMember[]
+  accounts            Account[]
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  branchMemberships   BranchMember[]
 
   // Doctor profile (one-to-one, optional)
   doctorProfile DoctorProfile?
@@ -80,6 +81,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
 }
 
 // ─── Enums ───
