@@ -10,6 +10,7 @@ import {
   FlipHorizontal2,
   Sun,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import type { ImageAdjustments } from "@/types/annotation";
@@ -33,6 +34,11 @@ interface AnnotationHeaderProps {
   // Flip
   flipped: boolean;
   onFlipChange: (v: boolean) => void;
+  // Notes
+  notesCount?: number;
+  onOpenNotes?: () => void;
+  // Shortcuts
+  onShowShortcuts?: () => void;
 }
 
 function AdjustmentSlider({
@@ -202,6 +208,7 @@ function AdjustPopover({
   flipped,
   onFlipChange,
   onClose,
+  onShowShortcuts,
 }: {
   adjustments: ImageAdjustments;
   onBrightnessChange: (v: number) => void;
@@ -212,6 +219,7 @@ function AdjustPopover({
   flipped: boolean;
   onFlipChange: (v: boolean) => void;
   onClose: () => void;
+  onShowShortcuts?: () => void;
 }) {
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -290,6 +298,17 @@ function AdjustPopover({
         </span>
         {flipped && <Check size={13} strokeWidth={2} />}
       </button>
+      {onShowShortcuts && (
+        <div className="flex items-center justify-between pt-2 border-t border-[#e5edf5]">
+          <button
+            onClick={() => { onShowShortcuts(); onClose(); }}
+            className="text-[12px] hover:underline"
+            style={{ color: "#533afd" }}
+          >
+            Keyboard shortcuts (?)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -311,6 +330,9 @@ export function AnnotationHeader({
   isAdjustmentsModified,
   flipped,
   onFlipChange,
+  notesCount = 0,
+  onOpenNotes,
+  onShowShortcuts,
 }: AnnotationHeaderProps) {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const adjustModified = isAdjustmentsModified || flipped;
@@ -372,9 +394,20 @@ export function AnnotationHeader({
               flipped={flipped}
               onFlipChange={onFlipChange}
               onClose={() => setAdjustOpen(false)}
+              onShowShortcuts={onShowShortcuts}
             />
           )}
         </div>
+        {onOpenNotes && (
+          <button
+            onClick={onOpenNotes}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
+            style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
+          >
+            <FileText size={14} strokeWidth={1.5} />
+            Notes{notesCount > 0 ? ` · ${notesCount}` : ""}
+          </button>
+        )}
         <button
           onClick={onSave}
           disabled={isSaving}

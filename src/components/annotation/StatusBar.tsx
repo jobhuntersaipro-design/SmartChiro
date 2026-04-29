@@ -1,5 +1,6 @@
 "use client";
 
+import { Undo2, Redo2 } from "lucide-react";
 import type { Point, ViewMode } from "@/types/annotation";
 
 type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
@@ -15,6 +16,10 @@ interface StatusBarProps {
   sizeWarning?: string | null;
   onRetrySave?: () => void;
   viewMode?: ViewMode;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 export function StatusBar({
@@ -28,6 +33,10 @@ export function StatusBar({
   sizeWarning,
   onRetrySave,
   viewMode = "single",
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }: StatusBarProps) {
   const renderSaveStatus = () => {
     switch (saveStatus) {
@@ -97,6 +106,26 @@ export function StatusBar({
         <span>{shapeCount} annotation{shapeCount !== 1 ? "s" : ""}</span>
         <span className="capitalize">{activeTool.replace("_", " ")} tool</span>
         {renderSaveStatus()}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            aria-label="Undo"
+            className="flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            style={{ width: 24, height: 24, color: canUndo ? "#425466" : "#A3ACB9" }}
+          >
+            <Undo2 size={14} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            aria-label="Redo"
+            className="flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            style={{ width: 24, height: 24, color: canRedo ? "#425466" : "#A3ACB9" }}
+          >
+            <Redo2 size={14} strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
     </div>
   );
