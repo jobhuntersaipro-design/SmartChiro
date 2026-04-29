@@ -29,8 +29,19 @@ export function FirstRunOverlay() {
     { icon: <ZoomIn className="w-5 h-5" />,      title: 'Zoom',          desc: 'Ctrl/⌘ + scroll wheel.' },
   ]
 
+  // Stop pointer events from reaching the canvas underneath, which would
+  // otherwise capture the pointer for drawing and swallow the button's click.
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation()
+
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div
+      className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onPointerDown={stop}
+      onPointerUp={stop}
+      onPointerMove={stop}
+      onClick={stop}
+      onWheel={stop}
+    >
       <div className="bg-white rounded-[6px] p-6 max-w-[480px] w-[92%] shadow-[0_8px_24px_rgba(18,42,66,.18)]">
         <div className="flex items-center gap-2 mb-1">
           <MousePointer2 className="w-4 h-4 text-[#533afd]" />
@@ -47,7 +58,12 @@ export function FirstRunOverlay() {
           ))}
         </ul>
         <div className="flex justify-end mt-5">
-          <Button onClick={dismiss} className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px]">Got it</Button>
+          <Button
+            onClick={(e) => { e.stopPropagation(); dismiss() }}
+            className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px]"
+          >
+            Got it
+          </Button>
         </div>
       </div>
     </div>
