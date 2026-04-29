@@ -34,6 +34,8 @@ function mapPatientToResponse(p: {
   state: string | null; postcode: string | null; country: string | null;
   emergencyName: string | null; emergencyPhone: string | null; emergencyRelation: string | null;
   status: string | null;
+  reminderChannel: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
+  preferredLanguage: string;
   doctorId: string; branchId: string;
   createdAt: Date;
   doctor: { id: string; name: string | null } | null;
@@ -73,6 +75,8 @@ function mapPatientToResponse(p: {
     medicalHistory: p.medicalHistory,
     notes: p.notes,
     status: p.status ?? 'active',
+    reminderChannel: p.reminderChannel,
+    preferredLanguage: p.preferredLanguage,
     doctorId: p.doctorId,
     doctorName: p.doctor?.name ?? 'Unknown',
     branchId: p.branchId,
@@ -207,7 +211,23 @@ export async function POST(request: NextRequest) {
       emergencyName, emergencyPhone, emergencyRelation,
       medicalHistory, notes, doctorId,
       initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
+      reminderChannel, preferredLanguage,
     } = body
+
+    const VALID_REMINDER_CHANNELS = ['WHATSAPP', 'EMAIL', 'BOTH', 'NONE'] as const
+    const VALID_LANGUAGES = ['en', 'ms'] as const
+    if (reminderChannel && !VALID_REMINDER_CHANNELS.includes(reminderChannel)) {
+      return NextResponse.json(
+        { error: `Invalid reminderChannel. Must be one of: ${VALID_REMINDER_CHANNELS.join(', ')}` },
+        { status: 400 }
+      )
+    }
+    if (preferredLanguage && !VALID_LANGUAGES.includes(preferredLanguage)) {
+      return NextResponse.json(
+        { error: `Invalid preferredLanguage. Must be one of: ${VALID_LANGUAGES.join(', ')}` },
+        { status: 400 }
+      )
+    }
 
     if (!firstName?.trim() || !lastName?.trim()) {
       return NextResponse.json(
@@ -334,6 +354,8 @@ export async function POST(request: NextRequest) {
         firstTreatmentFee: typeof firstTreatmentFee === 'number' ? firstTreatmentFee : null,
         standardFollowUpFee: typeof standardFollowUpFee === 'number' ? standardFollowUpFee : null,
         status: 'active',
+        reminderChannel: reminderChannel ?? 'WHATSAPP',
+        preferredLanguage: preferredLanguage ?? 'en',
         branchId,
         doctorId: assignedDoctorId,
       },

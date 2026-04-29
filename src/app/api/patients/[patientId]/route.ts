@@ -158,6 +158,8 @@ export async function GET(
       medicalHistory: patient.medicalHistory,
       notes: patient.notes,
       status: patient.status ?? "active",
+      reminderChannel: patient.reminderChannel,
+      preferredLanguage: patient.preferredLanguage,
       doctorId: patient.doctorId,
       doctorName: patient.doctor?.name ?? "Unknown",
       branchId: patient.branchId,
@@ -219,7 +221,23 @@ export async function PATCH(
     addressLine1, addressLine2, city, state, postcode, country,
     emergencyName, emergencyPhone, emergencyRelation, status,
     initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
+    reminderChannel, preferredLanguage,
   } = body;
+
+  const VALID_REMINDER_CHANNELS = ["WHATSAPP", "EMAIL", "BOTH", "NONE"] as const;
+  const VALID_LANGUAGES = ["en", "ms"] as const;
+  if (reminderChannel !== undefined && reminderChannel !== null && !VALID_REMINDER_CHANNELS.includes(reminderChannel)) {
+    return NextResponse.json(
+      { error: `Invalid reminderChannel. Must be one of: ${VALID_REMINDER_CHANNELS.join(", ")}` },
+      { status: 400 }
+    );
+  }
+  if (preferredLanguage !== undefined && preferredLanguage !== null && !VALID_LANGUAGES.includes(preferredLanguage)) {
+    return NextResponse.json(
+      { error: `Invalid preferredLanguage. Must be one of: ${VALID_LANGUAGES.join(", ")}` },
+      { status: 400 }
+    );
+  }
 
   // Validate name fields if provided
   if (firstName !== undefined && (!firstName || !firstName.trim())) {
@@ -308,6 +326,8 @@ export async function PATCH(
   if (standardFollowUpFee !== undefined) {
     updateData.standardFollowUpFee = typeof standardFollowUpFee === 'number' ? standardFollowUpFee : null;
   }
+  if (reminderChannel !== undefined) updateData.reminderChannel = reminderChannel;
+  if (preferredLanguage !== undefined) updateData.preferredLanguage = preferredLanguage;
 
   let updated;
   try {
@@ -364,6 +384,8 @@ export async function PATCH(
       medicalHistory: updated.medicalHistory,
       notes: updated.notes,
       status: updated.status ?? "active",
+      reminderChannel: updated.reminderChannel,
+      preferredLanguage: updated.preferredLanguage,
       doctorId: updated.doctorId,
       doctorName: updated.doctor?.name ?? "Unknown",
       branchId: updated.branchId,
