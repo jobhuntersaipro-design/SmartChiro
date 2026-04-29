@@ -12,7 +12,6 @@ import {
   Scaling,
   Undo2,
   Redo2,
-  RulerDimensionLine,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -34,7 +33,6 @@ const tools: ToolItem[] = [
   { id: "ruler", label: "Ruler", shortcut: "M", description: "Measure distance between two points", icon: <Ruler size={18} strokeWidth={1.5} /> },
   { id: "angle", label: "Angle", shortcut: "⇧M", description: "Measure the angle between three points", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
   { id: "cobb_angle", label: "Cobb Angle", shortcut: "⌘⇧M", description: "Measure Cobb angle between two lines", icon: <Scaling size={18} strokeWidth={1.5} /> },
-  { id: "calibration", label: "Calibration", shortcut: "K", description: "Draw on a known-distance object to calibrate measurements", icon: <RulerDimensionLine size={18} strokeWidth={1.5} /> },
 ];
 
 interface AnnotationToolbarProps {

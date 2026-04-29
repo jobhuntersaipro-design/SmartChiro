@@ -49,11 +49,6 @@ export default async function AnnotationPage({
       initialCanvasState={annotation?.canvasState as unknown as AnnotationCanvasState | undefined}
       initialAdjustments={annotation?.imageAdjustments as unknown as ImageAdjustments | undefined}
       xrayId={xrayId}
-      initialCalibration={{
-        isCalibrated: xray.isCalibrated,
-        pixelsPerMm: xray.pixelsPerMm,
-        calibrationNote: xray.calibrationNote,
-      }}
     />
   );
 }

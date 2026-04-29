@@ -14,9 +14,6 @@ interface StatusBarProps {
   saveError?: string | null;
   sizeWarning?: string | null;
   onRetrySave?: () => void;
-  isCalibrated?: boolean;
-  pixelsPerMm?: number | null;
-  calibrationNote?: string | null;
   viewMode?: ViewMode;
 }
 
@@ -30,9 +27,6 @@ export function StatusBar({
   saveError,
   sizeWarning,
   onRetrySave,
-  isCalibrated = false,
-  pixelsPerMm = null,
-  calibrationNote = null,
   viewMode = "single",
 }: StatusBarProps) {
   const renderSaveStatus = () => {
@@ -94,23 +88,6 @@ export function StatusBar({
             {selectedCount} shape{selectedCount !== 1 ? "s" : ""} selected
           </span>
         )}
-        <span
-          className="flex items-center gap-1"
-          title={calibrationNote ?? undefined}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              backgroundColor: isCalibrated ? "#30B130" : "#A3ACB9",
-              display: "inline-block",
-            }}
-          />
-          {isCalibrated && pixelsPerMm
-            ? `Calibrated: ${pixelsPerMm.toFixed(2)} px/mm`
-            : "Uncalibrated"}
-        </span>
         {sizeWarning && (
           <span style={{ color: "#F5A623" }}>{sizeWarning}</span>
         )}

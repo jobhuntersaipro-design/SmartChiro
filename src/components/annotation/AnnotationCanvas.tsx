@@ -35,8 +35,6 @@ import { MultiViewGrid, ViewportCell, type ViewportState } from "./MultiViewGrid
 import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
 import { DrawingConfirmation } from "./DrawingConfirmation";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
-import { CalibrationDialog } from "./CalibrationDialog";
-import { recalibrateMeasurement } from "@/lib/measurements";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -51,11 +49,6 @@ interface AnnotationCanvasProps {
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
   onClose: () => void;
-  initialCalibration?: {
-    isCalibrated: boolean;
-    pixelsPerMm: number | null;
-    calibrationNote: string | null;
-  };
 }
 
 export function AnnotationCanvas({
@@ -71,7 +64,6 @@ export function AnnotationCanvas({
   initialAdjustments,
   xrayId,
   onClose,
-  initialCalibration,
 }: AnnotationCanvasProps) {
   // ─── State ───
   const [shapes, setShapes] = useState<BaseShape[]>(
@@ -87,13 +79,6 @@ export function AnnotationCanvas({
 
   // Flip (horizontal mirror)
   const [flipped, setFlipped] = useState(false);
-
-  // Calibration state
-  const [isCalibrated, setIsCalibrated] = useState(initialCalibration?.isCalibrated ?? false);
-  const [pixelsPerMm, setPixelsPerMm] = useState<number | null>(initialCalibration?.pixelsPerMm ?? null);
-  const [calibrationNote, setCalibrationNote] = useState<string | null>(initialCalibration?.calibrationNote ?? null);
-  const [calibrationDialogOpen, setCalibrationDialogOpen] = useState(false);
-  const [calibrationPixelDistance, setCalibrationPixelDistance] = useState(0);
 
   // Keyboard shortcuts panel
   const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
@@ -183,16 +168,12 @@ export function AnnotationCanvas({
 
   const handleAddShape = useCallback(
     (shape: BaseShape) => {
-      // Recalibrate measurement label if calibrated
-      const calibratedShape = shape.measurement && pixelsPerMm
-        ? { ...shape, measurement: recalibrateMeasurement(shape.measurement, pixelsPerMm) }
-        : shape;
-      setShapes((prev) => [...prev, calibratedShape]);
-      undoRedo.pushCommand("ADD_SHAPE", calibratedShape.id, null, calibratedShape);
+      setShapes((prev) => [...prev, shape]);
+      undoRedo.pushCommand("ADD_SHAPE", shape.id, null, shape);
       autoSave.markDirty();
-      interaction.setSelectedShapeIds([calibratedShape.id]);
+      interaction.setSelectedShapeIds([shape.id]);
     },
-    [undoRedo, autoSave, interaction, pixelsPerMm]
+    [undoRedo, autoSave, interaction]
   );
 
   const handleDeleteShapes = useCallback(
@@ -209,40 +190,6 @@ export function AnnotationCanvas({
     [undoRedo, autoSave]
   );
 
-  const handleCalibrationDraw = useCallback((pixelDist: number) => {
-    setCalibrationPixelDistance(pixelDist);
-    setCalibrationDialogOpen(true);
-  }, []);
-
-  const handleCalibrate = useCallback(async (newPixelsPerMm: number, note: string) => {
-    setCalibrationDialogOpen(false);
-    setIsCalibrated(true);
-    setPixelsPerMm(newPixelsPerMm);
-    setCalibrationNote(note || null);
-
-    // Recalibrate all existing measurement labels
-    setShapes((prev) =>
-      prev.map((s) => {
-        if (s.measurement) {
-          return { ...s, measurement: recalibrateMeasurement(s.measurement, newPixelsPerMm) };
-        }
-        return s;
-      })
-    );
-    autoSave.markDirty();
-
-    // Persist to DB
-    try {
-      await fetch(`/api/xrays/${xrayId}/calibrate`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pixelsPerMm: newPixelsPerMm, calibrationNote: note || undefined }),
-      });
-    } catch (err) {
-      console.error("Failed to save calibration:", err);
-    }
-  }, [xrayId, autoSave]);
-
   const drawing = useDrawingTools({
     activeTool: interaction.activeTool,
     transform: viewport.transform,
@@ -250,8 +197,6 @@ export function AnnotationCanvas({
     currentStyle,
     onAddShape: handleAddShape,
     onDeleteShapes: handleDeleteShapes,
-    onCalibrationDraw: handleCalibrationDraw,
-    pixelsPerMm,
   });
 
   // ─── Multi-View: Switch active slot → swap shapes per xray ───
@@ -1219,18 +1164,8 @@ export function AnnotationCanvas({
           onStyleChange={setCurrentStyle}
           isOpen={propertiesPanelOpen}
           onTogglePanel={handleTogglePropertiesPanel}
-          pixelsPerMm={pixelsPerMm}
         />
       </div>
-
-      {/* Calibration Dialog */}
-      {calibrationDialogOpen && (
-        <CalibrationDialog
-          pixelDistance={calibrationPixelDistance}
-          onCalibrate={handleCalibrate}
-          onCancel={() => setCalibrationDialogOpen(false)}
-        />
-      )}
 
       {/* Keyboard Shortcuts Panel */}
       <KeyboardShortcutsPanel
@@ -1249,9 +1184,6 @@ export function AnnotationCanvas({
         saveError={autoSave.saveError}
         sizeWarning={autoSave.sizeWarning}
         onRetrySave={autoSave.retrySave}
-        isCalibrated={isCalibrated}
-        pixelsPerMm={pixelsPerMm}
-        calibrationNote={calibrationNote}
         viewMode={viewMode}
       />
     </div>

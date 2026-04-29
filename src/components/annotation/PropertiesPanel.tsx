@@ -55,7 +55,6 @@ interface PropertiesPanelProps {
   onStyleChange: (style: ShapeStyle) => void;
   isOpen: boolean;
   onTogglePanel: () => void;
-  pixelsPerMm?: number | null;
 }
 
 export function PropertiesPanel({
@@ -70,7 +69,6 @@ export function PropertiesPanel({
   onStyleChange,
   isOpen,
   onTogglePanel,
-  pixelsPerMm,
 }: PropertiesPanelProps) {
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "measurements">("layers");
 
@@ -322,7 +320,6 @@ export function PropertiesPanel({
           <MeasurementSummary
             shapes={shapes}
             onSelectShape={onSelectShape}
-            pixelsPerMm={pixelsPerMm ?? null}
           />
         )}
       </div>
@@ -759,11 +756,9 @@ function ShapeProperties({
 function MeasurementSummary({
   shapes,
   onSelectShape,
-  pixelsPerMm,
 }: {
   shapes: BaseShape[];
   onSelectShape: (id: string) => void;
-  pixelsPerMm: number | null;
 }) {
   const measurementShapes = shapes.filter(
     (s) => s.measurement && s.visible
@@ -803,7 +798,7 @@ function MeasurementSummary({
                 {s.label || s.type.replace("_", " ")}
               </span>
               <span className="text-xs font-medium tabular-nums text-right" style={{ color: "#00D4AA", minWidth: 60 }}>
-                {formatMeasurement(s.measurement!.value, s.measurement!.unit, pixelsPerMm)}
+                {formatMeasurement(s.measurement!.value, s.measurement!.unit, null)}
               </span>
             </button>
           ))}
