@@ -1,143 +1,159 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { ScanLine, Plus, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { XrayUpload } from "@/components/xray/XrayUpload";
+import { useMemo, useState } from 'react'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { XrayUpload } from '@/components/xray/XrayUpload'
+import { XrayCard, type XrayCardData } from '@/components/xray/XrayCard'
+import { XrayFilterBar, type FilterState } from '@/components/xray/XrayFilterBar'
+import { XrayBatchToolbar } from '@/components/xray/XrayBatchToolbar'
+import { DeleteXrayDialog } from '@/components/xray/DeleteXrayDialog'
+import { NotesDrawer } from '@/components/annotation/NotesDrawer'
 
 interface PatientXraysTabProps {
-  patientId: string;
-  xrays: {
-    id: string;
-    title: string | null;
-    bodyRegion: string | null;
-    viewType?: string | null;
-    status?: string;
-    thumbnailUrl?: string | null;
-    annotationCount?: number;
-    createdAt: string;
-  }[];
-  onRefresh: () => void;
+  patientId: string
+  xrays: XrayCardData[]
+  onRefresh: () => void
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-MY", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+const DEFAULT_FILTERS: FilterState = {
+  bodyRegions: [], viewTypes: [], date: 'all', sort: 'newest', showArchived: false, batchMode: false,
 }
 
-function formatBodyRegion(region: string | null): string {
-  if (!region) return "Unknown";
-  return region
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
+export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTabProps) {
+  const [showUpload, setShowUpload] = useState(false)
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [notesXrayId, setNotesXrayId] = useState<string | null>(null)
+  const [deleteIds, setDeleteIds] = useState<string[]>([])
 
-export function PatientXraysTab({
-  patientId,
-  xrays,
-  onRefresh,
-}: PatientXraysTabProps) {
-  const [showUpload, setShowUpload] = useState(false);
-
-  const sortedXrays = [...xrays].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-
-  function handleUploadComplete() {
-    setShowUpload(false);
-    onRefresh();
+  function handleFiltersChange(next: FilterState) {
+    if (!next.batchMode && filters.batchMode) setSelected(new Set())
+    setFilters(next)
   }
+
+  const filtered = useMemo(() => {
+    const cutoffMs = filters.date !== 'all'
+      ? new Date().setHours(0, 0, 0, 0) - (filters.date === '7d' ? 7 : 30) * 86400 * 1000
+      : null
+    const list = xrays.filter((x) => {
+      if (!filters.showArchived && x.status === 'ARCHIVED') return false
+      if (filters.bodyRegions.length && (!x.bodyRegion || !filters.bodyRegions.includes(x.bodyRegion as never))) return false
+      if (filters.viewTypes.length && (!x.viewType || !filters.viewTypes.includes(x.viewType as never))) return false
+      if (cutoffMs !== null && new Date(x.createdAt).getTime() < cutoffMs) return false
+      return true
+    })
+    const sorted = [...list]
+    if (filters.sort === 'newest') sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    if (filters.sort === 'oldest') sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    if (filters.sort === 'title') sorted.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
+    return sorted
+  }, [xrays, filters])
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  async function handleRename(id: string, title: string) {
+    await fetch(`/api/xrays/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    })
+    onRefresh()
+  }
+
+  async function handleRestore(id: string) {
+    await fetch(`/api/xrays/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'READY' }),
+    })
+    onRefresh()
+  }
+
+  function handleNotesOpen(id: string) {
+    setNotesXrayId(id)
+  }
+
+  function handleDelete(id: string) {
+    setDeleteIds([id])
+  }
+
+  function handleBatchDelete() {
+    setDeleteIds(Array.from(selected))
+  }
+
+  const titleMap = Object.fromEntries(xrays.map((x) => [x.id, x.title ?? 'Untitled']))
+  const notesXray = notesXrayId ? xrays.find((x) => x.id === notesXrayId) : null
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[15px] font-medium text-[#061b31]">
-          X-Rays ({xrays.length})
-        </h3>
+      <div className="flex items-center justify-between mb-3">
+        <XrayFilterBar state={filters} onChange={handleFiltersChange} count={filtered.length} />
         <Button
-          onClick={() => setShowUpload(!showUpload)}
-          className="h-8 rounded-[4px] bg-[#533afd] text-white text-[13px] font-medium hover:bg-[#4434d4] px-3"
+          onClick={() => setShowUpload((v) => !v)}
+          className="ml-3 h-8 rounded-[4px] bg-[#533afd] text-white text-[13px] font-medium hover:bg-[#4434d4] px-3"
         >
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Upload X-Ray
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload X-Ray
         </Button>
       </div>
 
-      {/* Upload Area */}
       {showUpload && (
         <div className="mb-4 rounded-[6px] border border-[#e5edf5] bg-white p-4">
-          <XrayUpload
-            patientId={patientId}
-            onUploadComplete={handleUploadComplete}
-          />
+          <XrayUpload patientId={patientId} onUploadComplete={() => { setShowUpload(false); onRefresh() }} />
         </div>
       )}
 
-      {/* Empty State */}
-      {sortedXrays.length === 0 && (
+      {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-12 h-12 rounded-full bg-[#f6f9fc] flex items-center justify-center mb-3">
-            <ScanLine className="w-6 h-6 text-[#64748d]" />
-          </div>
-          <p className="text-[14px] text-[#64748d]">
-            No X-rays uploaded yet
-          </p>
-          <p className="text-[13px] text-[#97a3b6] mt-1">
-            Upload an X-ray to start annotating
-          </p>
+          <p className="text-[14px] text-[#64748d]">No X-rays match these filters.</p>
         </div>
       )}
 
-      {/* X-Ray Grid */}
-      {sortedXrays.length > 0 && (
+      {filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sortedXrays.map((xray) => (
-            <a
-              key={xray.id}
-              href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden cursor-pointer hover:border-[#c1c9d2] transition group"
-            >
-              {/* Thumbnail */}
-              <div className="h-[160px] bg-[#1A1F36] flex items-center justify-center overflow-hidden">
-                {xray.thumbnailUrl ? (
-                  <img
-                    src={xray.thumbnailUrl}
-                    alt={xray.title || "X-ray"}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <ScanLine className="w-10 h-10 text-[#4a5568] opacity-40" />
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="px-3 py-2.5">
-                <p className="text-[14px] font-medium text-[#061b31] truncate">
-                  {xray.title || "Untitled"}
-                </p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  {xray.bodyRegion && (
-                    <span className="rounded-full px-2 py-0.5 text-[11px] bg-[#f6f9fc] text-[#64748d]">
-                      {formatBodyRegion(xray.bodyRegion)}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1 text-[11px] text-[#97a3b6]">
-                    <Calendar className="w-3 h-3" />
-                    {formatDate(xray.createdAt)}
-                  </span>
-                </div>
-              </div>
-            </a>
+          {filtered.map((x) => (
+            <XrayCard
+              key={x.id}
+              patientId={patientId}
+              xray={x}
+              selected={selected.has(x.id)}
+              batchMode={filters.batchMode}
+              onToggleSelect={toggleSelect}
+              onRename={handleRename}
+              onOpenNotes={handleNotesOpen}
+              onDelete={handleDelete}
+              onRestore={handleRestore}
+            />
           ))}
         </div>
       )}
+
+      {filters.batchMode && (
+        <XrayBatchToolbar
+          selectedCount={selected.size}
+          onDelete={handleBatchDelete}
+          onCancel={() => handleFiltersChange({ ...filters, batchMode: false })}
+        />
+      )}
+
+      <DeleteXrayDialog
+        open={deleteIds.length > 0}
+        onOpenChange={(o) => { if (!o) setDeleteIds([]) }}
+        xrayIds={deleteIds}
+        xrayTitles={deleteIds.map((id) => titleMap[id] ?? 'Untitled')}
+        onConfirmed={() => { setDeleteIds([]); setSelected(new Set()); onRefresh() }}
+      />
+
+      <NotesDrawer
+        xrayId={notesXrayId}
+        xrayTitle={notesXray?.title ?? null}
+        open={notesXrayId !== null}
+        onOpenChange={(o) => { if (!o) setNotesXrayId(null) }}
+      />
     </div>
-  );
+  )
 }

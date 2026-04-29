@@ -2,10 +2,12 @@ export interface PatientXray {
   id: string;
   title: string | null;
   bodyRegion: string | null;
-  viewType: string | null;
-  status: string;
-  thumbnailUrl: string | null;
-  annotationCount: number;
+  viewType?: string | null;
+  status: 'UPLOADING' | 'READY' | 'ARCHIVED';
+  thumbnailUrl?: string | null;
+  annotationCount?: number;
+  hasNotes?: boolean;
+  notePreview?: string | null;
   createdAt: string;
 }
 
