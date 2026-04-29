@@ -10,8 +10,6 @@ import {
   TriangleRight,
   Eraser,
   Scaling,
-  Undo2,
-  Redo2,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -38,11 +36,6 @@ const tools: ToolItem[] = [
 interface AnnotationToolbarProps {
   activeTool: ToolId;
   onToolChange: (tool: ToolId) => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  onToggleShortcuts?: () => void;
 }
 
 function ToolTooltip({
@@ -56,9 +49,9 @@ function ToolTooltip({
     <div
       className="pointer-events-none fixed z-50 flex flex-col gap-0.5 px-2.5 py-1.5"
       style={{
-        top: anchorRect.bottom + 6,
-        left: anchorRect.left + anchorRect.width / 2,
-        transform: "translateX(-50%)",
+        top: anchorRect.top + anchorRect.height / 2,
+        left: anchorRect.right + 8,
+        transform: "translateY(-50%)",
         backgroundColor: "#061b31",
         color: "#FFFFFF",
         borderRadius: 4,
@@ -85,11 +78,6 @@ function ToolTooltip({
 export function AnnotationToolbar({
   activeTool,
   onToolChange,
-  canUndo = false,
-  canRedo = false,
-  onUndo,
-  onRedo,
-  onToggleShortcuts,
 }: AnnotationToolbarProps) {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
@@ -125,63 +113,20 @@ export function AnnotationToolbar({
     };
   }, []);
 
-  // Undo/redo pseudo tool items for tooltips
-  const undoRedoTooltips: Record<string, ToolItem> = {
-    __undo: { id: "hand" as ToolId, label: "Undo", shortcut: "⌘Z", description: "Undo the last action", icon: null },
-    __redo: { id: "hand" as ToolId, label: "Redo", shortcut: "⌘⇧Z", description: "Redo the last undone action", icon: null },
-    __shortcuts: { id: "hand" as ToolId, label: "Keyboard Shortcuts", shortcut: "?", description: "Show all keyboard shortcuts", icon: null },
-  };
-
   const hoveredToolData = hoveredTool
-    ? undoRedoTooltips[hoveredTool] ?? tools.find((t) => t.id === hoveredTool)
+    ? tools.find((t) => t.id === hoveredTool)
     : null;
 
   return (
-    <div className="flex items-center gap-1 px-2">
-      {/* Undo/Redo */}
-      <button
-        onClick={onUndo}
-        disabled={!canUndo}
-        onMouseEnter={() => handleMouseEnter("__undo")}
-        onMouseLeave={handleMouseLeave}
-        ref={(el) => { if (el) buttonRefsMap.current.set("__undo", el); }}
-        className="flex items-center justify-center transition-colors disabled:cursor-not-allowed"
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 4,
-          color: canUndo ? "#273951" : "#A3ACB9",
-        }}
-      >
-        <Undo2 size={18} strokeWidth={1.5} />
-      </button>
-      <button
-        onClick={onRedo}
-        disabled={!canRedo}
-        onMouseEnter={() => handleMouseEnter("__redo")}
-        onMouseLeave={handleMouseLeave}
-        ref={(el) => { if (el) buttonRefsMap.current.set("__redo", el); }}
-        className="flex items-center justify-center transition-colors disabled:cursor-not-allowed"
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 4,
-          color: canRedo ? "#273951" : "#A3ACB9",
-        }}
-      >
-        <Redo2 size={18} strokeWidth={1.5} />
-      </button>
-      <div className="mx-1" style={{ width: 1, height: 28, backgroundColor: "#e5edf5" }} />
-
+    <div className="flex flex-col items-center gap-1 py-2">
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
         const prevTool = i > 0 ? tools[i - 1] : null;
         return (
-          <div key={tool.id} className="flex items-center">
+          <div key={tool.id} className="flex flex-col items-center">
             {prevTool?.separator && (
               <div
-                className="mx-1"
-                style={{ width: 1, height: 28, backgroundColor: "#e5edf5" }}
+                style={{ width: 24, height: 1, backgroundColor: "#1c2738", margin: "4px 0" }}
               />
             )}
             <button
@@ -197,8 +142,8 @@ export function AnnotationToolbar({
                 width: 36,
                 height: 36,
                 borderRadius: 4,
-                backgroundColor: isActive ? "#ededfc" : "transparent",
-                color: isActive ? "#533afd" : "#273951",
+                backgroundColor: isActive ? "#533afd" : "rgba(255,255,255,.06)",
+                color: isActive ? "#FFFFFF" : "#cdd5e2",
               }}
             >
               {tool.icon}
@@ -206,25 +151,6 @@ export function AnnotationToolbar({
           </div>
         );
       })}
-      {/* Spacer to push ? button to the right */}
-      <div className="flex-1" />
-      <button
-        onClick={onToggleShortcuts}
-        onMouseEnter={() => handleMouseEnter("__shortcuts")}
-        onMouseLeave={handleMouseLeave}
-        ref={(el) => { if (el) buttonRefsMap.current.set("__shortcuts", el); }}
-        className="flex items-center justify-center transition-colors"
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 4,
-          color: "#64748d",
-          fontSize: 16,
-          fontWeight: 600,
-        }}
-      >
-        ?
-      </button>
 
       {hoveredToolData && tooltipRect && (
         <ToolTooltip tool={hoveredToolData} anchorRect={tooltipRect} />
