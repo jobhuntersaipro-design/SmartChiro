@@ -910,9 +910,9 @@ export function AnnotationCanvas({
         />
 
         {/* Canvas Area */}
-        <div ref={canvasRootRef} className="relative flex flex-1 flex-col">
+        <div className="relative flex flex-1 flex-col">
           {viewMode === "single" ? (
-            <>
+            <div ref={canvasRootRef} className="relative flex flex-1 flex-col">
               <div
                 ref={viewport.containerRef}
                 className="relative flex-1 overflow-hidden"
@@ -920,7 +920,6 @@ export function AnnotationCanvas({
                   backgroundColor: "#1A1F36",
                   cursor: getCursor(),
                 }}
-                onWheel={viewport.handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -1042,7 +1041,7 @@ export function AnnotationCanvas({
                 onZoomOut={viewport.zoomOut}
                 onCustomZoom={(z) => viewport.zoomAtCenter(z)}
               />
-            </>
+            </div>
           ) : (
             /* Multi-View Grid — active cell is a full canvas */
             <>
