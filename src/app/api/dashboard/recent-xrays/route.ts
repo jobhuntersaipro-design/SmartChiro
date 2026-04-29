@@ -25,6 +25,7 @@ export async function GET() {
   return NextResponse.json({
     xrays: xrays.map((x) => ({
       id: x.id,
+      patientId: x.patientId,
       title: x.title,
       fileUrl: x.thumbnailUrl ?? x.fileUrl,
       patientName: `${x.patient.firstName} ${x.patient.lastName}`,

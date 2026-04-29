@@ -163,8 +163,7 @@ export type ToolId =
   | "eraser"
   | "ruler"
   | "angle"
-  | "cobb_angle"
-  | "calibration";
+  | "cobb_angle";
 
 export type ToolState =
   | "idle"

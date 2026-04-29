@@ -19,11 +19,10 @@ type UploadStage =
 
 interface XrayUploadProps {
   patientId: string
-  uploadedById: string
   onUploadComplete?: (xrayId: string) => void
 }
 
-export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUploadProps) {
+export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
   const [stage, setStage] = useState<UploadStage>('idle')
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
@@ -38,6 +37,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
     setProgress(0)
     setFileName(null)
     setFileSize(0)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     if (preview) {
       URL.revokeObjectURL(preview)
       setPreview(null)
@@ -83,7 +83,6 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
         formData.append('file', file)
         formData.append('thumbnail', new File([thumbnail], 'thumbnail.jpg', { type: 'image/jpeg' }))
         formData.append('patientId', patientId)
-        formData.append('uploadedById', uploadedById)
         formData.append('width', String(dimensions.width))
         formData.append('height', String(dimensions.height))
 
@@ -128,7 +127,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
         setError(err instanceof Error ? err.message : 'Upload failed.')
       }
     },
-    [patientId, uploadedById, onUploadComplete]
+    [patientId, onUploadComplete]
   )
 
   const handleFileChange = useCallback(
@@ -173,10 +172,9 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
     <div className="w-full max-w-[520px]">
       {/* Drop zone */}
       {stage === 'idle' && (
-        <div
+        <label
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          onClick={() => fileInputRef.current?.click()}
           className="flex cursor-pointer flex-col items-center justify-center rounded-[6px] border-2 border-dashed border-[#e5edf5] bg-[#f6f9fc] px-6 py-10 transition-colors hover:border-[#C1C9D2] hover:bg-[#f6f9fc]"
         >
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#ededfc]">
@@ -193,9 +191,9 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
             type="file"
             accept=".jpg,.jpeg,.png,image/jpeg,image/png"
             onChange={handleFileChange}
-            className="hidden"
+            className="sr-only"
           />
-        </div>
+        </label>
       )}
 
       {/* Upload progress */}

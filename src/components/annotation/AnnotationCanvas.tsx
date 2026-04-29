@@ -34,8 +34,13 @@ import { PatientImageSidebar } from "./PatientImageSidebar";
 import { MultiViewGrid, ViewportCell, type ViewportState } from "./MultiViewGrid";
 import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
 import { DrawingConfirmation } from "./DrawingConfirmation";
-import { CalibrationDialog } from "./CalibrationDialog";
-import { recalibrateMeasurement } from "@/lib/measurements";
+import { EmptyCanvasHint } from "./EmptyCanvasHint";
+import { useViewerInputs } from "@/hooks/useViewerInputs";
+import { SeriesStrip, type SeriesXray } from "./SeriesStrip";
+import { ToolIndicatorChip } from "./ToolIndicatorChip";
+import { FirstRunOverlay } from "./FirstRunOverlay";
+import { NotesDrawer } from "./NotesDrawer";
+import { useXrayNotes } from "@/hooks/useXrayNotes";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -50,11 +55,7 @@ interface AnnotationCanvasProps {
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
   onClose: () => void;
-  initialCalibration?: {
-    isCalibrated: boolean;
-    pixelsPerMm: number | null;
-    calibrationNote: string | null;
-  };
+  patientSeries?: SeriesXray[];
 }
 
 export function AnnotationCanvas({
@@ -70,13 +71,13 @@ export function AnnotationCanvas({
   initialAdjustments,
   xrayId,
   onClose,
-  initialCalibration,
+  patientSeries = [],
 }: AnnotationCanvasProps) {
   // ─── State ───
   const [shapes, setShapes] = useState<BaseShape[]>(
     initialCanvasState?.shapes ?? []
   );
-  const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
+  const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   // Prevents flash of full-size image before fitToViewport runs
   const [viewportReady, setViewportReady] = useState(false);
@@ -87,19 +88,23 @@ export function AnnotationCanvas({
   // Flip (horizontal mirror)
   const [flipped, setFlipped] = useState(false);
 
-  // Calibration state
-  const [isCalibrated, setIsCalibrated] = useState(initialCalibration?.isCalibrated ?? false);
-  const [pixelsPerMm, setPixelsPerMm] = useState<number | null>(initialCalibration?.pixelsPerMm ?? null);
-  const [calibrationNote, setCalibrationNote] = useState<string | null>(initialCalibration?.calibrationNote ?? null);
-  const [calibrationDialogOpen, setCalibrationDialogOpen] = useState(false);
-  const [calibrationPixelDistance, setCalibrationPixelDistance] = useState(0);
-
   // Keyboard shortcuts panel
   const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
 
+  // Series strip scroll direction
+  const [seriesScrollTick, setSeriesScrollTick] = useState<1 | -1 | null>(null);
+
+  // Notes drawer
+  const [notesOpen, setNotesOpen] = useState(false);
+  const notesData = useXrayNotes(xrayId);
+  const notesCount = notesData.history.length + (notesData.current ? 1 : 0);
+
+  // Canvas root ref for useViewerInputs
+  const canvasRootRef = useRef<HTMLDivElement>(null);
+
   // View mode & multi-view
   const [viewMode, setViewMode] = useState<ViewMode>("single");
-  const [imageSidebarOpen, setImageSidebarOpen] = useState(true);
+  const [imageSidebarOpen, setImageSidebarOpen] = useState(false);
   const [gridSlots, setGridSlots] = useState<ViewportSlot[]>([
     { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
   ]);
@@ -141,6 +146,24 @@ export function AnnotationCanvas({
   const imageAdj = useImageAdjustments(
     initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS }
   );
+
+  // Wire MedDream-style mouse conventions on the canvas root
+  useViewerInputs({
+    canvasRef: canvasRootRef,
+    onPan: (dx, dy) => {
+      viewport.pan(dx, dy);
+    },
+    onZoom: (deltaY, point) => {
+      const factor = deltaY < 0 ? 1.1 : 0.9;
+      viewport.zoomAtPoint(viewport.transform.zoom * factor, point.x, point.y);
+    },
+    onWindowLevel: (dx, dy) => {
+      imageAdj.setBrightness(Math.max(-100, Math.min(100, imageAdj.adjustments.brightness + Math.round(dx / 4))));
+      imageAdj.setContrast(Math.max(-100, Math.min(100, imageAdj.adjustments.contrast - Math.round(dy / 4))));
+    },
+    onScrollSeries: (direction) => setSeriesScrollTick(direction),
+  });
+
   const autoSave = useAutoSave({ annotationId, xrayId, userId });
   const undoRedo = useUndoRedo({
     shapes,
@@ -182,16 +205,12 @@ export function AnnotationCanvas({
 
   const handleAddShape = useCallback(
     (shape: BaseShape) => {
-      // Recalibrate measurement label if calibrated
-      const calibratedShape = shape.measurement && pixelsPerMm
-        ? { ...shape, measurement: recalibrateMeasurement(shape.measurement, pixelsPerMm) }
-        : shape;
-      setShapes((prev) => [...prev, calibratedShape]);
-      undoRedo.pushCommand("ADD_SHAPE", calibratedShape.id, null, calibratedShape);
+      setShapes((prev) => [...prev, shape]);
+      undoRedo.pushCommand("ADD_SHAPE", shape.id, null, shape);
       autoSave.markDirty();
-      interaction.setSelectedShapeIds([calibratedShape.id]);
+      interaction.setSelectedShapeIds([shape.id]);
     },
-    [undoRedo, autoSave, interaction, pixelsPerMm]
+    [undoRedo, autoSave, interaction]
   );
 
   const handleDeleteShapes = useCallback(
@@ -208,40 +227,6 @@ export function AnnotationCanvas({
     [undoRedo, autoSave]
   );
 
-  const handleCalibrationDraw = useCallback((pixelDist: number) => {
-    setCalibrationPixelDistance(pixelDist);
-    setCalibrationDialogOpen(true);
-  }, []);
-
-  const handleCalibrate = useCallback(async (newPixelsPerMm: number, note: string) => {
-    setCalibrationDialogOpen(false);
-    setIsCalibrated(true);
-    setPixelsPerMm(newPixelsPerMm);
-    setCalibrationNote(note || null);
-
-    // Recalibrate all existing measurement labels
-    setShapes((prev) =>
-      prev.map((s) => {
-        if (s.measurement) {
-          return { ...s, measurement: recalibrateMeasurement(s.measurement, newPixelsPerMm) };
-        }
-        return s;
-      })
-    );
-    autoSave.markDirty();
-
-    // Persist to DB
-    try {
-      await fetch(`/api/xrays/${xrayId}/calibrate`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pixelsPerMm: newPixelsPerMm, calibrationNote: note || undefined }),
-      });
-    } catch (err) {
-      console.error("Failed to save calibration:", err);
-    }
-  }, [xrayId, autoSave]);
-
   const drawing = useDrawingTools({
     activeTool: interaction.activeTool,
     transform: viewport.transform,
@@ -249,8 +234,6 @@ export function AnnotationCanvas({
     currentStyle,
     onAddShape: handleAddShape,
     onDeleteShapes: handleDeleteShapes,
-    onCalibrationDraw: handleCalibrationDraw,
-    pixelsPerMm,
   });
 
   // ─── Multi-View: Switch active slot → swap shapes per xray ───
@@ -489,6 +472,26 @@ export function AnnotationCanvas({
     }
   }, [viewport.transform]);
 
+  // Auto-open Properties panel on first selection per session.
+  // Once the user manually closes it, don't reopen automatically.
+  const userClosedPanelRef = useRef(false);
+  const prevSelectionCountRef = useRef(0);
+  useEffect(() => {
+    const count = interaction.selectedShapeIds.length;
+    if (count > 0 && prevSelectionCountRef.current === 0 && !userClosedPanelRef.current) {
+      setPropertiesPanelOpen(true);
+    }
+    prevSelectionCountRef.current = count;
+  }, [interaction.selectedShapeIds]);
+
+  const handleTogglePropertiesPanel = useCallback(() => {
+    setPropertiesPanelOpen((prev) => {
+      if (prev) userClosedPanelRef.current = true;
+      else userClosedPanelRef.current = false;
+      return !prev;
+    });
+  }, []);
+
   // ─── Shape Operations ───
   const toggleShapeVisibility = useCallback((id: string) => {
     setShapes((prev) =>
@@ -659,7 +662,7 @@ export function AnnotationCanvas({
       }
       // Toggle properties panel
       if (e.key === "\\") {
-        setPropertiesPanelOpen((prev) => !prev);
+        handleTogglePropertiesPanel();
         return;
       }
 
@@ -742,7 +745,7 @@ export function AnnotationCanvas({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction]);
+  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction, handleTogglePropertiesPanel]);
 
   // Fit to viewport once image loads
   useEffect(() => {
@@ -841,6 +844,14 @@ export function AnnotationCanvas({
 
   return (
     <div className="flex h-screen w-screen flex-col" style={{ backgroundColor: "#1A1F36" }}>
+      {/* Notes Drawer (portal-style sheet, rendered outside canvas) */}
+      <NotesDrawer
+        xrayId={xrayId}
+        xrayTitle={xrayTitle}
+        open={notesOpen}
+        onOpenChange={setNotesOpen}
+      />
+
       {/* Header */}
       <AnnotationHeader
         xrayTitle={xrayTitle}
@@ -859,39 +870,35 @@ export function AnnotationCanvas({
         isAdjustmentsModified={imageAdj.isModified}
         flipped={flipped}
         onFlipChange={setFlipped}
+        notesCount={notesCount}
+        onOpenNotes={() => setNotesOpen(true)}
+        onShowShortcuts={() => setShortcutsPanelOpen((prev) => !prev)}
       />
 
-      {/* Horizontal Toolbar */}
-      <div
-        className="flex items-center"
-        style={{
-          height: 44,
-          backgroundColor: "#FFFFFF",
-          borderBottom: "1px solid #e5edf5",
-        }}
-      >
-        <ViewModeSwitcher
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
-        <div style={{ width: 1, height: 28, backgroundColor: "#e5edf5", marginLeft: 4, marginRight: 4 }} />
-        <AnnotationToolbar
-          activeTool={interaction.activeTool}
-          onToolChange={(tool) => {
-            if (drawing.pendingShape) drawing.acceptPending();
-            interaction.setActiveTool(tool);
-          }}
-          canUndo={undoRedo.canUndo}
-          canRedo={undoRedo.canRedo}
-          onUndo={undoRedo.undo}
-          onRedo={undoRedo.redo}
-          onToggleShortcuts={() => setShortcutsPanelOpen((prev) => !prev)}
-        />
-      </div>
-
       {/* Main Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Patient Image Sidebar (left side) */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Vertical Left Rail Toolbar */}
+        <aside
+          style={{ width: 44, backgroundColor: "#0a1220", borderRight: "1px solid #1c2738", flexShrink: 0 }}
+          className="flex flex-col"
+        >
+          <AnnotationToolbar
+            activeTool={interaction.activeTool}
+            onToolChange={(tool) => {
+              if (drawing.pendingShape) drawing.acceptPending();
+              interaction.setActiveTool(tool);
+            }}
+          />
+          <div style={{ flex: 1 }} />
+          <div className="pb-2 flex flex-col items-center">
+            <ViewModeSwitcher
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          </div>
+        </aside>
+
+        {/* Patient Image Sidebar (left of canvas area, after toolbar) */}
         <PatientImageSidebar
           patientId={patientId}
           userId={userId}
@@ -906,7 +913,7 @@ export function AnnotationCanvas({
         {/* Canvas Area */}
         <div className="relative flex flex-1 flex-col">
           {viewMode === "single" ? (
-            <>
+            <div ref={canvasRootRef} className="relative flex flex-1 flex-col">
               <div
                 ref={viewport.containerRef}
                 className="relative flex-1 overflow-hidden"
@@ -914,12 +921,12 @@ export function AnnotationCanvas({
                   backgroundColor: "#1A1F36",
                   cursor: getCursor(),
                 }}
-                onWheel={viewport.handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onDoubleClick={handleDoubleClick}
               >
+                <ToolIndicatorChip activeTool={interaction.activeTool} />
                 {/* Image Layer */}
                 <div
                   className="absolute origin-top-left"
@@ -1008,6 +1015,23 @@ export function AnnotationCanvas({
                   />
                 )}
 
+                {/* Empty-canvas hint */}
+                {shapes.length === 0 && !drawing.drawingShape && !drawing.pendingShape && (
+                  <EmptyCanvasHint />
+                )}
+
+                {/* Series Strip (right edge) */}
+                <SeriesStrip
+                  patientId={patientId}
+                  currentXrayId={xrayId}
+                  xrays={patientSeries}
+                  scrollDirection={seriesScrollTick}
+                  onNavigate={() => setSeriesScrollTick(null)}
+                  onBeforeNavigate={() => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments)}
+                />
+
+                {/* First-run overlay (once per user) */}
+                <FirstRunOverlay />
               </div>
 
               {/* Zoom Bar */}
@@ -1019,7 +1043,7 @@ export function AnnotationCanvas({
                 onZoomOut={viewport.zoomOut}
                 onCustomZoom={(z) => viewport.zoomAtCenter(z)}
               />
-            </>
+            </div>
           ) : (
             /* Multi-View Grid — active cell is a full canvas */
             <>
@@ -1193,19 +1217,9 @@ export function AnnotationCanvas({
           currentStyle={currentStyle}
           onStyleChange={setCurrentStyle}
           isOpen={propertiesPanelOpen}
-          onTogglePanel={() => setPropertiesPanelOpen((prev) => !prev)}
-          pixelsPerMm={pixelsPerMm}
+          onTogglePanel={handleTogglePropertiesPanel}
         />
       </div>
-
-      {/* Calibration Dialog */}
-      {calibrationDialogOpen && (
-        <CalibrationDialog
-          pixelDistance={calibrationPixelDistance}
-          onCalibrate={handleCalibrate}
-          onCancel={() => setCalibrationDialogOpen(false)}
-        />
-      )}
 
       {/* Keyboard Shortcuts Panel */}
       <KeyboardShortcutsPanel
@@ -1224,10 +1238,11 @@ export function AnnotationCanvas({
         saveError={autoSave.saveError}
         sizeWarning={autoSave.sizeWarning}
         onRetrySave={autoSave.retrySave}
-        isCalibrated={isCalibrated}
-        pixelsPerMm={pixelsPerMm}
-        calibrationNote={calibrationNote}
         viewMode={viewMode}
+        canUndo={undoRedo.canUndo}
+        canRedo={undoRedo.canRedo}
+        onUndo={undoRedo.undo}
+        onRedo={undoRedo.redo}
       />
     </div>
   );

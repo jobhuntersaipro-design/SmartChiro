@@ -15,6 +15,10 @@ export function DrawingConfirmation({
   onAccept,
   onReject,
 }: DrawingConfirmationProps) {
+  // Stop pointer events from reaching the canvas underneath, which would
+  // otherwise start a new drawing tool / pointer-capture and swallow the click.
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+
   return (
     <div
       className="pointer-events-auto absolute z-50 flex items-center gap-1"
@@ -29,8 +33,17 @@ export function DrawingConfirmation({
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(18, 42, 66, 0.04)",
         animation: "confirmFadeIn 150ms ease-out",
       }}
+      onPointerDown={stop}
+      onPointerUp={stop}
+      onPointerMove={stop}
+      onMouseDown={stop}
+      onMouseUp={stop}
+      onClick={stop}
     >
       <button
+        type="button"
+        onPointerDown={stop}
+        onMouseDown={stop}
         onClick={(e) => { e.stopPropagation(); onAccept(); }}
         className="flex items-center justify-center transition-colors"
         style={{
@@ -46,6 +59,9 @@ export function DrawingConfirmation({
         <Check size={16} strokeWidth={2} />
       </button>
       <button
+        type="button"
+        onPointerDown={stop}
+        onMouseDown={stop}
         onClick={(e) => { e.stopPropagation(); onReject(); }}
         className="flex items-center justify-center transition-colors"
         style={{

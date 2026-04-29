@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:personal": "tsx prisma/seed-personal.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

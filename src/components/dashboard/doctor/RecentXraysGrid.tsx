@@ -25,7 +25,7 @@ export function RecentXraysGrid({ xrays }: RecentXraysGridProps) {
       {xrays.map((xray) => (
         <Link
           key={xray.id}
-          href={`/dashboard/xrays/${xray.id}/annotate`}
+          href={`/dashboard/xrays/${xray.patientId}/${xray.id}/annotate`}
           className="flex-shrink-0 group cursor-pointer transition-transform duration-200 hover:scale-105"
         >
           <div className="w-[120px] h-[90px] rounded-[6px] border border-[#e5edf5] overflow-hidden bg-[#1A1F36] mb-2 group-hover:border-[#533afd] transition-all duration-200 group-hover:shadow-md">

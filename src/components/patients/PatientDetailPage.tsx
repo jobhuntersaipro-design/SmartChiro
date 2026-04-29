@@ -37,7 +37,6 @@ import {
 
 interface PatientDetailPageProps {
   patientId: string;
-  currentUserId: string;
 }
 
 interface PatientDetail extends Patient {
@@ -86,7 +85,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PatientDetailPage({ patientId, currentUserId }: PatientDetailPageProps) {
+export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabId) || "overview";
@@ -390,7 +389,6 @@ export function PatientDetailPage({ patientId, currentUserId }: PatientDetailPag
       {activeTab === "xrays" && (
         <PatientXraysTab
           patientId={patientId}
-          uploadedById={currentUserId}
           xrays={patient.xrays ?? []}
           onRefresh={fetchPatient}
         />

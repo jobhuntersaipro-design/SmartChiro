@@ -255,9 +255,6 @@ export function useCanvasInteraction({
             case "m":
               setActiveTool("ruler");
               return;
-            case "k":
-              setActiveTool("calibration");
-              return;
           }
         }
       }

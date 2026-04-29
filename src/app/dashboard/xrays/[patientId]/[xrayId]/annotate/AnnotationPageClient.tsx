@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { AnnotationCanvas } from "@/components/annotation/AnnotationCanvas";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
+import type { SeriesXray } from "@/components/annotation/SeriesStrip";
 
 interface AnnotationPageClientProps {
   imageUrl: string;
@@ -16,11 +17,7 @@ interface AnnotationPageClientProps {
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
-  initialCalibration?: {
-    isCalibrated: boolean;
-    pixelsPerMm: number | null;
-    calibrationNote: string | null;
-  };
+  patientSeries?: SeriesXray[];
 }
 
 export function AnnotationPageClient({
@@ -35,7 +32,7 @@ export function AnnotationPageClient({
   initialCanvasState,
   initialAdjustments,
   xrayId,
-  initialCalibration,
+  patientSeries,
 }: AnnotationPageClientProps) {
   const router = useRouter();
 
@@ -53,7 +50,7 @@ export function AnnotationPageClient({
       initialAdjustments={initialAdjustments}
       xrayId={xrayId}
       onClose={() => router.back()}
-      initialCalibration={initialCalibration}
+      patientSeries={patientSeries}
     />
   );
 }
