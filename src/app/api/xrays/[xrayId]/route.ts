@@ -12,14 +12,7 @@ const ALLOWED_BODY_REGIONS = [
   "EXTREMITY",
   "OTHER",
 ] as const;
-const ALLOWED_VIEW_TYPES = [
-  "AP",
-  "LATERAL",
-  "OBLIQUE",
-  "FLEXION",
-  "EXTENSION",
-  "OTHER",
-] as const;
+const ALLOWED_VIEW_TYPES = ["AP", "LATERAL", "OBLIQUE", "PA", "OTHER"] as const;
 const ALLOWED_STATUSES = ["READY", "ARCHIVED"] as const; // UPLOADING is set by upload, not PATCHable
 
 // GET /api/xrays/{xrayId} — single xray with annotation summaries
