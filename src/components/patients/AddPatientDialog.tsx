@@ -511,6 +511,37 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   </FormField>
                 </div>
 
+                {/* Reminders section */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Phone className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Reminder Preferences</span>
+                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField label="Reminder channel">
+                    <select
+                      value={form.reminderChannel ?? "WHATSAPP"}
+                      onChange={(e) => updateField("reminderChannel", e.target.value as "WHATSAPP" | "EMAIL" | "BOTH" | "NONE")}
+                      className={selectClass}
+                    >
+                      <option value="WHATSAPP">WhatsApp</option>
+                      <option value="EMAIL">Email</option>
+                      <option value="BOTH">Both</option>
+                      <option value="NONE">None</option>
+                    </select>
+                  </FormField>
+                  <FormField label="Preferred language">
+                    <select
+                      value={form.preferredLanguage ?? "en"}
+                      onChange={(e) => updateField("preferredLanguage", e.target.value as "en" | "ms")}
+                      className={selectClass}
+                    >
+                      <option value="en">English</option>
+                      <option value="ms">Bahasa Malaysia</option>
+                    </select>
+                  </FormField>
+                </div>
+
                 {/* Medical section label */}
                 <div className="flex items-center gap-2 pt-1">
                   <Stethoscope className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />

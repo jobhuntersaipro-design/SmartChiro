@@ -39,6 +39,8 @@ interface PatientProfileTabProps {
     referralSource: string | null;
     notes: string | null;
     status: string;
+    reminderChannel?: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
+    preferredLanguage?: 'en' | 'ms';
     initialTreatmentFee?: number | null;
     firstTreatmentFee?: number | null;
     standardFollowUpFee?: number | null;
@@ -246,6 +248,11 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
             href={patient.branchId ? buildBranchHref(patient.branchId) : null}
           />
           <DetailRow label="Status" value={formatStatus(patient.status)} />
+          <DetailRow label="Reminder Channel" value={patient.reminderChannel ?? "WHATSAPP"} />
+          <DetailRow
+            label="Preferred Language"
+            value={patient.preferredLanguage === "ms" ? "Bahasa Malaysia" : "English"}
+          />
           <DetailRow label="Created" value={formatDateTime(patient.createdAt)} />
           <DetailRow
             label="Updated"

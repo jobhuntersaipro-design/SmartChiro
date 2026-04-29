@@ -77,6 +77,8 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         initialTreatmentFee: patient.initialTreatmentFee != null ? String(patient.initialTreatmentFee) : "",
         firstTreatmentFee: patient.firstTreatmentFee != null ? String(patient.firstTreatmentFee) : "",
         standardFollowUpFee: patient.standardFollowUpFee != null ? String(patient.standardFollowUpFee) : "",
+        reminderChannel: patient.reminderChannel || "WHATSAPP",
+        preferredLanguage: patient.preferredLanguage || "en",
       });
       setSubmitError(null);
     }
@@ -266,6 +268,22 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
               <FormField label="Notes">
                 <textarea value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} rows={2} className={textareaClass} />
               </FormField>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Reminder Channel">
+                  <select value={form.reminderChannel || "WHATSAPP"} onChange={(e) => update("reminderChannel", e.target.value)} className={selectClass}>
+                    <option value="WHATSAPP">WhatsApp</option>
+                    <option value="EMAIL">Email</option>
+                    <option value="BOTH">Both</option>
+                    <option value="NONE">None</option>
+                  </select>
+                </FormField>
+                <FormField label="Preferred Language">
+                  <select value={form.preferredLanguage || "en"} onChange={(e) => update("preferredLanguage", e.target.value)} className={selectClass}>
+                    <option value="en">English</option>
+                    <option value="ms">Bahasa Malaysia</option>
+                  </select>
+                </FormField>
+              </div>
               {isAdmin && branchDoctors && branchDoctors.length > 0 && (
                 <FormField label="Assigned Doctor">
                   <select value={form.doctorId || ""} onChange={(e) => update("doctorId", e.target.value)} className={selectClass}>

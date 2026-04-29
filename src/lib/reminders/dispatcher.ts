@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendMessage } from "@/lib/wa/worker-client";
 import { sendReminderEmail } from "@/lib/email";
@@ -250,10 +249,15 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
   });
 }
 
+type AppointmentForContext = {
+  dateTime: Date;
+  patient: { firstName: string; lastName: string };
+  branch: { name: string; address: string | null; phone: string | null };
+  doctor: { name: string | null };
+};
+
 function buildContext(
-  appt: Prisma.AppointmentGetPayload<{
-    include: { patient: true; branch: true; doctor: true };
-  }>,
+  appt: AppointmentForContext,
   lang: "en" | "ms"
 ): TemplateContext {
   const dt = new Date(appt.dateTime);

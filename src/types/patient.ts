@@ -46,6 +46,9 @@ export interface Patient {
   medicalHistory: string | null;
   notes: string | null;
   status: string;
+  // Reminder preferences
+  reminderChannel: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
+  preferredLanguage: 'en' | 'ms';
   // Relations
   doctorId: string;
   doctorName: string;
@@ -87,4 +90,6 @@ export interface CreatePatientData {
   initialTreatmentFee?: number;
   firstTreatmentFee?: number;
   standardFollowUpFee?: number;
+  reminderChannel?: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
+  preferredLanguage?: 'en' | 'ms';
 }
