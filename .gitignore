@@ -38,6 +38,9 @@ yarn-error.log*
 # playwright
 .playwright-mcp/
 
+# superpowers brainstorm artifacts
+.superpowers/
+
 # vercel
 .vercel
 

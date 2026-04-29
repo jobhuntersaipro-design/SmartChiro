@@ -170,7 +170,6 @@ export function PatientImageSidebar({
         new File([thumbnail], "thumbnail.jpg", { type: "image/jpeg" })
       );
       formData.append("patientId", patientId);
-      formData.append("uploadedById", userId);
       formData.append("width", String(dimensions.width));
       formData.append("height", String(dimensions.height));
 
@@ -213,7 +212,7 @@ export function PatientImageSidebar({
         return false;
       }
     },
-    [patientId, userId]
+    [patientId]
   );
 
   // Process upload queue sequentially

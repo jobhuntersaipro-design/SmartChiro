@@ -65,8 +65,16 @@ export async function GET(
         take: 5,
       },
       xrays: {
-        select: { id: true, title: true, bodyRegion: true, viewType: true, status: true, thumbnailUrl: true, createdAt: true },
-        where: { status: { not: "ARCHIVED" } },
+        select: {
+          id: true, title: true, bodyRegion: true, viewType: true, status: true,
+          thumbnailUrl: true, createdAt: true,
+          _count: { select: { annotations: true } },
+          notes: {
+            take: 1, orderBy: { createdAt: "desc" },
+            select: { bodyMd: true },
+          },
+        },
+        where: { status: { in: ["READY", "ARCHIVED"] } },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -182,6 +190,9 @@ export async function GET(
         status: x.status,
         thumbnailUrl: x.thumbnailUrl,
         createdAt: x.createdAt.toISOString(),
+        annotationCount: x._count.annotations,
+        hasNotes: x.notes.length > 0,
+        notePreview: x.notes[0]?.bodyMd?.slice(0, 80) ?? null,
       })),
       createdAt: patient.createdAt.toISOString(),
       updatedAt: patient.updatedAt.toISOString(),

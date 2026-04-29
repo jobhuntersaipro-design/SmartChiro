@@ -43,8 +43,6 @@ interface UseDrawingToolsOptions {
   currentStyle: ShapeStyle;
   onAddShape: (shape: BaseShape) => void;
   onDeleteShapes: (ids: string[]) => void;
-  onCalibrationDraw?: (pixelDistance: number) => void;
-  pixelsPerMm?: number | null;
 }
 
 export interface PendingShape {
@@ -71,7 +69,7 @@ interface UseDrawingToolsReturn {
 
 const DRAWING_TOOLS: ToolId[] = [
   "line", "freehand", "text", "eraser",
-  "ruler", "angle", "cobb_angle", "calibration",
+  "ruler", "angle", "cobb_angle",
 ];
 
 function createInitialDrawingState(): DrawingState {
@@ -150,8 +148,6 @@ export function useDrawingTools({
   currentStyle,
   onAddShape,
   onDeleteShapes,
-  onCalibrationDraw,
-  pixelsPerMm,
 }: UseDrawingToolsOptions): UseDrawingToolsReturn {
   const stateRef = useRef<DrawingState>(createInitialDrawingState());
   const drawingShapeRef = useRef<BaseShape | null>(null);
@@ -316,7 +312,7 @@ export function useDrawingTools({
       } else if (activeTool === "line") {
         preview = buildLineShape(imagePos, imagePos);
         preview.id = state.shapeId;
-      } else if (activeTool === "ruler" || activeTool === "calibration") {
+      } else if (activeTool === "ruler") {
         preview = createBaseShape("ruler", MEASUREMENT_STYLE, zIndex);
         preview.id = state.shapeId;
         preview.points = [imagePos, imagePos];
@@ -324,9 +320,6 @@ export function useDrawingTools({
         preview.tickLength = 8;
         preview.labelPosition = "auto";
         preview.lineCap = "round";
-        if (activeTool === "calibration") {
-          preview.style = { ...MEASUREMENT_STYLE, strokeColor: "#FFCC00" };
-        }
         const bb = computeBoundingBox([imagePos, imagePos]);
         preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
       } else {
@@ -410,8 +403,8 @@ export function useDrawingTools({
         return;
       }
 
-      // Ruler or Calibration (drag-based)
-      if (activeTool === "ruler" || activeTool === "calibration") {
+      // Ruler (drag-based)
+      if (activeTool === "ruler") {
         if (e.shiftKey) {
           endPoint = constrainAngle(state.startPoint, imagePos);
         }
@@ -422,14 +415,11 @@ export function useDrawingTools({
         preview.tickLength = 8;
         preview.labelPosition = "auto";
         preview.lineCap = "round";
-        if (activeTool === "calibration") {
-          preview.style = { ...MEASUREMENT_STYLE, strokeColor: "#FFCC00" };
-        }
         const bb = computeBoundingBox([state.startPoint, endPoint]);
         preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
         const m = computeRulerMeasurement(state.startPoint, endPoint);
-        const label = formatMeasurement(m.pixelLength, m.unit, pixelsPerMm ?? null);
-        preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: !!(pixelsPerMm && pixelsPerMm > 0), label };
+        const label = formatMeasurement(m.pixelLength, m.unit, null);
+        preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: false, label };
         drawingShapeRef.current = preview;
         return;
       }
@@ -456,23 +446,7 @@ export function useDrawingTools({
       }
 
       // Don't commit click-to-place tools on pointer up
-      if (activeTool === "text" || activeTool === "angle" || activeTool === "cobb_angle" || activeTool === "calibration") {
-        // Calibration: fire callback with pixel distance, don't create a shape
-        if (activeTool === "calibration" && drawingShapeRef.current) {
-          const calShape = drawingShapeRef.current;
-          if (calShape.points.length >= 2) {
-            const dist = Math.hypot(
-              calShape.points[1].x - calShape.points[0].x,
-              calShape.points[1].y - calShape.points[0].y
-            );
-            if (dist >= MIN_LINE_LENGTH) {
-              onCalibrationDraw?.(dist);
-            }
-          }
-          stateRef.current = createInitialDrawingState();
-          drawingShapeRef.current = null;
-          (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-        }
+      if (activeTool === "text" || activeTool === "angle" || activeTool === "cobb_angle") {
         return;
       }
 
@@ -532,7 +506,7 @@ export function useDrawingTools({
       drawingShapeRef.current = null;
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     },
-    [activeTool, transform.zoom, setPending, onCalibrationDraw]
+    [activeTool, transform.zoom, setPending]
   );
 
   // ─── Double Click ───

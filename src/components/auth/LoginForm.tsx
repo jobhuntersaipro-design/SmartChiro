@@ -7,7 +7,13 @@ import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { GoogleSignInButton } from './GoogleSignInButton'
 
-export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
+export function LoginForm({
+  googleEnabled = false,
+  resetSuccess = false,
+}: {
+  googleEnabled?: boolean
+  resetSuccess?: boolean
+}) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -78,6 +84,14 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
 
       {/* Auth Card */}
       <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
+        {resetSuccess && (
+          <div className="mb-4 rounded-[4px] border border-[#30B130]/30 bg-[#E8F5E9] p-3">
+            <p className="text-[14px] font-medium text-[#0A5D1A]">Password updated</p>
+            <p className="mt-1 text-[13px] text-[#273951]">
+              Sign in with your new password.
+            </p>
+          </div>
+        )}
         {/* Email/Password Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -99,12 +113,20 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
-            >
-              Password
-            </label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label
+                htmlFor="password"
+                className="block text-[14px] font-medium text-[#061b31]"
+              >
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-[13px] text-[#533afd] hover:underline transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 id="password"

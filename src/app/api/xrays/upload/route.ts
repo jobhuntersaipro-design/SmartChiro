@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { r2Client, buildXrayKey, getR2PublicUrl } from '@/lib/r2'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { auth } from '@/lib/auth'
+import { canManagePatientXrays } from '@/lib/auth/xray'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300 MB
@@ -9,20 +11,21 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME!
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Sign-in required.' },
+        { status: 401 }
+      )
+    }
+    const uploadedById = session.user.id
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const thumbnail = formData.get('thumbnail') as File | null
     const patientId = formData.get('patientId') as string | null
-    const uploadedById = formData.get('uploadedById') as string | null
     const widthStr = formData.get('width') as string | null
     const heightStr = formData.get('height') as string | null
-
-    if (!uploadedById) {
-      return NextResponse.json(
-        { error: 'Authentication required.' },
-        { status: 401 }
-      )
-    }
 
     if (!file || !patientId) {
       return NextResponse.json(
@@ -48,18 +51,19 @@ export async function POST(request: NextRequest) {
     const width = widthStr ? parseInt(widthStr, 10) : null
     const height = heightStr ? parseInt(heightStr, 10) : null
 
-    // Verify patient exists
-    const patient = await prisma.patient.findUnique({
-      where: { id: patientId },
-      select: { id: true, branchId: true },
-    })
-
-    if (!patient) {
+    // Verify branch membership (also returns false if patient doesn't exist)
+    if (!(await canManagePatientXrays(uploadedById, patientId))) {
       return NextResponse.json(
         { error: 'Patient not found.' },
         { status: 404 }
       )
     }
+
+    // Fetch patient branchId for R2 key generation (guaranteed to exist)
+    const patient = await prisma.patient.findUnique({
+      where: { id: patientId },
+      select: { id: true, branchId: true },
+    })
 
     const ext = file.type === 'image/png' ? 'png' : 'jpg'
 
@@ -78,7 +82,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const originalKey = buildXrayKey(patient.branchId, patientId, xray.id, `original.${ext}`)
+    const originalKey = buildXrayKey(patient!.branchId, patientId, xray.id, `original.${ext}`)
     const fileUrl = getR2PublicUrl(originalKey)
 
     // Upload original to R2
@@ -95,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Upload thumbnail if provided
     let thumbnailUrl: string | null = null
     if (thumbnail) {
-      const thumbnailKey = buildXrayKey(patient.branchId, patientId, xray.id, 'thumbnail.jpg')
+      const thumbnailKey = buildXrayKey(patient!.branchId, patientId, xray.id, 'thumbnail.jpg')
       const thumbBuffer = Buffer.from(await thumbnail.arrayBuffer())
       await r2Client.send(
         new PutObjectCommand({

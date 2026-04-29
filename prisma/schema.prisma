@@ -23,9 +23,10 @@ model User {
 
   activeBranchId String?
 
-  accounts          Account[]
-  sessions          Session[]
-  branchMemberships BranchMember[]
+  accounts            Account[]
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  branchMemberships   BranchMember[]
 
   // Doctor profile (one-to-one, optional)
   doctorProfile DoctorProfile?
@@ -36,6 +37,7 @@ model User {
   appointments     Appointment[] @relation("AppointmentDoctor")
   uploadedXrays    Xray[]        @relation("XrayUploader")
   annotations      Annotation[]  @relation("AnnotationCreator")
+  xrayNotes        XrayNote[]    @relation("XrayNoteAuthor")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -80,6 +82,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
 }
 
 // ─── Enums ───
@@ -417,6 +432,7 @@ model Xray {
   uploadedBy   User   @relation("XrayUploader", fields: [uploadedById], references: [id])
 
   annotations Annotation[]
+  notes       XrayNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -457,6 +473,22 @@ model Annotation {
 
   @@index([xrayId])
   @@index([createdById])
+}
+
+model XrayNote {
+  id     String @id @default(cuid())
+  bodyMd String // markdown / plain text — rendered as plain text in MVP
+
+  xrayId String
+  xray   Xray   @relation(fields: [xrayId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("XrayNoteAuthor", fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([xrayId, createdAt])
+  @@index([authorId])
 }
 
 // ─── Appointments ───

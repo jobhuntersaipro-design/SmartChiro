@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getPresignedUploadUrl, buildXrayKey, getR2PublicUrl } from '@/lib/r2'
+import { auth } from '@/lib/auth'
+import { canManagePatientXrays } from '@/lib/auth/xray'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300 MB
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { fileName, fileSize, mimeType, patientId } = body
-
-    // TODO: Replace with real auth when NextAuth is set up
-    const uploadedById = body.uploadedById as string
-    if (!uploadedById) {
+    const session = await auth()
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Authentication required.' },
+        { error: 'UNAUTHORIZED', message: 'Sign-in required.' },
         { status: 401 }
       )
     }
+    const uploadedById = session.user.id
+
+    const body = await request.json()
+    const { fileName, fileSize, mimeType, patientId } = body
 
     // Validate required fields
     if (!fileName || !fileSize || !mimeType || !patientId) {
@@ -43,18 +45,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify patient exists and get branchId
+    // Verify branch membership (also returns false if patient doesn't exist)
+    if (!(await canManagePatientXrays(uploadedById, patientId))) {
+      return NextResponse.json(
+        { error: 'NOT_FOUND', message: 'Patient not found.' },
+        { status: 404 }
+      )
+    }
+
+    // Get patient branchId for R2 key generation
     const patient = await prisma.patient.findUnique({
       where: { id: patientId },
       select: { id: true, branchId: true },
     })
-
-    if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found.' },
-        { status: 404 }
-      )
-    }
 
     // Determine file extension from MIME type
     const ext = mimeType === 'image/png' ? 'png' : 'jpg'
@@ -72,9 +75,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Build R2 keys
-    const originalKey = buildXrayKey(patient.branchId, patientId, xray.id, `original.${ext}`)
-    const thumbnailKey = buildXrayKey(patient.branchId, patientId, xray.id, 'thumbnail.jpg')
+    // Build R2 keys (patient is guaranteed to exist — already verified above)
+    const originalKey = buildXrayKey(patient!.branchId, patientId, xray.id, `original.${ext}`)
+    const thumbnailKey = buildXrayKey(patient!.branchId, patientId, xray.id, 'thumbnail.jpg')
 
     // Generate presigned URLs (5 min expiry)
     const [uploadUrl, thumbnailUploadUrl] = await Promise.all([

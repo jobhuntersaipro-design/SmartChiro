@@ -47,6 +47,7 @@ export interface RecentPatient {
 
 export interface RecentXray {
   id: string;
+  patientId: string;
   title: string | null;
   fileUrl: string;
   patientName: string;

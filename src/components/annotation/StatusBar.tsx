@@ -1,5 +1,6 @@
 "use client";
 
+import { Undo2, Redo2 } from "lucide-react";
 import type { Point, ViewMode } from "@/types/annotation";
 
 type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
@@ -14,10 +15,11 @@ interface StatusBarProps {
   saveError?: string | null;
   sizeWarning?: string | null;
   onRetrySave?: () => void;
-  isCalibrated?: boolean;
-  pixelsPerMm?: number | null;
-  calibrationNote?: string | null;
   viewMode?: ViewMode;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 export function StatusBar({
@@ -30,10 +32,11 @@ export function StatusBar({
   saveError,
   sizeWarning,
   onRetrySave,
-  isCalibrated = false,
-  pixelsPerMm = null,
-  calibrationNote = null,
   viewMode = "single",
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }: StatusBarProps) {
   const renderSaveStatus = () => {
     switch (saveStatus) {
@@ -94,23 +97,6 @@ export function StatusBar({
             {selectedCount} shape{selectedCount !== 1 ? "s" : ""} selected
           </span>
         )}
-        <span
-          className="flex items-center gap-1"
-          title={calibrationNote ?? undefined}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              backgroundColor: isCalibrated ? "#30B130" : "#A3ACB9",
-              display: "inline-block",
-            }}
-          />
-          {isCalibrated && pixelsPerMm
-            ? `Calibrated: ${pixelsPerMm.toFixed(2)} px/mm`
-            : "Uncalibrated"}
-        </span>
         {sizeWarning && (
           <span style={{ color: "#F5A623" }}>{sizeWarning}</span>
         )}
@@ -120,6 +106,26 @@ export function StatusBar({
         <span>{shapeCount} annotation{shapeCount !== 1 ? "s" : ""}</span>
         <span className="capitalize">{activeTool.replace("_", " ")} tool</span>
         {renderSaveStatus()}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            aria-label="Undo"
+            className="flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            style={{ width: 24, height: 24, color: canUndo ? "#425466" : "#A3ACB9" }}
+          >
+            <Undo2 size={14} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            aria-label="Redo"
+            className="flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            style={{ width: 24, height: 24, color: canRedo ? "#425466" : "#A3ACB9" }}
+          >
+            <Redo2 size={14} strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
     </div>
   );

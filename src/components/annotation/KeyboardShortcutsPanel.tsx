@@ -40,7 +40,6 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
       { keys: ["M"], description: "Ruler" },
       { keys: ["\u21E7", "M"], description: "Angle" },
       { keys: ["\u2318", "\u21E7", "M"], description: "Cobb Angle" },
-      { keys: ["K"], description: "Calibration Reference" },
     ],
   },
   {
