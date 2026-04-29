@@ -37,6 +37,7 @@ import { DrawingConfirmation } from "./DrawingConfirmation";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
 import { useViewerInputs } from "@/hooks/useViewerInputs";
 import { SeriesStrip, type SeriesXray } from "./SeriesStrip";
+import { ToolIndicatorChip } from "./ToolIndicatorChip";
 import { FirstRunOverlay } from "./FirstRunOverlay";
 import { NotesDrawer } from "./NotesDrawer";
 import { useXrayNotes } from "@/hooks/useXrayNotes";
@@ -925,6 +926,7 @@ export function AnnotationCanvas({
                 onPointerUp={handlePointerUp}
                 onDoubleClick={handleDoubleClick}
               >
+                <ToolIndicatorChip activeTool={interaction.activeTool} />
                 {/* Image Layer */}
                 <div
                   className="absolute origin-top-left"
