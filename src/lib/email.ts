@@ -69,3 +69,45 @@ export async function sendVerificationEmail(email: string, name: string) {
     throw new Error('Failed to send verification email')
   }
 }
+
+// ─── Reminder emails ───
+
+export type ReminderEmailResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: 'invalid_email' | 'bounce_hard' | 'unknown'; message: string }
+
+export async function sendReminderEmail(args: {
+  to: string
+  subject: string
+  html: string
+  text: string
+  from: string
+}): Promise<ReminderEmailResult> {
+  try {
+    const r = await resend.emails.send({
+      from: args.from,
+      to: args.to,
+      subject: args.subject,
+      html: args.html,
+      text: args.text,
+    })
+    if (r.error) {
+      const m = r.error.message ?? ''
+      const reason: 'invalid_email' | 'bounce_hard' | 'unknown' = /invalid.*(email|address)/i.test(
+        m
+      )
+        ? 'invalid_email'
+        : /bounce|undeliverable|hard.*fail/i.test(m)
+          ? 'bounce_hard'
+          : 'unknown'
+      return { ok: false, reason, message: m }
+    }
+    return { ok: true, id: r.data?.id ?? '' }
+  } catch (e) {
+    return {
+      ok: false,
+      reason: 'unknown',
+      message: e instanceof Error ? e.message : String(e),
+    }
+  }
+}
