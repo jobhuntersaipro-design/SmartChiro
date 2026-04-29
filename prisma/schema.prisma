@@ -17,9 +17,9 @@ model User {
   image         String?
   phoneNumber   String?
 
-  isPro                Boolean  @default(false)
-  stripeCustomerId     String?  @unique
-  stripeSubscriptionId String?  @unique
+  isPro                Boolean @default(false)
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
 
   activeBranchId String?
 
@@ -31,11 +31,11 @@ model User {
   doctorProfile DoctorProfile?
 
   // As doctor
-  assignedPatients Patient[]      @relation("PatientDoctor")
-  visits           Visit[]        @relation("VisitDoctor")
-  appointments     Appointment[]  @relation("AppointmentDoctor")
-  uploadedXrays    Xray[]         @relation("XrayUploader")
-  annotations      Annotation[]   @relation("AnnotationCreator")
+  assignedPatients Patient[]     @relation("PatientDoctor")
+  visits           Visit[]       @relation("VisitDoctor")
+  appointments     Appointment[] @relation("AppointmentDoctor")
+  uploadedXrays    Xray[]        @relation("XrayUploader")
+  annotations      Annotation[]  @relation("AnnotationCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -108,9 +108,9 @@ enum InvoiceStatus {
 }
 
 enum XrayStatus {
-  UPLOADING  // presigned URL generated, file not yet confirmed
-  READY      // upload confirmed, available for annotation
-  ARCHIVED   // soft-deleted / hidden from active views
+  UPLOADING // presigned URL generated, file not yet confirmed
+  READY // upload confirmed, available for annotation
+  ARCHIVED // soft-deleted / hidden from active views
 }
 
 enum BodyRegion {
@@ -124,11 +124,32 @@ enum BodyRegion {
 }
 
 enum ViewType {
-  AP       // anterior-posterior
+  AP // anterior-posterior
   LATERAL
   OBLIQUE
-  PA       // posterior-anterior
+  PA // posterior-anterior
   OTHER
+}
+
+enum ReminderChannel {
+  WHATSAPP
+  EMAIL
+  BOTH
+  NONE
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum WaSessionStatus {
+  DISCONNECTED
+  PAIRING
+  CONNECTED
+  LOGGED_OUT
 }
 
 // ─── Organization ───
@@ -145,24 +166,27 @@ model Branch {
   logo    String?
 
   // Practitioner / business
-  ownerName       String?
-  licenseNumber   String?  // Business license or NPI
-  operatingHours  String?  // e.g. "Mon-Fri 9am-6pm"
-  treatmentRooms  Int?
-  clinicType      String?  // solo, group, franchise
+  ownerName      String?
+  licenseNumber  String? // Business license or NPI
+  operatingHours String? // e.g. "Mon-Fri 9am-6pm"
+  treatmentRooms Int?
+  clinicType     String? // solo, group, franchise
 
   // Nice-to-have
   website             String?
-  insuranceProviders   String?  // comma-separated
-  specialties          String?  // comma-separated
-  billingContactName   String?
-  billingContactEmail  String?
-  billingContactPhone  String?
+  insuranceProviders  String? // comma-separated
+  specialties         String? // comma-separated
+  billingContactName  String?
+  billingContactEmail String?
+  billingContactPhone String?
 
   members      BranchMember[]
   patients     Patient[]
   appointments Appointment[]
   invoices     Invoice[]
+
+  reminderSettings BranchReminderSettings?
+  waSession        WaSession?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -172,8 +196,8 @@ model BranchMember {
   id   String     @id @default(cuid())
   role BranchRole @default(DOCTOR)
 
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -232,13 +256,13 @@ model Patient {
   notes            String?
 
   // New fields
-  icNumber          String?   @unique
-  occupation        String?
-  race              String?
-  maritalStatus     String?
-  bloodType         String?
-  allergies         String?
-  referralSource    String?
+  icNumber       String? @unique
+  occupation     String?
+  race           String?
+  maritalStatus  String?
+  bloodType      String?
+  allergies      String?
+  referralSource String?
 
   // Pricing (RM)
   initialTreatmentFee Float?
@@ -246,12 +270,12 @@ model Patient {
   standardFollowUpFee Float?
 
   // Address breakdown
-  addressLine1      String?
-  addressLine2      String?
-  city              String?
-  state             String?
-  postcode          String?
-  country           String?  @default("Malaysia")
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postcode     String?
+  country      String? @default("Malaysia")
 
   // Emergency contact breakdown
   emergencyName     String?
@@ -259,14 +283,18 @@ model Patient {
   emergencyRelation String?
 
   // Status
-  status            String?  @default("active")
+  status String? @default("active")
+
+  // Reminder preferences
+  reminderChannel   ReminderChannel @default(WHATSAPP)
+  preferredLanguage String          @default("en") // "en" | "ms"
 
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   // Assigned to one doctor at a time
   doctorId String
-  doctor   User @relation("PatientDoctor", fields: [doctorId], references: [id])
+  doctor   User   @relation("PatientDoctor", fields: [doctorId], references: [id])
 
   visits       Visit[]
   xrays        Xray[]
@@ -287,8 +315,8 @@ model Visit {
   visitDate DateTime @default(now())
 
   // Visit classification
-  visitType      String?   // "initial", "follow_up", "emergency", "reassessment", "discharge"
-  chiefComplaint String?   // Primary reason for this visit
+  visitType      String? // "initial", "follow_up", "emergency", "reassessment", "discharge"
+  chiefComplaint String? // Primary reason for this visit
 
   // SOAP Notes
   subjective     String?
@@ -298,27 +326,27 @@ model Visit {
   treatmentNotes String?
 
   // Clinical findings (structured)
-  areasAdjusted       String?   // Comma-separated: "C1, C5, T4, L5, SI"
-  techniqueUsed       String?   // "Gonstead", "Diversified", "Activator", "Thompson", etc.
-  subluxationFindings String?   // Specific subluxation patterns found
+  areasAdjusted       String? // Comma-separated: "C1, C5, T4, L5, SI"
+  techniqueUsed       String? // "Gonstead", "Diversified", "Activator", "Thompson", etc.
+  subluxationFindings String? // Specific subluxation patterns found
 
   // Vitals
-  bloodPressureSys    Int?      // mmHg systolic
-  bloodPressureDia    Int?      // mmHg diastolic
-  heartRate           Int?      // bpm
-  weight              Float?    // kg
-  temperature         Float?    // celsius
+  bloodPressureSys Int? // mmHg systolic
+  bloodPressureDia Int? // mmHg diastolic
+  heartRate        Int? // bpm
+  weight           Float? // kg
+  temperature      Float? // celsius
 
   // Recommendations
-  recommendations     String?   // Home exercises, ergonomic advice, lifestyle changes
-  referrals           String?   // External referrals (orthopedist, neurologist, etc.)
-  nextVisitDays       Int?      // Recommended days until next visit
+  recommendations String? // Home exercises, ergonomic advice, lifestyle changes
+  referrals       String? // External referrals (orthopedist, neurologist, etc.)
+  nextVisitDays   Int? // Recommended days until next visit
 
-  patientId     String
-  patient       Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
-  doctorId      String
-  doctor        User @relation("VisitDoctor", fields: [doctorId], references: [id])
+  doctorId String
+  doctor   User   @relation("VisitDoctor", fields: [doctorId], references: [id])
 
   appointmentId String? @unique
 
@@ -366,18 +394,18 @@ model Xray {
   // Original upload
   fileUrl  String
   fileName String
-  fileSize Int        // bytes
-  mimeType String     // image/jpeg | image/png
-  width    Int?       // px — set after upload confirmation
-  height   Int?       // px
+  fileSize Int // bytes
+  mimeType String // image/jpeg | image/png
+  width    Int? // px — set after upload confirmation
+  height   Int? // px
 
   // Thumbnail
   thumbnailUrl String?
 
   // Calibration
   isCalibrated    Boolean @default(false)
-  pixelsPerMm     Float?    // computed from calibration reference
-  calibrationNote String?   // e.g. "25mm coin" — what was used as reference
+  pixelsPerMm     Float? // computed from calibration reference
+  calibrationNote String? // e.g. "25mm coin" — what was used as reference
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
@@ -386,7 +414,7 @@ model Xray {
   visit   Visit?  @relation(fields: [visitId], references: [id], onDelete: SetNull)
 
   uploadedById String
-  uploadedBy   User @relation("XrayUploader", fields: [uploadedById], references: [id])
+  uploadedBy   User   @relation("XrayUploader", fields: [uploadedById], references: [id])
 
   annotations Annotation[]
 
@@ -400,13 +428,13 @@ model Xray {
 }
 
 model Annotation {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   label   String?
-  version Int    @default(1)
+  version Int     @default(1)
 
   // Canvas state — the core payload
-  canvasState     Json   // AnnotationCanvasState
-  canvasStateSize Int    @default(0) // byte size of canvasState JSON (for quota tracking)
+  canvasState     Json // AnnotationCanvasState
+  canvasStateSize Int  @default(0) // byte size of canvasState JSON (for quota tracking)
 
   // Snapshot
   thumbnailUrl String? // auto-generated preview after save
@@ -419,10 +447,10 @@ model Annotation {
   aiMeasurements Json?
 
   xrayId String
-  xray   Xray @relation(fields: [xrayId], references: [id], onDelete: Cascade)
+  xray   Xray   @relation(fields: [xrayId], references: [id], onDelete: Cascade)
 
   createdById String
-  createdBy   User @relation("AnnotationCreator", fields: [createdById], references: [id])
+  createdBy   User   @relation("AnnotationCreator", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -447,7 +475,9 @@ model Appointment {
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   doctorId String
-  doctor   User @relation("AppointmentDoctor", fields: [doctorId], references: [id])
+  doctor   User   @relation("AppointmentDoctor", fields: [doctorId], references: [id])
+
+  reminders AppointmentReminder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -498,8 +528,8 @@ model PatientDocument {
   mimeType String
   category String?
 
-  patientId    String
-  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   uploadedById String
 
@@ -507,4 +537,50 @@ model PatientDocument {
 
   @@index([patientId])
   @@index([uploadedById])
+}
+
+// ─── Appointment Reminders ───
+
+model BranchReminderSettings {
+  id         String   @id @default(cuid())
+  branchId   String   @unique
+  branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  enabled    Boolean  @default(false)
+  offsetsMin Int[]
+  templates  Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model WaSession {
+  id          String          @id @default(cuid())
+  branchId    String          @unique
+  branch      Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  status      WaSessionStatus @default(DISCONNECTED)
+  phoneNumber String?
+  lastSeenAt  DateTime?
+  qrPayload   String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model AppointmentReminder {
+  id            String          @id @default(cuid())
+  appointmentId String
+  appointment   Appointment     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  channel       ReminderChannel
+  offsetMin     Int
+  scheduledFor  DateTime
+  status        ReminderStatus  @default(PENDING)
+  sentAt        DateTime?
+  failureReason String?
+  attemptCount  Int             @default(0)
+  externalId    String?
+  isFallback    Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([appointmentId, channel, offsetMin, isFallback])
+  @@index([scheduledFor, status])
+  @@index([appointmentId])
 }
