@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import type { VisitType, InvoiceStatus, PaymentMethod } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
@@ -7,6 +8,23 @@ const connectionString = process.env.DATABASE_URL!
 
 const adapter = new PrismaNeon({ connectionString })
 const prisma = new PrismaClient({ adapter })
+
+// Map legacy visit type strings → new enum values
+const VISIT_TYPE_MAP: Record<string, VisitType> = {
+  initial: 'INITIAL_CONSULTATION',
+  first_treatment: 'FIRST_TREATMENT',
+  follow_up: 'FOLLOW_UP',
+  reassessment: 'RE_EVALUATION',
+  re_evaluation: 'RE_EVALUATION',
+  emergency: 'EMERGENCY',
+  discharge: 'DISCHARGE',
+}
+
+function mapVisitType(s: string | null | undefined): VisitType | null {
+  if (!s) return null
+  const m = VISIT_TYPE_MAP[s.toLowerCase()]
+  return m ?? 'OTHER'
+}
 
 async function main() {
   const hashedPassword = await hash('12345678', 12)
@@ -718,8 +736,126 @@ async function main() {
 
   console.log(`Seeded ${patientCount} patients`)
 
-  // ─── Visits with questionnaires (enhanced) ───
   const now = new Date()
+
+  // ─── Packages (templates) ───
+  // Wipe existing seed-* packages + patient-packages so re-runs stay clean
+  await prisma.patientPackage.deleteMany({ where: { id: { startsWith: 'seed-pp-' } } })
+  await prisma.package.deleteMany({ where: { id: { startsWith: 'seed-pkg-' } } })
+  await prisma.invoice.deleteMany({ where: { invoiceNumber: { startsWith: 'SEED-' } } })
+
+  const packageDefs = [
+    {
+      id: 'seed-pkg-001',
+      name: '10-Visit Adjustment Plan',
+      description: 'Best value for chronic conditions. 10 sessions to be used within 6 months.',
+      sessionCount: 10,
+      price: 1500,
+      validityDays: 180,
+    },
+    {
+      id: 'seed-pkg-002',
+      name: '5-Visit Trial Package',
+      description: 'Perfect intro package — 5 adjustments to start your wellness journey.',
+      sessionCount: 5,
+      price: 800,
+      validityDays: 90,
+    },
+    {
+      id: 'seed-pkg-003',
+      name: 'Monthly Unlimited',
+      description: 'Up to 30 visits in 30 days for athletes & frequent users.',
+      sessionCount: 30,
+      price: 2500,
+      validityDays: 30,
+    },
+  ]
+
+  const createdPackages: { id: string; sessionCount: number; price: number }[] = []
+  for (const pkg of packageDefs) {
+    await prisma.package.create({
+      data: {
+        id: pkg.id,
+        branchId: branch.id,
+        name: pkg.name,
+        description: pkg.description,
+        sessionCount: pkg.sessionCount,
+        price: pkg.price,
+        validityDays: pkg.validityDays,
+      },
+    })
+    createdPackages.push({ id: pkg.id, sessionCount: pkg.sessionCount, price: pkg.price })
+  }
+  console.log(`Seeded ${createdPackages.length} package templates`)
+
+  // ─── PatientPackages — sell packages to ~30% of patients ───
+  // Pattern: patient indices 0, 3, 6, 8, 11, 14 get packages
+  const packageSales: { patientIdx: number; pkgIdx: number; sessionsUsed: number; markPaid: boolean; daysAgo: number }[] = [
+    { patientIdx: 0, pkgIdx: 0, sessionsUsed: 5, markPaid: true, daysAgo: 90 },     // half-used 10-visit
+    { patientIdx: 3, pkgIdx: 1, sessionsUsed: 2, markPaid: true, daysAgo: 25 },     // 5-visit, partly used
+    { patientIdx: 6, pkgIdx: 0, sessionsUsed: 8, markPaid: true, daysAgo: 100 },    // 10-visit nearly done
+    { patientIdx: 8, pkgIdx: 2, sessionsUsed: 12, markPaid: true, daysAgo: 14 },    // monthly active
+    { patientIdx: 11, pkgIdx: 1, sessionsUsed: 0, markPaid: false, daysAgo: 5 },    // just bought, unpaid
+    { patientIdx: 14, pkgIdx: 0, sessionsUsed: 3, markPaid: true, daysAgo: 60 },    // 10-visit early
+  ]
+
+  let invoiceSeq = 1
+  const nextInvNum = (prefix: string) => `SEED-${prefix}-${String(invoiceSeq++).padStart(4, '0')}`
+
+  let patientPackageCount = 0
+  for (const sale of packageSales) {
+    if (sale.patientIdx >= patientCount) continue
+    const patientId = `seed-patient-${String(sale.patientIdx + 1).padStart(3, '0')}`
+    const pkg = createdPackages[sale.pkgIdx]
+    if (!pkg) continue
+    const purchasedAt = new Date(now)
+    purchasedAt.setDate(purchasedAt.getDate() - sale.daysAgo)
+    const validity = packageDefs[sale.pkgIdx].validityDays
+    const expiresAt = validity ? new Date(purchasedAt.getTime() + validity * 24 * 60 * 60 * 1000) : null
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        invoiceNumber: nextInvNum('PKG'),
+        amount: pkg.price,
+        currency: 'MYR',
+        status: sale.markPaid ? 'PAID' : 'DRAFT',
+        paymentMethod: sale.markPaid ? 'CASH' : null,
+        paidAt: sale.markPaid ? purchasedAt : null,
+        lineItems: [
+          {
+            description: `${packageDefs[sale.pkgIdx].name} (${pkg.sessionCount} sessions)`,
+            quantity: 1,
+            unitPrice: pkg.price,
+            total: pkg.price,
+          },
+        ],
+        patientId,
+        branchId: branch.id,
+        notes: `Package purchase`,
+      },
+    })
+
+    const status = sale.sessionsUsed >= pkg.sessionCount ? 'COMPLETED' : 'ACTIVE'
+    await prisma.patientPackage.create({
+      data: {
+        id: `seed-pp-${String(patientPackageCount + 1).padStart(3, '0')}`,
+        patientId,
+        packageId: pkg.id,
+        branchId: branch.id,
+        purchasedAt,
+        expiresAt,
+        sessionsTotal: pkg.sessionCount,
+        sessionsUsed: sale.sessionsUsed,
+        totalPrice: pkg.price,
+        status,
+        invoiceId: invoice.id,
+      },
+    })
+    patientPackageCount++
+  }
+  console.log(`Seeded ${patientPackageCount} patient packages`)
+
+  // ─── Visits with questionnaires (enhanced) ───
   const visitData = [
     {
       patientIdx: 0, daysAgo: 3, visitType: 'follow_up', chiefComplaint: 'Lower back pain follow-up',
@@ -909,10 +1045,11 @@ async function main() {
       patientComments?: string
     } | undefined
 
-    await prisma.visit.create({
+    const visitTypeEnum = mapVisitType(v.visitType)
+    const createdVisit = await prisma.visit.create({
       data: {
         visitDate,
-        visitType: v.visitType,
+        visitType: visitTypeEnum,
         chiefComplaint: v.chiefComplaint,
         subjective: (vAny.subjective as string | undefined) ?? null,
         objective: (vAny.objective as string | undefined) ?? null,
@@ -949,6 +1086,77 @@ async function main() {
     })
     visitCount++
     if (q) qCount++
+
+    // ── Billing for the visit ──
+    // Distribution per index (deterministic):
+    //   0,4,8,12,16: PAID per-visit
+    //   1,5,9,13,17: PAID per-visit
+    //   2,6,10,14:    DRAFT (unpaid)
+    //   3,7,11,15:    package redemption (if patient has active package, else PAID)
+    //   18+:          mix of OVERDUE / PAID
+    const tier = pricingTiers[v.patientIdx % pricingTiers.length]
+    const baseFee = (() => {
+      if (visitTypeEnum === 'INITIAL_CONSULTATION') return tier?.initial ?? 250
+      if (visitTypeEnum === 'FIRST_TREATMENT') return tier?.first ?? 180
+      return tier?.followup ?? 120
+    })()
+
+    const mode = (() => {
+      const rem = visitCount % 5
+      if (rem === 0 || rem === 1) return 'PAID'
+      if (rem === 2) return 'DRAFT'
+      if (rem === 3) return 'PACKAGE'
+      return 'OVERDUE'
+    })()
+
+    if (mode === 'PACKAGE') {
+      const pp = await prisma.patientPackage.findFirst({
+        where: { patientId, status: 'ACTIVE' },
+      })
+      if (pp && pp.sessionsUsed < pp.sessionsTotal) {
+        await prisma.patientPackage.update({
+          where: { id: pp.id },
+          data: {
+            sessionsUsed: { increment: 1 },
+            status: pp.sessionsUsed + 1 >= pp.sessionsTotal ? 'COMPLETED' : 'ACTIVE',
+          },
+        })
+        await prisma.visit.update({
+          where: { id: createdVisit.id },
+          data: { patientPackageId: pp.id },
+        })
+        continue
+      }
+      // fall through to PAID if no package available
+    }
+
+    const status: InvoiceStatus = mode === 'OVERDUE' ? 'OVERDUE' : mode === 'DRAFT' ? 'DRAFT' : 'PAID'
+    const method: PaymentMethod | null = status === 'PAID' ? (visitCount % 3 === 0 ? 'CARD' : 'CASH') : null
+    const paidAt = status === 'PAID' ? visitDate : null
+    const inv = await prisma.invoice.create({
+      data: {
+        invoiceNumber: nextInvNum('INV'),
+        amount: baseFee,
+        currency: 'MYR',
+        status,
+        paymentMethod: method,
+        paidAt,
+        lineItems: [
+          {
+            description: `${visitTypeEnum ?? 'Visit'} — ${visitDate.toISOString().slice(0, 10)}`,
+            quantity: 1,
+            unitPrice: baseFee,
+            total: baseFee,
+          },
+        ],
+        patientId,
+        branchId: branch.id,
+      },
+    })
+    await prisma.visit.update({
+      where: { id: createdVisit.id },
+      data: { invoiceId: inv.id },
+    })
   }
 
   console.log(`Seeded ${visitCount} visits (${qCount} with questionnaires, ${visitCount - qCount} without)`)

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   X, Loader2, ChevronDown, ChevronUp,
   ClipboardList, Stethoscope, Activity,
-  MessageSquare, FileText, Heart,
+  MessageSquare, FileText, Heart, Wallet,
 } from "lucide-react";
-import type { CreateVisitData } from "@/types/visit";
+import type { CreateVisitData, PaymentMethod, VisitType } from "@/types/visit";
+import { VISIT_TYPE_LABELS, PAYMENT_METHOD_LABELS } from "@/types/visit";
+import type { PatientPackage } from "@/types/package";
 
 interface CreateVisitDialogProps {
   open: boolean;
@@ -15,6 +17,8 @@ interface CreateVisitDialogProps {
   patientId: string;
   onCreated: () => void;
 }
+
+type BillingMode = "none" | "per_visit" | "package";
 
 // ─── Shared Styles ───
 
@@ -27,13 +31,19 @@ const selectClass =
 const textareaClass =
   "flex w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
 
-const VISIT_TYPES = [
-  { value: "initial", label: "Initial" },
-  { value: "follow_up", label: "Follow-up" },
-  { value: "emergency", label: "Emergency" },
-  { value: "reassessment", label: "Reassessment" },
-  { value: "discharge", label: "Discharge" },
+const VISIT_TYPES: { value: VisitType; label: string }[] = [
+  { value: "INITIAL_CONSULTATION", label: VISIT_TYPE_LABELS.INITIAL_CONSULTATION },
+  { value: "FIRST_TREATMENT", label: VISIT_TYPE_LABELS.FIRST_TREATMENT },
+  { value: "FOLLOW_UP", label: VISIT_TYPE_LABELS.FOLLOW_UP },
+  { value: "RE_EVALUATION", label: VISIT_TYPE_LABELS.RE_EVALUATION },
+  { value: "EMERGENCY", label: VISIT_TYPE_LABELS.EMERGENCY },
+  { value: "DISCHARGE", label: VISIT_TYPE_LABELS.DISCHARGE },
+  { value: "OTHER", label: VISIT_TYPE_LABELS.OTHER },
 ];
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = (
+  Object.entries(PAYMENT_METHOD_LABELS) as [PaymentMethod, string][]
+).map(([value, label]) => ({ value, label }));
 
 const TECHNIQUES = [
   "Gonstead",
@@ -139,7 +149,7 @@ function SliderField({
 export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: CreateVisitDialogProps) {
   const [form, setForm] = useState<CreateVisitData>({
     visitDate: new Date().toISOString().slice(0, 10),
-    visitType: "follow_up",
+    visitType: "FOLLOW_UP",
     questionnaire: {
       painLevel: 5,
       mobilityScore: 5,
@@ -153,15 +163,42 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Billing
+  const [billingMode, setBillingMode] = useState<BillingMode>("none");
+  const [billingFee, setBillingFee] = useState<string>("");
+  const [billingMarkPaid, setBillingMarkPaid] = useState(false);
+  const [billingPaymentMethod, setBillingPaymentMethod] = useState<PaymentMethod>("CASH");
+  const [billingPackageId, setBillingPackageId] = useState<string>("");
+  const [activePackages, setActivePackages] = useState<PatientPackage[]>([]);
+
   // Section expand state
   const [sections, setSections] = useState({
     visitInfo: true,
+    billing: true,
     questionnaire: true,
     soap: true,
     treatment: true,
     vitals: false,
     recommendations: false,
   });
+
+  // Load active packages when dialog opens
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    fetch(`/api/patients/${patientId}/packages?status=active`)
+      .then((r) => (r.ok ? r.json() : { patientPackages: [] }))
+      .then((data) => {
+        if (cancelled) return;
+        const list: PatientPackage[] = data.patientPackages ?? [];
+        setActivePackages(list);
+        if (list.length > 0) setBillingPackageId(list[0].id);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, patientId]);
 
   const toggleSection = useCallback((key: keyof typeof sections) => {
     setSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -191,7 +228,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
   function handleClose() {
     setForm({
       visitDate: new Date().toISOString().slice(0, 10),
-      visitType: "follow_up",
+      visitType: "FOLLOW_UP",
       questionnaire: {
         painLevel: 5,
         mobilityScore: 5,
@@ -202,6 +239,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
     });
     setNextVisitDate("");
     setQuestionnaireEnabled(true);
+    setBillingMode("none");
+    setBillingFee("");
+    setBillingMarkPaid(false);
+    setBillingPaymentMethod("CASH");
+    setBillingPackageId("");
     setSubmitError(null);
     onOpenChange(false);
   }
@@ -229,6 +271,24 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
       const computedDays = daysFromToday(nextVisitDate);
       if (computedDays !== undefined) {
         payload.nextVisitDays = computedDays;
+      }
+
+      // Billing payload
+      if (billingMode === "per_visit") {
+        const fee = Number(billingFee);
+        if (!Number.isFinite(fee) || fee < 0) {
+          throw new Error("Visit fee must be a non-negative number");
+        }
+        payload.billing = {
+          mode: "per_visit",
+          fee,
+          ...(billingMarkPaid ? { markPaid: true, paymentMethod: billingPaymentMethod } : {}),
+        };
+      } else if (billingMode === "package") {
+        if (!billingPackageId) throw new Error("Please choose a package to use");
+        payload.billing = { mode: "package", patientPackageId: billingPackageId };
+      } else {
+        payload.billing = { mode: "none" };
       }
       const res = await fetch(`/api/patients/${patientId}/visits`, {
         method: "POST",
@@ -300,8 +360,8 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                     Visit Type
                   </label>
                   <select
-                    value={form.visitType || "follow_up"}
-                    onChange={(e) => updateField("visitType", e.target.value)}
+                    value={form.visitType || "FOLLOW_UP"}
+                    onChange={(e) => updateField("visitType", e.target.value as VisitType)}
                     className={selectClass}
                   >
                     {VISIT_TYPES.map((vt) => (
@@ -324,6 +384,130 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   className={inputClass}
                 />
               </div>
+            </div>
+          )}
+
+          {/* ── Section 1.5: Billing ── */}
+          <SectionHeader
+            icon={Wallet}
+            title="Billing"
+            expanded={sections.billing}
+            onToggle={() => toggleSection("billing")}
+          />
+          {sections.billing && (
+            <div className="space-y-3 pb-3 pl-1">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBillingMode("none")}
+                  className={`rounded-[4px] border px-3 py-2 text-[13px] font-medium transition-all ${
+                    billingMode === "none"
+                      ? "border-[#533afd] bg-[#f0eeff] text-[#533afd]"
+                      : "border-[#e5edf5] bg-white text-[#273951] hover:bg-[#f6f9fc]"
+                  }`}
+                >
+                  No charge
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingMode("per_visit")}
+                  className={`rounded-[4px] border px-3 py-2 text-[13px] font-medium transition-all ${
+                    billingMode === "per_visit"
+                      ? "border-[#533afd] bg-[#f0eeff] text-[#533afd]"
+                      : "border-[#e5edf5] bg-white text-[#273951] hover:bg-[#f6f9fc]"
+                  }`}
+                >
+                  Pay per visit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => activePackages.length > 0 && setBillingMode("package")}
+                  disabled={activePackages.length === 0}
+                  className={`rounded-[4px] border px-3 py-2 text-[13px] font-medium transition-all ${
+                    billingMode === "package"
+                      ? "border-[#533afd] bg-[#f0eeff] text-[#533afd]"
+                      : activePackages.length === 0
+                      ? "border-[#e5edf5] bg-[#f6f9fc] text-[#a3acb9] cursor-not-allowed"
+                      : "border-[#e5edf5] bg-white text-[#273951] hover:bg-[#f6f9fc]"
+                  }`}
+                  title={activePackages.length === 0 ? "No active packages — sell one first" : undefined}
+                >
+                  Use package
+                </button>
+              </div>
+
+              {billingMode === "per_visit" && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                        Fee (MYR)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={billingFee}
+                        onChange={(e) => setBillingFee(e.target.value)}
+                        placeholder="120.00"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 cursor-pointer select-none h-9">
+                        <input
+                          type="checkbox"
+                          checked={billingMarkPaid}
+                          onChange={(e) => setBillingMarkPaid(e.target.checked)}
+                          className="h-4 w-4 rounded border-[#e5edf5] text-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                          style={{ accentColor: "#533afd" }}
+                        />
+                        <span className="text-[13px] text-[#273951]">Mark as paid now</span>
+                      </label>
+                    </div>
+                  </div>
+                  {billingMarkPaid && (
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                        Payment Method
+                      </label>
+                      <select
+                        value={billingPaymentMethod}
+                        onChange={(e) => setBillingPaymentMethod(e.target.value as PaymentMethod)}
+                        className={selectClass}
+                      >
+                        {PAYMENT_METHODS.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {billingMode === "package" && activePackages.length > 0 && (
+                <div>
+                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                    Package
+                  </label>
+                  <select
+                    value={billingPackageId}
+                    onChange={(e) => setBillingPackageId(e.target.value)}
+                    className={selectClass}
+                  >
+                    {activePackages.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.packageName} — {p.sessionsRemaining}/{p.sessionsTotal} sessions left
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[12px] text-[#64748d]">
+                    1 session will be deducted from this package on save.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

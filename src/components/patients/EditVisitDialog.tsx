@@ -27,12 +27,14 @@ const textareaClass =
   "flex w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
 
 const VISIT_TYPES = [
-  { value: "initial", label: "Initial" },
-  { value: "follow_up", label: "Follow-up" },
-  { value: "emergency", label: "Emergency" },
-  { value: "reassessment", label: "Reassessment" },
-  { value: "discharge", label: "Discharge" },
-];
+  { value: "INITIAL_CONSULTATION", label: "Initial Consultation" },
+  { value: "FIRST_TREATMENT", label: "First Treatment" },
+  { value: "FOLLOW_UP", label: "Follow-Up" },
+  { value: "RE_EVALUATION", label: "Re-Evaluation" },
+  { value: "EMERGENCY", label: "Emergency" },
+  { value: "DISCHARGE", label: "Discharge" },
+  { value: "OTHER", label: "Other" },
+] as const;
 
 const TECHNIQUES = [
   "Gonstead",
@@ -132,7 +134,7 @@ function SliderField({
 function visitToFormData(visit: Visit): CreateVisitData {
   return {
     visitDate: visit.visitDate.slice(0, 10),
-    visitType: visit.visitType ?? "follow_up",
+    visitType: visit.visitType ?? "FOLLOW_UP",
     chiefComplaint: visit.chiefComplaint ?? "",
     subjective: visit.subjective ?? "",
     objective: visit.objective ?? "",
@@ -189,7 +191,7 @@ function daysToDateStr(days: number | null | undefined, fromDate: string): strin
 export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved }: EditVisitDialogProps) {
   const [form, setForm] = useState<CreateVisitData>({
     visitDate: new Date().toISOString().slice(0, 10),
-    visitType: "follow_up",
+    visitType: "FOLLOW_UP",
   });
   const [nextVisitDate, setNextVisitDate] = useState<string>("");
   const [questionnaireEnabled, setQuestionnaireEnabled] = useState(true);
@@ -326,8 +328,8 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 <div>
                   <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Visit Type</label>
                   <select
-                    value={form.visitType || "follow_up"}
-                    onChange={(e) => updateField("visitType", e.target.value)}
+                    value={form.visitType || "FOLLOW_UP"}
+                    onChange={(e) => updateField("visitType", e.target.value as CreateVisitData["visitType"])}
                     className={selectClass}
                   >
                     {VISIT_TYPES.map((vt) => (

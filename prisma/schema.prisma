@@ -122,6 +122,37 @@ enum InvoiceStatus {
   CANCELLED
 }
 
+enum VisitType {
+  INITIAL_CONSULTATION
+  FIRST_TREATMENT
+  FOLLOW_UP
+  RE_EVALUATION
+  EMERGENCY
+  DISCHARGE
+  OTHER
+}
+
+enum PackageStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum PatientPackageStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  EWALLET
+  INSURANCE
+  OTHER
+}
+
 enum XrayStatus {
   UPLOADING // presigned URL generated, file not yet confirmed
   READY // upload confirmed, available for annotation
@@ -174,10 +205,12 @@ model Branch {
   billingContactEmail String?
   billingContactPhone String?
 
-  members      BranchMember[]
-  patients     Patient[]
-  appointments Appointment[]
-  invoices     Invoice[]
+  members         BranchMember[]
+  patients        Patient[]
+  appointments    Appointment[]
+  invoices        Invoice[]
+  packages        Package[]
+  patientPackages PatientPackage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -283,11 +316,12 @@ model Patient {
   doctorId String
   doctor   User   @relation("PatientDoctor", fields: [doctorId], references: [id])
 
-  visits       Visit[]
-  xrays        Xray[]
-  appointments Appointment[]
-  invoices     Invoice[]
-  documents    PatientDocument[]
+  visits          Visit[]
+  xrays           Xray[]
+  appointments    Appointment[]
+  invoices        Invoice[]
+  documents       PatientDocument[]
+  patientPackages PatientPackage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -302,7 +336,7 @@ model Visit {
   visitDate DateTime @default(now())
 
   // Visit classification
-  visitType      String? // "initial", "follow_up", "emergency", "reassessment", "discharge"
+  visitType      VisitType?
   chiefComplaint String? // Primary reason for this visit
 
   // SOAP Notes
@@ -337,6 +371,12 @@ model Visit {
 
   appointmentId String? @unique
 
+  // Billing
+  invoiceId        String?         @unique
+  invoice          Invoice?        @relation("VisitInvoice", fields: [invoiceId], references: [id])
+  patientPackageId String?
+  patientPackage   PatientPackage? @relation(fields: [patientPackageId], references: [id])
+
   xrays         Xray[]
   questionnaire VisitQuestionnaire?
 
@@ -347,6 +387,7 @@ model Visit {
   @@index([doctorId])
   @@index([visitDate])
   @@index([visitType])
+  @@index([patientPackageId])
 }
 
 model VisitQuestionnaire {
@@ -494,11 +535,12 @@ model Appointment {
 // ─── Billing ───
 
 model Invoice {
-  id            String        @id @default(cuid())
-  invoiceNumber String        @unique
+  id            String         @id @default(cuid())
+  invoiceNumber String         @unique
   amount        Decimal
-  currency      String        @default("MYR")
-  status        InvoiceStatus @default(DRAFT)
+  currency      String         @default("MYR")
+  status        InvoiceStatus  @default(DRAFT)
+  paymentMethod PaymentMethod?
   dueDate       DateTime?
   paidAt        DateTime?
   notes         String?
@@ -510,6 +552,10 @@ model Invoice {
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
+  // Optional back-refs (one-to-one each)
+  visit          Visit?          @relation("VisitInvoice")
+  patientPackage PatientPackage? @relation("PackageInvoice")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -517,6 +563,64 @@ model Invoice {
   @@index([branchId])
   @@index([status])
   @@index([invoiceNumber])
+  @@index([paidAt])
+}
+
+// ─── Packages ───
+
+model Package {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  sessionCount Int
+  price        Decimal
+  currency     String        @default("MYR")
+  validityDays Int?
+  status       PackageStatus @default(ACTIVE)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  patientPackages PatientPackage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([status])
+}
+
+model PatientPackage {
+  id            String               @id @default(cuid())
+  purchasedAt   DateTime             @default(now())
+  expiresAt     DateTime?
+  sessionsTotal Int
+  sessionsUsed  Int                  @default(0)
+  totalPrice    Decimal
+  status        PatientPackageStatus @default(ACTIVE)
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  packageId String
+  package   Package @relation(fields: [packageId], references: [id])
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Optional one-to-one with the Invoice raised for this package purchase
+  invoiceId String?  @unique
+  invoice   Invoice? @relation("PackageInvoice", fields: [invoiceId], references: [id])
+
+  visits Visit[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([branchId])
+  @@index([packageId])
+  @@index([status])
 }
 
 // ─── Documents ───

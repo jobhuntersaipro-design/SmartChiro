@@ -3,18 +3,20 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  Plus, Loader2, ChevronDown, ChevronUp, Calendar,
-  Pencil, Trash2, Image, FileText, Activity, Stethoscope,
-  MessageSquare, ArrowUpDown, Filter,
+  Plus, ChevronDown, ChevronUp,
+  Pencil, Trash2, Image as ImageIcon, FileText, Activity, Stethoscope,
+  MessageSquare, ArrowUpDown, Filter, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RecoveryScoreBar } from "@/components/patients/RecoveryScoreBar";
 import { CreateVisitDialog } from "@/components/patients/CreateVisitDialog";
 import { EditVisitDialog } from "@/components/patients/EditVisitDialog";
 import { DeleteVisitDialog } from "@/components/patients/DeleteVisitDialog";
+import { UpdatePaymentDialog } from "@/components/patients/UpdatePaymentDialog";
 import { ExternalLink } from "@/components/patients/ExternalLink";
 import { buildDoctorHref } from "@/lib/format";
-import type { Visit } from "@/types/visit";
+import type { Visit, VisitType } from "@/types/visit";
+import { VISIT_TYPE_LABELS } from "@/types/visit";
 
 interface PatientVisitsTabProps {
   patientId: string;
@@ -22,23 +24,64 @@ interface PatientVisitsTabProps {
 
 // ─── Visit type badge config ───
 
-const VISIT_TYPE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  initial: { label: "Initial", bg: "bg-[#ededfc]", text: "text-[#533afd]", border: "#533afd" },
-  follow_up: { label: "Follow-up", bg: "bg-[rgba(5,112,222,0.1)]", text: "text-[#0570DE]", border: "#0570DE" },
-  emergency: { label: "Emergency", bg: "bg-[#FDE8EC]", text: "text-[#DF1B41]", border: "#DF1B41" },
-  reassessment: { label: "Reassessment", bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", border: "#9b6829" },
-  discharge: { label: "Discharge", bg: "bg-[#E8F5E8]", text: "text-[#30B130]", border: "#30B130" },
+const VISIT_TYPE_CONFIG: Record<VisitType, { label: string; bg: string; text: string; border: string }> = {
+  INITIAL_CONSULTATION: { label: VISIT_TYPE_LABELS.INITIAL_CONSULTATION, bg: "bg-[#ededfc]", text: "text-[#533afd]", border: "#533afd" },
+  FIRST_TREATMENT: { label: VISIT_TYPE_LABELS.FIRST_TREATMENT, bg: "bg-[#E8F5E8]", text: "text-[#30B130]", border: "#30B130" },
+  FOLLOW_UP: { label: VISIT_TYPE_LABELS.FOLLOW_UP, bg: "bg-[rgba(5,112,222,0.1)]", text: "text-[#0570DE]", border: "#0570DE" },
+  RE_EVALUATION: { label: VISIT_TYPE_LABELS.RE_EVALUATION, bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", border: "#9b6829" },
+  EMERGENCY: { label: VISIT_TYPE_LABELS.EMERGENCY, bg: "bg-[#FDE8EC]", text: "text-[#DF1B41]", border: "#DF1B41" },
+  DISCHARGE: { label: VISIT_TYPE_LABELS.DISCHARGE, bg: "bg-[#E8F5E8]", text: "text-[#30B130]", border: "#30B130" },
+  OTHER: { label: VISIT_TYPE_LABELS.OTHER, bg: "bg-[#f6f9fc]", text: "text-[#64748d]", border: "#c1c9d2" },
 };
 
-function getVisitConfig(type: string | null) {
-  return VISIT_TYPE_CONFIG[type || "follow_up"] || VISIT_TYPE_CONFIG.follow_up;
+function getVisitConfig(type: VisitType | null) {
+  if (type && VISIT_TYPE_CONFIG[type]) return VISIT_TYPE_CONFIG[type];
+  return VISIT_TYPE_CONFIG.OTHER;
 }
 
-function VisitTypeBadge({ type }: { type: string | null }) {
+function VisitTypeBadge({ type }: { type: VisitType | null }) {
   const config = getVisitConfig(type);
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium ${config.bg} ${config.text}`}>
       {config.label}
+    </span>
+  );
+}
+
+// ─── Payment status badge ───
+
+function PaymentBadge({ visit }: { visit: Visit }) {
+  if (visit.patientPackage) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-[#ededfc] text-[#533afd]"
+        title={`From package: ${visit.patientPackage.packageName} (${visit.patientPackage.sessionsUsed}/${visit.patientPackage.sessionsTotal})`}
+      >
+        <Wallet className="h-3 w-3" strokeWidth={2} />
+        Package
+      </span>
+    );
+  }
+  if (!visit.invoice) {
+    return (
+      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-[#f6f9fc] text-[#64748d]">
+        Unbilled
+      </span>
+    );
+  }
+  const status = visit.invoice.status;
+  const config: Record<string, { bg: string; text: string; label: string }> = {
+    PAID: { bg: "bg-[#E8F5E8]", text: "text-[#30B130]", label: "Paid" },
+    DRAFT: { bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", label: "Unpaid" },
+    SENT: { bg: "bg-[rgba(5,112,222,0.1)]", text: "text-[#0570DE]", label: "Sent" },
+    OVERDUE: { bg: "bg-[#FDE8EC]", text: "text-[#DF1B41]", label: "Overdue" },
+    CANCELLED: { bg: "bg-[#f6f9fc]", text: "text-[#64748d]", label: "Cancelled" },
+  };
+  const c = config[status] ?? config.DRAFT;
+  const amt = visit.invoice.amount.toFixed(2);
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-medium ${c.bg} ${c.text}`}>
+      {c.label} · RM {amt}
     </span>
   );
 }
@@ -108,11 +151,13 @@ function VisitCard({
   patientId,
   onEdit,
   onDelete,
+  onUpdatePayment,
 }: {
   visit: Visit;
   patientId: string;
   onEdit: (visit: Visit) => void;
   onDelete: (visit: Visit) => void;
+  onUpdatePayment: (visit: Visit) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = getVisitConfig(visit.visitType);
@@ -154,6 +199,9 @@ function VisitCard({
 
         {/* Visit Type Badge */}
         <VisitTypeBadge type={visit.visitType} />
+
+        {/* Payment Badge */}
+        <PaymentBadge visit={visit} />
 
         {/* Doctor */}
         <span
@@ -389,7 +437,7 @@ function VisitCard({
           {visit.xrays.length > 0 && (
             <div>
               <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-2">
-                <Image className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+                <ImageIcon className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
                 Associated X-Rays
               </h4>
               <div className="grid grid-cols-4 gap-2">
@@ -407,7 +455,7 @@ function VisitCard({
                       />
                     ) : (
                       <div className="w-full h-20 bg-[#1A1F36] flex items-center justify-center">
-                        <Image className="h-6 w-6 text-[#64748d]" strokeWidth={1} />
+                        <ImageIcon className="h-6 w-6 text-[#64748d]" strokeWidth={1} />
                       </div>
                     )}
                     <div className="px-2 py-1.5">
@@ -438,6 +486,20 @@ function VisitCard({
               <Pencil className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
               Edit
             </Button>
+            {!visit.patientPackage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdatePayment(visit);
+                }}
+                className="rounded-[4px] border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] text-[13px]"
+              >
+                <Wallet className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
+                Update Payment
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -461,11 +523,13 @@ function VisitCard({
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All Types" },
-  { value: "initial", label: "Initial" },
-  { value: "follow_up", label: "Follow-up" },
-  { value: "emergency", label: "Emergency" },
-  { value: "reassessment", label: "Reassessment" },
-  { value: "discharge", label: "Discharge" },
+  { value: "INITIAL_CONSULTATION", label: "Initial Consultation" },
+  { value: "FIRST_TREATMENT", label: "First Treatment" },
+  { value: "FOLLOW_UP", label: "Follow-Up" },
+  { value: "RE_EVALUATION", label: "Re-Evaluation" },
+  { value: "EMERGENCY", label: "Emergency" },
+  { value: "DISCHARGE", label: "Discharge" },
+  { value: "OTHER", label: "Other" },
 ];
 
 // ─── Main Component ───
@@ -479,6 +543,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editVisit, setEditVisit] = useState<Visit | null>(null);
   const [deleteVisit, setDeleteVisit] = useState<Visit | null>(null);
+  const [paymentVisit, setPaymentVisit] = useState<Visit | null>(null);
 
   const fetchVisits = useCallback(async () => {
     setLoading(true);
@@ -580,6 +645,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
               patientId={patientId}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onUpdatePayment={(v) => setPaymentVisit(v)}
             />
           ))}
         </div>
@@ -607,6 +673,14 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
         patientId={patientId}
         visit={deleteVisit}
         onDeleted={fetchVisits}
+      />
+
+      <UpdatePaymentDialog
+        open={!!paymentVisit}
+        onOpenChange={(open) => { if (!open) setPaymentVisit(null); }}
+        patientId={patientId}
+        visit={paymentVisit}
+        onSaved={fetchVisits}
       />
     </div>
   );

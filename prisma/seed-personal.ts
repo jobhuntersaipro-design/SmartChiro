@@ -1,13 +1,30 @@
 import { PrismaClient } from '@prisma/client'
+import type { VisitType } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
+
+const PERSONAL_VISIT_TYPE_MAP: Record<string, VisitType> = {
+  initial: 'INITIAL_CONSULTATION',
+  first_treatment: 'FIRST_TREATMENT',
+  follow_up: 'FOLLOW_UP',
+  reassessment: 'RE_EVALUATION',
+  re_evaluation: 'RE_EVALUATION',
+  emergency: 'EMERGENCY',
+  discharge: 'DISCHARGE',
+}
+
+function mapPersonalVisitType(s: string | null | undefined): VisitType | null {
+  if (!s) return null
+  return PERSONAL_VISIT_TYPE_MAP[s.toLowerCase()] ?? 'OTHER'
+}
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) throw new Error('DATABASE_URL is not set')
 
 const SEED_EMAIL = process.env.SEED_USER_EMAIL
 const SEED_PASSWORD = process.env.SEED_USER_PASSWORD
+const SEED_NAME = process.env.SEED_USER_NAME ?? 'Demo Account'
 if (!SEED_EMAIL || !SEED_PASSWORD) {
   throw new Error('SEED_USER_EMAIL and SEED_USER_PASSWORD must be set in .env')
 }
@@ -21,10 +38,10 @@ async function main() {
   // ─── Owner ───
   const owner = await prisma.user.upsert({
     where: { email: SEED_EMAIL! },
-    update: { password: hashedPassword, emailVerified: new Date() },
+    update: { name: SEED_NAME, password: hashedPassword, emailVerified: new Date() },
     create: {
       email: SEED_EMAIL!,
-      name: 'Job Hunter',
+      name: SEED_NAME,
       password: hashedPassword,
       isPro: true,
       emailVerified: new Date(),
@@ -43,7 +60,7 @@ async function main() {
       zip: '50088',
       phone: '+60 3-2161 5500',
       email: 'klcc@smartchiro.test',
-      ownerName: 'Job Hunter',
+      ownerName: SEED_NAME,
       clinicType: 'group',
       operatingHours: 'Mon-Fri 9am-7pm, Sat 9am-2pm',
       treatmentRooms: 5,
@@ -59,7 +76,7 @@ async function main() {
       zip: '59000',
       phone: '+60 3-2282 7700',
       email: 'bangsar@smartchiro.test',
-      ownerName: 'Job Hunter',
+      ownerName: SEED_NAME,
       clinicType: 'group',
       operatingHours: 'Mon-Sat 10am-8pm',
       treatmentRooms: 3,
@@ -345,7 +362,7 @@ async function main() {
     await prisma.visit.create({
       data: {
         visitDate,
-        visitType: v.visitType,
+        visitType: mapPersonalVisitType(v.visitType),
         chiefComplaint: v.chiefComplaint,
         subjective: (vAny.subjective as string | undefined) ?? null,
         objective: (vAny.objective as string | undefined) ?? null,

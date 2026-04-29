@@ -65,11 +65,13 @@ interface AppointmentItem {
 }
 
 const visitTypeColors: Record<string, { bg: string; text: string }> = {
-  initial: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-[#533afd]" },
-  follow_up: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-[#0570DE]" },
-  emergency: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
-  reassessment: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-[#F5A623]" },
-  discharge: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
+  INITIAL_CONSULTATION: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-[#533afd]" },
+  FIRST_TREATMENT: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
+  FOLLOW_UP: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-[#0570DE]" },
+  RE_EVALUATION: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-[#F5A623]" },
+  EMERGENCY: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
+  DISCHARGE: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
+  OTHER: { bg: "bg-[#F0F3F7]", text: "text-[#64748d]" },
 };
 
 const statusColors: Record<string, { bg: string; text: string }> = {

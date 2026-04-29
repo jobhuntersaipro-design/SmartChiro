@@ -14,6 +14,7 @@ import { BranchDoctorsTab } from "./BranchDoctorsTab";
 import { BranchScheduleTab } from "./BranchScheduleTab";
 import { BranchPatientsTab } from "./BranchPatientsTab";
 import { BranchSettingsTab } from "./BranchSettingsTab";
+import { BranchPackagesTab } from "./BranchPackagesTab";
 
 interface BranchDetailViewProps {
   branchId: string;
@@ -26,6 +27,7 @@ const TABS = [
   { id: "doctors", label: "Doctors" },
   { id: "schedule", label: "Schedule" },
   { id: "patients", label: "Patients" },
+  { id: "packages", label: "Packages" },
   { id: "settings", label: "Settings" },
 ] as const;
 
@@ -216,6 +218,9 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       )}
       {activeTab === "patients" && (
         <BranchPatientsTab branchId={branchId} members={branch.members} />
+      )}
+      {activeTab === "packages" && (
+        <BranchPackagesTab branchId={branchId} canManage={canEdit} />
       )}
       {activeTab === "settings" && canEdit && (
         <BranchSettingsTab

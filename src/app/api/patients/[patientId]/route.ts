@@ -88,6 +88,17 @@ export async function GET(
   let recoveryTrend: number | null = null;
   let nextAppointment: string | null = null;
   let visitsByType: Record<string, number> | null = null;
+  let activePackages:
+    | {
+        id: string;
+        packageName: string;
+        sessionsTotal: number;
+        sessionsUsed: number;
+        sessionsRemaining: number;
+        expiresAt: string | null;
+        status: string;
+      }[]
+    | null = null;
 
   if (includeDetail) {
     // Recovery trend: average overallImprovement from last 5 questionnaires
@@ -121,16 +132,34 @@ export async function GET(
       select: { visitType: true },
     });
     visitsByType = {
-      initial: 0,
-      follow_up: 0,
-      emergency: 0,
-      reassessment: 0,
-      discharge: 0,
+      INITIAL_CONSULTATION: 0,
+      FIRST_TREATMENT: 0,
+      FOLLOW_UP: 0,
+      RE_EVALUATION: 0,
+      EMERGENCY: 0,
+      DISCHARGE: 0,
+      OTHER: 0,
     };
     for (const v of allVisits) {
-      const t = v.visitType ?? "follow_up";
-      if (t in visitsByType) visitsByType[t]++;
+      const t = (v.visitType ?? "OTHER") as keyof typeof visitsByType;
+      if (visitsByType[t] !== undefined) visitsByType[t]++;
     }
+
+    // Active patient packages (most recent first)
+    const packages = await prisma.patientPackage.findMany({
+      where: { patientId, status: "ACTIVE" },
+      orderBy: { purchasedAt: "desc" },
+      include: { package: { select: { name: true } } },
+    });
+    activePackages = packages.map((p) => ({
+      id: p.id,
+      packageName: p.package.name,
+      sessionsTotal: p.sessionsTotal,
+      sessionsUsed: p.sessionsUsed,
+      sessionsRemaining: Math.max(0, p.sessionsTotal - p.sessionsUsed),
+      expiresAt: p.expiresAt?.toISOString() ?? null,
+      status: p.status,
+    }));
   }
 
   return NextResponse.json({
@@ -198,6 +227,7 @@ export async function GET(
         recoveryTrend,
         nextAppointment,
         visitsByType,
+        activePackages,
       }),
     },
   });

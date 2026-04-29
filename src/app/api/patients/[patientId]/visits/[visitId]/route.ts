@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { VISIT_TYPES } from "@/types/visit";
 
 type RouteContext = { params: Promise<{ patientId: string; visitId: string }> };
-
-const VALID_VISIT_TYPES = ["initial", "follow_up", "emergency", "reassessment", "discharge"];
 
 async function checkVisitAccess(userId: string, patientId: string, visitId: string) {
   const visit = await prisma.visit.findUnique({
@@ -54,9 +53,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
   const body = await req.json();
 
-  if (body.visitType && !VALID_VISIT_TYPES.includes(body.visitType)) {
+  if (body.visitType && !VISIT_TYPES.includes(body.visitType)) {
     return NextResponse.json(
-      { error: `Invalid visit type. Must be one of: ${VALID_VISIT_TYPES.join(", ")}` },
+      { error: `Invalid visit type. Must be one of: ${VISIT_TYPES.join(", ")}` },
       { status: 400 }
     );
   }
@@ -135,6 +134,8 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     include: {
       questionnaire: true,
       doctor: { select: { id: true, name: true } },
+      invoice: true,
+      patientPackage: { include: { package: true } },
       xrays: {
         select: { id: true, title: true, thumbnailUrl: true, bodyRegion: true },
         where: { status: "READY" },
@@ -164,6 +165,26 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
       recommendations: visit.recommendations,
       referrals: visit.referrals,
       nextVisitDays: visit.nextVisitDays,
+      invoice: visit.invoice
+        ? {
+            id: visit.invoice.id,
+            invoiceNumber: visit.invoice.invoiceNumber,
+            amount: Number(visit.invoice.amount),
+            currency: visit.invoice.currency,
+            status: visit.invoice.status,
+            paymentMethod: visit.invoice.paymentMethod,
+            paidAt: visit.invoice.paidAt?.toISOString() ?? null,
+            notes: visit.invoice.notes,
+          }
+        : null,
+      patientPackage: visit.patientPackage
+        ? {
+            id: visit.patientPackage.id,
+            packageName: visit.patientPackage.package.name,
+            sessionsUsed: visit.patientPackage.sessionsUsed,
+            sessionsTotal: visit.patientPackage.sessionsTotal,
+          }
+        : null,
       questionnaire: visit.questionnaire
         ? {
             id: visit.questionnaire.id,

@@ -16,7 +16,9 @@ import {
   Trash2,
   ToggleLeft,
   ToggleRight,
+  Wallet,
 } from "lucide-react";
+import { SellPackageDialog } from "@/components/patients/SellPackageDialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Patient } from "@/types/patient";
@@ -39,11 +41,22 @@ interface PatientDetailPageProps {
   patientId: string;
 }
 
+interface ActivePackageSummary {
+  id: string;
+  packageName: string;
+  sessionsTotal: number;
+  sessionsUsed: number;
+  sessionsRemaining: number;
+  expiresAt: string | null;
+  status: string;
+}
+
 interface PatientDetail extends Patient {
   branchName: string;
   recoveryTrend: number | null;
   nextAppointment: string | null;
   visitsByType: Record<string, number>;
+  activePackages?: ActivePackageSummary[];
 }
 
 const TABS = [
@@ -96,6 +109,7 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [sellPackageOpen, setSellPackageOpen] = useState(false);
 
   const fetchPatient = useCallback(async () => {
     try {
@@ -310,6 +324,14 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
             <Button
               variant="outline"
               className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
+              onClick={() => setSellPackageOpen(true)}
+            >
+              <Wallet className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Sell Package
+            </Button>
+            <Button
+              variant="outline"
+              className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
               onClick={handleToggleStatus}
             >
               {isActive ? (
@@ -360,6 +382,48 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
         ))}
       </div>
 
+      {/* Active packages */}
+      {patient.activePackages && patient.activePackages.length > 0 && (
+        <div
+          className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4"
+          style={{ boxShadow: "rgba(50,50,93,0.08) 0px 4px 12px" }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Wallet className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+            <h3 className="text-[14px] font-medium text-[#061b31]">Active Packages</h3>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {patient.activePackages.map((pkg) => {
+              const pct = Math.round((pkg.sessionsUsed / Math.max(1, pkg.sessionsTotal)) * 100);
+              return (
+                <div
+                  key={pkg.id}
+                  className="rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] p-3"
+                >
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <span className="text-[14px] font-medium text-[#061b31]">{pkg.packageName}</span>
+                    <span className="text-[12px] text-[#64748d] tabular-nums">
+                      {pkg.sessionsRemaining}/{pkg.sessionsTotal} left
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-white rounded-full overflow-hidden border border-[#e5edf5]">
+                    <div
+                      className="h-full bg-[#533afd] transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  {pkg.expiresAt && (
+                    <p className="mt-2 text-[11px] text-[#64748d]">
+                      Expires {new Date(pkg.expiresAt).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Tab navigation */}
       <div className="border-b border-[#e5edf5]">
         <div className="flex gap-0">
@@ -409,6 +473,13 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onDelete={handleDelete}
+      />
+      <SellPackageDialog
+        open={sellPackageOpen}
+        onOpenChange={setSellPackageOpen}
+        patientId={patientId}
+        branchId={patient.branchId}
+        onSold={fetchPatient}
       />
     </div>
   );

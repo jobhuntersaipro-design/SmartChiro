@@ -23,6 +23,8 @@ import { SkeletonStatCards } from "./shared/SkeletonCard";
 import { SkeletonTable } from "./shared/SkeletonTable";
 
 import { QuickActionsPanel } from "./owner/QuickActionsPanel";
+import { RevenueCard } from "./owner/RevenueCard";
+import { TopDoctorsCard } from "./owner/TopDoctorsCard";
 
 import { RecentPatientsCard } from "./doctor/RecentPatientsCard";
 import { RecentXraysGrid } from "./doctor/RecentXraysGrid";
@@ -222,6 +224,14 @@ export function DashboardView({
           onCreateBranch={() => router.push("/dashboard/branches")}
           onAddDoctor={() => router.push("/dashboard/branches")}
         />
+      )}
+
+      {/* Owner: Revenue + Top Doctors */}
+      {!isDoctor && (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+          <RevenueCard branchId={selectedBranchId} />
+          <TopDoctorsCard branchId={selectedBranchId} />
+        </div>
       )}
 
       {/* Schedule + Activity */}
