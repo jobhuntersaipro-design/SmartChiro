@@ -7,7 +7,6 @@ import { XrayUpload } from "@/components/xray/XrayUpload";
 
 interface PatientXraysTabProps {
   patientId: string;
-  uploadedById: string;
   xrays: {
     id: string;
     title: string | null;
@@ -39,7 +38,6 @@ function formatBodyRegion(region: string | null): string {
 
 export function PatientXraysTab({
   patientId,
-  uploadedById,
   xrays,
   onRefresh,
 }: PatientXraysTabProps) {
@@ -75,7 +73,6 @@ export function PatientXraysTab({
         <div className="mb-4 rounded-[6px] border border-[#e5edf5] bg-white p-4">
           <XrayUpload
             patientId={patientId}
-            uploadedById={uploadedById}
             onUploadComplete={handleUploadComplete}
           />
         </div>

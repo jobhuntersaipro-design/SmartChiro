@@ -12,5 +12,5 @@ export default async function PatientDetailsPage({
 
   const { patientId } = await params;
 
-  return <PatientDetailPage patientId={patientId} currentUserId={session.user.id} />;
+  return <PatientDetailPage patientId={patientId} />;
 }

@@ -19,11 +19,10 @@ type UploadStage =
 
 interface XrayUploadProps {
   patientId: string
-  uploadedById: string
   onUploadComplete?: (xrayId: string) => void
 }
 
-export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUploadProps) {
+export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
   const [stage, setStage] = useState<UploadStage>('idle')
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
@@ -84,7 +83,6 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
         formData.append('file', file)
         formData.append('thumbnail', new File([thumbnail], 'thumbnail.jpg', { type: 'image/jpeg' }))
         formData.append('patientId', patientId)
-        formData.append('uploadedById', uploadedById)
         formData.append('width', String(dimensions.width))
         formData.append('height', String(dimensions.height))
 
@@ -129,7 +127,7 @@ export function XrayUpload({ patientId, uploadedById, onUploadComplete }: XrayUp
         setError(err instanceof Error ? err.message : 'Upload failed.')
       }
     },
-    [patientId, uploadedById, onUploadComplete]
+    [patientId, onUploadComplete]
   )
 
   const handleFileChange = useCallback(
