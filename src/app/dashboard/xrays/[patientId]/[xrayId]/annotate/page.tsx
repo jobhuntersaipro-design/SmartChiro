@@ -52,6 +52,7 @@ export default async function AnnotationPage({
 
   return (
     <AnnotationPageClient
+      key={xrayId}
       imageUrl={xray.fileUrl}
       imageWidth={xray.width ?? 1024}
       imageHeight={xray.height ?? 768}

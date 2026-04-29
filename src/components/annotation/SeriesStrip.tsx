@@ -49,6 +49,11 @@ export function SeriesStrip({
   const width = collapsed ? 22 : 96
   const onlyOne = xrays.length <= 1
 
+  // Stop pointer events from reaching the canvas underneath, otherwise the
+  // canvas's pointerdown handler captures the pointer (starts a tool stroke)
+  // and the strip's click never fires.
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation()
+
   return (
     <aside
       className="absolute right-0 top-0 bottom-0 z-10 flex flex-col"
@@ -58,6 +63,11 @@ export function SeriesStrip({
         borderLeft: '1px solid #1c2738',
         transition: 'width 150ms ease',
       }}
+      onPointerDown={stop}
+      onPointerUp={stop}
+      onMouseDown={stop}
+      onClick={stop}
+      onWheel={stop}
     >
       {/* Collapse toggle */}
       <button
