@@ -14,6 +14,8 @@ import {
   GripVertical,
   Scaling,
   Trash2,
+  PanelRightOpen,
+  PanelRightClose,
 } from "lucide-react";
 import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
 import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotation";
@@ -72,13 +74,58 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "measurements">("layers");
 
-  if (!isOpen) return null;
-
   const sortedShapes = [...shapes].sort((a, b) => b.zIndex - a.zIndex);
   const selectedShape =
     selectedShapeIds.length === 1
       ? shapes.find((s) => s.id === selectedShapeIds[0])
       : null;
+
+  // Collapsed: render only a thin right-edge toggle so users can find the panel
+  if (!isOpen) {
+    return (
+      <button
+        onClick={onTogglePanel}
+        className="flex flex-col items-center justify-center transition-colors"
+        style={{
+          width: 28,
+          backgroundColor: "#FFFFFF",
+          borderLeft: "1px solid #e5edf5",
+          color: "#64748d",
+          gap: 6,
+        }}
+        title="Show properties panel (\\)"
+        aria-label="Show properties panel"
+      >
+        <PanelRightOpen size={16} strokeWidth={1.5} />
+        <span
+          style={{
+            writingMode: "vertical-rl",
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: 0.4,
+            color: "#64748d",
+          }}
+        >
+          Layers · Properties
+        </span>
+        {shapes.length > 0 && (
+          <span
+            className="rounded-full px-1.5"
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              backgroundColor: "#ededfc",
+              color: "#533afd",
+              minWidth: 18,
+              textAlign: "center",
+            }}
+          >
+            {shapes.length}
+          </span>
+        )}
+      </button>
+    );
+  }
 
   return (
     <div
@@ -91,7 +138,7 @@ export function PropertiesPanel({
     >
       {/* Tab Header */}
       <div
-        className="flex"
+        className="flex items-center"
         style={{ borderBottom: "1px solid #e5edf5" }}
       >
         <button
@@ -123,6 +170,20 @@ export function PropertiesPanel({
           }}
         >
           Measurements
+        </button>
+        <button
+          onClick={onTogglePanel}
+          className="flex items-center justify-center transition-colors"
+          style={{
+            width: 32,
+            height: 32,
+            color: "#64748d",
+            borderLeft: "1px solid #e5edf5",
+          }}
+          title="Hide panel (\\)"
+          aria-label="Hide properties panel"
+        >
+          <PanelRightClose size={14} strokeWidth={1.5} />
         </button>
       </div>
 

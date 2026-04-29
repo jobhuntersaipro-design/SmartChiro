@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ChevronRight, Save, X, Pencil, Check, FlipHorizontal2 } from "lucide-react";
+import {
+  ChevronRight,
+  Save,
+  X,
+  Pencil,
+  Check,
+  FlipHorizontal2,
+  Sun,
+  RotateCcw,
+} from "lucide-react";
 import Link from "next/link";
 import type { ImageAdjustments } from "@/types/annotation";
 
@@ -43,7 +52,7 @@ function AdjustmentSlider({
     <div className="flex items-center gap-2">
       <span
         className="text-xs whitespace-nowrap"
-        style={{ color: "#273951", minWidth: 60 }}
+        style={{ color: "#273951", minWidth: 64 }}
       >
         {label}
       </span>
@@ -53,11 +62,11 @@ function AdjustmentSlider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1 w-20 cursor-pointer accent-[#533afd]"
+        className="h-1 flex-1 cursor-pointer accent-[#533afd]"
       />
       <span
         className="text-xs tabular-nums"
-        style={{ color: "#64748d", minWidth: 28, textAlign: "right" }}
+        style={{ color: "#64748d", minWidth: 32, textAlign: "right" }}
       >
         {value}
       </span>
@@ -183,6 +192,108 @@ function InlineEditableTitle({
   );
 }
 
+function AdjustPopover({
+  adjustments,
+  onBrightnessChange,
+  onContrastChange,
+  onWindowCenterChange,
+  onResetAdjustments,
+  isAdjustmentsModified,
+  flipped,
+  onFlipChange,
+  onClose,
+}: {
+  adjustments: ImageAdjustments;
+  onBrightnessChange: (v: number) => void;
+  onContrastChange: (v: number) => void;
+  onWindowCenterChange: (v: number) => void;
+  onResetAdjustments: () => void;
+  isAdjustmentsModified: boolean;
+  flipped: boolean;
+  onFlipChange: (v: boolean) => void;
+  onClose: () => void;
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={popoverRef}
+      className="absolute right-0 top-full z-50 mt-1 flex w-[280px] flex-col gap-3 p-4"
+      style={{
+        backgroundColor: "#FFFFFF",
+        border: "1px solid #e5edf5",
+        borderRadius: 6,
+        boxShadow:
+          "0 0 0 1px rgba(0,0,0,0.04), 0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)",
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748d" }}>
+          Image Adjustments
+        </span>
+        {isAdjustmentsModified && (
+          <button
+            onClick={onResetAdjustments}
+            className="flex items-center gap-1 text-[11px] transition-colors hover:underline"
+            style={{ color: "#DF1B41" }}
+          >
+            <RotateCcw size={11} strokeWidth={1.5} />
+            Reset
+          </button>
+        )}
+      </div>
+      <AdjustmentSlider
+        label="Brightness"
+        value={adjustments.brightness}
+        min={-100}
+        max={100}
+        onChange={onBrightnessChange}
+      />
+      <AdjustmentSlider
+        label="Contrast"
+        value={adjustments.contrast}
+        min={-100}
+        max={100}
+        onChange={onContrastChange}
+      />
+      <AdjustmentSlider
+        label="Window"
+        value={adjustments.windowCenter}
+        min={0}
+        max={255}
+        onChange={onWindowCenterChange}
+      />
+      <div style={{ height: 1, backgroundColor: "#e5edf5", margin: "2px 0" }} />
+      <button
+        onClick={() => onFlipChange(!flipped)}
+        className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
+        style={{
+          borderRadius: 4,
+          border: "1px solid #e5edf5",
+          backgroundColor: flipped ? "#ededfc" : "#FFFFFF",
+          color: flipped ? "#533afd" : "#273951",
+        }}
+      >
+        <span className="flex items-center gap-1.5">
+          <FlipHorizontal2 size={13} strokeWidth={1.5} />
+          Flip horizontally
+        </span>
+        {flipped && <Check size={13} strokeWidth={2} />}
+      </button>
+    </div>
+  );
+}
+
 export function AnnotationHeader({
   xrayTitle,
   patientName,
@@ -201,6 +312,9 @@ export function AnnotationHeader({
   flipped,
   onFlipChange,
 }: AnnotationHeaderProps) {
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const adjustModified = isAdjustmentsModified || flipped;
+
   return (
     <div
       className="flex items-center justify-between px-4"
@@ -213,7 +327,7 @@ export function AnnotationHeader({
       {/* Left: Breadcrumb */}
       <div className="flex items-center gap-1.5">
         <Link
-          href={`/dashboard/${patientId}`}
+          href={`/dashboard/patients/${patientId}/details`}
           className="text-sm transition-colors hover:underline"
           style={{ color: "#64748d" }}
         >
@@ -223,59 +337,44 @@ export function AnnotationHeader({
         <InlineEditableTitle title={xrayTitle} xrayId={xrayId} />
       </div>
 
-      {/* Center: Image adjustments */}
-      <div className="flex items-center gap-4">
-        <AdjustmentSlider
-          label="Brightness"
-          value={adjustments.brightness}
-          min={-100}
-          max={100}
-          onChange={onBrightnessChange}
-        />
-        <AdjustmentSlider
-          label="Contrast"
-          value={adjustments.contrast}
-          min={-100}
-          max={100}
-          onChange={onContrastChange}
-        />
-        <AdjustmentSlider
-          label="W/C"
-          value={adjustments.windowCenter}
-          min={0}
-          max={255}
-          onChange={onWindowCenterChange}
-        />
-        <button
-          onClick={() => onFlipChange(!flipped)}
-          className="flex items-center gap-1 px-2 py-1 text-xs transition-colors"
-          style={{
-            borderRadius: 4,
-            border: "1px solid #e5edf5",
-            backgroundColor: flipped ? "#ededfc" : "#FFFFFF",
-            color: flipped ? "#533afd" : "#273951",
-          }}
-        >
-          <FlipHorizontal2 size={14} strokeWidth={1.5} />
-          Flip
-        </button>
-        {isAdjustmentsModified && (
+      {/* Right: Adjust + Save + Close */}
+      <div className="flex items-center gap-2">
+        <div className="relative">
           <button
-            onClick={onResetAdjustments}
-            className="px-2 py-1 text-xs transition-colors"
+            onClick={() => setAdjustOpen((prev) => !prev)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{
               borderRadius: 4,
-              color: "#DF1B41",
               border: "1px solid #e5edf5",
+              backgroundColor: adjustOpen ? "#ededfc" : "#FFFFFF",
+              color: adjustOpen ? "#533afd" : "#273951",
+              position: "relative",
             }}
+            aria-label="Image adjustments"
           >
-            Reset
+            <Sun size={14} strokeWidth={1.5} />
+            Adjust
+            {adjustModified && !adjustOpen && (
+              <span
+                className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
+                style={{ backgroundColor: "#F5A623" }}
+              />
+            )}
           </button>
-        )}
-      </div>
-
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2">
+          {adjustOpen && (
+            <AdjustPopover
+              adjustments={adjustments}
+              onBrightnessChange={onBrightnessChange}
+              onContrastChange={onContrastChange}
+              onWindowCenterChange={onWindowCenterChange}
+              onResetAdjustments={onResetAdjustments}
+              isAdjustmentsModified={isAdjustmentsModified}
+              flipped={flipped}
+              onFlipChange={onFlipChange}
+              onClose={() => setAdjustOpen(false)}
+            />
+          )}
+        </div>
         <button
           onClick={onSave}
           disabled={isSaving}

@@ -105,10 +105,12 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 
 function VisitCard({
   visit,
+  patientId,
   onEdit,
   onDelete,
 }: {
   visit: Visit;
+  patientId: string;
   onEdit: (visit: Visit) => void;
   onDelete: (visit: Visit) => void;
 }) {
@@ -394,7 +396,7 @@ function VisitCard({
                 {visit.xrays.map((xray) => (
                   <Link
                     key={xray.id}
-                    href={`/dashboard/xrays/${xray.id}/annotate`}
+                    href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
                     className="group relative rounded-[4px] border border-[#e5edf5] overflow-hidden transition-all duration-200 hover:border-[#533afd] hover:shadow-sm"
                   >
                     {xray.thumbnailUrl ? (
@@ -575,6 +577,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
             <VisitCard
               key={visit.id}
               visit={visit}
+              patientId={patientId}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />

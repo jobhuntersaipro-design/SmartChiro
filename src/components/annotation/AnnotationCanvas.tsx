@@ -34,6 +34,7 @@ import { PatientImageSidebar } from "./PatientImageSidebar";
 import { MultiViewGrid, ViewportCell, type ViewportState } from "./MultiViewGrid";
 import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
 import { DrawingConfirmation } from "./DrawingConfirmation";
+import { EmptyCanvasHint } from "./EmptyCanvasHint";
 import { CalibrationDialog } from "./CalibrationDialog";
 import { recalibrateMeasurement } from "@/lib/measurements";
 
@@ -76,7 +77,7 @@ export function AnnotationCanvas({
   const [shapes, setShapes] = useState<BaseShape[]>(
     initialCanvasState?.shapes ?? []
   );
-  const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true);
+  const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   // Prevents flash of full-size image before fitToViewport runs
   const [viewportReady, setViewportReady] = useState(false);
@@ -99,7 +100,7 @@ export function AnnotationCanvas({
 
   // View mode & multi-view
   const [viewMode, setViewMode] = useState<ViewMode>("single");
-  const [imageSidebarOpen, setImageSidebarOpen] = useState(true);
+  const [imageSidebarOpen, setImageSidebarOpen] = useState(false);
   const [gridSlots, setGridSlots] = useState<ViewportSlot[]>([
     { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
   ]);
@@ -489,6 +490,26 @@ export function AnnotationCanvas({
     }
   }, [viewport.transform]);
 
+  // Auto-open Properties panel on first selection per session.
+  // Once the user manually closes it, don't reopen automatically.
+  const userClosedPanelRef = useRef(false);
+  const prevSelectionCountRef = useRef(0);
+  useEffect(() => {
+    const count = interaction.selectedShapeIds.length;
+    if (count > 0 && prevSelectionCountRef.current === 0 && !userClosedPanelRef.current) {
+      setPropertiesPanelOpen(true);
+    }
+    prevSelectionCountRef.current = count;
+  }, [interaction.selectedShapeIds]);
+
+  const handleTogglePropertiesPanel = useCallback(() => {
+    setPropertiesPanelOpen((prev) => {
+      if (prev) userClosedPanelRef.current = true;
+      else userClosedPanelRef.current = false;
+      return !prev;
+    });
+  }, []);
+
   // ─── Shape Operations ───
   const toggleShapeVisibility = useCallback((id: string) => {
     setShapes((prev) =>
@@ -659,7 +680,7 @@ export function AnnotationCanvas({
       }
       // Toggle properties panel
       if (e.key === "\\") {
-        setPropertiesPanelOpen((prev) => !prev);
+        handleTogglePropertiesPanel();
         return;
       }
 
@@ -742,7 +763,7 @@ export function AnnotationCanvas({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction]);
+  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction, handleTogglePropertiesPanel]);
 
   // Fit to viewport once image loads
   useEffect(() => {
@@ -1008,6 +1029,10 @@ export function AnnotationCanvas({
                   />
                 )}
 
+                {/* Empty-canvas hint */}
+                {shapes.length === 0 && !drawing.drawingShape && !drawing.pendingShape && (
+                  <EmptyCanvasHint />
+                )}
               </div>
 
               {/* Zoom Bar */}
@@ -1193,7 +1218,7 @@ export function AnnotationCanvas({
           currentStyle={currentStyle}
           onStyleChange={setCurrentStyle}
           isOpen={propertiesPanelOpen}
-          onTogglePanel={() => setPropertiesPanelOpen((prev) => !prev)}
+          onTogglePanel={handleTogglePropertiesPanel}
           pixelsPerMm={pixelsPerMm}
         />
       </div>

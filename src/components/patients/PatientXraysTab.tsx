@@ -102,7 +102,7 @@ export function PatientXraysTab({
           {sortedXrays.map((xray) => (
             <a
               key={xray.id}
-              href={`/dashboard/xrays/${xray.id}/annotate`}
+              href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden cursor-pointer hover:border-[#c1c9d2] transition group"
