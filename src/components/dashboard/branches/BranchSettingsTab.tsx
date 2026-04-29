@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { BranchDetail, OperatingHoursMap, DayHours } from "@/types/branch";
 import { DeleteBranchDialog } from "./DeleteBranchDialog";
+import { BranchReminderSettingsCard } from "@/components/branches/BranchReminderSettingsCard";
 import { useRouter } from "next/navigation";
 
 interface BranchSettingsTabProps {
@@ -252,6 +253,9 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
         {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
         {success && <p className="text-[14px] text-[#30B130]">Saved successfully</p>}
       </div>
+
+      {/* Appointment Reminders */}
+      <BranchReminderSettingsCard branchId={branch.id} canEdit={true} />
 
       {/* Danger Zone */}
       {isOwner && (
