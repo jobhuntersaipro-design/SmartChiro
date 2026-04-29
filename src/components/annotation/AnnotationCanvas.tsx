@@ -35,6 +35,11 @@ import { MultiViewGrid, ViewportCell, type ViewportState } from "./MultiViewGrid
 import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
 import { DrawingConfirmation } from "./DrawingConfirmation";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
+import { useViewerInputs } from "@/hooks/useViewerInputs";
+import { SeriesStrip, type SeriesXray } from "./SeriesStrip";
+import { FirstRunOverlay } from "./FirstRunOverlay";
+import { NotesDrawer } from "./NotesDrawer";
+import { useXrayNotes } from "@/hooks/useXrayNotes";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -49,6 +54,7 @@ interface AnnotationCanvasProps {
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
   onClose: () => void;
+  patientSeries?: SeriesXray[];
 }
 
 export function AnnotationCanvas({
@@ -64,6 +70,7 @@ export function AnnotationCanvas({
   initialAdjustments,
   xrayId,
   onClose,
+  patientSeries = [],
 }: AnnotationCanvasProps) {
   // ─── State ───
   const [shapes, setShapes] = useState<BaseShape[]>(
@@ -82,6 +89,17 @@ export function AnnotationCanvas({
 
   // Keyboard shortcuts panel
   const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
+
+  // Series strip scroll direction
+  const [seriesScrollTick, setSeriesScrollTick] = useState<1 | -1 | null>(null);
+
+  // Notes drawer
+  const [notesOpen, setNotesOpen] = useState(false);
+  const notesData = useXrayNotes(xrayId);
+  const notesCount = notesData.history.length + (notesData.current ? 1 : 0);
+
+  // Canvas root ref for useViewerInputs
+  const canvasRootRef = useRef<HTMLDivElement>(null);
 
   // View mode & multi-view
   const [viewMode, setViewMode] = useState<ViewMode>("single");
@@ -127,6 +145,24 @@ export function AnnotationCanvas({
   const imageAdj = useImageAdjustments(
     initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS }
   );
+
+  // Wire MedDream-style mouse conventions on the canvas root
+  useViewerInputs({
+    canvasRef: canvasRootRef,
+    onPan: (dx, dy) => {
+      viewport.pan(dx, dy);
+    },
+    onZoom: (deltaY, point) => {
+      const factor = deltaY < 0 ? 1.1 : 0.9;
+      viewport.zoomAtPoint(viewport.transform.zoom * factor, point.x, point.y);
+    },
+    onWindowLevel: (dx, dy) => {
+      imageAdj.setBrightness(Math.max(-100, Math.min(100, imageAdj.adjustments.brightness + Math.round(dx / 4))));
+      imageAdj.setContrast(Math.max(-100, Math.min(100, imageAdj.adjustments.contrast - Math.round(dy / 4))));
+    },
+    onScrollSeries: (direction) => setSeriesScrollTick(direction),
+  });
+
   const autoSave = useAutoSave({ annotationId, xrayId, userId });
   const undoRedo = useUndoRedo({
     shapes,
@@ -807,6 +843,14 @@ export function AnnotationCanvas({
 
   return (
     <div className="flex h-screen w-screen flex-col" style={{ backgroundColor: "#1A1F36" }}>
+      {/* Notes Drawer (portal-style sheet, rendered outside canvas) */}
+      <NotesDrawer
+        xrayId={xrayId}
+        xrayTitle={xrayTitle}
+        open={notesOpen}
+        onOpenChange={setNotesOpen}
+      />
+
       {/* Header */}
       <AnnotationHeader
         xrayTitle={xrayTitle}
@@ -825,39 +869,35 @@ export function AnnotationCanvas({
         isAdjustmentsModified={imageAdj.isModified}
         flipped={flipped}
         onFlipChange={setFlipped}
+        notesCount={notesCount}
+        onOpenNotes={() => setNotesOpen(true)}
+        onShowShortcuts={() => setShortcutsPanelOpen((prev) => !prev)}
       />
 
-      {/* Horizontal Toolbar */}
-      <div
-        className="flex items-center"
-        style={{
-          height: 44,
-          backgroundColor: "#FFFFFF",
-          borderBottom: "1px solid #e5edf5",
-        }}
-      >
-        <ViewModeSwitcher
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-        />
-        <div style={{ width: 1, height: 28, backgroundColor: "#e5edf5", marginLeft: 4, marginRight: 4 }} />
-        <AnnotationToolbar
-          activeTool={interaction.activeTool}
-          onToolChange={(tool) => {
-            if (drawing.pendingShape) drawing.acceptPending();
-            interaction.setActiveTool(tool);
-          }}
-          canUndo={undoRedo.canUndo}
-          canRedo={undoRedo.canRedo}
-          onUndo={undoRedo.undo}
-          onRedo={undoRedo.redo}
-          onToggleShortcuts={() => setShortcutsPanelOpen((prev) => !prev)}
-        />
-      </div>
-
       {/* Main Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Patient Image Sidebar (left side) */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Vertical Left Rail Toolbar */}
+        <aside
+          style={{ width: 44, backgroundColor: "#0a1220", borderRight: "1px solid #1c2738", flexShrink: 0 }}
+          className="flex flex-col"
+        >
+          <AnnotationToolbar
+            activeTool={interaction.activeTool}
+            onToolChange={(tool) => {
+              if (drawing.pendingShape) drawing.acceptPending();
+              interaction.setActiveTool(tool);
+            }}
+          />
+          <div style={{ flex: 1 }} />
+          <div className="pb-2 flex flex-col items-center">
+            <ViewModeSwitcher
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          </div>
+        </aside>
+
+        {/* Patient Image Sidebar (left of canvas area, after toolbar) */}
         <PatientImageSidebar
           patientId={patientId}
           userId={userId}
@@ -870,7 +910,7 @@ export function AnnotationCanvas({
         />
 
         {/* Canvas Area */}
-        <div className="relative flex flex-1 flex-col">
+        <div ref={canvasRootRef} className="relative flex flex-1 flex-col">
           {viewMode === "single" ? (
             <>
               <div
@@ -978,6 +1018,19 @@ export function AnnotationCanvas({
                 {shapes.length === 0 && !drawing.drawingShape && !drawing.pendingShape && (
                   <EmptyCanvasHint />
                 )}
+
+                {/* Series Strip (right edge) */}
+                <SeriesStrip
+                  patientId={patientId}
+                  currentXrayId={xrayId}
+                  xrays={patientSeries}
+                  scrollDirection={seriesScrollTick}
+                  onNavigate={() => setSeriesScrollTick(null)}
+                  onBeforeNavigate={() => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments)}
+                />
+
+                {/* First-run overlay (once per user) */}
+                <FirstRunOverlay />
               </div>
 
               {/* Zoom Bar */}
@@ -1185,6 +1238,10 @@ export function AnnotationCanvas({
         sizeWarning={autoSave.sizeWarning}
         onRetrySave={autoSave.retrySave}
         viewMode={viewMode}
+        canUndo={undoRedo.canUndo}
+        canRedo={undoRedo.canRedo}
+        onUndo={undoRedo.undo}
+        onRedo={undoRedo.redo}
       />
     </div>
   );

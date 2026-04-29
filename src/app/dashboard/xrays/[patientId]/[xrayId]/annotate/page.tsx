@@ -36,6 +36,20 @@ export default async function AnnotationPage({
   const annotation = xray.annotations[0] ?? null;
   const patientName = `${xray.patient.firstName} ${xray.patient.lastName}`;
 
+  const patientSeriesRaw = await prisma.xray.findMany({
+    where: { patientId: xray.patientId, status: "READY" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, title: true, bodyRegion: true, thumbnailUrl: true, createdAt: true },
+  });
+
+  const patientSeries = patientSeriesRaw.map((x) => ({
+    id: x.id,
+    title: x.title,
+    bodyRegion: x.bodyRegion,
+    thumbnailUrl: x.thumbnailUrl,
+    createdAt: x.createdAt.toISOString(),
+  }));
+
   return (
     <AnnotationPageClient
       imageUrl={xray.fileUrl}
@@ -49,6 +63,7 @@ export default async function AnnotationPage({
       initialCanvasState={annotation?.canvasState as unknown as AnnotationCanvasState | undefined}
       initialAdjustments={annotation?.imageAdjustments as unknown as ImageAdjustments | undefined}
       xrayId={xrayId}
+      patientSeries={patientSeries}
     />
   );
 }
