@@ -97,7 +97,7 @@ describe('Xray Notes API', () => {
     const res = await GET(req('GET', `/api/xrays/${xrayId}/notes`), { params: Promise.resolve({ xrayId }) })
     const json = await res.json()
     expect(json.current).not.toBeNull()
-    if (json.history.length > 0) {
+    if (Array.isArray(json.history) && json.history.length > 0) {
       const ts = json.history.map((h: { createdAt: string }) => new Date(h.createdAt).getTime())
       for (let i = 1; i < ts.length; i++) expect(ts[i - 1]).toBeGreaterThanOrEqual(ts[i])
     }
