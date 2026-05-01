@@ -36,7 +36,7 @@ function StatusPill({ status }: { status: string }) {
   // Dot + colored text only, no pill background — eliminates wasted space
   // while preserving color coding by status.
   const config: Record<string, { text: string; dot: string; label: string }> = {
-    SCHEDULED:    { text: "#1d4ed8", dot: "#3b82f6", label: "Scheduled"  },
+    SCHEDULED:    { text: "#15803d", dot: "#22c55e", label: "Scheduled"  },
     CHECKED_IN:   { text: "#15803d", dot: "#22c55e", label: "Checked-in" },
     IN_PROGRESS:  { text: "#854d0e", dot: "#eab308", label: "In progress"},
     COMPLETED:    { text: "#64748d", dot: "#94a3b8", label: "Completed"  },
