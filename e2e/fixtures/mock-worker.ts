@@ -44,7 +44,7 @@ app.post("/branches/:branchId/session", async (c) => {
   if (!v.ok) return c.json({ error: v.message }, 401);
   const branchId = c.req.param("branchId");
   sessions.set(branchId, { status: "PAIRING" });
-  return c.json({ ok: true }, 202);
+  return c.json({ status: "PAIRING" }, 202);
 });
 
 app.get("/branches/:branchId/status", async (c) => {
@@ -60,7 +60,12 @@ app.post("/branches/:branchId/send", async (c) => {
   const v = await verify(c, raw);
   if (!v.ok) return c.json({ error: v.message }, 401);
   const branchId = c.req.param("branchId");
-  const body = JSON.parse(raw) as { to: string; body: string };
+  let body: { to: string; body: string };
+  try {
+    body = JSON.parse(raw) as { to: string; body: string };
+  } catch {
+    return c.json({ error: { code: "invalid_json", message: "body is not valid JSON" } }, 400);
+  }
   sends.push({ branchId, to: body.to, body: body.body, ts: Date.now() });
   return c.json({ msgId: `mock-${randomUUID()}` });
 });
@@ -75,6 +80,11 @@ app.post("/branches/:branchId/logout", async (c) => {
 });
 
 // ─── Test-only hooks (loopback only) ────────────────────────────────────
+// NOTE: the real defense against off-box traffic is the `hostname: "127.0.0.1"`
+// bind passed to serve() at the bottom of this file — the OS rejects non-loopback
+// connections at the socket layer. This isLoopback() check is a sanity guard on
+// the request URL's host header for clarity at the route level; it does NOT
+// substitute for the bind.
 function isLoopback(req: Request): boolean {
   const host = new URL(req.url).hostname;
   return host === "127.0.0.1" || host === "localhost" || host === "::1";
@@ -83,7 +93,12 @@ function isLoopback(req: Request): boolean {
 app.post("/__test/emit", async (c) => {
   if (!isLoopback(c.req.raw)) return c.json({ error: "loopback only" }, 403);
   const raw = await c.req.text();
-  const event = JSON.parse(raw) as { type: string; branchId: string; [k: string]: unknown };
+  let event: { type: string; branchId: string; [k: string]: unknown };
+  try {
+    event = JSON.parse(raw) as { type: string; branchId: string; [k: string]: unknown };
+  } catch {
+    return c.json({ error: { code: "invalid_json", message: "body is not valid JSON" } }, 400);
+  }
 
   // Mirror DB-side state for status endpoint coherence
   const cur = sessions.get(event.branchId) ?? { status: "NONE" };
