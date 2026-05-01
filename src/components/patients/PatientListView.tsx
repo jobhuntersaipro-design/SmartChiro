@@ -105,6 +105,8 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   const [toast, setToast] = useState<string | null>(null);
   const [branchDoctors, setBranchDoctors] = useState<{ id: string; name: string }[]>([]);
 
+  const isAdmin = branchRole === "OWNER" || branchRole === "ADMIN";
+
   function handleSortChange(key: SortKey) {
     setSortKey((prev) => {
       if (prev === key) {
@@ -138,8 +140,6 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
     setStatusFilter("all");
     setDoctorFilter("all");
   }
-
-  const isAdmin = branchRole === "OWNER" || branchRole === "ADMIN";
 
   const fetchPatients = useCallback(async () => {
     try {
