@@ -59,6 +59,11 @@ export interface Patient {
   lastVisit: string | null;
   totalVisits: number;
   totalXrays: number;
+  upcomingAppointment: {
+    id: string;
+    dateTime: string;
+    status: string;
+  } | null;
   createdAt: string;
   xrays: PatientXray[];
 }

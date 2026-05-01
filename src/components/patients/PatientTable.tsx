@@ -2,14 +2,22 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Patient } from "@/types/patient";
-import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { MoreHorizontal, Eye, Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { formatRelativeAppointmentTime, appointmentTimeBucket } from "@/lib/format";
+import { getDoctorColor } from "@/lib/doctor-color";
+
+export type SortKey = "upcomingAppointment" | "lastName" | "totalVisits" | "status";
+export type SortDir = "asc" | "desc";
 
 interface PatientTableProps {
   patients: Patient[];
   onEdit?: (patient: Patient) => void;
   onDelete?: (patient: Patient) => void;
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+  onSortChange?: (key: SortKey) => void;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -24,6 +32,76 @@ function StatusBadge({ status }: { status: string }) {
       <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
       {c.label}
     </span>
+  );
+}
+
+function DoctorBadge({ id, name }: { id: string; name: string }) {
+  const c = getDoctorColor(id);
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-medium max-w-full"
+      style={{ background: c.bg, color: c.text }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
+      <span className="truncate">{name}</span>
+    </span>
+  );
+}
+
+function NextAppointmentCell({ apt }: { apt: Patient["upcomingAppointment"] }) {
+  if (!apt) return <span className="text-[13px] text-[#94a3b8]">—</span>;
+  const bucket = appointmentTimeBucket(apt.dateTime);
+  const text = formatRelativeAppointmentTime(apt.dateTime);
+  let style: React.CSSProperties = {};
+  let cls = "text-[13px]";
+  if (bucket === "today") {
+    style = { color: "#533afd" };
+    cls += " font-semibold";
+  } else if (bucket === "tomorrow") {
+    style = { color: "#0570DE" };
+    cls += " font-medium";
+  } else if (bucket === "thisWeek") {
+    style = { color: "#273951" };
+  } else {
+    style = { color: "#64748d" };
+  }
+  return (
+    <time dateTime={apt.dateTime} className={cls} style={style}>
+      {text}
+    </time>
+  );
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  active,
+  dir,
+  onClick,
+}: {
+  label: string;
+  sortKey: SortKey;
+  active: boolean;
+  dir: SortDir;
+  onClick: (key: SortKey) => void;
+}) {
+  const Icon = !active ? ChevronsUpDown : dir === "asc" ? ChevronUp : ChevronDown;
+  return (
+    <div
+      role="columnheader"
+      aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() => onClick(sortKey)}
+        className={`flex items-center gap-1 text-[13px] font-medium uppercase tracking-[0.04em] transition-colors ${
+          active ? "text-[#061b31]" : "text-[#64748d] hover:text-[#061b31]"
+        }`}
+      >
+        {label}
+        <Icon className={`h-3 w-3 ${active ? "opacity-100" : "opacity-50"}`} strokeWidth={1.75} />
+      </button>
+    </div>
   );
 }
 
@@ -85,12 +163,45 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
   );
 }
 
-export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) {
+const COL_GRID = "grid grid-cols-[1fr_180px_140px_140px_100px_80px_40px] gap-3";
+
+export function PatientTable({
+  patients,
+  onEdit,
+  onDelete,
+  sortKey = "upcomingAppointment",
+  sortDir = "asc",
+  onSortChange,
+}: PatientTableProps) {
   const router = useRouter();
 
-  if (patients.length === 0) {
+  const sorted = useMemo(() => {
+    const arr = [...patients];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "upcomingAppointment") {
+        const aTime = a.upcomingAppointment ? new Date(a.upcomingAppointment.dateTime).getTime() : Infinity;
+        const bTime = b.upcomingAppointment ? new Date(b.upcomingAppointment.dateTime).getTime() : Infinity;
+        cmp = aTime - bTime;
+        // Secondary: lastName when both have no upcoming
+        if (cmp === 0) cmp = a.lastName.localeCompare(b.lastName);
+      } else if (sortKey === "lastName") {
+        cmp = a.lastName.localeCompare(b.lastName);
+        if (cmp === 0) cmp = a.firstName.localeCompare(b.firstName);
+      } else if (sortKey === "totalVisits") {
+        cmp = a.totalVisits - b.totalVisits;
+      } else if (sortKey === "status") {
+        cmp = a.status.localeCompare(b.status);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [patients, sortKey, sortDir]);
+
+  if (sorted.length === 0) {
     return (
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white p-12 text-center"
+      <div
+        className="rounded-[6px] border border-[#e5edf5] bg-white p-12 text-center"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
         <p className="text-[15px] text-[#64748d]">No patients found</p>
@@ -98,36 +209,39 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
     );
   }
 
+  const handleSort = (key: SortKey) => {
+    if (onSortChange) onSortChange(key);
+  };
+
   return (
     <div
       className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden transition-all duration-200 hover:border-[#c1c9d2]"
       style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
     >
-      {/* Table header */}
-      <div className="grid grid-cols-[1fr_140px_130px_90px_80px_80px_40px] gap-3 px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc]">
-        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Patient</span>
+      {/* Header */}
+      <div className={`${COL_GRID} px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc] sticky top-0 z-10`}>
+        <SortHeader label="Patient" sortKey="lastName" active={sortKey === "lastName"} dir={sortDir} onClick={handleSort} />
+        <SortHeader label="Next Appointment" sortKey="upcomingAppointment" active={sortKey === "upcomingAppointment"} dir={sortDir} onClick={handleSort} />
         <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Contact</span>
         <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Doctor</span>
-        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Status</span>
-        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Visits</span>
-        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">X-Rays</span>
+        <SortHeader label="Status" sortKey="status" active={sortKey === "status"} dir={sortDir} onClick={handleSort} />
+        <SortHeader label="Visits" sortKey="totalVisits" active={sortKey === "totalVisits"} dir={sortDir} onClick={handleSort} />
         <span />
       </div>
 
-      {/* Table rows */}
-      {patients.map((patient) => {
+      {/* Rows */}
+      {sorted.map((patient) => {
         const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
         const fullName = `${patient.firstName} ${patient.lastName}`;
-
         return (
           <div
             key={patient.id}
             onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
-            className="grid grid-cols-[1fr_140px_130px_90px_80px_80px_40px] gap-3 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5"
+            className={`${COL_GRID} items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5`}
           >
             {/* Patient name + IC */}
-            <div className="flex items-center gap-2.5">
-              <Avatar className="h-7 w-7">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Avatar className="h-7 w-7 flex-shrink-0">
                 <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[12px] font-medium">
                   {initials}
                 </AvatarFallback>
@@ -142,6 +256,11 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
               </div>
             </div>
 
+            {/* Next appointment */}
+            <div className="min-w-0">
+              <NextAppointmentCell apt={patient.upcomingAppointment} />
+            </div>
+
             {/* Contact */}
             <div className="min-w-0">
               <span className="text-[14px] text-[#273951] block truncate">{patient.phone || "—"}</span>
@@ -151,16 +270,15 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
             </div>
 
             {/* Doctor */}
-            <span className="text-[14px] text-[#273951] truncate">{patient.doctorName}</span>
+            <div className="min-w-0">
+              <DoctorBadge id={patient.doctorId} name={patient.doctorName} />
+            </div>
 
             {/* Status */}
             <StatusBadge status={patient.status} />
 
             {/* Visits */}
             <span className="text-[14px] text-[#273951]">{patient.totalVisits}</span>
-
-            {/* X-Rays */}
-            <span className="text-[14px] text-[#273951]">{patient.totalXrays}</span>
 
             {/* Actions */}
             <ActionsMenu

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Loader2, LayoutGrid, List } from "lucide-react";
+import { Plus, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Patient, CreatePatientData } from "@/types/patient";
 import { PatientSearch } from "@/components/patients/PatientSearch";
-import { PatientTable } from "@/components/patients/PatientTable";
+import { PatientTable, SortKey, SortDir } from "@/components/patients/PatientTable";
 import { PatientCard } from "@/components/patients/PatientCard";
-import { PatientSummaryStats } from "@/components/patients/PatientSummaryStats";
+import { PatientTableSkeleton } from "@/components/patients/PatientTableSkeleton";
+import { BranchStatsCards } from "@/components/patients/BranchStatsCards";
+import { UpcomingAppointmentsSection } from "@/components/patients/UpcomingAppointmentsSection";
 import { AddPatientDialog } from "@/components/patients/AddPatientDialog";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
 import { DeletePatientDialog } from "@/components/patients/DeletePatientDialog";
@@ -52,11 +54,25 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   const [statusFilter, setStatusFilter] = useState("all");
   const [doctorFilter, setDoctorFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [sortKey, setSortKey] = useState<SortKey>("upcomingAppointment");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [addOpen, setAddOpen] = useState(false);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [deletePatient, setDeletePatient] = useState<Patient | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [branchDoctors, setBranchDoctors] = useState<{ id: string; name: string }[]>([]);
+
+  function handleSortChange(key: SortKey) {
+    setSortKey((prev) => {
+      if (prev === key) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        return prev;
+      }
+      // New key: default direction depends on column
+      setSortDir(key === "totalVisits" ? "desc" : "asc");
+      return key;
+    });
+  }
 
   const isAdmin = branchRole === "OWNER" || branchRole === "ADMIN";
 
@@ -116,13 +132,6 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
 
     return result;
   }, [patients, statusFilter, doctorFilter, search, isAdmin]);
-
-  const stats = useMemo(() => ({
-    total: patients.length,
-    active: patients.filter((p) => p.status === "active").length,
-    inactive: patients.filter((p) => p.status === "inactive").length,
-    discharged: patients.filter((p) => p.status === "discharged").length,
-  }), [patients]);
 
   // Unique doctors for filter
   const doctorOptions = useMemo(() => {
@@ -188,10 +197,11 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
         </Button>
       </div>
 
-      {/* Summary Stats */}
-      {!loading && !error && (
-        <PatientSummaryStats {...stats} />
-      )}
+      {/* Per-branch stat cards (or personal cards for DOCTOR) */}
+      <BranchStatsCards />
+
+      {/* Upcoming appointments section */}
+      <UpcomingAppointmentsSection />
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4">
@@ -239,12 +249,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       )}
 
       {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-[#533afd] mr-2" strokeWidth={2} />
-          <span className="text-[15px] text-[#64748d]">Loading patients...</span>
-        </div>
-      )}
+      {loading && <PatientTableSkeleton rows={6} />}
 
       {/* Error state */}
       {error && !loading && (
@@ -264,6 +269,9 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
           patients={filtered}
           onEdit={(p) => setEditPatient(p)}
           onDelete={(p) => setDeletePatient(p)}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSortChange={handleSortChange}
         />
       )}
 
