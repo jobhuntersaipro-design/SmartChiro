@@ -7,22 +7,16 @@ const E2E_USER_EMAIL = process.env.E2E_USER_EMAIL ?? "e2e@smartchiro.test";
 const MOCK_URL = `http://127.0.0.1:${process.env.MOCK_WORKER_PORT ?? 8788}`;
 const CRON_SECRET = process.env.CRON_SECRET ?? "test-cron";
 
-// Safety guard: same shape as e2e/fixtures/seed.ts. Refuse to run if the
-// connection string isn't clearly a test DB. Without this, a developer who
-// forgets to set DATABASE_URL_TEST and falls through to DATABASE_URL would
-// have this spec running deleteMany() against production.
+// Safety guard: same shape as e2e/fixtures/seed.ts. The seed and this spec
+// both run deleteMany() — refuse if DATABASE_URL_TEST is missing rather than
+// silently falling back to DATABASE_URL (prod). Substring matching against
+// Neon's random endpoint hashes would be useless theatre, so the real safety
+// is the operator manually setting DATABASE_URL_TEST.
 const connectionString = process.env.DATABASE_URL_TEST;
 if (!connectionString) {
   throw new Error(
     "DATABASE_URL_TEST is required for reminder-send.spec. " +
-      "Create a Neon test branch and set it in .env.test — see e2e/README.md.",
-  );
-}
-if (!/test/i.test(connectionString) && !/localhost|127\.0\.0\.1/.test(connectionString)) {
-  throw new Error(
-    "Refusing to run: DATABASE_URL_TEST must contain \"test\" or point at localhost. " +
-      "Got: " +
-      connectionString.replace(/:[^:@]+@/, ":****@"),
+      "Set it in .env.test to a non-prod Neon branch — see e2e/README.md.",
   );
 }
 

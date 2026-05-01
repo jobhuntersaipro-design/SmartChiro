@@ -2,26 +2,32 @@
 
 ## One-time setup
 
-1. Create a Neon branch dedicated to e2e (cheap, isolated):
-   ```bash
-   neonctl branches create --name smartchiro-test --parent main
-   neonctl connection-string smartchiro-test --pooled
-   ```
-2. Copy the connection string into `.env.test` as `DATABASE_URL_TEST`.
-3. Apply the current schema once:
-   ```bash
-   DATABASE_URL=$DATABASE_URL_TEST npx prisma migrate deploy
-   ```
+The e2e suite needs a non-prod Neon branch it can wipe and reseed. You can either reuse your existing dev branch or make a dedicated one:
 
-After that, `npm run test:e2e` handles seeding and reset automatically. The `playwright.config.ts` and `e2e/fixtures/seed.ts` both load `.env.test` explicitly (it takes precedence over `.env`), so your prod `.env` stays untouched.
+**Option 1 — reuse your dev branch (simpler, what we recommend if you keep a 2-branch dev/prod setup):**
+```bash
+neonctl connection-string <dev-branch-name> --pooled
+```
+
+**Option 2 — dedicated e2e branch:**
+```bash
+neonctl branches create --name smartchiro-test --parent main
+neonctl connection-string smartchiro-test --pooled
+```
+
+Then:
+1. Paste the connection string into `.env.test` as `DATABASE_URL_TEST`.
+2. Apply the current schema once: `DATABASE_URL=$DATABASE_URL_TEST npx prisma migrate deploy`
+
+After that, `npm run test:e2e` handles seeding and reset automatically. `playwright.config.ts` and `e2e/fixtures/seed.ts` both load `.env.test` explicitly (it takes precedence over `.env`), so your prod `.env` stays untouched.
 
 ## Safety guards
 
-`seedE2E()` refuses to run unless:
-- `DATABASE_URL_TEST` is set (no fallback to `DATABASE_URL`).
-- The connection string contains `test` or points at `localhost` / `127.0.0.1`.
+`seedE2E()` refuses to run unless `DATABASE_URL_TEST` is set. There is no fallback to `DATABASE_URL` — that's the most important guard, because the seed runs `prisma.appointmentReminder.deleteMany({})` and `prisma.waSession.deleteMany({})` with no filter.
 
-If you need to run e2e against a connection that doesn't include `test` in its URL, rename the Neon branch or update the regex in `e2e/fixtures/seed.ts`. Do not silence the guard — it's the last line of defense against wiping production reminder/WA-session rows.
+We deliberately don't substring-match the URL (Neon endpoints are random adjective-noun hashes that don't carry the branch name, so a "test" check would just be theatre). The real safety is **you manually pasting the dev URL into `.env.test`** — that's the explicit opt-in.
+
+If you want belt-and-suspenders, give the credentials in `.env.test` read-write access only on the dev branch via Neon IAM.
 
 ## Commands
 

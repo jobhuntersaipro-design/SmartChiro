@@ -21,17 +21,16 @@ function assertSafeConnectionString(s: string | undefined): asserts s is string 
   if (!s) {
     throw new Error(
       'DATABASE_URL_TEST is required for e2e seeding. ' +
-        'Create a Neon test branch and set it in .env.test — see e2e/README.md. ' +
+        'Set it in .env.test to a non-prod Neon branch — see e2e/README.md. ' +
         'Refusing to fall back to DATABASE_URL because the seed runs destructive deleteMany.',
     )
   }
-  if (!/test/i.test(s) && !/localhost|127\.0\.0\.1/.test(s)) {
-    throw new Error(
-      'Refusing to seed: DATABASE_URL_TEST must contain "test" or point at localhost. ' +
-        'Got: ' +
-        s.replace(/:[^:@]+@/, ':****@'),
-    )
-  }
+  // Note: we deliberately don't substring-match the URL. Neon endpoints are
+  // random adjective-noun hashes that don't carry the branch name, so a
+  // "test"/"dev" check would be useless theatre. The real safety is the
+  // operator manually pasting the dev-branch URL into .env.test (an explicit
+  // opt-in) and the no-fallback rule above. If you want belt-and-suspenders,
+  // use Neon's IAM to give .env.test creds read-write only on the dev branch.
 }
 
 const E2E_USER_EMAIL = process.env.E2E_USER_EMAIL ?? 'e2e@smartchiro.test'
