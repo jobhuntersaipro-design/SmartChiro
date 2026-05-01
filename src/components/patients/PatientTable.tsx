@@ -5,8 +5,7 @@ import { Patient } from "@/types/patient";
 import { MoreHorizontal, Eye, Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { formatRelativeAppointmentTime, appointmentTimeBucket } from "@/lib/format";
-import { getDoctorColor } from "@/lib/doctor-color";
+import { formatRelativeAppointmentTime, appointmentTimeBucket, buildWhatsAppUrl } from "@/lib/format";
 
 export type SortKey = "upcomingAppointment" | "lastName" | "totalVisits" | "status";
 export type SortDir = "asc" | "desc";
@@ -22,28 +21,18 @@ interface PatientTableProps {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-    active: { bg: "bg-[#E8F5E8]", text: "text-[#30B130]", dot: "bg-[#30B130]", label: "Active" },
-    inactive: { bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", dot: "bg-[#F5A623]", label: "Inactive" },
-    discharged: { bg: "bg-[#F0F0F0]", text: "text-[#64748d]", dot: "bg-[#64748d]", label: "Discharged" },
+    active:     { bg: "#dcfce7", text: "#15803d", dot: "#22c55e", label: "Active"     },
+    inactive:   { bg: "#fef3c7", text: "#854d0e", dot: "#eab308", label: "Inactive"   },
+    discharged: { bg: "#e2e8f0", text: "#475569", dot: "#94a3b8", label: "Discharged" },
   };
   const c = config[status] || config.active;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium ${c.bg} ${c.text}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-      {c.label}
-    </span>
-  );
-}
-
-function DoctorBadge({ id, name }: { id: string; name: string }) {
-  const c = getDoctorColor(id);
-  return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-medium max-w-full"
+      className="inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-semibold tracking-wide"
       style={{ background: c.bg, color: c.text }}
     >
-      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
-      <span className="truncate">{name}</span>
+      <span className="h-1 w-1 rounded-full" style={{ background: c.dot }} />
+      {c.label}
     </span>
   );
 }
@@ -261,18 +250,29 @@ export function PatientTable({
               <NextAppointmentCell apt={patient.upcomingAppointment} />
             </div>
 
-            {/* Contact */}
+            {/* Contact — phone links to WhatsApp chat */}
             <div className="min-w-0">
-              <span className="text-[14px] text-[#273951] block truncate">{patient.phone || "—"}</span>
+              {patient.phone ? (
+                <a
+                  href={buildWhatsAppUrl(patient.phone) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[14px] text-[#273951] hover:text-[#25D366] hover:underline underline-offset-2 transition-colors block truncate"
+                  title="Open WhatsApp chat"
+                >
+                  {patient.phone}
+                </a>
+              ) : (
+                <span className="text-[14px] text-[#94a3b8]">—</span>
+              )}
               {patient.phone && patient.email && (
                 <span className="text-[12px] text-[#64748d] block truncate">{patient.email}</span>
               )}
             </div>
 
             {/* Doctor */}
-            <div className="min-w-0">
-              <DoctorBadge id={patient.doctorId} name={patient.doctorName} />
-            </div>
+            <span className="text-[14px] text-[#273951] truncate">{patient.doctorName}</span>
 
             {/* Status */}
             <StatusBadge status={patient.status} />
