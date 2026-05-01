@@ -1,14 +1,19 @@
 import { defineConfig, devices } from "@playwright/test";
-import "dotenv/config";
+import { config as loadDotenv } from "dotenv";
+
+// Load .env.test FIRST so its values win over .env (which holds prod-shaped values).
+loadDotenv({ path: ".env.test" });
+loadDotenv();
 
 const PORT = 3000;
 const MOCK_PORT = Number(process.env.MOCK_WORKER_PORT ?? 8788);
 
-const DB_URL = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
+const DB_URL = process.env.DATABASE_URL_TEST;
 if (!DB_URL) {
   throw new Error(
-    "DATABASE_URL_TEST (or DATABASE_URL) must be set for e2e. " +
-      "Create a Neon test branch and add it to .env.test — see e2e/README.md.",
+    "DATABASE_URL_TEST is required for e2e. " +
+      "Create a Neon test branch and set it in .env.test — see e2e/README.md. " +
+      "Refusing to fall back to DATABASE_URL because the seed runs destructive deleteMany.",
   );
 }
 
