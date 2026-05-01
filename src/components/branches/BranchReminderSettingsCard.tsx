@@ -143,12 +143,35 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
             {wa?.phoneNumber && ` (${wa.phoneNumber})`}
           </div>
           {canEdit && (
-            <button
-              onClick={() => setWaModal(true)}
-              className="rounded-[4px] bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB]"
-            >
-              {waStatus === "CONNECTED" ? "Re-pair" : "Connect WhatsApp"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setWaModal(true)}
+                className="rounded-[4px] bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB]"
+              >
+                {waStatus === "CONNECTED" ? "Re-pair" : "Connect WhatsApp"}
+              </button>
+              {waStatus === "CONNECTED" && (
+                <button
+                  onClick={async () => {
+                    const r = await fetch(`/api/branches/${branchId}/wa/disconnect`, {
+                      method: "POST",
+                    });
+                    if (r.ok) {
+                      setState((cur) =>
+                        cur
+                          ? { ...cur, waSession: { status: "DISCONNECTED", phoneNumber: null } }
+                          : cur,
+                      );
+                    } else {
+                      alert("Failed to disconnect WhatsApp");
+                    }
+                  }}
+                  className="rounded-[4px] border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
+                >
+                  Disconnect
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
