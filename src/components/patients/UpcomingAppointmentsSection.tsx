@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Calendar, Loader2, ArrowRight } from "lucide-react";
-import { formatRelativeAppointmentTime, appointmentTimeBucket, buildWhatsAppUrl } from "@/lib/format";
+import { formatAppointmentDateTime, buildWhatsAppUrl } from "@/lib/format";
 
 type Range = "today" | "week" | "month";
 
@@ -33,46 +33,29 @@ const RANGE_LABELS: Record<Range, string> = {
 };
 
 function StatusPill({ status }: { status: string }) {
-  // Stronger backgrounds + tighter padding — addresses "too much blank space"
-  const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-    SCHEDULED:    { bg: "#dbeafe", text: "#1d4ed8", dot: "#3b82f6", label: "Scheduled"  },
-    CHECKED_IN:   { bg: "#dcfce7", text: "#15803d", dot: "#22c55e", label: "Checked-in" },
-    IN_PROGRESS:  { bg: "#fef3c7", text: "#854d0e", dot: "#eab308", label: "In progress"},
-    COMPLETED:    { bg: "#e2e8f0", text: "#475569", dot: "#94a3b8", label: "Completed"  },
-    CANCELLED:    { bg: "#fee2e2", text: "#b91c1c", dot: "#ef4444", label: "Cancelled"  },
-    NO_SHOW:      { bg: "#fee2e2", text: "#b91c1c", dot: "#ef4444", label: "No-show"    },
+  // Dot + colored text only, no pill background — eliminates wasted space
+  // while preserving color coding by status.
+  const config: Record<string, { text: string; dot: string; label: string }> = {
+    SCHEDULED:    { text: "#1d4ed8", dot: "#3b82f6", label: "Scheduled"  },
+    CHECKED_IN:   { text: "#15803d", dot: "#22c55e", label: "Checked-in" },
+    IN_PROGRESS:  { text: "#854d0e", dot: "#eab308", label: "In progress"},
+    COMPLETED:    { text: "#64748d", dot: "#94a3b8", label: "Completed"  },
+    CANCELLED:    { text: "#b91c1c", dot: "#ef4444", label: "Cancelled"  },
+    NO_SHOW:      { text: "#b91c1c", dot: "#ef4444", label: "No-show"    },
   };
   const c = config[status] ?? config.SCHEDULED;
   return (
-    <span
-      className="inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-semibold tracking-wide"
-      style={{ background: c.bg, color: c.text }}
-    >
-      <span className="h-1 w-1 rounded-full" style={{ background: c.dot }} />
+    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
+      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
       {c.label}
     </span>
   );
 }
 
 function TimeCell({ iso }: { iso: string }) {
-  const bucket = appointmentTimeBucket(iso);
-  const text = formatRelativeAppointmentTime(iso);
-  let style: React.CSSProperties = {};
-  let cls = "text-[14px]";
-  if (bucket === "today") {
-    style = { color: "#533afd" };
-    cls += " font-semibold";
-  } else if (bucket === "tomorrow") {
-    style = { color: "#0570DE" };
-    cls += " font-medium";
-  } else if (bucket === "thisWeek") {
-    style = { color: "#273951" };
-  } else {
-    style = { color: "#64748d" };
-  }
   return (
-    <time dateTime={iso} className={cls} style={style}>
-      {text}
+    <time dateTime={iso} className="text-[14px] text-[#273951] tabular-nums">
+      {formatAppointmentDateTime(iso)}
     </time>
   );
 }

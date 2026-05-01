@@ -5,7 +5,7 @@ import { Patient } from "@/types/patient";
 import { MoreHorizontal, Eye, Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { formatRelativeAppointmentTime, appointmentTimeBucket, buildWhatsAppUrl } from "@/lib/format";
+import { formatAppointmentDateTime, buildWhatsAppUrl } from "@/lib/format";
 
 export type SortKey = "upcomingAppointment" | "lastName" | "totalVisits" | "status";
 export type SortDir = "asc" | "desc";
@@ -20,18 +20,15 @@ interface PatientTableProps {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-    active:     { bg: "#dcfce7", text: "#15803d", dot: "#22c55e", label: "Active"     },
-    inactive:   { bg: "#fef3c7", text: "#854d0e", dot: "#eab308", label: "Inactive"   },
-    discharged: { bg: "#e2e8f0", text: "#475569", dot: "#94a3b8", label: "Discharged" },
+  const config: Record<string, { text: string; dot: string; label: string }> = {
+    active:     { text: "#15803d", dot: "#22c55e", label: "Active"     },
+    inactive:   { text: "#854d0e", dot: "#eab308", label: "Inactive"   },
+    discharged: { text: "#64748d", dot: "#94a3b8", label: "Discharged" },
   };
   const c = config[status] || config.active;
   return (
-    <span
-      className="inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-semibold tracking-wide"
-      style={{ background: c.bg, color: c.text }}
-    >
-      <span className="h-1 w-1 rounded-full" style={{ background: c.dot }} />
+    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
+      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
       {c.label}
     </span>
   );
@@ -39,24 +36,9 @@ function StatusBadge({ status }: { status: string }) {
 
 function NextAppointmentCell({ apt }: { apt: Patient["upcomingAppointment"] }) {
   if (!apt) return <span className="text-[13px] text-[#94a3b8]">—</span>;
-  const bucket = appointmentTimeBucket(apt.dateTime);
-  const text = formatRelativeAppointmentTime(apt.dateTime);
-  let style: React.CSSProperties = {};
-  let cls = "text-[13px]";
-  if (bucket === "today") {
-    style = { color: "#533afd" };
-    cls += " font-semibold";
-  } else if (bucket === "tomorrow") {
-    style = { color: "#0570DE" };
-    cls += " font-medium";
-  } else if (bucket === "thisWeek") {
-    style = { color: "#273951" };
-  } else {
-    style = { color: "#64748d" };
-  }
   return (
-    <time dateTime={apt.dateTime} className={cls} style={style}>
-      {text}
+    <time dateTime={apt.dateTime} className="text-[13px] text-[#273951] tabular-nums">
+      {formatAppointmentDateTime(apt.dateTime)}
     </time>
   );
 }
