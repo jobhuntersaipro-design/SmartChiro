@@ -37,6 +37,9 @@ yarn-error.log*
 
 # playwright
 .playwright-mcp/
+e2e/.auth/
+playwright-report/
+test-results/
 
 # superpowers brainstorm artifacts
 .superpowers/

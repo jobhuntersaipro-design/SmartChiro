@@ -48,3 +48,28 @@ export function buildDoctorHref(userId: string): string {
 export function buildBranchHref(branchId: string): string {
   return `/dashboard/branches/${branchId}`
 }
+
+const TIME_FMT = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+const WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'short' })
+
+// Always returns "10:30 AM 06/05/2026". Uniform/formal — no relative
+// "Today"/"Tomorrow" labels. The sort order surfaces urgency.
+export function formatAppointmentDateTime(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return null
+  const time = TIME_FMT.format(dt) // "10:30 AM"
+  const dd = String(dt.getDate()).padStart(2, '0')
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const yyyy = dt.getFullYear()
+  return `${time} ${dd}/${mm}/${yyyy}`
+}
+
+// Returns short weekday like "Tue". Use with WeekdayBadge for visual emphasis.
+export function getAppointmentWeekday(iso: string | null | undefined): { label: string; isWeekend: boolean } | null {
+  if (!iso) return null
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return null
+  const day = dt.getDay() // 0 = Sun, 6 = Sat
+  return { label: WEEKDAY_FMT.format(dt), isWeekend: day === 0 || day === 6 }
+}

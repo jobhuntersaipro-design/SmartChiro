@@ -2,6 +2,7 @@
 
 import { Calendar } from "lucide-react";
 import { EmptyState } from "./EmptyState";
+import { formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
 
 export interface ScheduleAppointment {
   id: string;
@@ -14,14 +15,39 @@ export interface ScheduleAppointment {
   branch?: { id: string; name: string };
 }
 
-const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-  SCHEDULED: { bg: "#EFF6FF", text: "#0570de", label: "Scheduled" },
-  CHECKED_IN: { bg: "#FFF8E1", text: "#f5a623", label: "Checked In" },
-  IN_PROGRESS: { bg: "#ededfc", text: "#533afd", label: "In Progress" },
-  COMPLETED: { bg: "#ECFDF5", text: "#15be53", label: "Completed" },
-  CANCELLED: { bg: "#FEF2F2", text: "#df1b41", label: "Cancelled" },
-  NO_SHOW: { bg: "#F3F4F6", text: "#64748d", label: "No Show" },
+// Dot + colored text — same convention as patients page tables.
+const statusConfig: Record<string, { text: string; dot: string; label: string }> = {
+  SCHEDULED:   { text: "#15803d", dot: "#22c55e", label: "Scheduled"   },
+  CHECKED_IN:  { text: "#15803d", dot: "#22c55e", label: "Checked In"  },
+  IN_PROGRESS: { text: "#854d0e", dot: "#eab308", label: "In Progress" },
+  COMPLETED:   { text: "#64748d", dot: "#94a3b8", label: "Completed"   },
+  CANCELLED:   { text: "#b91c1c", dot: "#ef4444", label: "Cancelled"   },
+  NO_SHOW:     { text: "#b91c1c", dot: "#ef4444", label: "No Show"     },
 };
+
+function StatusIndicator({ status }: { status: string }) {
+  const c = statusConfig[status] ?? statusConfig.SCHEDULED;
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
+      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
+      {c.label}
+    </span>
+  );
+}
+
+function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-[3px] px-1 py-px text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
+      style={{
+        background: isWeekend ? "#fef3c7" : "#f1f5f9",
+        color: isWeekend ? "#854d0e" : "#475569",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
 
 interface ScheduleTableProps {
   appointments: ScheduleAppointment[];
@@ -49,34 +75,33 @@ export function ScheduleTable({
       <table className="w-full">
         <thead>
           <tr className="border-b border-[#e5edf5]">
-            <th className="px-4 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Time</th>
-            <th className="px-4 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Patient</th>
+            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">When</th>
+            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Patient</th>
             {showDoctor && (
-              <th className="px-4 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Doctor</th>
+              <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Doctor</th>
             )}
             {showBranch && (
-              <th className="px-4 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Branch</th>
+              <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Branch</th>
             )}
-            <th className="px-4 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Service</th>
-            <th className="px-4 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Status</th>
+            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Notes</th>
+            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Status</th>
           </tr>
         </thead>
         <tbody>
           {appointments.slice(0, 10).map((appt) => {
-            const time = new Date(appt.dateTime).toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            });
-            const status = statusConfig[appt.status] ?? statusConfig.SCHEDULED;
+            const dow = getAppointmentWeekday(appt.dateTime);
+            const dateText = formatAppointmentDateTime(appt.dateTime);
 
             return (
               <tr
                 key={appt.id}
-                className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer"
+                className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors duration-200 cursor-pointer"
               >
-                <td className="px-4 py-3 text-[15px] text-[#061b31] font-medium whitespace-nowrap">
-                  {time}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5">
+                    {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
+                    <span className="text-[14px] text-[#273951] tabular-nums">{dateText}</span>
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-[15px] text-[#273951]">
                   {appt.patient.firstName} {appt.patient.lastName}
@@ -91,16 +116,11 @@ export function ScheduleTable({
                     {appt.branch?.name ?? "—"}
                   </td>
                 )}
-                <td className="px-4 py-3 text-[15px] text-[#64748d]">
+                <td className="px-4 py-3 text-[14px] text-[#64748d] truncate max-w-[200px]">
                   {appt.notes ?? "—"}
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[13px] font-medium transition-transform duration-200 hover:scale-105"
-                    style={{ backgroundColor: status.bg, color: status.text }}
-                  >
-                    {status.label}
-                  </span>
+                  <StatusIndicator status={appt.status} />
                 </td>
               </tr>
             );

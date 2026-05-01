@@ -33,6 +33,7 @@ import {
   buildDoctorHref,
   buildBranchHref,
   formatDobWithAge,
+  formatAppointmentDateTime,
 } from "@/lib/format";
 
 interface PatientDetailPageProps {
@@ -69,18 +70,18 @@ function formatGender(gender: string | null): string | null {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  // Dot + colored text — consistent with patients table.
   const lower = status.toLowerCase();
-  let classes = "bg-[#F0F3F7] text-[#64748d]";
-  if (lower === "active") {
-    classes = "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]";
-  } else if (lower === "inactive") {
-    classes = "bg-[rgba(245,166,35,0.2)] text-[#b57a14] border border-[rgba(245,166,35,0.4)]";
-  } else if (lower === "discharged") {
-    classes = "bg-[#F0F3F7] text-[#64748d] border border-[#e5edf5]";
-  }
+  const config: Record<string, { text: string; dot: string; label: string }> = {
+    active:     { text: "#15803d", dot: "#22c55e", label: "Active"     },
+    inactive:   { text: "#854d0e", dot: "#eab308", label: "Inactive"   },
+    discharged: { text: "#64748d", dot: "#94a3b8", label: "Discharged" },
+  };
+  const c = config[lower] ?? { text: "#64748d", dot: "#94a3b8", label: status };
   return (
-    <span className={`rounded-[4px] px-[8px] py-[2px] text-[11px] font-light ${classes}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
+      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
+      {c.label}
     </span>
   );
 }
@@ -209,7 +210,7 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
     {
       label: "Next Appointment",
       value: patient.nextAppointment
-        ? new Date(patient.nextAppointment).toLocaleDateString("en-MY", { day: "numeric", month: "short" })
+        ? formatAppointmentDateTime(patient.nextAppointment) ?? "None"
         : "None",
       icon: CalendarCheck,
       color: "#30B130",

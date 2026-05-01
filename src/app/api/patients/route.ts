@@ -42,6 +42,7 @@ function mapPatientToResponse(p: {
   _count: { visits: number; xrays: number };
   visits: { visitDate: Date }[];
   xrays: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; _count: { annotations: number } }[];
+  appointments?: { id: string; dateTime: Date; status: string }[];
 }) {
   return {
     id: p.id,
@@ -83,6 +84,13 @@ function mapPatientToResponse(p: {
     lastVisit: p.visits[0]?.visitDate?.toISOString() ?? null,
     totalVisits: p._count.visits,
     totalXrays: p._count.xrays,
+    upcomingAppointment: p.appointments && p.appointments[0]
+      ? {
+          id: p.appointments[0].id,
+          dateTime: p.appointments[0].dateTime.toISOString(),
+          status: p.appointments[0].status,
+        }
+      : null,
     createdAt: p.createdAt.toISOString(),
     xrays: p.xrays.map((x) => ({
       id: x.id,
@@ -159,6 +167,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    const now = new Date()
     const patients = await prisma.patient.findMany({
       where,
       include: {
@@ -182,6 +191,12 @@ export async function GET(request: NextRequest) {
           select: { visitDate: true },
           orderBy: { visitDate: 'desc' },
           take: 1,
+        },
+        appointments: {
+          where: { status: { in: ['SCHEDULED', 'CHECKED_IN'] }, dateTime: { gte: now } },
+          orderBy: { dateTime: 'asc' },
+          take: 1,
+          select: { id: true, dateTime: true, status: true },
         },
       },
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
@@ -374,6 +389,12 @@ export async function POST(request: NextRequest) {
           select: { visitDate: true },
           orderBy: { visitDate: 'desc' },
           take: 1,
+        },
+        appointments: {
+          where: { status: { in: ['SCHEDULED', 'CHECKED_IN'] }, dateTime: { gte: new Date() } },
+          orderBy: { dateTime: 'asc' },
+          take: 1,
+          select: { id: true, dateTime: true, status: true },
         },
       },
     })

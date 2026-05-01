@@ -13,7 +13,7 @@ import { CreateVisitDialog } from "@/components/patients/CreateVisitDialog";
 import { EditVisitDialog } from "@/components/patients/EditVisitDialog";
 import { DeleteVisitDialog } from "@/components/patients/DeleteVisitDialog";
 import { ExternalLink } from "@/components/patients/ExternalLink";
-import { buildDoctorHref } from "@/lib/format";
+import { buildDoctorHref, formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
 import type { Visit } from "@/types/visit";
 
 interface PatientVisitsTabProps {
@@ -43,12 +43,30 @@ function VisitTypeBadge({ type }: { type: string | null }) {
   );
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-[3px] px-1 py-px text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
+      style={{
+        background: isWeekend ? "#fef3c7" : "#f1f5f9",
+        color: isWeekend ? "#854d0e" : "#475569",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function VisitDateCell({ iso }: { iso: string }) {
+  const dow = getAppointmentWeekday(iso);
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+      {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
+      <time dateTime={iso} className="text-[14px] font-medium text-[#061b31] tabular-nums">
+        {formatAppointmentDateTime(iso)}
+      </time>
+    </span>
+  );
 }
 
 // ─── Loading Skeleton ───
@@ -148,9 +166,7 @@ function VisitCard({
         className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left"
       >
         {/* Date */}
-        <span className="text-[14px] font-medium text-[#061b31] whitespace-nowrap">
-          {formatDate(visit.visitDate)}
-        </span>
+        <VisitDateCell iso={visit.visitDate} />
 
         {/* Visit Type Badge */}
         <VisitTypeBadge type={visit.visitType} />

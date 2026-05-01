@@ -1,8 +1,94 @@
-# Current Feature
+# Current Feature: WhatsApp Worker (Baileys)
 
 ## Status
 
-Available for next feature.
+Not Started
+
+## Spec
+
+- **Contract (external API):** `docs/superpowers/specs/2026-04-29-smartchiro-wa-worker-contract.md`
+- **Implementation plan (inside the worker):** `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`
+- **Source-of-truth design:** `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md` §8
+
+The Next.js app is already wired against the contract — main calls `WORKER_URL` over signed HTTPS, but that URL points nowhere because the service doesn't exist yet.
+
+**Proposed repo path:** sibling directory `~/Desktop/smartchiro-wa-worker` (NOT inside this monorepo — different deps, different deploy lifecycle).
+
+**Proposed branch (in this repo, for any companion docs only):** `feat/wa-worker-handoff`
+
+## Goals
+
+- Implement the 4 HMAC-signed endpoints from spec §8.2 against a real Baileys session:
+  - `POST /branches/:branchId/session` — start pairing, emit `qr` event with base64 PNG
+  - `GET /branches/:branchId/status` — return `{status, phoneNumber?, lastSeenAt?}`
+  - `POST /branches/:branchId/send` — `{to, body}` → `{msgId}` or `{error: {code, message}}`
+  - `POST /branches/:branchId/logout` — terminate the session
+  - `GET /healthz` — unauthed liveness probe
+- Implement outbound webhook to `{APP_URL}/api/wa/webhook` (HMAC-signed with `WORKER_OUTBOUND_SECRET`) for the 5 lifecycle events: `qr`, `connected`, `disconnected`, `logged_out`, `ack`.
+- Map Baileys errors to the 6 error codes in spec §8.4 (`not_on_whatsapp`, `invalid_e164`, `session_disconnected`, `session_logged_out`, `rate_limited`, `unknown`).
+- Hold one `WASocket` per `branchId` in a `Map`, persist credentials at `<SESSIONS_DIR>/<branchId>/{creds.json, keys/}`, restore sessions on process restart.
+- Deploy to Railway with a persistent volume mounted at `SESSIONS_DIR`. Single-process v1; sharding by `branchId` is a follow-up.
+- Local dev: `npm run dev` runs the worker on port 8787 alongside `npm run dev` on port 3000 in SmartChiro. The `Connect WhatsApp` modal in the SmartChiro UI shows a real QR; scanning it with a phone marks the branch session `CONNECTED`; triggering `/api/reminders/dispatch` delivers a real WhatsApp.
+
+## Notes
+
+### Locked Decisions
+1. **Sibling repo, not in this monorepo** — different runtime constraints (long-lived process, persistent disk, native Baileys deps). Spec §8.5.
+2. **Railway** for hosting (~$5/mo). Persistent volumes are built-in. Free-tier-idling hosts (Render free, etc.) are NOT acceptable — WhatsApp socket must stay live.
+3. **Hono** over Express — smaller, native fetch types, plays well with Railway's nixpacks builder.
+4. **Pinned exact Baileys version** (spec §8.1). The fork churns; lock it.
+5. **HMAC mirrors the SmartChiro app's `signRequest`/`verifyRequest`** byte-for-byte. Reuse the same algorithm: `hex(HMAC_SHA256(secret, timestamp + "." + rawBody))`, 60s replay window, in-memory LRU of seen signatures.
+6. **One process for all branches** in v1 — `Map<branchId, WASocket>` with ~128MB budget per active session. Spec acknowledges this scales to "tens of branches" before sharding is needed.
+
+### Non-Goals (v1)
+- Multi-process / horizontal scaling (sharding by `branchId`).
+- WhatsApp Cloud API support (separate code path; this implementation is Baileys-only).
+- Reading inbound messages or replies (spec §3 — owner handles replies on their phone).
+- Media attachments (`/send` accepts text body only).
+- Per-branch rate limiting beyond Baileys' internal throttling.
+- Web UI for the worker — operations via SmartChiro app + logs.
+
+### Repo Structure (target)
+```
+~/Desktop/smartchiro-wa-worker/
+├── package.json
+├── tsconfig.json
+├── Dockerfile               # for Railway
+├── railway.json             # build config + volume mount
+├── .env.example
+├── .gitignore               # exclude data/sessions
+├── README.md                # local dev + Railway deploy steps
+├── data/sessions/           # gitignored, mounted as volume in prod
+└── src/
+    ├── server.ts            # Hono app: routes + HMAC middleware
+    ├── env.ts               # validate WORKER_SHARED_SECRET, WORKER_OUTBOUND_SECRET, APP_URL, PORT, SESSIONS_DIR
+    ├── hmac.ts              # signRequest + verifyRequest (mirror of SmartChiro)
+    ├── session.ts           # Baileys session manager: create, restore, send, logout
+    ├── webhook.ts           # signed POST to APP_URL/api/wa/webhook
+    └── errors.ts            # Baileys → spec error code mapping
+```
+
+### Env Vars
+- **Worker side:** `WORKER_SHARED_SECRET` (app→worker auth), `WORKER_OUTBOUND_SECRET` (worker→app webhook auth), `APP_URL` (where to POST events), `PORT` (default 8787), `SESSIONS_DIR` (default `./data/sessions` dev, `/data/sessions` prod).
+- **App side (already set):** `WORKER_URL`, `WORKER_SHARED_SECRET`, `WORKER_OUTBOUND_SECRET`. Set `WORKER_URL=http://localhost:8787` for local dev, the Railway public URL for prod.
+
+### Deployment Topology
+```
+Vercel (Next.js)  ──signed HTTPS──▶  Railway (worker)  ──Baileys WS──▶  WhatsApp
+       ▲                                    │
+       └────────signed HTTPS────────────────┘
+              (webhook for lifecycle events)
+```
+
+Vercel Cron fires `/api/reminders/dispatch` every 5 min (already configured). Worker stays always-on on Railway with persistent volume for session credentials.
+
+### Risks (carry-over from spec §15)
+- **Account ban:** Meta may flag the owner's number. Mitigated only by clinic discipline (low message volume, opt-in patients). Surfaced in the SmartChiro Connect WhatsApp modal.
+- **Session expiry:** "Linked Devices" sessions expire periodically; pairing must be redone. Worker emits `logged_out` event so the UI can prompt re-pair.
+- **Volume loss = re-pair from scratch.** Acceptable for v1.
+
+### Companion Documentation
+The contract is in §8 of the existing design doc. The implementation specifics above are NOT in any spec yet — if you want a separate `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md` doc capturing the structure + Railway runbook, ask before `/feature start`.
 
 ## History
 
