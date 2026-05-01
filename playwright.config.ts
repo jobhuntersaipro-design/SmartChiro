@@ -4,6 +4,14 @@ import "dotenv/config";
 const PORT = 3000;
 const MOCK_PORT = Number(process.env.MOCK_WORKER_PORT ?? 8788);
 
+const DB_URL = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
+if (!DB_URL) {
+  throw new Error(
+    "DATABASE_URL_TEST (or DATABASE_URL) must be set for e2e. " +
+      "Create a Neon test branch and add it to .env.test — see e2e/README.md.",
+  );
+}
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
@@ -34,7 +42,7 @@ export default defineConfig({
         WORKER_SHARED_SECRET: process.env.WORKER_SHARED_SECRET ?? "test-shared",
         WORKER_OUTBOUND_SECRET: process.env.WORKER_OUTBOUND_SECRET ?? "test-outbound",
         CRON_SECRET: process.env.CRON_SECRET ?? "test-cron",
-        DATABASE_URL: process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL ?? "",
+        DATABASE_URL: DB_URL,
       },
     },
     {
