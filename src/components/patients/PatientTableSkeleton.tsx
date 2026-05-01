@@ -9,7 +9,7 @@ export function PatientTableSkeleton({ rows = 6 }: { rows?: number }) {
       className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden"
       style={{ boxShadow: SHADOW_CARD }}
     >
-      <div className="grid grid-cols-[1fr_180px_140px_130px_90px_80px_40px] gap-3 px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc]">
+      <div className="grid grid-cols-[minmax(220px,300px)_230px_minmax(140px,1fr)_140px_110px_70px_40px] gap-3 px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc]">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="h-3 w-16 bg-[#e5edf5] rounded animate-pulse" />
         ))}
@@ -18,7 +18,7 @@ export function PatientTableSkeleton({ rows = 6 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="grid grid-cols-[1fr_180px_140px_130px_90px_80px_40px] gap-3 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0"
+          className="grid grid-cols-[minmax(220px,300px)_230px_minmax(140px,1fr)_140px_110px_70px_40px] gap-3 items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0"
         >
           <div className="flex items-center gap-2.5">
             <div className="h-7 w-7 rounded-full bg-[#f0f3f7] animate-pulse" />

@@ -152,7 +152,7 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
   );
 }
 
-const COL_GRID = "grid grid-cols-[1fr_180px_140px_140px_100px_80px_40px] gap-3";
+const COL_GRID = "grid grid-cols-[minmax(220px,300px)_230px_minmax(140px,1fr)_140px_110px_70px_40px] gap-3";
 
 export function PatientTable({
   patients,

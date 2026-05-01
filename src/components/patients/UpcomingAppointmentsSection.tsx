@@ -163,7 +163,7 @@ export function UpcomingAppointmentsSection() {
         <EmptyState range={range} />
       ) : (
         <>
-          <div className="grid grid-cols-[180px_1fr_140px_120px_140px] gap-3 px-4 py-2 border-b border-[#e5edf5] bg-[#f6f9fc]">
+          <div className="grid grid-cols-[230px_minmax(160px,240px)_minmax(140px,1fr)_120px_170px] gap-3 px-4 py-2 border-b border-[#e5edf5] bg-[#f6f9fc]">
             <span className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">When</span>
             <span className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Patient</span>
             <span className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Doctor</span>
@@ -175,7 +175,7 @@ export function UpcomingAppointmentsSection() {
             return (
               <div
                 key={a.id}
-                className="grid grid-cols-[180px_1fr_140px_120px_140px] gap-3 items-center px-4 py-2.5 border-b border-[#e5edf5] last:border-b-0 hover:bg-[#fbfcfe] transition-colors"
+                className="grid grid-cols-[230px_minmax(160px,240px)_minmax(140px,1fr)_120px_170px] gap-3 items-center px-4 py-2.5 border-b border-[#e5edf5] last:border-b-0 hover:bg-[#fbfcfe] transition-colors"
               >
                 <TimeCell iso={a.dateTime} />
                 <Link
