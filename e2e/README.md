@@ -25,6 +25,14 @@ If you need to run e2e against a connection that doesn't include `test` in its U
 
 ## Commands
 
-- `npm run test:e2e` — headless Playwright
+- `npm run test:e2e` — headless Playwright (auto-seeds via `auth.setup.ts`)
 - `npm run test:e2e:ui` — interactive Playwright UI
 - `npm run test:e2e:debug` — step-debugger
+- `npx tsx e2e/fixtures/seed-cli.ts` — wipe and reseed without running tests
+  (use this if you need to inspect a known-good DB state)
+
+## Why two seed files?
+
+`e2e/fixtures/seed.ts` is the library — `seedE2E()` is imported by `auth.setup.ts`. It uses CJS-friendly imports because Playwright's test transformer mis-handles `import.meta.url`, top-level dynamic imports, and several CJS packages' conditional exports.
+
+`e2e/fixtures/seed-cli.ts` is the standalone runner — it loads `.env.test` via dotenv and invokes `seedE2E()`. Playwright never touches it, so it's free to use ESM features.
