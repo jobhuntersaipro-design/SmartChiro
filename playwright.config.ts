@@ -1,9 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
-import { config as loadDotenv } from "dotenv";
+import "dotenv/config";
 
-// Load .env.test FIRST so its values win over .env (which holds prod-shaped values).
-loadDotenv({ path: ".env.test" });
-loadDotenv();
+// .env holds both local-dev secrets AND e2e test config (DATABASE_URL_TEST,
+// E2E_*, MOCK_WORKER_PORT). Single-source-of-truth, no .env.test split.
 
 const PORT = 3000;
 const MOCK_PORT = Number(process.env.MOCK_WORKER_PORT ?? 8788);
