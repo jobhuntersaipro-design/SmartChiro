@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Calendar, Loader2, ArrowRight } from "lucide-react";
-import { formatAppointmentDateTime, buildWhatsAppUrl } from "@/lib/format";
+import { formatAppointmentDateTime, getAppointmentWeekday, buildWhatsAppUrl } from "@/lib/format";
 
 type Range = "today" | "week" | "month";
 
@@ -52,11 +52,29 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function TimeCell({ iso }: { iso: string }) {
+function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean }) {
   return (
-    <time dateTime={iso} className="text-[14px] text-[#273951] tabular-nums">
-      {formatAppointmentDateTime(iso)}
-    </time>
+    <span
+      className="inline-flex items-center justify-center rounded-[3px] px-1 py-px text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
+      style={{
+        background: isWeekend ? "#fef3c7" : "#f1f5f9",
+        color: isWeekend ? "#854d0e" : "#475569",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function TimeCell({ iso }: { iso: string }) {
+  const dow = getAppointmentWeekday(iso);
+  return (
+    <span className="inline-flex items-center gap-1.5 min-w-0">
+      {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
+      <time dateTime={iso} className="text-[14px] text-[#273951] tabular-nums truncate">
+        {formatAppointmentDateTime(iso)}
+      </time>
+    </span>
   );
 }
 
