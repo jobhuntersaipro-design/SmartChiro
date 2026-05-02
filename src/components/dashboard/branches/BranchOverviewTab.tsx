@@ -34,14 +34,36 @@ export function BranchOverviewTab({ branch, stats }: BranchOverviewTabProps) {
         if (res.ok) {
           const data = await res.json();
           setAppointments(
-            data.appointments.map((a: { id: string; dateTime: string; duration: number; status: string; patient: { firstName: string; lastName: string } | null; doctor: { name: string | null } | null; notes: string | null }) => ({
-              id: a.id,
-              time: new Date(a.dateTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-              patientName: a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Unknown",
-              doctorName: a.doctor?.name ?? "Unassigned",
-              status: a.status,
-              duration: a.duration,
-            }))
+            data.appointments
+              .filter(
+                (a: { patient: { id?: string; firstName: string; lastName: string } | null }) =>
+                  !!a.patient,
+              )
+              .map(
+                (a: {
+                  id: string;
+                  dateTime: string;
+                  duration: number;
+                  status: string;
+                  notes: string | null;
+                  patient: { id: string; firstName: string; lastName: string };
+                  doctor: { id: string; name: string | null } | null;
+                }) => ({
+                  id: a.id,
+                  dateTime: a.dateTime,
+                  duration: a.duration,
+                  status: a.status as DashScheduleAppointment["status"],
+                  notes: a.notes,
+                  patient: {
+                    id: a.patient.id,
+                    firstName: a.patient.firstName,
+                    lastName: a.patient.lastName,
+                  },
+                  doctor: a.doctor
+                    ? { id: a.doctor.id, name: a.doctor.name ?? "Unassigned" }
+                    : undefined,
+                }),
+              ),
           );
         }
       } finally {
