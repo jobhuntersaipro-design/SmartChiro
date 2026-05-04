@@ -68,6 +68,61 @@ export interface Patient {
   xrays: PatientXray[];
 }
 
+// ─── Past Appointments ───
+
+export type AppointmentStatusValue =
+  | 'SCHEDULED'
+  | 'CHECKED_IN'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW';
+
+export type InvoiceStatusValue =
+  | 'DRAFT'
+  | 'SENT'
+  | 'PAID'
+  | 'OVERDUE'
+  | 'CANCELLED';
+
+export interface PastAppointmentInvoice {
+  id: string;
+  invoiceNumber: string;
+  amount: number;
+  status: InvoiceStatusValue;
+}
+
+export interface PastAppointment {
+  id: string;
+  dateTime: string;
+  duration: number;
+  status: AppointmentStatusValue;
+  isStale: boolean;
+  notes: string | null;
+  doctor: { id: string; name: string };
+  branch: { id: string; name: string };
+  visit: { id: string; visitDate: string } | null;
+  invoices: PastAppointmentInvoice[];
+}
+
+export interface PastAppointmentStats {
+  completed: number;
+  cancelled: number;
+  noShow: number;
+  stale: number;
+  paid: number;
+  outstanding: number;
+  currency: 'MYR';
+}
+
+export interface PastAppointmentsResponse {
+  stats: PastAppointmentStats;
+  appointments: PastAppointment[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface CreatePatientData {
   firstName: string;
   lastName: string;

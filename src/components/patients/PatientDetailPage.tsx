@@ -19,11 +19,12 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import type { BranchRole } from "@prisma/client";
 import type { Patient } from "@/types/patient";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
 import { DeletePatientDialog } from "@/components/patients/DeletePatientDialog";
 import { PatientOverviewTab } from "@/components/patients/PatientOverviewTab";
-import { PatientVisitsTab } from "@/components/patients/PatientVisitsTab";
+import { PatientHistoryTab } from "@/components/patients/PatientHistoryTab";
 import { PatientXraysTab } from "@/components/patients/PatientXraysTab";
 import { PatientProfileTab } from "@/components/patients/PatientProfileTab";
 import { ExternalLink } from "@/components/patients/ExternalLink";
@@ -38,6 +39,7 @@ import {
 
 interface PatientDetailPageProps {
   patientId: string;
+  branchRole: BranchRole | null;
 }
 
 interface PatientDetail extends Patient {
@@ -49,12 +51,23 @@ interface PatientDetail extends Patient {
 
 const TABS = [
   { id: "overview", label: "Overview" },
-  { id: "visits", label: "Visits" },
+  { id: "history", label: "History" },
   { id: "xrays", label: "X-Rays" },
   { id: "profile", label: "Profile" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+// Backwards-compat: existing deep-links use ?tab=visits. Map them to the new
+// `history` top-level tab + `visits` sub-tab so old bookmarks still land in
+// the right place.
+function resolveInitialTab(raw: string | null): TabId {
+  if (raw === "visits") return "history";
+  if (raw === "history" || raw === "overview" || raw === "xrays" || raw === "profile") {
+    return raw;
+  }
+  return "overview";
+}
 
 function getInitials(firstName: string, lastName: string): string {
   const f = firstName.trim();
@@ -86,10 +99,10 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
+export function PatientDetailPage({ patientId, branchRole }: PatientDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as TabId) || "overview";
+  const initialTab: TabId = resolveInitialTab(searchParams.get("tab"));
 
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,7 +136,14 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
 
   function handleTabChange(tab: TabId) {
     setActiveTab(tab);
-    router.replace(`/dashboard/patients/${patientId}/details?tab=${tab}`, { scroll: false });
+    // History is split into Visits/Appointments sub-tabs — default to Visits
+    // so the old "Visits" landing experience is preserved (legacy ?tab=visits
+    // also resolves to History/Visits).
+    const sub = tab === "history" ? "&sub=visits" : "";
+    router.replace(
+      `/dashboard/patients/${patientId}/details?tab=${tab}${sub}`,
+      { scroll: false },
+    );
   }
 
   async function handleSave(pid: string, data: Record<string, unknown>) {
@@ -384,8 +404,8 @@ export function PatientDetailPage({ patientId }: PatientDetailPageProps) {
       {activeTab === "overview" && (
         <PatientOverviewTab patientId={patientId} patient={patient} />
       )}
-      {activeTab === "visits" && (
-        <PatientVisitsTab patientId={patientId} />
+      {activeTab === "history" && (
+        <PatientHistoryTab patientId={patientId} branchRole={branchRole} />
       )}
       {activeTab === "xrays" && (
         <PatientXraysTab

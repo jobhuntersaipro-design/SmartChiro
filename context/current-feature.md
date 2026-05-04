@@ -1,94 +1,102 @@
-# Current Feature: WhatsApp Worker (Baileys)
+# Current Feature
 
 ## Status
 
-Not Started
+No active feature.
+
+> The Past Appointments Sub-Tab feature shipped 2026-05-04 (see History below).
+> Reload a parked feature with `/feature load <spec.md>`, e.g. WhatsApp Worker
+> spec at `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`.
 
 ## Spec
 
-- **Contract (external API):** `docs/superpowers/specs/2026-04-29-smartchiro-wa-worker-contract.md`
-- **Implementation plan (inside the worker):** `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`
-- **Source-of-truth design:** `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md` §8
+- **Source-of-truth design:** `docs/superpowers/specs/2026-05-03-past-appointments-tab-spec.md`
 
-The Next.js app is already wired against the contract — main calls `WORKER_URL` over signed HTTPS, but that URL points nowhere because the service doesn't exist yet.
+The patient detail page (`/dashboard/patients/[patientId]/details`) gets a new sub-tab system under what is currently the "Visits" tab. The tab is renamed to **History** and contains two sub-tabs: `Visits | Appointments`. The new Appointments sub-tab is the focus of this feature — it surfaces every past appointment, computes per-patient stats (Completed / Cancelled / No-show / Stale + Revenue Paid + Outstanding), and lets owners/admins manage retroactive edits, visit linking, and invoicing.
 
-**Proposed repo path:** sibling directory `~/Desktop/smartchiro-wa-worker` (NOT inside this monorepo — different deps, different deploy lifecycle).
-
-**Proposed branch (in this repo, for any companion docs only):** `feat/wa-worker-handoff`
+**Proposed branch:** `feat/past-appointments-tab`
 
 ## Goals
 
-- Implement the 4 HMAC-signed endpoints from spec §8.2 against a real Baileys session:
-  - `POST /branches/:branchId/session` — start pairing, emit `qr` event with base64 PNG
-  - `GET /branches/:branchId/status` — return `{status, phoneNumber?, lastSeenAt?}`
-  - `POST /branches/:branchId/send` — `{to, body}` → `{msgId}` or `{error: {code, message}}`
-  - `POST /branches/:branchId/logout` — terminate the session
-  - `GET /healthz` — unauthed liveness probe
-- Implement outbound webhook to `{APP_URL}/api/wa/webhook` (HMAC-signed with `WORKER_OUTBOUND_SECRET`) for the 5 lifecycle events: `qr`, `connected`, `disconnected`, `logged_out`, `ack`.
-- Map Baileys errors to the 6 error codes in spec §8.4 (`not_on_whatsapp`, `invalid_e164`, `session_disconnected`, `session_logged_out`, `rate_limited`, `unknown`).
-- Hold one `WASocket` per `branchId` in a `Map`, persist credentials at `<SESSIONS_DIR>/<branchId>/{creds.json, keys/}`, restore sessions on process restart.
-- Deploy to Railway with a persistent volume mounted at `SESSIONS_DIR`. Single-process v1; sharding by `branchId` is a follow-up.
-- Local dev: `npm run dev` runs the worker on port 8787 alongside `npm run dev` on port 3000 in SmartChiro. The `Connect WhatsApp` modal in the SmartChiro UI shows a real QR; scanning it with a phone marks the branch session `CONNECTED`; triggering `/api/reminders/dispatch` delivers a real WhatsApp.
+- Add **History** top-level tab on patient detail page with `Visits | Appointments` sub-tabs (legacy `?tab=visits` deep-links remain valid).
+- Implement `GET /api/patients/[patientId]/past-appointments` returning filtered/paginated rows + per-patient stats (counts by status + paid/outstanding revenue).
+- Add Prisma migration `20260503000000_link_appointments_visits_invoices` to connect Visit↔Appointment (via existing `Visit.appointmentId`) and add new `Invoice.appointmentId` FK.
+- Add past-edit guard to existing `PATCH /api/appointments/[id]` (block `dateTime`/`doctorId` changes when `dateTime < now`; DOCTOR → 403).
+- Implement three new write endpoints:
+  - `POST /api/appointments/[id]/visit` — idempotent create-Visit-from-completed-appointment.
+  - `POST /api/appointments/[id]/invoice` — issue invoice tied to appointment (multiple allowed).
+  - `POST /api/invoices/[id]/regenerate` — void DRAFT/SENT/OVERDUE invoice + create new DRAFT (PAID is blocked).
+- Build UI: 5 stat cards (Completed / Cancelled / No-show / Stale / Revenue), filter bar (Status / Doctor / Date range), sortable + paginated table, edit-status/notes dialog, issue-invoice dialog.
+- Apply RBAC: OWNER/ADMIN full CRUD on past appointments + invoices for branches they own/admin; DOCTOR read-only on the past appointments tab.
+- TDD-strict: write API + component tests first, watch them fail, implement.
+- Verify with manual E2E checklist on a seeded patient at `personal-branch-001` before opening PR.
 
 ## Notes
 
-### Locked Decisions
-1. **Sibling repo, not in this monorepo** — different runtime constraints (long-lived process, persistent disk, native Baileys deps). Spec §8.5.
-2. **Railway** for hosting (~$5/mo). Persistent volumes are built-in. Free-tier-idling hosts (Render free, etc.) are NOT acceptable — WhatsApp socket must stay live.
-3. **Hono** over Express — smaller, native fetch types, plays well with Railway's nixpacks builder.
-4. **Pinned exact Baileys version** (spec §8.1). The fork churns; lock it.
-5. **HMAC mirrors the SmartChiro app's `signRequest`/`verifyRequest`** byte-for-byte. Reuse the same algorithm: `hex(HMAC_SHA256(secret, timestamp + "." + rawBody))`, 60s replay window, in-memory LRU of seen signatures.
-6. **One process for all branches** in v1 — `Map<branchId, WASocket>` with ~128MB budget per active session. Spec acknowledges this scales to "tens of branches" before sharding is needed.
+### Locked Decisions (from Q1–Q5, 2026-05-03)
+1. Tab placement → convert "Visits" → "History" with `Visits | Appointments` sub-tabs.
+2. Past = `dateTime < now` regardless of status; stale `SCHEDULED` rows surface with amber "Stale" pill.
+3. Revenue source = `SUM(Invoice.amount WHERE status=PAID)` headline; outstanding = `SUM(amount WHERE status IN (SENT, OVERDUE))` sub-line.
+4. All four management actions in scope: edit notes/status, create visit, issue invoice, regenerate invoice. Reschedule explicitly out of scope. Hard delete stays under existing OWNER/ADMIN flow.
+5. RBAC: OWNER/ADMIN full CRUD; DOCTOR read-only.
 
 ### Non-Goals (v1)
-- Multi-process / horizontal scaling (sharding by `branchId`).
-- WhatsApp Cloud API support (separate code path; this implementation is Baileys-only).
-- Reading inbound messages or replies (spec §3 — owner handles replies on their phone).
-- Media attachments (`/send` accepts text body only).
-- Per-branch rate limiting beyond Baileys' internal throttling.
-- Web UI for the worker — operations via SmartChiro app + logs.
+- Audit log of who changed what (only Prisma `updatedAt`).
+- Bulk multi-select actions.
+- Export to CSV/PDF.
+- Notifications when stale appointments pile up.
+- Soft-undo for status edits.
+- Multi-appointment refund flow for a paid invoice (manual: cancel old + issue new).
+- Charts/trends — stat cards only.
 
-### Repo Structure (target)
+### Schema Migration (locked)
+```prisma
+model Visit {
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)  // NEW
+}
+model Appointment {
+  visit    Visit?      // NEW back-relation
+  invoices Invoice[]   // NEW back-relation
+}
+model Invoice {
+  appointmentId String?       // NEW
+  appointment   Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)  // NEW
+  @@index([appointmentId])
+}
 ```
-~/Desktop/smartchiro-wa-worker/
-├── package.json
-├── tsconfig.json
-├── Dockerfile               # for Railway
-├── railway.json             # build config + volume mount
-├── .env.example
-├── .gitignore               # exclude data/sessions
-├── README.md                # local dev + Railway deploy steps
-├── data/sessions/           # gitignored, mounted as volume in prod
-└── src/
-    ├── server.ts            # Hono app: routes + HMAC middleware
-    ├── env.ts               # validate WORKER_SHARED_SECRET, WORKER_OUTBOUND_SECRET, APP_URL, PORT, SESSIONS_DIR
-    ├── hmac.ts              # signRequest + verifyRequest (mirror of SmartChiro)
-    ├── session.ts           # Baileys session manager: create, restore, send, logout
-    ├── webhook.ts           # signed POST to APP_URL/api/wa/webhook
-    └── errors.ts            # Baileys → spec error code mapping
-```
+No backfill required.
 
-### Env Vars
-- **Worker side:** `WORKER_SHARED_SECRET` (app→worker auth), `WORKER_OUTBOUND_SECRET` (worker→app webhook auth), `APP_URL` (where to POST events), `PORT` (default 8787), `SESSIONS_DIR` (default `./data/sessions` dev, `/data/sessions` prod).
-- **App side (already set):** `WORKER_URL`, `WORKER_SHARED_SECRET`, `WORKER_OUTBOUND_SECRET`. Set `WORKER_URL=http://localhost:8787` for local dev, the Railway public URL for prod.
+### Component Inventory (target)
+- New: `PatientHistoryTab.tsx`, `PastAppointmentsTab.tsx`, `PastAppointmentStatCards.tsx`, `PastAppointmentTable.tsx`, `EditPastAppointmentDialog.tsx`, `IssueInvoiceDialog.tsx`. Optionally extract `_shared/SortableHeader`, `StatusDot`, `TimeCell` if duplication with `UpcomingAppointmentsSection` exceeds ~60 LOC.
+- Modify: `PatientDetailPage.tsx` (TABS + activeTab branch), `src/types/patient.ts`, `prisma/schema.prisma`, `src/app/api/appointments/[appointmentId]/route.ts` (past-edit guard).
 
-### Deployment Topology
-```
-Vercel (Next.js)  ──signed HTTPS──▶  Railway (worker)  ──Baileys WS──▶  WhatsApp
-       ▲                                    │
-       └────────signed HTTPS────────────────┘
-              (webhook for lifecycle events)
-```
+### Implementation Order (TDD-strict, from spec §11)
+1. Write all API integration tests in `__tests__/` — fail.
+2. `prisma migrate dev` for the relation additions.
+3. Implement `GET /past-appointments` → first test passes.
+4. Add past-edit guard to existing PATCH → guard tests pass.
+5. Implement `/visit`, `/invoice`, `/regenerate` POSTs → remaining API tests pass.
+6. Write component tests → fail.
+7. Build `PatientHistoryTab` + `PastAppointmentsTab` + stat cards + table → component tests pass.
+8. Wire `EditPastAppointmentDialog` + `IssueInvoiceDialog`.
+9. Update `PatientDetailPage.tsx` to mount the new tab.
+10. `npm run build` + `npm run lint` + `npm test` all green.
+11. Manual E2E checklist on `jobhunters.ai.pro@gmail.com` seed (3 branches × ~10 patients with mixed history).
+12. Open PR `feat/past-appointments-tab`.
 
-Vercel Cron fires `/api/reminders/dispatch` every 5 min (already configured). Worker stays always-on on Railway with persistent volume for session credentials.
+Estimated diff: ~1100–1400 LOC across ~14 new + 3 modified files. Subagent-driven in 3 waves: (a) migration + API + tests, (b) UI components + tests, (c) integration + manual E2E.
 
-### Risks (carry-over from spec §15)
-- **Account ban:** Meta may flag the owner's number. Mitigated only by clinic discipline (low message volume, opt-in patients). Surfaced in the SmartChiro Connect WhatsApp modal.
-- **Session expiry:** "Linked Devices" sessions expire periodically; pairing must be redone. Worker emits `logged_out` event so the UI can prompt re-pair.
-- **Volume loss = re-pair from scratch.** Acceptable for v1.
+### Open Question (non-blocking)
+Stale `SCHEDULED` vs past `IN_PROGRESS` rows: spec collapses both into the "Stale" stat card with the label flexing to "Stale or stuck" when any IN_PROGRESS exists. Flag during review if a separate "Stuck" pill is preferred.
 
-### Companion Documentation
-The contract is in §8 of the existing design doc. The implementation specifics above are NOT in any spec yet — if you want a separate `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md` doc capturing the structure + Railway runbook, ask before `/feature start`.
+### Deferred / Parked Features
+- **WhatsApp Worker (Baileys)** — sibling repo `~/Desktop/smartchiro-wa-worker`. Not started. Specs preserved at:
+  - `docs/superpowers/specs/2026-04-29-smartchiro-wa-worker-contract.md`
+  - `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`
+  - `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md` §8
+
+  Reload via `/feature load docs/superpowers/specs/2026-04-30-wa-worker-implementation.md` when ready to ship.
 
 ## History
 
@@ -130,4 +138,5 @@ The contract is in §8 of the existing design doc. The implementation specifics 
 - 2026-04-20 **Patient Detail Page** — Replaced PatientDetailSheet slide-in with dedicated `/dashboard/patients/[patientId]/details` page. Patient header (avatar, status badge, demographics, contact, edit/delete/status actions), 4 stat cards (Total Visits, X-Rays, Next Appointment, Recovery Trend), 4 tabs: Overview (recovery trend chart + quick info sidebar), Visits (visit list with type/score badges, filters, CRUD via dialogs), X-Rays (gallery grid with upload — `uploadedById` passed as prop, no `useSession` since app has no SessionProvider), Profile (personal/contact/medical sections). New VisitQuestionnaire model + 14 Visit fields (chiropractic + vitals + recovery scores 0-10). 5 API routes: visits CRUD (GET/POST/PUT/DELETE), appointments GET, enhanced patient GET `?include=detail`. CreateVisitDialog with 6 collapsible sections (Visit Info, Questionnaire, SOAP, Treatment, Vitals, Recommendations). Seed expanded with 3-5 visits per patient + questionnaires. 40 tests (17 API + 23 component). Deleted PatientDetailSheet/PatientDetailView. 33 files changed (`context/features/patient-detail-page-spec.md`)
 - 2026-04-21 **Patient Detail — Deep-Linked Info & DOB Format** — Every actionable field on `/dashboard/patients/[patientId]/details` opens in a new tab: phone → WhatsApp `wa.me`, email → `mailto:`, doctor name → `/dashboard/doctors/[id]`, branch name → `/dashboard/branches/[id]`, address → Google Maps search. Emergency contact phone converted from `tel:` to WhatsApp. Date of Birth reformatted to `DD-MM-YYYY (Age)` in header, Overview Quick Info, and Profile tab. New `src/lib/format.ts` with 6 pure helpers (`formatDobWithAge`, `buildWhatsAppUrl`, `buildMailtoUrl`, `buildMapsUrl`, `buildDoctorHref`, `buildBranchHref`) + 17 tests. New `ExternalLink` wrapper enforcing `target="_blank" rel="noopener noreferrer"`. MY phone normalization (strip non-digits → leading `0` becomes `60`). Visits tab card header converted from `<button>` to `<div role=button tabIndex=0>` so nested doctor `<a>` is valid HTML; click-propagation stopped on link so card toggle still works. X-ray gallery already opened in new tab (verified). No API, schema, or migration changes. 8 files changed (`context/features/patient-detail-hyperlinks-spec.md`)
 - 2026-04-29 **X-Ray Annotation Revamp & Management** — Patient X-Rays tab rebuilt with filter chips (body region / view type / date / archived), inline rename, kebab menu (rename / edit notes / archive / restore), batch select + archive dialog, notes drawer with versioned history (`XrayNote` model, 100-rev cap). Annotation viewer adopts MedDream-style mouse conventions via `useViewerInputs` (middle-drag pan, right-drag W/L, wheel-scroll-series, Ctrl+wheel zoom, Shift+wheel W/L fine-tune). Toolbar repainted as 44px dark left rail. SeriesStrip on canvas right edge with collapsible thumbnails. FirstRunOverlay teaches new conventions once per browser. Removed orphaned calibration tool/dialog/route + "Uncalibrated" status text. RBAC tightened on PATCH/DELETE/upload/upload-url via shared `canManageXray` helper (4-role × 4-route matrix tested). Notes API at GET/POST `/api/xrays/[id]/notes`. (`docs/superpowers/specs/2026-04-29-xray-annotation-revamp-and-management-design.md`)
+- 2026-05-04 **Past Appointments Sub-Tab** — New `History` top-level tab on `/dashboard/patients/[patientId]/details` with `Visits | Appointments` sub-tabs (legacy `?tab=visits` deep-links preserved). The Past Appointments sub-tab surfaces every appointment with `dateTime < now` (incl. `Stale` for SCHEDULED-past with amber pill + breathing dot animation), 5 stat cards (Completed / Cancelled / No-show / Stale / Revenue split into paid + outstanding), filter bar (Status multi-select chips / Doctor / Date range preset), sortable + 10-row paginated table linking patient/doctor/branch, edit-status/notes dialog with radio + char counter, issue-invoice dialog with auto-defaults from appointment date. Migration `20260503052950_link_appointments_visits_invoices` adds Visit↔Appointment relation (via existing `Visit.appointmentId @unique`) + `Appointment.invoices[]` back-relation + `Invoice.appointmentId` FK + index. 5 new API routes: `GET /api/patients/[id]/past-appointments` (filter + sort + paginate + per-patient stats; OWNER/ADMIN scope, DOCTOR read), `POST /api/appointments/[id]/visit` (idempotent create-Visit-from-COMPLETED, returns 200 if already linked / 201 if fresh), `POST /api/appointments/[id]/invoice` (issue tied to appointment, multi-allowed, auto-line-item), `POST /api/invoices/[id]/regenerate` (void DRAFT/SENT/OVERDUE + new DRAFT, blocks PAID with 422 `invoice_already_paid`). Existing `PATCH /api/appointments/[id]` gains past-edit guard (blocks `dateTime` / `doctorId` change on past rows with 422 `cannot_reschedule_past`; DOCTOR → 403 on past rows). RBAC matrix: OWNER/ADMIN full CRUD on past appointments + invoices for branches they own/admin; DOCTOR read-only on the tab; cross-branch leak returns 404 (not 403) per §7. Bonus improvements during this branch: Upcoming Appointments table in `/dashboard/patients` rebuilt as quiet Stripe-product UI — sortable headers (`↑`/`↓`/`↕` indicators, fixed StrictMode setSortDir bug), branch + doctor filters, 10-row pagination, branch column, two-line `2:00 PM` / `03/05/2026` time cell, animated breathing dot on SCHEDULED rows; multi-branch API across user's owned/admin branches. New `formatAppointmentTime` + `formatAppointmentDateOnly` helpers, `animate-subtle-blink` keyframe with `prefers-reduced-motion` opt-out. Personal seed expanded to 3 branches (KLCC + Bangsar + Penang Georgetown) × 30 patients × 36 visits × 57 appointments × 12 invoices. UI-reviewer pass applied 10 patches (COMPLETED green color, `Loader2` spinner, `rounded-full` → `rounded-[4px]` filter chips, `overflow-x-auto` mobile, `type="submit"` dialog buttons, Calendar empty-state icon, kebab focus ring, full-opacity focus rings, responsive stat-card grid). 25 new tests (19 API + 6 component-helper). DB drift required `prisma migrate reset` mid-feature (lost ephemeral test data, re-seeded clean). Files: 13 new + 5 modified. (`docs/superpowers/specs/2026-05-03-past-appointments-tab-spec.md`)
 - 2026-04-30 **Appointment Reminders (WhatsApp + Email)** — Auto-dispatch reminders before each `SCHEDULED` appointment at branch-configurable offsets (default 24h + 2h). New enums (`ReminderChannel`, `ReminderStatus`, `WaSessionStatus`), models (`BranchReminderSettings`, `WaSession`, `AppointmentReminder` with unique `[appointmentId, channel, offsetMin, isFallback]`), and `Patient` cols (`reminderChannel`, `preferredLanguage`). Pure libs: `placeholders` (allowlist), `templates` (render + validate), `default-templates` (EN+BM plain + Stripe-styled HTML), `backoff` (5min/30min/2h ladder), `fallback` (terminal-error → cross-channel sibling row), `materialize` (channel resolution + planned-row builder per spec §7.2), `hmac` (HMAC-SHA256 sign/verify with 60s replay window). `dispatcher.ts` exposes `materializePending` and `dispatchDue` separately. Reschedule/cancel handled by an explicit `PATCH /api/appointments/[id]` that clears PENDING reminders so the next tick re-materializes. Email via Resend, WhatsApp via signed HTTP to a sibling `smartchiro-wa-worker` (out of repo, contract only) — `worker-stub.ts` provides an in-memory implementation for tests. 8 routes: `POST /api/reminders/dispatch` (Vercel Cron `*/5min`, accepts `x-cron-secret` or Bearer), `GET/PUT /api/branches/[id]/reminder-settings`, `POST /api/branches/[id]/wa/{connect,disconnect}` + `GET .../status`, `POST /api/wa/webhook`, `GET /api/appointments/[id]/reminders`, `PATCH /api/appointments/[id]`. Patient POST/PATCH accept `reminderChannel` + `preferredLanguage`. UI: `BranchReminderSettingsCard` (toggle, offset checkboxes, WhatsApp connection block, save), `ReminderTemplateEditor` (placeholder hints + char counter), `WaConnectModal` (QR pairing with 2s polling), `ReminderStatusBadge` (pill + popover). 57 unit + integration tests across 9 files. `vercel.json` cron config. New env vars: `CRON_SECRET`, `WORKER_URL`, `WORKER_SHARED_SECRET`, `WORKER_OUTBOUND_SECRET`, `RESEND_REMINDERS_FROM`. Manual E2E checklist + worker contract handoff in `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md`.
