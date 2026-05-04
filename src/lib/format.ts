@@ -65,6 +65,26 @@ export function formatAppointmentDateTime(iso: string | null | undefined): strin
   return `${time} ${dd}/${mm}/${yyyy}`
 }
 
+// Returns the time part only ("10:30 AM"). Pair with formatAppointmentDateOnly
+// when the time/date need to be on separate lines or styled independently.
+export function formatAppointmentTime(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return null
+  return TIME_FMT.format(dt)
+}
+
+// Returns the date part only ("06/05/2026").
+export function formatAppointmentDateOnly(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const dt = new Date(iso)
+  if (Number.isNaN(dt.getTime())) return null
+  const dd = String(dt.getDate()).padStart(2, '0')
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const yyyy = dt.getFullYear()
+  return `${dd}/${mm}/${yyyy}`
+}
+
 // Returns short weekday like "Tue". Use with WeekdayBadge for visual emphasis.
 export function getAppointmentWeekday(iso: string | null | undefined): { label: string; isWeekend: boolean } | null {
   if (!iso) return null

@@ -33,6 +33,26 @@
   border-bottom: 1px dashed transparent;
 }
 
+/* Subtle "live indicator" pulse for status dots — gentle scale + opacity
+   combo so the dot reads as a soft heartbeat rather than a flicker. Applied
+   only to the dot (not the label) to avoid distracting motion on text. */
+@keyframes subtle-blink {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.85); }
+}
+
+.animate-subtle-blink {
+  animation: subtle-blink 2.4s ease-in-out infinite;
+  /* Force GPU layer to keep the scale crisp at sub-pixel sizes */
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-subtle-blink {
+    animation: none;
+  }
+}
+
 @theme inline {
   --font-heading: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;

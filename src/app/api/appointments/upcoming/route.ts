@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 
@@ -34,31 +35,39 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        activeBranchId: true,
         branchMemberships: { select: { branchId: true, role: true } },
       },
     })
 
-    const activeBranchId = user?.activeBranchId ?? user?.branchMemberships[0]?.branchId
-    const membership = user?.branchMemberships.find((m) => m.branchId === activeBranchId)
-    const isOwnerOrAdmin = membership?.role === 'OWNER' || membership?.role === 'ADMIN'
+    // Owner/Admin sees all appointments at their owned/admin branches.
+    // Doctor sees only their own appointments at branches where they are a doctor.
+    const ownerAdminBranchIds = (user?.branchMemberships ?? [])
+      .filter((m) => m.role === 'OWNER' || m.role === 'ADMIN')
+      .map((m) => m.branchId)
+    const doctorBranchIds = (user?.branchMemberships ?? [])
+      .filter((m) => m.role === 'DOCTOR')
+      .map((m) => m.branchId)
+
+    const accessClauses: Prisma.AppointmentWhereInput[] = []
+    if (ownerAdminBranchIds.length > 0) {
+      accessClauses.push({ branchId: { in: ownerAdminBranchIds } })
+    }
+    if (doctorBranchIds.length > 0) {
+      accessClauses.push({ branchId: { in: doctorBranchIds }, doctorId: userId })
+    }
+
+    if (accessClauses.length === 0) {
+      return NextResponse.json({ range, total: 0, appointments: [] })
+    }
 
     const { gte, lt } = rangeBounds(range)
 
-    const where: Record<string, unknown> = {
-      status: { in: ['SCHEDULED', 'CHECKED_IN'] },
-      dateTime: { gte, lt },
-    }
-
-    if (isOwnerOrAdmin && activeBranchId) {
-      where.branchId = activeBranchId
-    } else {
-      // DOCTOR: only own appointments
-      where.doctorId = userId
-    }
-
     const appointments = await prisma.appointment.findMany({
-      where,
+      where: {
+        status: { in: ['SCHEDULED', 'CHECKED_IN'] },
+        dateTime: { gte, lt },
+        OR: accessClauses,
+      },
       orderBy: { dateTime: 'asc' },
       take: 100,
       select: {
@@ -71,6 +80,7 @@ export async function GET(request: NextRequest) {
           select: { id: true, firstName: true, lastName: true, phone: true, status: true },
         },
         doctor: { select: { id: true, name: true } },
+        branch: { select: { id: true, name: true } },
       },
     })
 
@@ -85,6 +95,7 @@ export async function GET(request: NextRequest) {
         notes: a.notes,
         patient: a.patient,
         doctor: { id: a.doctor.id, name: a.doctor.name ?? 'Unknown' },
+        branch: a.branch,
       })),
     })
   } catch (error) {
