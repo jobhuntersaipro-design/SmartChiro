@@ -363,7 +363,8 @@ model Visit {
   doctorId String
   doctor   User   @relation("VisitDoctor", fields: [doctorId], references: [id])
 
-  appointmentId String? @unique
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
 
   xrays         Xray[]
   questionnaire VisitQuestionnaire?
@@ -509,6 +510,8 @@ model Appointment {
   doctorId String
   doctor   User   @relation("AppointmentDoctor", fields: [doctorId], references: [id])
 
+  visit     Visit?
+  invoices  Invoice[]
   reminders AppointmentReminder[]
 
   createdAt DateTime @default(now())
@@ -540,6 +543,9 @@ model Invoice {
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -547,6 +553,7 @@ model Invoice {
   @@index([branchId])
   @@index([status])
   @@index([invoiceNumber])
+  @@index([appointmentId])
 }
 
 // ─── Documents ───

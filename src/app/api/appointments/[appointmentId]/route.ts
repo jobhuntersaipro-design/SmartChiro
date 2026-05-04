@@ -13,6 +13,7 @@ const Body = z
       .optional(),
     duration: z.number().int().positive().optional(),
     notes: z.string().nullable().optional(),
+    doctorId: z.string().optional(),
   })
   .refine((d) => Object.keys(d).length > 0, "at least one field required");
 
@@ -32,10 +33,25 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
+  const isPast = appt.dateTime.getTime() < Date.now();
+
+  // DOCTOR (not OWNER/ADMIN) cannot edit a past appointment at all.
+  if (isPast && role !== "OWNER" && role !== "ADMIN") {
+    return NextResponse.json({ error: "forbidden_past_edit" }, { status: 403 });
+  }
+
   const parsed = Body.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json(
       { error: "validation", details: parsed.error.flatten() },
+      { status: 422 }
+    );
+  }
+
+  // Past-edit guard: cannot reschedule a past appointment (block dateTime/doctorId changes).
+  if (isPast && (parsed.data.dateTime !== undefined || parsed.data.doctorId !== undefined)) {
+    return NextResponse.json(
+      { error: "cannot_reschedule_past" },
       { status: 422 }
     );
   }
@@ -45,6 +61,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
   if (parsed.data.duration !== undefined) updateData.duration = parsed.data.duration;
   if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
+  if (parsed.data.doctorId !== undefined) updateData.doctorId = parsed.data.doctorId;
 
   const updated = await prisma.appointment.update({
     where: { id: appointmentId },
