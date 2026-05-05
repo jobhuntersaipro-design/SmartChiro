@@ -311,20 +311,29 @@ export async function DELETE(
     select: { email: true, name: true },
   });
 
-  await prisma.$transaction([
-    prisma.branchAuditLog.create({
+  // Capture snapshot BEFORE delete so we can audit even if the branch is gone.
+  const snapshot = snapshotOf(branch);
+  const branchName = branch.name;
+
+  await prisma.branch.delete({ where: { id: branchId } });
+
+  // Audit (fail-soft — must not block the user action). Note: the audit row
+  // intentionally has no FK to Branch, so it survives the delete above.
+  try {
+    await prisma.branchAuditLog.create({
       data: {
         branchId,
         action: "DELETE",
         actorId: session.user.id,
         actorEmail: actor?.email ?? "",
         actorName: actor?.name ?? null,
-        branchNameAtEvent: branch.name,
-        changes: { before: snapshotOf(branch) } as unknown as Prisma.InputJsonValue,
+        branchNameAtEvent: branchName,
+        changes: { before: snapshot } as unknown as Prisma.InputJsonValue,
       },
-    }),
-    prisma.branch.delete({ where: { id: branchId } }),
-  ]);
+    });
+  } catch (e) {
+    console.error("BranchAuditLog write failed (DELETE):", e);
+  }
 
   return NextResponse.json({ success: true });
 }
