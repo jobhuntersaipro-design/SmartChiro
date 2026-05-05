@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { snapshotOf } from "@/lib/branch-audit";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -97,6 +99,9 @@ export async function GET(req: NextRequest) {
       operatingHours: b.operatingHours,
       treatmentRooms: b.treatmentRooms,
       clinicType: b.clinicType,
+      billingContactName: b.billingContactName,
+      billingContactEmail: b.billingContactEmail,
+      billingContactPhone: b.billingContactPhone,
       doctorCount: b._count.members,
       patientCount: b._count.patients,
       todayAppointments: todayMap.get(b.id) ?? 0,
@@ -185,7 +190,7 @@ export async function POST(req: NextRequest) {
     // Auto-set ownerName from session user
     const sessionUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true },
+      select: { name: true, email: true },
     });
 
     const branch = await prisma.branch.create({
@@ -224,6 +229,23 @@ export async function POST(req: NextRequest) {
         where: { id: userId },
         data: { activeBranchId: branch.id },
       });
+    }
+
+    // Audit (fail-soft — must not block the user action)
+    try {
+      await prisma.branchAuditLog.create({
+        data: {
+          branchId: branch.id,
+          action: "CREATE",
+          actorId: userId,
+          actorEmail: sessionUser?.email ?? "",
+          actorName: sessionUser?.name ?? null,
+          branchNameAtEvent: branch.name,
+          changes: { after: snapshotOf(branch) } as unknown as Prisma.InputJsonValue,
+        },
+      });
+    } catch (e) {
+      console.error("BranchAuditLog write failed (CREATE):", e);
     }
 
     return NextResponse.json({ branch }, { status: 201 });

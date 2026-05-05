@@ -225,6 +225,33 @@ model BranchMember {
   @@index([role])
 }
 
+// ─── Branch Audit Log ───
+
+enum BranchAuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model BranchAuditLog {
+  id                String            @id @default(cuid())
+  branchId          String
+  action            BranchAuditAction
+
+  actorId    String?
+  actorEmail String
+  actorName  String?
+
+  branchNameAtEvent String
+
+  changes Json
+
+  createdAt DateTime @default(now())
+
+  @@index([branchId, createdAt(sort: Desc)])
+  @@index([actorId])
+}
+
 // ─── Doctor Profile ───
 
 model DoctorProfile {

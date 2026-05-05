@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { snapshotOf, diffSnapshots } from "@/lib/branch-audit";
 
 type RouteContext = { params: Promise<{ branchId: string }> };
 
@@ -158,12 +160,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Branch not found" }, { status: 404 });
   }
 
-  // Check caller is OWNER or ADMIN
+  // Check caller is OWNER (ADMIN demoted to read-only on edit per 2026-05-05 spec)
   const membership = await prisma.branchMember.findUnique({
     where: { userId_branchId: { userId: session.user.id, branchId } },
   });
 
-  if (!membership || membership.role === "DOCTOR") {
+  if (!membership || membership.role !== "OWNER") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -219,10 +221,37 @@ export async function PATCH(
     }
   }
 
+  const before = snapshotOf(branch);
+
   const updated = await prisma.branch.update({
     where: { id: branchId },
     data: updateData,
   });
+
+  // Audit (fail-soft — must not block the user action)
+  const after = snapshotOf(updated);
+  const diff = diffSnapshots(before, after);
+  if (Object.keys(diff.before).length > 0) {
+    try {
+      const actor = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { email: true, name: true },
+      });
+      await prisma.branchAuditLog.create({
+        data: {
+          branchId,
+          action: "UPDATE",
+          actorId: session.user.id,
+          actorEmail: actor?.email ?? "",
+          actorName: actor?.name ?? null,
+          branchNameAtEvent: updated.name,
+          changes: diff as unknown as Prisma.InputJsonValue,
+        },
+      });
+    } catch (e) {
+      console.error("BranchAuditLog write failed (UPDATE):", e);
+    }
+  }
 
   return NextResponse.json({
     branch: {
@@ -277,7 +306,25 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await prisma.branch.delete({ where: { id: branchId } });
+  const actor = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, name: true },
+  });
+
+  await prisma.$transaction([
+    prisma.branchAuditLog.create({
+      data: {
+        branchId,
+        action: "DELETE",
+        actorId: session.user.id,
+        actorEmail: actor?.email ?? "",
+        actorName: actor?.name ?? null,
+        branchNameAtEvent: branch.name,
+        changes: { before: snapshotOf(branch) } as unknown as Prisma.InputJsonValue,
+      },
+    }),
+    prisma.branch.delete({ where: { id: branchId } }),
+  ]);
 
   return NextResponse.json({ success: true });
 }
