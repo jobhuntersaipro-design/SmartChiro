@@ -1,116 +1,22 @@
-# Current Feature: Appointments Calendar — Google-Calendar-Style Scheduling
+# Current Feature
 
 ## Status
 
-In Progress (PR1)
+No active feature.
+
+> The Appointments Calendar feature shipped 2026-05-05 (see History below).
+> Reload a parked feature with `/feature load <spec.md>`, e.g. WhatsApp Worker
+> spec at `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`.
 
 ## Spec
 
-- **Source-of-truth design:** `docs/superpowers/specs/2026-05-05-appointments-calendar-spec.md`
-
-A new `/dashboard/appointments` page replaces the dead `/dashboard/calendar` link with a Google-Calendar-style scheduling experience: Day / Week / Month views (via `react-big-calendar`), drag-and-drop rescheduling with conflict prevention, doctor-as-resource side-by-side columns when 2+ doctors are selected in Day view, branch + multi-doctor filter bar with URL state persistence, and click-through to patient detail. Ships in **two PRs**: PR1 rebases the parked `feat/appointment-crud` branch (15 commits with the CRUD foundation already built but never merged), PR2 builds the calendar page on top.
-
-**Proposed branches:**
-- `feat/appointment-crud-api` (PR1 — foundation)
-- `feat/appointments-calendar-page` (PR2 — calendar UI on top)
+<!-- Populated by `/feature load <spec.md>` -->
 
 ## Goals
 
-### PR1 — Appointment CRUD foundation (~1–2 days)
-- Rebase `feat/appointment-crud` (15 commits) onto current main; resolve conflicts with shipped Past Appointments + Branches CRUD work.
-- Land: `findConflictingAppointments` helper, `POST /api/appointments`, `GET /api/appointments/check-conflict`, `GET /api/appointments/[id]`.
-- Land: 4 shadcn dialogs (Create / Edit / Cancel / Delete with typed-confirm).
-- Land: `PatientCombobox` + `DoctorCombobox` (shadcn Command + Popover typeaheads).
-- Land: `AppointmentActionsMenu` (shadcn DropdownMenu) wired into `UpcomingAppointmentsSection` on patient detail.
-- Land: `e2e/appointment-crud.spec.ts` covering Create / Edit / Cancel / Delete / conflict.
-- All shadcn/ui throughout.
-
-### PR2 — Calendar page (~4–7 days)
-- New route `/dashboard/appointments` (server shell + client calendar).
-- `react-big-calendar` + `withDragAndDrop` HOC + Stripe-themed CSS overrides.
-- **Day / Week / Month** views via shadcn Tabs.
-- **Filter bar**: Branch (shadcn Select) + Doctor (shadcn Command multi-select Popover) — persist in URL query params for shareable links.
-- **Resource view (Day mode)**: side-by-side doctor columns when 2+ doctors selected.
-- **Drag-and-drop semantics**: time-shift, doctor reassign, resize for duration; past-time blocked (toast + snap-back); conflict → confirmation dialog for OWNER/ADMIN, hard-block for DOCTOR.
-- **Click event card** → shadcn Popover with patient/doctor links, status pill, RBAC-gated Edit/Cancel/Delete actions; "View patient" navigates to `/dashboard/patients/[id]/details`.
-- **Click empty slot** → CreateAppointmentDialog pre-filled with time + doctor (resource view).
-- New `GET /api/appointments?branchId=…&doctorIds=…&start=…&end=…` endpoint (capped 500 events; branch-scoped).
-- **Sidebar rename**: `/dashboard/calendar` → `/dashboard/appointments`, label "Calendar" → "Appointments". Middleware redirect from old path for stale bookmarks.
+<!-- Populated by `/feature load` -->
 
 ## Notes
-
-### Locked Decisions (from Q1–Q8, 2026-05-05)
-1. **Q1.b** Two-PR plan: PR1 rebases parked CRUD work, PR2 builds calendar UI on top. Cleaner reviewable chunks.
-2. **Q2.a** `react-big-calendar` (MIT, ~80KB gzipped) + `withDragAndDrop` + custom Stripe-themed CSS overrides. NOT FullCalendar, NOT custom-built.
-3. **Q3.c** Both filter UI (Branch select + Doctor multi-select) AND resource columns when 2+ doctors selected in Day view.
-4. **Q4.b** DOCTOR can only manage their own appointments (`appointment.doctorId === user.id`). OWNER + ADMIN can manage all in branches they own/admin. Cross-branch leak → 404.
-5. **Q5.all** All drag-and-drop semantics allowed: time-shift, doctor reassign, resize for duration. Past-time blocked. Conflict → confirmation dialog for OWNER/ADMIN with override option, hard-block for DOCTOR.
-6. **Q6.skip** All out-of-scope: recurring appointments, Google Calendar sync, .ics, print, patient self-booking — NOT in v1.
-7. **Q7.a** Sidebar rename "Calendar" → "Appointments" at `/dashboard/appointments`, redirect from `/dashboard/calendar` for stale bookmarks.
-8. **Q8** Click event card → Popover with "View patient" link that navigates to `/dashboard/patients/[id]/details`. Edit/Cancel/Delete in popover open dialogs (not inline-edit).
-
-### Schema
-**No migration needed.** `Appointment` table at `prisma/schema.prisma:524` already has all required fields (`dateTime`, `duration`, `status`, `doctorId`, `branchId`, `patientId`, `notes`) plus indexes on `branchId`, `doctorId`, `dateTime`, `status`.
-
-### RBAC Matrix (Calendar Page)
-| Action | OWNER | ADMIN | DOCTOR |
-|--------|:-----:|:-----:|:------:|
-| View `/dashboard/appointments` | ✅ all owned/admin branches | ✅ all admin branches | ✅ branches they belong to |
-| Branch filter dropdown | ✅ | ✅ | hidden — pinned to user's branch |
-| Doctor filter dropdown | ✅ all in branch | ✅ all in branch | only doctors in shared branch incl self |
-| Create event (click empty slot) | ✅ any doctor | ✅ any doctor | ✅ self only — pre-fills doctorId=self |
-| Drag own event (time only) | ✅ | ✅ | ✅ |
-| Drag own event (doctor reassign) | ✅ | ✅ | ❌ blocked + toast |
-| Drag others' event | ✅ | ✅ | ❌ blocked + toast |
-| Override conflict | ✅ confirmation | ✅ | ❌ hard-block |
-| Edit / Cancel / Delete via popover | ✅ all | ✅ all | ✅ own only — others' show greyed actions w/ tooltip |
-
-### shadcn/ui Components Used
-Dialog, AlertDialog, Popover, Command, Select, Tabs, Button, Input, Textarea, Calendar (date picker), DropdownMenu, Avatar, Badge, Tooltip, Toaster (sonner). Run `npx shadcn@latest add <name>` for any missing primitives.
-
-### File Inventory (target)
-- **PR1**: 16 files cherry-picked from parked branch (see spec §5.2).
-- **PR2 New (12 files)**: `src/app/dashboard/appointments/page.tsx`, `AppointmentsCalendarView`, `AppointmentsHeader`, `AppointmentsCalendar` (DnD wrapper), `AppointmentEventCard`, `AppointmentEventPopover`, `ConflictOverrideDialog`, `calendar.css`, `doctor-color.ts`, `src/types/appointment.ts`, extend `appointments/route.ts` with GET, new test file.
-- **PR2 Modified (2 files)**: `src/components/dashboard/Sidebar.tsx` (relabel + reroute), `src/middleware.ts` (redirect).
-
-Estimated: PR1 ~600–800 LOC, PR2 ~1500–2000 LOC.
-
-### Implementation Order (TDD-strict, from spec §10)
-**PR1:**
-1. Branch from main, rebase 15 parked commits (helper → API tests → routes → dialogs → wiring).
-2. Resolve conflicts (likely in `appointments/[id]/route.ts` past-edit guard, `UpcomingAppointmentsSection`, `PatientDetailPage`).
-3. `npm run build` + `npm run lint` + `npm test` all green.
-4. Manual E2E from patient detail: create → edit → conflict-check rejects double-book → cancel → delete typed-confirm.
-5. Open PR1.
-
-**PR2 (after PR1 merges):**
-1. Branch from main, `npm install react-big-calendar @types/react-big-calendar date-fns`.
-2. Add missing shadcn primitives (Tabs, Popover, Command, Calendar, Tooltip, Sonner).
-3. Failing API tests for `GET /api/appointments?…` (RBAC + filter + 500-cap) → implement → green.
-4. Failing tests for `doctor-color.ts` (deterministic hashing) → implement → green.
-5. `AppointmentsCalendarView` skeleton (no DnD): D/W/M switch, filter bar, fetch on filter change.
-6. Custom event card + popover with patient detail click-through.
-7. `withDragAndDrop` HOC: (a) time-shift, (b) doctor reassign, (c) conflict override, (d) resize.
-8. `ConflictOverrideDialog` (shadcn AlertDialog).
-9. Resource view for 2+ doctors in Day view.
-10. Sidebar rename + middleware redirect.
-11. Stripe-themed CSS pass; ui-reviewer agent for visual polish.
-12. Build/lint/test all green; manual E2E checklist.
-13. Open PR2.
-
-### Open Questions (non-blocking, flag during PR review)
-- **Q13.1** Audit log for appointment changes (mirror BranchAuditLog)? Default: skip in v1.
-- **Q13.2** "Show cancelled appointments" toggle on calendar header? Default: hide.
-- **Q13.3** Doctor working-hours overlay (greyed off-hours from `DoctorProfile.workingSchedule`)? Defer to v2.
-- **Q13.4** Booking buffer (15-min between appointments) configurable per branch? Defer to v2.
-- **Q13.5** 500-event cap per query — adjust based on real seed volume.
-
-### Risks
-- `react-big-calendar` adds ~80KB gzipped — acceptable for dashboard route; flag if Lighthouse complains.
-- Drag-and-drop is mouse-first; tablet OK but not perfect (clinic workstations are desktop-first per project spec).
-- Doctor color palette: 12-color deterministic hash — collisions with >12 doctors per branch. v2: extend palette.
-- Conflict-check race condition between client check and server PATCH — mitigated by server-side authoritative check (returns 409 with conflict details).
-- Time zone: all stored UTC, rendered in local time via `date-fns-tz`. Multi-timezone clinics defer to v2.
 
 ### Deferred / Parked Features
 - **WhatsApp Worker (Baileys)** — sibling repo `~/Desktop/smartchiro-wa-worker`. Not started. Specs preserved at:
@@ -166,4 +72,5 @@ Estimated: PR1 ~600–800 LOC, PR2 ~1500–2000 LOC.
 - 2026-04-29 **X-Ray Annotation Revamp & Management** — Patient X-Rays tab rebuilt with filter chips (body region / view type / date / archived), inline rename, kebab menu (rename / edit notes / archive / restore), batch select + archive dialog, notes drawer with versioned history (`XrayNote` model, 100-rev cap). Annotation viewer adopts MedDream-style mouse conventions via `useViewerInputs` (middle-drag pan, right-drag W/L, wheel-scroll-series, Ctrl+wheel zoom, Shift+wheel W/L fine-tune). Toolbar repainted as 44px dark left rail. SeriesStrip on canvas right edge with collapsible thumbnails. FirstRunOverlay teaches new conventions once per browser. Removed orphaned calibration tool/dialog/route + "Uncalibrated" status text. RBAC tightened on PATCH/DELETE/upload/upload-url via shared `canManageXray` helper (4-role × 4-route matrix tested). Notes API at GET/POST `/api/xrays/[id]/notes`. (`docs/superpowers/specs/2026-04-29-xray-annotation-revamp-and-management-design.md`)
 - 2026-05-04 **Past Appointments Sub-Tab** — New `History` top-level tab on `/dashboard/patients/[patientId]/details` with `Visits | Appointments` sub-tabs (legacy `?tab=visits` deep-links preserved). The Past Appointments sub-tab surfaces every appointment with `dateTime < now` (incl. `Stale` for SCHEDULED-past with amber pill + breathing dot animation), 5 stat cards (Completed / Cancelled / No-show / Stale / Revenue split into paid + outstanding), filter bar (Status multi-select chips / Doctor / Date range preset), sortable + 10-row paginated table linking patient/doctor/branch, edit-status/notes dialog with radio + char counter, issue-invoice dialog with auto-defaults from appointment date. Migration `20260503052950_link_appointments_visits_invoices` adds Visit↔Appointment relation (via existing `Visit.appointmentId @unique`) + `Appointment.invoices[]` back-relation + `Invoice.appointmentId` FK + index. 5 new API routes: `GET /api/patients/[id]/past-appointments` (filter + sort + paginate + per-patient stats; OWNER/ADMIN scope, DOCTOR read), `POST /api/appointments/[id]/visit` (idempotent create-Visit-from-COMPLETED, returns 200 if already linked / 201 if fresh), `POST /api/appointments/[id]/invoice` (issue tied to appointment, multi-allowed, auto-line-item), `POST /api/invoices/[id]/regenerate` (void DRAFT/SENT/OVERDUE + new DRAFT, blocks PAID with 422 `invoice_already_paid`). Existing `PATCH /api/appointments/[id]` gains past-edit guard (blocks `dateTime` / `doctorId` change on past rows with 422 `cannot_reschedule_past`; DOCTOR → 403 on past rows). RBAC matrix: OWNER/ADMIN full CRUD on past appointments + invoices for branches they own/admin; DOCTOR read-only on the tab; cross-branch leak returns 404 (not 403) per §7. Bonus improvements during this branch: Upcoming Appointments table in `/dashboard/patients` rebuilt as quiet Stripe-product UI — sortable headers (`↑`/`↓`/`↕` indicators, fixed StrictMode setSortDir bug), branch + doctor filters, 10-row pagination, branch column, two-line `2:00 PM` / `03/05/2026` time cell, animated breathing dot on SCHEDULED rows; multi-branch API across user's owned/admin branches. New `formatAppointmentTime` + `formatAppointmentDateOnly` helpers, `animate-subtle-blink` keyframe with `prefers-reduced-motion` opt-out. Personal seed expanded to 3 branches (KLCC + Bangsar + Penang Georgetown) × 30 patients × 36 visits × 57 appointments × 12 invoices. UI-reviewer pass applied 10 patches (COMPLETED green color, `Loader2` spinner, `rounded-full` → `rounded-[4px]` filter chips, `overflow-x-auto` mobile, `type="submit"` dialog buttons, Calendar empty-state icon, kebab focus ring, full-opacity focus rings, responsive stat-card grid). 25 new tests (19 API + 6 component-helper). DB drift required `prisma migrate reset` mid-feature (lost ephemeral test data, re-seeded clean). Files: 13 new + 5 modified. (`docs/superpowers/specs/2026-05-03-past-appointments-tab-spec.md`)
 - 2026-05-05 **Branches Tab — CRUD Refinement & Audit Log** — Plugged four targeted gaps in the existing branches CRUD: (1) `EditBranchDialog` invoked from the branches list (4-step wizard pre-filled from `BranchWithStats`, submits diff-only via PATCH, closes silently on no-op save) so OWNERs no longer have to navigate to the Settings tab to edit. (2) Fixed missing **Create Branch** button — dropped the `isOwner` role gate from `BranchListView`. Root cause is `branchMemberships[0]` arbitrary pick at `src/lib/auth.ts:53-60`; this PR fixes the symptom only, root-cause queued as a follow-up. (3) New `BranchAuditLog` model + `BranchAuditAction` enum + migration `20260505043029_branch_audit_log` (no FK on `branchId`/`actorId` so logs survive their subject; composite index on `[branchId, createdAt DESC]`). `POST /api/branches` emits CREATE row with full snapshot; `PATCH /api/branches/[id]` emits UPDATE row with changed-fields-only diff (no row for no-op patches); `DELETE` emits DELETE row in `prisma.$transaction([...])` with the delete; all audit writes are fail-soft (try/catch + console.error). New `GET /api/branches/[id]/audit-log` route — cursor-paginated with default `limit=50` / `MAX_LIMIT=100`, OWNER + ADMIN read, DOCTOR → 403, cross-branch leak → 404 to match existing pattern. New `<BranchActivityLog>` mounted in `BranchSettingsTab` (OWNER + ADMIN visible) with actor avatar/initials, action pill (Created green / Updated blue / Deleted red), per-field diff for UPDATE rendered as `Phone: <old> → <new>` with strikethrough on the before value, relative timestamps with absolute on hover, "Load more" cursor pagination, empty state. (4) Tightened RBAC: `PATCH /api/branches/[id]` now OWNER-only (was OWNER+ADMIN); ADMIN demoted to read-only on edit/delete; ADMIN keeps audit-log read access. `BranchCard` kebab menu hides entirely for ADMIN/DOCTOR; Settings tab Save button gated to OWNER with "Only the branch owner can edit these settings" hint for ADMIN. New helpers: `src/lib/branch-audit.ts` (`AUDITED_BRANCH_FIELDS` × 19, `snapshotOf`, `diffSnapshots`); `src/components/dashboard/branches/edit-branch-form.ts` (`branchToFormData`, `computePatchPayload`, `parseOperatingHoursJson`); `src/components/dashboard/branches/audit-log-format.ts` (`formatFieldName`, `formatFieldValue`, `actionStyle`, `formatRelativeTime`). `BranchWithStats` extended to include `billingContactName/Email/Phone` so edit pre-fill works; `BranchListView` props simplified (`userId`/`branchRole` removed). Bonus: shipped `scripts/check-counts.mjs` (read-only Neon inventory probe) and `scripts/restore-memberships.mjs` (idempotent non-destructive upsert of OWNER + 3 personal-doctor-* DOCTOR memberships against personal-branch-001/002/003 — used to recover from `seed-personal.ts` user.id drift after `migrate reset` + fresh login). 54 new tests (9 lib unit + 25 API integration including audit row emission on CREATE/UPDATE/DELETE, no-op PATCH suppression, ADMIN PATCH 403, audit-log GET RBAC + DESC ordering + cursor pagination + 100-cap limit + 401/403/404 paths + 20 component-helper tests). Files: 6 new + 8 modified. (`docs/superpowers/specs/2026-05-05-branches-crud-spec.md`)
+- 2026-05-05 **Appointments Calendar — Google-Calendar-Style Scheduling** — Two-PR feature delivering `/dashboard/appointments` (sidebar relabeled "Calendar" → "Appointments", 308 redirect from old path). **PR1** (`feat/appointment-crud-api`) revived 14 files from the parked `feat/appointment-crud` branch via selective copy (full `git rebase main` would have been a 68-commit conflict bloodbath since the branch diverged before Past Appointments + Branches CRUD shipped): `src/lib/appointments.ts` (`findConflictingAppointments` overlap detection across SCHEDULED/CHECKED_IN per doctor), `POST /api/appointments` (create with conflict-check + RBAC — DOCTOR can only create their own), `GET /api/appointments/check-conflict` (debounced pre-flight), `GET /api/appointments/[id]` (single with relations), `DELETE /api/appointments/[id]` (hard delete OWNER+ADMIN only — DOCTOR must Cancel). Merged the PATCH handler manually to keep main's shipped past-edit guard (`cannot_reschedule_past`, 422) AND add parked branch's conflict-check (409 with conflict details) on `dateTime`/`duration`/`doctorId` change. 4 dialogs: `CreateAppointmentDialog` (with `PatientCombobox` + `DoctorCombobox` typeahead via shadcn Command + Popover), `EditAppointmentDialog`, `CancelAppointmentDialog` (PATCH status=CANCELLED, fail-soft), `DeleteAppointmentDialog` (typed-confirm). `AppointmentActionsMenu` kebab wired into `UpcomingAppointmentsSection` 7-column grid (with `currentUserId`/`isAdmin` props from `PatientListView`). `PatientDetailPage` gains "+ New Appointment" button + mounted CreateAppointmentDialog with prefilledPatient. `Patient.upcomingAppointment` type extended with `doctorId`/`duration`/`notes`. **PR2** (`feat/appointments-calendar-page`) built the calendar page on top: `react-big-calendar` (~80KB gzipped) + `withDragAndDrop` HOC + Stripe-themed `calendar.css` (border `#e5edf5`, today `#F0EEFF`, monospace gutter labels, primary `#635BFF` events). Day/Week/Month views via custom segmented control; **resource view** for 2+ doctors in Day mode (side-by-side columns via react-big-calendar's `resources` prop). `CalendarFilterBar` with Branch select (shadcn) + Doctor multi-select Command-Popover with checkmarks, prev/next/today + DatePicker popover (shadcn Calendar). URL state: `?branch=&doctors=&view=&date=` for shareable links. `AppointmentEventCard` (compact, struck-through for CANCELLED/NO_SHOW), `AppointmentEventPopover` (anchored to clicked event, click-outside + Esc dismiss, status pill, "View patient" link → `/dashboard/patients/[id]/details`, RBAC-gated Edit/Cancel/Delete buttons). Drag-and-drop semantics: time-shift, doctor reassign across columns (OWNER/ADMIN only — DOCTOR blocked + toast), resize bottom-edge for duration; past-time blocked with snap-back via re-fetch; conflict triggers `ConflictOverrideDialog` for OWNER/ADMIN (override and double-book) or hard-blocks DOCTOR with toast. New `GET /api/appointments?branchId=&doctorIds=&start=&end=&includeCancelled=` endpoint: branch-scoped (cross-branch leak → 404), CSV `doctorIds` filter, default excludes `CANCELLED`/`NO_SHOW` (toggleable), 500-event cap returns 422 `window_too_wide`. New `doctor-color.ts` with deterministic FNV-1a hash → 12-color Stripe pastel palette (`#635BFF`, `#0570DE`, `#15BE53`, etc.). New `src/types/appointment.ts` (`CalendarAppointment`, `ConflictItem`). Sidebar relabel + middleware 308 redirect from `/dashboard/calendar*` → `/dashboard/appointments*`. shadcn primitives added: `popover`, `command`, `calendar`, `select`, `sonner` (Tabs + Tooltip already existed). 13 new tests (7 GET-list integration + 6 doctor-color unit) + all 48 appointment-related tests green; build + lint clean. Files: PR1 — 14 new + 6 modified; PR2 — 13 new + 5 modified. (`docs/superpowers/specs/2026-05-05-appointments-calendar-spec.md`)
 - 2026-04-30 **Appointment Reminders (WhatsApp + Email)** — Auto-dispatch reminders before each `SCHEDULED` appointment at branch-configurable offsets (default 24h + 2h). New enums (`ReminderChannel`, `ReminderStatus`, `WaSessionStatus`), models (`BranchReminderSettings`, `WaSession`, `AppointmentReminder` with unique `[appointmentId, channel, offsetMin, isFallback]`), and `Patient` cols (`reminderChannel`, `preferredLanguage`). Pure libs: `placeholders` (allowlist), `templates` (render + validate), `default-templates` (EN+BM plain + Stripe-styled HTML), `backoff` (5min/30min/2h ladder), `fallback` (terminal-error → cross-channel sibling row), `materialize` (channel resolution + planned-row builder per spec §7.2), `hmac` (HMAC-SHA256 sign/verify with 60s replay window). `dispatcher.ts` exposes `materializePending` and `dispatchDue` separately. Reschedule/cancel handled by an explicit `PATCH /api/appointments/[id]` that clears PENDING reminders so the next tick re-materializes. Email via Resend, WhatsApp via signed HTTP to a sibling `smartchiro-wa-worker` (out of repo, contract only) — `worker-stub.ts` provides an in-memory implementation for tests. 8 routes: `POST /api/reminders/dispatch` (Vercel Cron `*/5min`, accepts `x-cron-secret` or Bearer), `GET/PUT /api/branches/[id]/reminder-settings`, `POST /api/branches/[id]/wa/{connect,disconnect}` + `GET .../status`, `POST /api/wa/webhook`, `GET /api/appointments/[id]/reminders`, `PATCH /api/appointments/[id]`. Patient POST/PATCH accept `reminderChannel` + `preferredLanguage`. UI: `BranchReminderSettingsCard` (toggle, offset checkboxes, WhatsApp connection block, save), `ReminderTemplateEditor` (placeholder hints + char counter), `WaConnectModal` (QR pairing with 2s polling), `ReminderStatusBadge` (pill + popover). 57 unit + integration tests across 9 files. `vercel.json` cron config. New env vars: `CRON_SECRET`, `WORKER_URL`, `WORKER_SHARED_SECRET`, `WORKER_OUTBOUND_SECRET`, `RESEND_REMINDERS_FROM`. Manual E2E checklist + worker contract handoff in `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md`.
