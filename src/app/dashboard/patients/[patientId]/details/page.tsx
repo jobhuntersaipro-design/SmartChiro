@@ -25,6 +25,10 @@ export default async function PatientDetailsPage({
     : null;
 
   return (
-    <PatientDetailPage patientId={patientId} branchRole={branchRole} />
+    <PatientDetailPage
+      patientId={patientId}
+      branchRole={branchRole}
+      currentUserId={session.user.id}
+    />
   );
 }

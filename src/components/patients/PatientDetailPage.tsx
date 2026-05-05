@@ -23,6 +23,7 @@ import type { BranchRole } from "@prisma/client";
 import type { Patient } from "@/types/patient";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
 import { DeletePatientDialog } from "@/components/patients/DeletePatientDialog";
+import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
 import { PatientOverviewTab } from "@/components/patients/PatientOverviewTab";
 import { PatientHistoryTab } from "@/components/patients/PatientHistoryTab";
 import { PatientXraysTab } from "@/components/patients/PatientXraysTab";
@@ -40,6 +41,7 @@ import {
 interface PatientDetailPageProps {
   patientId: string;
   branchRole: BranchRole | null;
+  currentUserId: string;
 }
 
 interface PatientDetail extends Patient {
@@ -99,7 +101,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PatientDetailPage({ patientId, branchRole }: PatientDetailPageProps) {
+export function PatientDetailPage({ patientId, branchRole, currentUserId }: PatientDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab: TabId = resolveInitialTab(searchParams.get("tab"));
@@ -110,6 +112,7 @@ export function PatientDetailPage({ patientId, branchRole }: PatientDetailPagePr
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [createAppointmentOpen, setCreateAppointmentOpen] = useState(false);
 
   const fetchPatient = useCallback(async () => {
     try {
@@ -343,6 +346,14 @@ export function PatientDetailPage({ patientId, branchRole }: PatientDetailPagePr
             <Button
               variant="outline"
               className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
+              onClick={() => setCreateAppointmentOpen(true)}
+            >
+              <CalendarCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
+              New Appointment
+            </Button>
+            <Button
+              variant="outline"
+              className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
               onClick={() => setEditOpen(true)}
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -430,6 +441,24 @@ export function PatientDetailPage({ patientId, branchRole }: PatientDetailPagePr
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onDelete={handleDelete}
+      />
+      <CreateAppointmentDialog
+        open={createAppointmentOpen}
+        isAdmin={branchRole === "OWNER" || branchRole === "ADMIN"}
+        currentUserId={currentUserId}
+        prefilledPatient={patient ? {
+          id: patient.id,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          email: patient.email,
+          phone: patient.phone,
+        } : null}
+        onClose={() => setCreateAppointmentOpen(false)}
+        onCreated={() => {
+          setCreateAppointmentOpen(false);
+          // Reload patient to refresh upcomingAppointment field
+          window.location.reload();
+        }}
       />
     </div>
   );

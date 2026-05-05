@@ -266,7 +266,10 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       <BranchStatsCards />
 
       {/* Upcoming appointments section */}
-      <UpcomingAppointmentsSection />
+      <UpcomingAppointmentsSection
+        currentUserId={userId}
+        isAdmin={branchRole === "OWNER" || branchRole === "ADMIN"}
+      />
 
       {/* Filter bar — sticky to top of viewport while scrolling */}
       <div className="sticky top-[52px] z-20 -mx-2 px-2 py-2 bg-[#f6f9fc]/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-[#f6f9fc]/80">

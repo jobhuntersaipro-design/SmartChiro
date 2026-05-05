@@ -63,6 +63,9 @@ export interface Patient {
     id: string;
     dateTime: string;
     status: string;
+    doctorId: string;
+    duration: number;
+    notes: string | null;
   } | null;
   createdAt: string;
   xrays: PatientXray[];

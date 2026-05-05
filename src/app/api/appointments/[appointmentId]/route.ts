@@ -2,8 +2,46 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { findConflictingAppointments } from "@/lib/appointments";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
+
+export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const { appointmentId } = await ctx.params;
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const appt = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: {
+      id: true,
+      dateTime: true,
+      duration: true,
+      status: true,
+      notes: true,
+      branchId: true,
+      patient: { select: { id: true, firstName: true, lastName: true } },
+      doctor: { select: { id: true, name: true } },
+    },
+  });
+  if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  const role = await getUserBranchRole(user.id, appt.branchId);
+  if (!role) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+
+  return NextResponse.json({
+    appointment: {
+      id: appt.id,
+      dateTime: appt.dateTime.toISOString(),
+      duration: appt.duration,
+      status: appt.status,
+      notes: appt.notes,
+      branchId: appt.branchId,
+      patient: appt.patient,
+      doctor: appt.doctor,
+    },
+  });
+}
 
 const Body = z
   .object({
@@ -24,7 +62,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    select: { branchId: true, doctorId: true, dateTime: true, status: true },
+    select: { branchId: true, doctorId: true, dateTime: true, duration: true, status: true },
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -56,6 +94,51 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     );
   }
 
+  // Past-time guard: reject moving a future appointment to a time in the past.
+  if (parsed.data.dateTime !== undefined) {
+    const newStart = new Date(parsed.data.dateTime);
+    if (newStart.getTime() < Date.now()) {
+      return NextResponse.json({ error: "past_datetime" }, { status: 422 });
+    }
+  }
+
+  // Conflict check: if dateTime, duration, or doctorId changes, ensure the new window
+  // doesn't overlap another SCHEDULED/CHECKED_IN appointment for the (new) doctor.
+  const dateTimeWillChange =
+    parsed.data.dateTime !== undefined &&
+    new Date(parsed.data.dateTime).getTime() !== appt.dateTime.getTime();
+  const durationWillChange =
+    parsed.data.duration !== undefined && parsed.data.duration !== appt.duration;
+  const doctorWillChange =
+    parsed.data.doctorId !== undefined && parsed.data.doctorId !== appt.doctorId;
+
+  if (dateTimeWillChange || durationWillChange || doctorWillChange) {
+    const newStart = parsed.data.dateTime ? new Date(parsed.data.dateTime) : appt.dateTime;
+    const newDuration = parsed.data.duration ?? appt.duration;
+    const newEnd = new Date(newStart.getTime() + newDuration * 60_000);
+    const newDoctorId = parsed.data.doctorId ?? appt.doctorId;
+    const conflicts = await findConflictingAppointments({
+      doctorId: newDoctorId,
+      start: newStart,
+      end: newEnd,
+      excludeId: appointmentId,
+    });
+    if (conflicts.length > 0) {
+      return NextResponse.json(
+        {
+          error: "conflict",
+          conflicts: conflicts.map((c) => ({
+            id: c.id,
+            dateTime: c.dateTime.toISOString(),
+            duration: c.duration,
+            patient: c.patient,
+          })),
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const updateData: Record<string, unknown> = {};
   if (parsed.data.dateTime !== undefined) updateData.dateTime = new Date(parsed.data.dateTime);
   if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
@@ -83,4 +166,28 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   }
 
   return NextResponse.json({ appointment: updated });
+}
+
+export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const { appointmentId } = await ctx.params;
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const appt = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { branchId: true },
+  });
+  if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  const role = await getUserBranchRole(user.id, appt.branchId);
+  if (role !== "OWNER" && role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "doctors_must_cancel_not_delete" },
+      { status: 403 }
+    );
+  }
+
+  // Cascades to AppointmentReminder via Prisma onDelete: Cascade.
+  await prisma.appointment.delete({ where: { id: appointmentId } });
+  return NextResponse.json({ ok: true });
 }

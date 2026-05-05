@@ -42,7 +42,7 @@ function mapPatientToResponse(p: {
   _count: { visits: number; xrays: number };
   visits: { visitDate: Date }[];
   xrays: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; _count: { annotations: number } }[];
-  appointments?: { id: string; dateTime: Date; status: string }[];
+  appointments?: { id: string; dateTime: Date; status: string; doctorId: string; duration: number; notes: string | null }[];
 }) {
   return {
     id: p.id,
@@ -89,6 +89,9 @@ function mapPatientToResponse(p: {
           id: p.appointments[0].id,
           dateTime: p.appointments[0].dateTime.toISOString(),
           status: p.appointments[0].status,
+          doctorId: p.appointments[0].doctorId,
+          duration: p.appointments[0].duration,
+          notes: p.appointments[0].notes ?? null,
         }
       : null,
     createdAt: p.createdAt.toISOString(),
@@ -196,7 +199,7 @@ export async function GET(request: NextRequest) {
           where: { status: { in: ['SCHEDULED', 'CHECKED_IN'] }, dateTime: { gte: now } },
           orderBy: { dateTime: 'asc' },
           take: 1,
-          select: { id: true, dateTime: true, status: true },
+          select: { id: true, dateTime: true, status: true, doctorId: true, duration: true, notes: true },
         },
       },
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
@@ -394,7 +397,7 @@ export async function POST(request: NextRequest) {
           where: { status: { in: ['SCHEDULED', 'CHECKED_IN'] }, dateTime: { gte: new Date() } },
           orderBy: { dateTime: 'asc' },
           take: 1,
-          select: { id: true, dateTime: true, status: true },
+          select: { id: true, dateTime: true, status: true, doctorId: true, duration: true, notes: true },
         },
       },
     })

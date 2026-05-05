@@ -20,6 +20,10 @@ import {
   getAppointmentWeekday,
   buildWhatsAppUrl,
 } from "@/lib/format";
+import { AppointmentActionsMenu } from "@/components/patients/AppointmentActionsMenu";
+import { EditAppointmentDialog } from "@/components/patients/EditAppointmentDialog";
+import { CancelAppointmentDialog } from "@/components/patients/CancelAppointmentDialog";
+import { DeleteAppointmentDialog } from "@/components/patients/DeleteAppointmentDialog";
 
 type Range = "today" | "week" | "month";
 
@@ -193,9 +197,17 @@ const PAGE_SIZE = 10;
 // When | Patient | Doctor | Branch | Status | Contact
 // Branch absorbs extra space because branch names are typically the longest
 // ("SmartChiro Penang Georgetown"). Patient is capped so it stops dominating.
-const COLS = "grid-cols-[160px_180px_140px_minmax(160px,1fr)_120px_36px]";
+const COLS = "grid-cols-[160px_180px_140px_minmax(160px,1fr)_120px_36px_36px]";
 
-export function UpcomingAppointmentsSection() {
+interface UpcomingAppointmentsSectionProps {
+  currentUserId?: string;
+  isAdmin?: boolean;
+}
+
+export function UpcomingAppointmentsSection({
+  currentUserId,
+  isAdmin = false,
+}: UpcomingAppointmentsSectionProps = {}) {
   const [range, setRange] = useState<Range>("week");
   const [appointments, setAppointments] = useState<UpcomingAppointment[]>([]);
   const [total, setTotal] = useState(0);
@@ -207,6 +219,11 @@ export function UpcomingAppointmentsSection() {
   const [sortKey, setSortKey] = useState<SortKey>("when");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(1);
+
+  // Action dialogs — track which appointment id is being edited / cancelled / deleted
+  const [editId, setEditId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<UpcomingAppointment | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UpcomingAppointment | null>(null);
 
   useEffect(() => {
     try {
@@ -437,6 +454,7 @@ export function UpcomingAppointmentsSection() {
                 <SortableHeader label="Branch"  k="branch"  active={sortKey === "branch"}  dir={sortDir} onSort={onSort} />
                 <SortableHeader label="Status"  k="status"  active={sortKey === "status"}  dir={sortDir} onSort={onSort} />
                 <span aria-hidden />
+                <span aria-hidden />
               </div>
               {visible.map((a) => {
                 const wa = buildWhatsAppUrl(a.patient.phone);
@@ -480,6 +498,13 @@ export function UpcomingAppointmentsSection() {
                     ) : (
                       <span className="text-[13px] text-[#cbd5e1] text-center" aria-hidden>—</span>
                     )}
+                    <AppointmentActionsMenu
+                      canEdit={isAdmin || a.doctor.id === currentUserId}
+                      canDelete={isAdmin}
+                      onEdit={() => setEditId(a.id)}
+                      onCancel={() => setCancelTarget(a)}
+                      onDelete={() => setDeleteTarget(a)}
+                    />
                   </div>
                 );
               })}
@@ -518,6 +543,37 @@ export function UpcomingAppointmentsSection() {
           )}
         </div>
       )}
+
+      {/* Action dialogs */}
+      <EditAppointmentDialog
+        appointmentId={editId}
+        isAdmin={isAdmin}
+        onClose={() => setEditId(null)}
+        onUpdated={() => {
+          setEditId(null);
+          load(range);
+        }}
+      />
+      <CancelAppointmentDialog
+        appointmentId={cancelTarget?.id ?? null}
+        patientName={cancelTarget ? `${cancelTarget.patient.firstName} ${cancelTarget.patient.lastName}` : ""}
+        appointmentDateTime={cancelTarget?.dateTime ?? null}
+        onClose={() => setCancelTarget(null)}
+        onCancelled={() => {
+          setCancelTarget(null);
+          load(range);
+        }}
+      />
+      <DeleteAppointmentDialog
+        appointmentId={deleteTarget?.id ?? null}
+        patientName={deleteTarget ? `${deleteTarget.patient.firstName} ${deleteTarget.patient.lastName}` : ""}
+        appointmentDateTime={deleteTarget?.dateTime ?? null}
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={() => {
+          setDeleteTarget(null);
+          load(range);
+        }}
+      />
     </div>
   );
 }
