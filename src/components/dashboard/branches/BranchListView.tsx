@@ -10,18 +10,17 @@ import type { CreateBranchData } from "@/types/branch";
 import { BranchCard } from "./BranchCard";
 import { BranchSummaryStats } from "./BranchSummaryStats";
 import { DeleteBranchDialog } from "./DeleteBranchDialog";
+import { EditBranchDialog } from "./EditBranchDialog";
+import type { EditBranchFormData } from "./edit-branch-form";
 import { CreateBranchDialog } from "../owner/CreateBranchDialog";
 import { EmptyState } from "../shared/EmptyState";
 
 interface BranchListViewProps {
-  userId: string;
   userName: string | null;
-  branchRole: string | null;
 }
 
-export function BranchListView({ userId, userName, branchRole }: BranchListViewProps) {
+export function BranchListView({ userName }: BranchListViewProps) {
   const router = useRouter();
-  const isOwner = branchRole === "OWNER";
 
   const [branches, setBranches] = useState<BranchWithStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +32,8 @@ export function BranchListView({ userId, userName, branchRole }: BranchListViewP
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBranchId, setDeleteBranchId] = useState("");
   const [deleteBranchName, setDeleteBranchName] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editBranch, setEditBranch] = useState<BranchWithStats | null>(null);
 
   const fetchBranches = useCallback(async () => {
     try {
@@ -90,7 +91,23 @@ export function BranchListView({ userId, userName, branchRole }: BranchListViewP
   }
 
   function handleEdit(branchId: string) {
-    router.push(`/dashboard/branches/${branchId}?tab=settings`);
+    const branch = branches.find((b) => b.id === branchId);
+    if (!branch) return;
+    setEditBranch(branch);
+    setEditOpen(true);
+  }
+
+  async function handleSaveBranch(branchId: string, payload: Partial<EditBranchFormData>) {
+    const res = await fetch(`/api/branches/${branchId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error ?? "Failed to save changes");
+    }
+    await fetchBranches();
   }
 
   function handleDelete(branchId: string) {
@@ -126,19 +143,17 @@ export function BranchListView({ userId, userName, branchRole }: BranchListViewP
           <h1 className="text-[23px] font-normal text-[#061b31]">Branches</h1>
           <p className="text-[15px] text-[#64748d]">Manage your clinic locations</p>
         </div>
-        {isOwner && (
-          <Button
-            onClick={() => setCreateOpen(true)}
-            className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
-          >
-            <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
-            Create Branch
-          </Button>
-        )}
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
+        >
+          <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
+          Create Branch
+        </Button>
       </div>
 
       {/* Summary Stats */}
-      {branches.length > 0 && branchRole !== "DOCTOR" && (
+      {branches.length > 0 && (
         <BranchSummaryStats
           totalBranches={totals.branches}
           totalDoctors={totals.doctors}
@@ -186,14 +201,12 @@ export function BranchListView({ userId, userName, branchRole }: BranchListViewP
           title="No branches yet"
           description="Create your first branch to get started managing your clinic locations."
           action={
-            isOwner ? (
-              <Button
-                onClick={() => setCreateOpen(true)}
-                className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] cursor-pointer"
-              >
-                Create Branch
-              </Button>
-            ) : undefined
+            <Button
+              onClick={() => setCreateOpen(true)}
+              className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] cursor-pointer"
+            >
+              Create Branch
+            </Button>
           }
         />
       ) : filtered.length === 0 ? (
@@ -260,6 +273,13 @@ export function BranchListView({ userId, userName, branchRole }: BranchListViewP
         onOpenChange={setCreateOpen}
         onCreateBranch={handleCreateBranch}
         ownerName={userName}
+      />
+      <EditBranchDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        branch={editBranch}
+        ownerName={userName}
+        onSubmit={handleSaveBranch}
       />
       <DeleteBranchDialog
         open={deleteOpen}

@@ -7,10 +7,6 @@ export default async function BranchesPage() {
   if (!session?.user?.id) redirect("/login");
 
   return (
-    <BranchListView
-      userId={session.user.id}
-      userName={session.user.name ?? null}
-      branchRole={(session.user as { branchRole?: string }).branchRole ?? null}
-    />
+    <BranchListView userName={session.user.name ?? null} />
   );
 }

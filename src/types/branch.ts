@@ -42,6 +42,9 @@ export interface BranchWithStats {
   operatingHours: string | null;
   treatmentRooms: number | null;
   clinicType: string | null;
+  billingContactName: string | null;
+  billingContactEmail: string | null;
+  billingContactPhone: string | null;
   doctorCount: number;
   patientCount: number;
   todayAppointments: number;
@@ -126,4 +129,22 @@ export interface BranchPatient {
   lastVisitDate: string | null;
   xrayCount: number;
   visitCount: number;
+}
+
+export type BranchAuditAction = "CREATE" | "UPDATE" | "DELETE";
+
+export type BranchAuditChanges =
+  | { after: Record<string, unknown> }
+  | { before: Record<string, unknown>; after: Record<string, unknown> }
+  | { before: Record<string, unknown> };
+
+export interface BranchAuditEntry {
+  id: string;
+  action: BranchAuditAction;
+  actorId: string | null;
+  actorEmail: string;
+  actorName: string | null;
+  branchNameAtEvent: string;
+  changes: BranchAuditChanges;
+  createdAt: string;
 }

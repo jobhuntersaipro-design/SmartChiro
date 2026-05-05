@@ -67,7 +67,6 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const isOwner = userRole === "OWNER";
-  const isAdmin = userRole === "ADMIN";
   const open = isOpenToday(branch.operatingHours);
 
   return (
@@ -94,8 +93,8 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
             </div>
           </div>
 
-          {/* Actions menu */}
-          {(isOwner || isAdmin) && (
+          {/* Actions menu — OWNER only per 2026-05-05 RBAC tightening */}
+          {isOwner && (
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}

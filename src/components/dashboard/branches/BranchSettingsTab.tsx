@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { BranchDetail, OperatingHoursMap, DayHours } from "@/types/branch";
 import { DeleteBranchDialog } from "./DeleteBranchDialog";
+import { BranchActivityLog } from "./BranchActivityLog";
 import { BranchReminderSettingsCard } from "@/components/branches/BranchReminderSettingsCard";
 import { useRouter } from "next/navigation";
 
@@ -241,21 +242,33 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
         </FieldRow>
       </Section>
 
-      {/* Save */}
-      <div className="flex items-center gap-3">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="h-9 px-6 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
-        >
-          {saving ? "Saving..." : "Save Changes"}
-        </Button>
-        {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
-        {success && <p className="text-[14px] text-[#30B130]">Saved successfully</p>}
-      </div>
+      {/* Save — OWNER only per 2026-05-05 RBAC tightening */}
+      {isOwner && (
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="h-9 px-6 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
+          {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
+          {success && <p className="text-[14px] text-[#30B130]">Saved successfully</p>}
+        </div>
+      )}
+      {!isOwner && (
+        <p className="text-[13px] text-[#64748d]">
+          Only the branch owner can edit these settings.
+        </p>
+      )}
 
       {/* Appointment Reminders */}
       <BranchReminderSettingsCard branchId={branch.id} canEdit={true} />
+
+      {/* Activity Log — visible to OWNER + ADMIN per 2026-05-05 RBAC */}
+      {(isOwner || branch.userRole === "ADMIN") && (
+        <BranchActivityLog branchId={branch.id} />
+      )}
 
       {/* Danger Zone */}
       {isOwner && (
