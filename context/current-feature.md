@@ -1,119 +1,24 @@
-# Current Feature: Branches Tab — Full CRUD Refinement & Audit Log
+# Current Feature
 
 ## Status
 
-In Progress
+No active feature.
+
+> The Branches Tab CRUD Refinement feature shipped 2026-05-05 (see History below).
+> Reload a parked feature with `/feature load <spec.md>`, e.g. WhatsApp Worker
+> spec at `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`.
 
 ## Spec
 
-- **Source-of-truth design:** `docs/superpowers/specs/2026-05-05-branches-crud-spec.md`
-
-The `/dashboard/branches` page already has substantial CRUD (POST + GET/PATCH/DELETE on `[branchId]`, list view, settings tab, delete dialog, multi-step create dialog). This feature plugs four targeted gaps identified in clarifying Q&A on 2026-05-05: an inline `EditBranchDialog` so OWNERS no longer have to navigate to the Settings tab to edit, a fix for the disappearing "Create Branch" button (root cause: `session.user.branchRole` is picked arbitrarily from `branchMemberships[0]`), a `BranchAuditLog` model + endpoint + UI timeline tracking every CREATE/UPDATE/DELETE, and tightening PATCH/DELETE RBAC from OWNER+ADMIN → OWNER-only.
-
-**Proposed branch:** `feat/branches-crud-refinement`
+<!-- Populated by `/feature load <spec.md>` -->
 
 ## Goals
 
-- Add `EditBranchDialog` reusing the multi-step UX of `CreateBranchDialog`, pre-populated with the branch's current values, invoked from BranchCard kebab menu and list-row "Edit" action.
-- Fix the missing-Create-button bug — remove the `isOwner` gate from `BranchListView` so any authenticated user can create a branch (server route already auto-makes them OWNER on creation).
-- Add `BranchAuditLog` Prisma model + migration `20260505000000_branch_audit_log`; emit log rows from `POST /api/branches`, `PATCH /api/branches/[id]`, `DELETE /api/branches/[id]`.
-- New endpoint: `GET /api/branches/[id]/audit-log` (cursor-paginated, OWNER + ADMIN can read; DOCTOR → 403).
-- New UI section in `BranchSettingsTab`: "Activity Log" — last 50 changes with actor avatar/name, action pill, field-level diff for UPDATE, relative timestamp.
-- Tighten RBAC: `PATCH` and `DELETE` on `/api/branches/[id]` → OWNER only (was OWNER + ADMIN for PATCH; DELETE was already OWNER-only).
-- TDD-strict: failing API tests → migration → API → UI → manual E2E.
-- Verify with manual E2E checklist on `jobhunters.ai.pro@gmail.com` seed before opening PR.
+<!-- Populated by `/feature load` -->
 
 ## Notes
 
-### Locked Decisions (from Q1–Q5, 2026-05-05)
-1. **Q1.a** Inline edit dialog on the branches list page — no navigation to Settings tab required.
-2. **Q2** "Create Branch" button bug confirmed — root cause in `src/lib/auth.ts:53-60` (`branchMemberships[0]` arbitrary pick). Fix scope: drop the role gate on Create button. Root-cause fix to session shape deferred to follow-up issue.
-3. **Q3** Audit trail required — new `BranchAuditLog` model + `GET /api/branches/[id]/audit-log` endpoint + read-only timeline in Settings tab.
-4. **Q4** Live Neon DB confirmed in sync via `prisma migrate status` (17 migrations applied, no drift).
-5. **Q5** OWNER-only on edit/delete. ADMIN demoted to read-only on those two ops; ADMIN keeps audit log read access. DOCTOR unchanged (read-only).
-
-### Non-Goals (v1)
-- Soft-delete / archive (current DELETE remains hard-delete with cascade).
-- Bulk multi-select operations.
-- Branch duplication / clone.
-- Restoring deleted branches from audit log.
-- Field-level access control (e.g. "ADMIN can edit hours but not billing").
-- Audit log retention policy / pruning.
-- Audit log of member add / remove (separate spec if needed).
-- WebSocket / live updates for the activity log.
-- Diff visualization for nested JSON (only flat string/int columns diffed).
-- Logo upload (`Branch.logo` unused — defer).
-
-### Schema Migration (locked)
-```prisma
-enum BranchAuditAction {
-  CREATE
-  UPDATE
-  DELETE
-}
-
-model BranchAuditLog {
-  id                String            @id @default(cuid())
-  branchId          String            // not a FK — survives branch deletion
-  action            BranchAuditAction
-  actorId           String?           // nullable in case user is later deleted
-  actorEmail        String
-  actorName         String?
-  branchNameAtEvent String
-  changes           Json              // CREATE: {after}, UPDATE: {before, after} (changed only), DELETE: {before}
-  createdAt         DateTime          @default(now())
-
-  @@index([branchId, createdAt(sort: Desc)])
-  @@index([actorId])
-}
-```
-Why no FK on `branchId` / `actorId`: logs intentionally outlive their subject (DELETE rows still queryable). No backfill required.
-
-### Component Inventory (target)
-- **New (5 files + 4 tests):** `EditBranchDialog.tsx`, `BranchActivityLog.tsx`, `src/lib/branch-audit.ts`, `src/app/api/branches/[branchId]/audit-log/route.ts`, plus colocated `__tests__/` for each.
-- **Modify:** `prisma/schema.prisma`, `src/types/branch.ts`, `src/app/api/branches/route.ts` (emit CREATE log), `src/app/api/branches/[branchId]/route.ts` (RBAC tighten + UPDATE/DELETE log), `BranchListView.tsx` (drop role gate, wire EditDialog), `BranchCard.tsx` (kebab menu), `BranchSettingsTab.tsx` (mount `<BranchActivityLog>`), and the two existing API test files.
-- Extract `_branchFormSteps.tsx` from `CreateBranchDialog` if shared-step duplication exceeds ~60 LOC (project convention).
-
-### Implementation Order (TDD-strict, from spec §10)
-1. Write failing API tests: audit-log route (auth/RBAC/list/cursor), extend `[branchId]/route.test.ts` (audit rows on PATCH+DELETE; ADMIN PATCH → 403), extend `branches/route.test.ts` (audit row on POST).
-2. `prisma migrate dev --name branch_audit_log`. Verify Neon picks up the migration.
-3. Implement `src/lib/branch-audit.ts` (`snapshotOf`, `diffSnapshots`) + unit tests → green.
-4. Wire audit emission into POST / PATCH / DELETE → API tests green.
-5. Tighten RBAC on PATCH (OWNER-only) → API tests green.
-6. Implement `GET /api/branches/[id]/audit-log` route → API tests green.
-7. Write failing component tests: `EditBranchDialog.test.tsx` (pre-fill, diff submit, close on success), `BranchActivityLog.test.tsx` (render, paginate, empty state).
-8. Build `EditBranchDialog` (extract `_branchFormSteps.tsx` if duplication >60 LOC) → tests green.
-9. Build `BranchActivityLog` → tests green.
-10. Drop `isOwner` gate on Create in `BranchListView`. Wire `EditBranchDialog`. Add kebab menu to `BranchCard`. Mount `<BranchActivityLog>` in `BranchSettingsTab`.
-11. `npm run build` + `npm run lint` + `npm test` all green.
-12. Manual E2E checklist (spec §11) on `jobhunters.ai.pro@gmail.com` seed.
-13. Open PR `feat/branches-crud-refinement`.
-
-Estimated diff: ~600–800 LOC across 5 new + 8 modified files.
-
-### RBAC Matrix (locked)
-| Action | OWNER | ADMIN | DOCTOR |
-|---|:---:|:---:|:---:|
-| GET /api/branches | ✅ | ✅ | ✅ |
-| POST /api/branches | ✅ | ✅ | ✅ |
-| GET /api/branches/[id] | ✅ | ✅ | ✅ |
-| PATCH /api/branches/[id] | ✅ | ❌ 403 | ❌ 403 |
-| DELETE /api/branches/[id] | ✅ | ❌ 403 | ❌ 403 |
-| GET /api/branches/[id]/audit-log | ✅ | ✅ | ❌ 403 |
-| Edit/Delete in BranchCard kebab | ✅ | ❌ | ❌ |
-| Activity Log in Settings tab | ✅ | ✅ | ❌ |
-
-Cross-branch leak returns 404 (not 403) — matches existing pattern.
-
-### Open Questions (non-blocking)
-- **Q12.1** Audit log of member add/remove → out of scope here. Flag during PR review if you want it bundled.
-- **Q12.2** Should ADMIN see kebab menu but with **disabled** Edit/Delete + tooltip "OWNER only", or hide entirely? Default chosen: hide. Reverse with one-line change if you prefer disabled-with-tooltip.
-- **Q12.3** "Load more" button vs infinite-scroll for Activity Log → defaulting to button (matches `PatientImageSidebar` convention).
-
-### Risks
-- Migration on production: `BranchAuditLog` is purely additive — zero downtime, no backfill.
-- Audit row write failure must not block the user action — fail-soft (try/catch + console.error). Reverse to fail-loud if you want stricter guarantees; flag before §4 lands.
-- Session bug fix is symptomatic only — recommend follow-up issue: "Replace single `branchRole` in session with per-branch role lookup helper."
+<!-- Populated by `/feature load` -->
 
 ### Deferred / Parked Features
 - **WhatsApp Worker (Baileys)** — sibling repo `~/Desktop/smartchiro-wa-worker`. Not started. Specs preserved at:
@@ -122,6 +27,10 @@ Cross-branch leak returns 404 (not 403) — matches existing pattern.
   - `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md` §8
 
   Reload via `/feature load docs/superpowers/specs/2026-04-30-wa-worker-implementation.md` when ready to ship.
+
+### Follow-up Issues (queued, not started)
+- **Session `branchRole` shape fix** — root cause of the Q2 "Create Branch button hidden" bug shipped 2026-05-05 was [src/lib/auth.ts:53-60](../src/lib/auth.ts#L53-L60) picking `branchMemberships[0]` arbitrarily. Replace with a per-branch role lookup helper so multi-branch users get correct role in each context.
+- **Seed user.id drift** — `prisma/seed-personal.ts` runs before NextAuth ever creates the user. After a `migrate reset` + fresh login, the seeded BranchMember rows are orphaned (link to old cuid). Two options: (a) move membership upserts into a post-login one-shot hook keyed by `SEED_USER_EMAIL`, or (b) ship `scripts/restore-memberships.mjs` as the official recovery path with a small `scripts/README.md`.
 
 ## History
 
@@ -164,4 +73,5 @@ Cross-branch leak returns 404 (not 403) — matches existing pattern.
 - 2026-04-21 **Patient Detail — Deep-Linked Info & DOB Format** — Every actionable field on `/dashboard/patients/[patientId]/details` opens in a new tab: phone → WhatsApp `wa.me`, email → `mailto:`, doctor name → `/dashboard/doctors/[id]`, branch name → `/dashboard/branches/[id]`, address → Google Maps search. Emergency contact phone converted from `tel:` to WhatsApp. Date of Birth reformatted to `DD-MM-YYYY (Age)` in header, Overview Quick Info, and Profile tab. New `src/lib/format.ts` with 6 pure helpers (`formatDobWithAge`, `buildWhatsAppUrl`, `buildMailtoUrl`, `buildMapsUrl`, `buildDoctorHref`, `buildBranchHref`) + 17 tests. New `ExternalLink` wrapper enforcing `target="_blank" rel="noopener noreferrer"`. MY phone normalization (strip non-digits → leading `0` becomes `60`). Visits tab card header converted from `<button>` to `<div role=button tabIndex=0>` so nested doctor `<a>` is valid HTML; click-propagation stopped on link so card toggle still works. X-ray gallery already opened in new tab (verified). No API, schema, or migration changes. 8 files changed (`context/features/patient-detail-hyperlinks-spec.md`)
 - 2026-04-29 **X-Ray Annotation Revamp & Management** — Patient X-Rays tab rebuilt with filter chips (body region / view type / date / archived), inline rename, kebab menu (rename / edit notes / archive / restore), batch select + archive dialog, notes drawer with versioned history (`XrayNote` model, 100-rev cap). Annotation viewer adopts MedDream-style mouse conventions via `useViewerInputs` (middle-drag pan, right-drag W/L, wheel-scroll-series, Ctrl+wheel zoom, Shift+wheel W/L fine-tune). Toolbar repainted as 44px dark left rail. SeriesStrip on canvas right edge with collapsible thumbnails. FirstRunOverlay teaches new conventions once per browser. Removed orphaned calibration tool/dialog/route + "Uncalibrated" status text. RBAC tightened on PATCH/DELETE/upload/upload-url via shared `canManageXray` helper (4-role × 4-route matrix tested). Notes API at GET/POST `/api/xrays/[id]/notes`. (`docs/superpowers/specs/2026-04-29-xray-annotation-revamp-and-management-design.md`)
 - 2026-05-04 **Past Appointments Sub-Tab** — New `History` top-level tab on `/dashboard/patients/[patientId]/details` with `Visits | Appointments` sub-tabs (legacy `?tab=visits` deep-links preserved). The Past Appointments sub-tab surfaces every appointment with `dateTime < now` (incl. `Stale` for SCHEDULED-past with amber pill + breathing dot animation), 5 stat cards (Completed / Cancelled / No-show / Stale / Revenue split into paid + outstanding), filter bar (Status multi-select chips / Doctor / Date range preset), sortable + 10-row paginated table linking patient/doctor/branch, edit-status/notes dialog with radio + char counter, issue-invoice dialog with auto-defaults from appointment date. Migration `20260503052950_link_appointments_visits_invoices` adds Visit↔Appointment relation (via existing `Visit.appointmentId @unique`) + `Appointment.invoices[]` back-relation + `Invoice.appointmentId` FK + index. 5 new API routes: `GET /api/patients/[id]/past-appointments` (filter + sort + paginate + per-patient stats; OWNER/ADMIN scope, DOCTOR read), `POST /api/appointments/[id]/visit` (idempotent create-Visit-from-COMPLETED, returns 200 if already linked / 201 if fresh), `POST /api/appointments/[id]/invoice` (issue tied to appointment, multi-allowed, auto-line-item), `POST /api/invoices/[id]/regenerate` (void DRAFT/SENT/OVERDUE + new DRAFT, blocks PAID with 422 `invoice_already_paid`). Existing `PATCH /api/appointments/[id]` gains past-edit guard (blocks `dateTime` / `doctorId` change on past rows with 422 `cannot_reschedule_past`; DOCTOR → 403 on past rows). RBAC matrix: OWNER/ADMIN full CRUD on past appointments + invoices for branches they own/admin; DOCTOR read-only on the tab; cross-branch leak returns 404 (not 403) per §7. Bonus improvements during this branch: Upcoming Appointments table in `/dashboard/patients` rebuilt as quiet Stripe-product UI — sortable headers (`↑`/`↓`/`↕` indicators, fixed StrictMode setSortDir bug), branch + doctor filters, 10-row pagination, branch column, two-line `2:00 PM` / `03/05/2026` time cell, animated breathing dot on SCHEDULED rows; multi-branch API across user's owned/admin branches. New `formatAppointmentTime` + `formatAppointmentDateOnly` helpers, `animate-subtle-blink` keyframe with `prefers-reduced-motion` opt-out. Personal seed expanded to 3 branches (KLCC + Bangsar + Penang Georgetown) × 30 patients × 36 visits × 57 appointments × 12 invoices. UI-reviewer pass applied 10 patches (COMPLETED green color, `Loader2` spinner, `rounded-full` → `rounded-[4px]` filter chips, `overflow-x-auto` mobile, `type="submit"` dialog buttons, Calendar empty-state icon, kebab focus ring, full-opacity focus rings, responsive stat-card grid). 25 new tests (19 API + 6 component-helper). DB drift required `prisma migrate reset` mid-feature (lost ephemeral test data, re-seeded clean). Files: 13 new + 5 modified. (`docs/superpowers/specs/2026-05-03-past-appointments-tab-spec.md`)
+- 2026-05-05 **Branches Tab — CRUD Refinement & Audit Log** — Plugged four targeted gaps in the existing branches CRUD: (1) `EditBranchDialog` invoked from the branches list (4-step wizard pre-filled from `BranchWithStats`, submits diff-only via PATCH, closes silently on no-op save) so OWNERs no longer have to navigate to the Settings tab to edit. (2) Fixed missing **Create Branch** button — dropped the `isOwner` role gate from `BranchListView`. Root cause is `branchMemberships[0]` arbitrary pick at `src/lib/auth.ts:53-60`; this PR fixes the symptom only, root-cause queued as a follow-up. (3) New `BranchAuditLog` model + `BranchAuditAction` enum + migration `20260505043029_branch_audit_log` (no FK on `branchId`/`actorId` so logs survive their subject; composite index on `[branchId, createdAt DESC]`). `POST /api/branches` emits CREATE row with full snapshot; `PATCH /api/branches/[id]` emits UPDATE row with changed-fields-only diff (no row for no-op patches); `DELETE` emits DELETE row in `prisma.$transaction([...])` with the delete; all audit writes are fail-soft (try/catch + console.error). New `GET /api/branches/[id]/audit-log` route — cursor-paginated with default `limit=50` / `MAX_LIMIT=100`, OWNER + ADMIN read, DOCTOR → 403, cross-branch leak → 404 to match existing pattern. New `<BranchActivityLog>` mounted in `BranchSettingsTab` (OWNER + ADMIN visible) with actor avatar/initials, action pill (Created green / Updated blue / Deleted red), per-field diff for UPDATE rendered as `Phone: <old> → <new>` with strikethrough on the before value, relative timestamps with absolute on hover, "Load more" cursor pagination, empty state. (4) Tightened RBAC: `PATCH /api/branches/[id]` now OWNER-only (was OWNER+ADMIN); ADMIN demoted to read-only on edit/delete; ADMIN keeps audit-log read access. `BranchCard` kebab menu hides entirely for ADMIN/DOCTOR; Settings tab Save button gated to OWNER with "Only the branch owner can edit these settings" hint for ADMIN. New helpers: `src/lib/branch-audit.ts` (`AUDITED_BRANCH_FIELDS` × 19, `snapshotOf`, `diffSnapshots`); `src/components/dashboard/branches/edit-branch-form.ts` (`branchToFormData`, `computePatchPayload`, `parseOperatingHoursJson`); `src/components/dashboard/branches/audit-log-format.ts` (`formatFieldName`, `formatFieldValue`, `actionStyle`, `formatRelativeTime`). `BranchWithStats` extended to include `billingContactName/Email/Phone` so edit pre-fill works; `BranchListView` props simplified (`userId`/`branchRole` removed). Bonus: shipped `scripts/check-counts.mjs` (read-only Neon inventory probe) and `scripts/restore-memberships.mjs` (idempotent non-destructive upsert of OWNER + 3 personal-doctor-* DOCTOR memberships against personal-branch-001/002/003 — used to recover from `seed-personal.ts` user.id drift after `migrate reset` + fresh login). 54 new tests (9 lib unit + 25 API integration including audit row emission on CREATE/UPDATE/DELETE, no-op PATCH suppression, ADMIN PATCH 403, audit-log GET RBAC + DESC ordering + cursor pagination + 100-cap limit + 401/403/404 paths + 20 component-helper tests). Files: 6 new + 8 modified. (`docs/superpowers/specs/2026-05-05-branches-crud-spec.md`)
 - 2026-04-30 **Appointment Reminders (WhatsApp + Email)** — Auto-dispatch reminders before each `SCHEDULED` appointment at branch-configurable offsets (default 24h + 2h). New enums (`ReminderChannel`, `ReminderStatus`, `WaSessionStatus`), models (`BranchReminderSettings`, `WaSession`, `AppointmentReminder` with unique `[appointmentId, channel, offsetMin, isFallback]`), and `Patient` cols (`reminderChannel`, `preferredLanguage`). Pure libs: `placeholders` (allowlist), `templates` (render + validate), `default-templates` (EN+BM plain + Stripe-styled HTML), `backoff` (5min/30min/2h ladder), `fallback` (terminal-error → cross-channel sibling row), `materialize` (channel resolution + planned-row builder per spec §7.2), `hmac` (HMAC-SHA256 sign/verify with 60s replay window). `dispatcher.ts` exposes `materializePending` and `dispatchDue` separately. Reschedule/cancel handled by an explicit `PATCH /api/appointments/[id]` that clears PENDING reminders so the next tick re-materializes. Email via Resend, WhatsApp via signed HTTP to a sibling `smartchiro-wa-worker` (out of repo, contract only) — `worker-stub.ts` provides an in-memory implementation for tests. 8 routes: `POST /api/reminders/dispatch` (Vercel Cron `*/5min`, accepts `x-cron-secret` or Bearer), `GET/PUT /api/branches/[id]/reminder-settings`, `POST /api/branches/[id]/wa/{connect,disconnect}` + `GET .../status`, `POST /api/wa/webhook`, `GET /api/appointments/[id]/reminders`, `PATCH /api/appointments/[id]`. Patient POST/PATCH accept `reminderChannel` + `preferredLanguage`. UI: `BranchReminderSettingsCard` (toggle, offset checkboxes, WhatsApp connection block, save), `ReminderTemplateEditor` (placeholder hints + char counter), `WaConnectModal` (QR pairing with 2s polling), `ReminderStatusBadge` (pill + popover). 57 unit + integration tests across 9 files. `vercel.json` cron config. New env vars: `CRON_SECRET`, `WORKER_URL`, `WORKER_SHARED_SECRET`, `WORKER_OUTBOUND_SECRET`, `RESEND_REMINDERS_FROM`. Manual E2E checklist + worker contract handoff in `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md`.
