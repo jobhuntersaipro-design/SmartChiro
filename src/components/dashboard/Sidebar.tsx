@@ -34,7 +34,7 @@ const navItems = [
   { label: "Patients", href: "/dashboard/patients", icon: Users },
   { label: "Branches", href: "/dashboard/branches", icon: Building2 },
   { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope },
-  { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
+  { label: "Appointments", href: "/dashboard/appointments", icon: Calendar },
   { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
 ];
 

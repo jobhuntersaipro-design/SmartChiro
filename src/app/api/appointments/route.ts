@@ -4,6 +4,95 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { findConflictingAppointments } from "@/lib/appointments";
 
+const MAX_EVENTS_PER_QUERY = 500;
+
+export async function GET(req: Request): Promise<Response> {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const branchId = url.searchParams.get("branchId");
+  const start = url.searchParams.get("start");
+  const end = url.searchParams.get("end");
+
+  if (!branchId || !start || !end) {
+    return NextResponse.json({ error: "missing_params" }, { status: 400 });
+  }
+
+  // RBAC: caller must be a member of the branch. Cross-branch leak → 404.
+  const role = await getUserBranchRole(user.id, branchId);
+  if (!role) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return NextResponse.json({ error: "invalid_date" }, { status: 400 });
+  }
+
+  const doctorIdsParam = url.searchParams.get("doctorIds");
+  const doctorIds = doctorIdsParam ? doctorIdsParam.split(",").filter(Boolean) : null;
+  const includeCancelled = url.searchParams.get("includeCancelled") === "true";
+
+  const statusFilter = includeCancelled
+    ? undefined
+    : { notIn: ["CANCELLED", "NO_SHOW"] as ("CANCELLED" | "NO_SHOW")[] };
+
+  // First check the count to enforce the 500-event cap.
+  const count = await prisma.appointment.count({
+    where: {
+      branchId,
+      dateTime: { gte: startDate, lt: endDate },
+      ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
+    },
+  });
+  if (count > MAX_EVENTS_PER_QUERY) {
+    return NextResponse.json(
+      { error: "window_too_wide", count, cap: MAX_EVENTS_PER_QUERY },
+      { status: 422 }
+    );
+  }
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      branchId,
+      dateTime: { gte: startDate, lt: endDate },
+      ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
+    },
+    orderBy: { dateTime: "asc" },
+    select: {
+      id: true,
+      dateTime: true,
+      duration: true,
+      status: true,
+      notes: true,
+      patient: {
+        select: { id: true, firstName: true, lastName: true, phone: true },
+      },
+      doctor: {
+        select: { id: true, name: true, image: true },
+      },
+      branch: { select: { id: true, name: true } },
+    },
+  });
+
+  return NextResponse.json({
+    appointments: appointments.map((a) => ({
+      id: a.id,
+      dateTime: a.dateTime.toISOString(),
+      duration: a.duration,
+      status: a.status,
+      notes: a.notes,
+      patient: a.patient,
+      doctor: a.doctor,
+      branch: a.branch,
+    })),
+  });
+}
+
 const Body = z.object({
   patientId: z.string().min(1),
   doctorId: z.string().min(1),

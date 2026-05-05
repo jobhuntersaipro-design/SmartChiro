@@ -1,0 +1,143 @@
+/* ───────────────────────────────────────────────────────────────────────
+   Stripe-themed overrides for react-big-calendar.
+   Aligns the calendar with SmartChiro's design tokens:
+     border       #e5edf5
+     muted text   #64748d
+     primary      #635BFF
+     today bg     #F0EEFF
+     hover bg     #F0F3F7
+     monospace    'SF Mono', 'Fira Code', monospace
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Frame */
+.rbc-calendar {
+  font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 13px;
+  color: #0a2540;
+  height: 100%;
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+  border-color: #e5edf5;
+  background: white;
+}
+
+.rbc-time-header,
+.rbc-month-header,
+.rbc-time-content,
+.rbc-month-row,
+.rbc-day-bg,
+.rbc-time-content > * + * > *,
+.rbc-time-header-content,
+.rbc-time-header > .rbc-row:first-child,
+.rbc-time-header > .rbc-row + .rbc-row,
+.rbc-day-slot .rbc-time-slot {
+  border-color: #e5edf5 !important;
+}
+
+/* Header row: weekday labels */
+.rbc-header {
+  padding: 8px 6px;
+  font-weight: 500;
+  font-size: 12px;
+  color: #64748d;
+  border-bottom: 1px solid #e5edf5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Time gutter (left side hour labels) */
+.rbc-time-gutter,
+.rbc-time-gutter .rbc-timeslot-group {
+  background: #fafbfd;
+}
+.rbc-label {
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #64748d;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hour rows */
+.rbc-day-slot .rbc-timeslot-group {
+  border-bottom: 1px solid #f1f5f9;
+}
+.rbc-time-slot {
+  border-top-color: #f1f5f9 !important;
+}
+
+/* Today highlight */
+.rbc-today {
+  background-color: #F0EEFF !important;
+}
+
+/* Off-range cells (Month view) */
+.rbc-off-range-bg {
+  background: #fafbfd;
+}
+.rbc-off-range {
+  color: #cbd5e1;
+}
+
+/* Selected slot (drag-to-select range) */
+.rbc-slot-selection {
+  background: #635BFF20;
+  border: 1px solid #635BFF;
+  color: #061b31;
+  font-weight: 500;
+}
+
+/* Now line */
+.rbc-current-time-indicator {
+  background-color: #DF1B41;
+  height: 2px;
+}
+
+/* Events */
+.rbc-event {
+  cursor: pointer;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+.rbc-event:hover {
+  filter: brightness(0.97);
+}
+.rbc-event.rbc-selected {
+  outline: 2px solid #635BFF;
+  outline-offset: -2px;
+}
+
+/* Drag preview */
+.rbc-addons-dnd .rbc-addons-dnd-row-body .rbc-addons-dnd-drag-row {
+  opacity: 0.7;
+}
+.rbc-addons-dnd-dragged-event {
+  opacity: 0.7 !important;
+}
+
+/* Resource header (Day view with multiple doctors) */
+.rbc-time-header-cell {
+  border-bottom: 1px solid #e5edf5;
+}
+.rbc-time-header-content > .rbc-row.rbc-row-resource {
+  border-bottom: 2px solid #e5edf5;
+  background: #fafbfd;
+}
+
+/* Month-view "show more" link */
+.rbc-show-more {
+  color: #635BFF;
+  font-weight: 500;
+  font-size: 11px;
+}
+.rbc-show-more:hover {
+  color: #4434d4;
+  text-decoration: underline;
+}
+
+/* Hide built-in toolbar (we render our own CalendarFilterBar) */
+.rbc-toolbar {
+  display: none;
+}
