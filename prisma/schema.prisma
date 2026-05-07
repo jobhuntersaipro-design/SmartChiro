@@ -32,12 +32,14 @@ model User {
   doctorProfile DoctorProfile?
 
   // As doctor
-  assignedPatients Patient[]     @relation("PatientDoctor")
-  visits           Visit[]       @relation("VisitDoctor")
-  appointments     Appointment[] @relation("AppointmentDoctor")
-  uploadedXrays    Xray[]        @relation("XrayUploader")
-  annotations      Annotation[]  @relation("AnnotationCreator")
-  xrayNotes        XrayNote[]    @relation("XrayNoteAuthor")
+  assignedPatients Patient[]         @relation("PatientDoctor")
+  visits           Visit[]           @relation("VisitDoctor")
+  appointments     Appointment[]     @relation("AppointmentDoctor")
+  uploadedXrays    Xray[]            @relation("XrayUploader")
+  annotations      Annotation[]      @relation("AnnotationCreator")
+  xrayNotes        XrayNote[]        @relation("XrayNoteAuthor")
+  timeOff          DoctorTimeOff[]   @relation("DoctorTimeOff")
+  breakTimes       DoctorBreakTime[] @relation("DoctorBreakTime")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -200,6 +202,9 @@ model Branch {
   appointments Appointment[]
   invoices     Invoice[]
 
+  doctorTimeOff   DoctorTimeOff[]   @relation("BranchTimeOff")
+  doctorBreakTime DoctorBreakTime[] @relation("BranchBreakTime")
+
   reminderSettings BranchReminderSettings?
   waSession        WaSession?
 
@@ -233,10 +238,121 @@ enum BranchAuditAction {
   DELETE
 }
 
+// ─── Appointment Audit Log ───
+
+enum AppointmentAuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  CANCEL
+  RESCHEDULE
+  DOCTOR_REASSIGN
+  STATUS_CHANGE
+  NOTE_EDIT
+}
+
+model AppointmentAuditLog {
+  id            String                 @id @default(cuid())
+  appointmentId String
+  action        AppointmentAuditAction
+
+  actorId    String?
+  actorEmail String
+  actorName  String?
+
+  // Snapshot of patient + doctor + time at the moment the event happened so logs stay
+  // readable even if the appointment is later deleted.
+  patientNameAtEvent String
+  dateTimeAtEvent    DateTime
+
+  // Per-field changes for UPDATE/RESCHEDULE/STATUS_CHANGE/NOTE_EDIT/DOCTOR_REASSIGN.
+  // Shape: { fieldName: { from: any, to: any } }
+  changes Json
+
+  createdAt DateTime @default(now())
+
+  @@index([appointmentId, createdAt(sort: Desc)])
+  @@index([actorId])
+}
+
+// ─── Treatment Type ───
+
+enum TreatmentType {
+  INITIAL_CONSULT
+  ADJUSTMENT
+  GONSTEAD
+  DIVERSIFIED
+  ACTIVATOR
+  DROP_TABLE
+  SOFT_TISSUE
+  SPINAL_DECOMPRESSION
+  REHAB_EXERCISE
+  X_RAY
+  FOLLOW_UP
+  WELLNESS_CHECK
+  PEDIATRIC
+  PRENATAL
+  SPORTS_REHAB
+  OTHER
+}
+
+// ─── Doctor Availability ───
+
+enum LeaveType {
+  ANNUAL_LEAVE
+  SICK_LEAVE
+  PERSONAL_LEAVE
+  CONFERENCE
+  JURY_DUTY
+  UNPAID_LEAVE
+  OTHER
+}
+
+model DoctorTimeOff {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation("DoctorTimeOff", fields: [userId], references: [id], onDelete: Cascade)
+  // Optional branch scope — null means applies across all branches the doctor works in.
+  branchId  String?
+  branch    Branch?   @relation("BranchTimeOff", fields: [branchId], references: [id], onDelete: SetNull)
+  type      LeaveType
+  startDate DateTime
+  endDate   DateTime
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([branchId])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model DoctorBreakTime {
+  id          String  @id @default(cuid())
+  userId      String
+  user        User    @relation("DoctorBreakTime", fields: [userId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch  @relation("BranchBreakTime", fields: [branchId], references: [id], onDelete: Cascade)
+  // 0 = Sunday … 6 = Saturday (matches JS getDay())
+  dayOfWeek   Int
+  // Minutes since midnight (e.g., 12:00 PM = 720)
+  startMinute Int
+  endMinute   Int
+  label       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, branchId, dayOfWeek, startMinute])
+  @@index([userId, branchId, dayOfWeek])
+}
+
 model BranchAuditLog {
-  id                String            @id @default(cuid())
-  branchId          String
-  action            BranchAuditAction
+  id       String            @id @default(cuid())
+  branchId String
+  action   BranchAuditAction
 
   actorId    String?
   actorEmail String
@@ -522,11 +638,12 @@ model XrayNote {
 // ─── Appointments ───
 
 model Appointment {
-  id       String            @id @default(cuid())
-  dateTime DateTime
-  duration Int               @default(30)
-  status   AppointmentStatus @default(SCHEDULED)
-  notes    String?
+  id            String            @id @default(cuid())
+  dateTime      DateTime
+  duration      Int               @default(30)
+  status        AppointmentStatus @default(SCHEDULED)
+  notes         String?
+  treatmentType TreatmentType?
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)

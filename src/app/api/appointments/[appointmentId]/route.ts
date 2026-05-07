@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { findConflictingAppointments } from "@/lib/appointments";
+import { logAppointmentEvent, diffSnapshots, snapshotOf, classifyUpdate } from "@/lib/appointment-audit";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -52,6 +53,27 @@ const Body = z
     duration: z.number().int().positive().optional(),
     notes: z.string().nullable().optional(),
     doctorId: z.string().optional(),
+    treatmentType: z
+      .enum([
+        "INITIAL_CONSULT",
+        "ADJUSTMENT",
+        "GONSTEAD",
+        "DIVERSIFIED",
+        "ACTIVATOR",
+        "DROP_TABLE",
+        "SOFT_TISSUE",
+        "SPINAL_DECOMPRESSION",
+        "REHAB_EXERCISE",
+        "X_RAY",
+        "FOLLOW_UP",
+        "WELLNESS_CHECK",
+        "PEDIATRIC",
+        "PRENATAL",
+        "SPORTS_REHAB",
+        "OTHER",
+      ])
+      .nullable()
+      .optional(),
   })
   .refine((d) => Object.keys(d).length > 0, "at least one field required");
 
@@ -62,7 +84,16 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    select: { branchId: true, doctorId: true, dateTime: true, duration: true, status: true },
+    select: {
+      branchId: true,
+      doctorId: true,
+      dateTime: true,
+      duration: true,
+      status: true,
+      notes: true,
+      treatmentType: true,
+      patient: { select: { firstName: true, lastName: true } },
+    },
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -145,11 +176,52 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   if (parsed.data.duration !== undefined) updateData.duration = parsed.data.duration;
   if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
   if (parsed.data.doctorId !== undefined) updateData.doctorId = parsed.data.doctorId;
+  if (parsed.data.treatmentType !== undefined) updateData.treatmentType = parsed.data.treatmentType;
 
   const updated = await prisma.appointment.update({
     where: { id: appointmentId },
     data: updateData,
   });
+
+  // Audit — diff the audited fields and choose a specific action verb when possible
+  const before = snapshotOf({
+    dateTime: appt.dateTime,
+    duration: appt.duration,
+    status: appt.status,
+    notes: appt.notes,
+    doctorId: appt.doctorId,
+    treatmentType: appt.treatmentType,
+  });
+  const after = snapshotOf({
+    dateTime: updated.dateTime,
+    duration: updated.duration,
+    status: updated.status,
+    notes: updated.notes,
+    doctorId: updated.doctorId,
+    treatmentType: updated.treatmentType,
+  });
+  // Normalize Date → ISO string for diff comparison
+  const beforeForDiff = {
+    ...before,
+    dateTime: appt.dateTime.toISOString(),
+  };
+  const afterForDiff = {
+    ...after,
+    dateTime: updated.dateTime.toISOString(),
+  };
+  const changes = diffSnapshots(beforeForDiff, afterForDiff);
+  if (Object.keys(changes).length > 0) {
+    const patientName = appt.patient
+      ? `${appt.patient.firstName} ${appt.patient.lastName}`
+      : "Unknown patient";
+    await logAppointmentEvent({
+      appointmentId,
+      action: classifyUpdate(changes),
+      actor: { id: user.id, email: user.email ?? "unknown", name: user.name ?? null },
+      snapshot: { patientName, dateTime: updated.dateTime },
+      changes: changes as unknown as Parameters<typeof logAppointmentEvent>[0]["changes"],
+    });
+  }
 
   // Reschedule / cancel hook: clear PENDING reminders so they re-materialize at the new time
   // (or simply stay cleared if status moved away from SCHEDULED).
@@ -175,7 +247,11 @@ export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    select: { branchId: true },
+    select: {
+      branchId: true,
+      dateTime: true,
+      patient: { select: { firstName: true, lastName: true } },
+    },
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -186,6 +262,19 @@ export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
       { status: 403 }
     );
   }
+
+  const patientName = appt.patient
+    ? `${appt.patient.firstName} ${appt.patient.lastName}`
+    : "Unknown patient";
+
+  // Audit BEFORE delete so we still have the appointmentId reference
+  await logAppointmentEvent({
+    appointmentId,
+    action: "DELETE",
+    actor: { id: user.id, email: user.email ?? "unknown", name: user.name ?? null },
+    snapshot: { patientName, dateTime: appt.dateTime },
+    changes: {},
+  });
 
   // Cascades to AppointmentReminder via Prisma onDelete: Cascade.
   await prisma.appointment.delete({ where: { id: appointmentId } });

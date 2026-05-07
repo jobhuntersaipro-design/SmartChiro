@@ -32,8 +32,9 @@ import { AppointmentEventCard } from "./AppointmentEventCard";
 import { AppointmentEventPopover } from "./AppointmentEventPopover";
 import { ConflictOverrideDialog } from "./ConflictOverrideDialog";
 import { CalendarFilterBar } from "./CalendarFilterBar";
+import { DoctorDayCalendar } from "./DoctorDayCalendar";
 import { doctorColor } from "./doctor-color";
-import type { CalendarAppointment, ConflictItem } from "@/types/appointment";
+import type { CalendarAppointment, ConflictItem, AvailabilitySlot } from "@/types/appointment";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
@@ -79,6 +80,13 @@ interface BranchOption {
 interface Props {
   currentUserId: string;
   branches: BranchOption[];
+  /** When mounted inside AppointmentsPageShell, the page-level top bar already
+   * renders the title and "+ New Appointment" — hide ours to avoid duplication. */
+  hideHeader?: boolean;
+  /** When mounted inside AppointmentsPageShell, the shell owns the `view` URL
+   * param (list|calendar). Pass true to skip our internal `view=day|week|month`
+   * URL sync to avoid clobbering. */
+  disableUrlSync?: boolean;
 }
 
 const VIEW_FROM_PARAM: Record<string, View> = {
@@ -118,7 +126,12 @@ function getWindow(date: Date, view: View): { start: Date; end: Date } {
   return { start, end };
 }
 
-export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
+export function AppointmentsCalendarView({
+  currentUserId,
+  branches,
+  hideHeader = false,
+  disableUrlSync = false,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -136,7 +149,7 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
   const initialDoctorIds =
     searchParams.get("doctors")?.split(",").filter(Boolean) ?? [];
   const initialView =
-    VIEW_FROM_PARAM[searchParams.get("view") ?? "week"] ?? Views.WEEK;
+    VIEW_FROM_PARAM[searchParams.get("view") ?? "day"] ?? Views.DAY;
   const initialDate = searchParams.get("date")
     ? new Date(searchParams.get("date")!)
     : new Date();
@@ -146,6 +159,7 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
   const [view, setView] = useState<View>(initialView);
   const [date, setDate] = useState<Date>(initialDate);
   const [appointments, setAppointments] = useState<CalendarAppointment[]>([]);
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -171,17 +185,18 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
     [branchId, branches]
   );
 
-  // ─── Sync URL when state changes ───
+  // ─── Sync URL when state changes (skip when shell owns the URL) ───
   useEffect(() => {
+    if (disableUrlSync) return;
     const params = new URLSearchParams();
     params.set("branch", branchId);
     if (doctorIds.length > 0) params.set("doctors", doctorIds.join(","));
     params.set("view", PARAM_FROM_VIEW[view] ?? "week");
     params.set("date", date.toISOString().split("T")[0]);
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [branchId, doctorIds, view, date, router]);
+  }, [branchId, doctorIds, view, date, router, disableUrlSync]);
 
-  // ─── Fetch appointments when window changes ───
+  // ─── Fetch appointments + availability when window changes ───
   const fetchAppointments = useCallback(async () => {
     if (!branchId) return;
     const { start, end } = getWindow(date, view);
@@ -191,25 +206,40 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
       end: end.toISOString(),
     });
     if (doctorIds.length > 0) params.set("doctorIds", doctorIds.join(","));
+    const availParams = new URLSearchParams({
+      start: start.toISOString(),
+      end: end.toISOString(),
+    });
+    if (doctorIds.length > 0) availParams.set("doctorIds", doctorIds.join(","));
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/appointments?${params.toString()}`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
+      const [apptRes, availRes] = await Promise.all([
+        fetch(`/api/appointments?${params.toString()}`),
+        fetch(`/api/branches/${branchId}/availability?${availParams.toString()}`),
+      ]);
+      if (!apptRes.ok) {
+        const body = await apptRes.json().catch(() => ({}));
         if (body.error === "window_too_wide") {
           setError(`Too many events (${body.count}) — narrow your filters.`);
         } else {
           setError(body.error ?? "Failed to load appointments");
         }
         setAppointments([]);
-        return;
+      } else {
+        const body = await apptRes.json();
+        setAppointments(body.appointments);
       }
-      const body = await res.json();
-      setAppointments(body.appointments);
+      if (availRes.ok) {
+        const body = await availRes.json();
+        setAvailability(body.slots);
+      } else {
+        setAvailability([]);
+      }
     } catch {
       setError("Network error loading appointments");
       setAppointments([]);
+      setAvailability([]);
     } finally {
       setLoading(false);
     }
@@ -398,22 +428,24 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-110px)]">
-      <div className="flex items-baseline justify-between gap-3">
-        <div>
-          <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">Appointments</h1>
-          <p className="text-[14px] text-[#64748d]">Schedule, reschedule, and manage all bookings.</p>
+    <div className={hideHeader ? "flex flex-col gap-4 h-full" : "flex flex-col gap-4 h-[calc(100vh-110px)]"}>
+      {!hideHeader && (
+        <div className="flex items-baseline justify-between gap-3">
+          <div>
+            <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">Appointments</h1>
+            <p className="text-[14px] text-[#64748d]">Schedule, reschedule, and manage all bookings.</p>
+          </div>
+          <Button
+            onClick={() => {
+              setCreatePrefill(null);
+              setCreateOpen(true);
+            }}
+            className="h-9 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
+          >
+            New Appointment
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            setCreatePrefill(null);
-            setCreateOpen(true);
-          }}
-          className="h-9 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
-        >
-          New Appointment
-        </Button>
-      </div>
+      )}
 
       <CalendarFilterBar
         branches={branches}
@@ -451,6 +483,39 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
         </div>
       )}
 
+      {view === Views.DAY ? (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <DoctorDayCalendar
+            date={date}
+            doctors={
+              doctorIds.length === 0
+                ? branch?.doctors ?? []
+                : (branch?.doctors ?? []).filter((d) => doctorIds.includes(d.id))
+            }
+            appointments={appointments}
+            availability={availability}
+            loading={loading}
+            isAdmin={isAdmin}
+            currentUserId={currentUserId}
+            onSelectEvent={(a) => {
+              setPopoverEvent(a);
+              setPopoverAnchor(
+                new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0)
+              );
+            }}
+            onSelectSlot={(slot) => {
+              setCreatePrefill({
+                dateTime: slot.dateTime.toISOString(),
+                doctorId: slot.doctorId,
+              });
+              setCreateOpen(true);
+            }}
+            onEdit={(a) => setEditId(a.id)}
+            onCancel={(a) => setCancelTarget(a)}
+            onDelete={(a) => setDeleteTarget(a)}
+          />
+        </div>
+      ) : (
       <div className="relative flex-1 min-h-0 rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
@@ -507,6 +572,7 @@ export function AppointmentsCalendarView({ currentUserId, branches }: Props) {
           toolbar={false}
         />
       </div>
+      )}
 
       {/* Popover */}
       {popoverEvent && popoverAnchor && (

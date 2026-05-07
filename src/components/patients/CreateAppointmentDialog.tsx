@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PatientCombobox } from "@/components/patients/PatientCombobox";
 import { DoctorCombobox } from "@/components/patients/DoctorCombobox";
 import { formatAppointmentDateTime } from "@/lib/format";
+import {
+  TREATMENT_OPTIONS,
+  treatmentLabelFor,
+} from "@/lib/treatment-colors";
+import type { TreatmentType } from "@/types/appointment";
 
 interface Props {
   open: boolean;
@@ -71,9 +76,11 @@ export function CreateAppointmentDialog({
   const [time, setTime] = useState("10:00");
   const [duration, setDuration] = useState(30);
   const [notes, setNotes] = useState("");
+  const [treatmentType, setTreatmentType] = useState<TreatmentType | "">("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
+  const [breakConfirm, setBreakConfirm] = useState<{ label: string } | null>(null);
 
   // Initialize from prefills when the dialog opens
   useEffect(() => {
@@ -94,8 +101,10 @@ export function CreateAppointmentDialog({
     setTime("10:00");
     setDuration(30);
     setNotes("");
+    setTreatmentType("");
     setError(null);
     setConflicts([]);
+    setBreakConfirm(null);
   }, [open, prefilledPatient, prefilledDoctor]);
 
   // Doctors who are not admins can only book for themselves — auto-pin
@@ -132,7 +141,7 @@ export function CreateAppointmentDialog({
   const canSave =
     !!patient && !!doctor && !!iso && !isPast && conflicts.length === 0 && !submitting;
 
-  async function submit() {
+  async function submit(opts: { forceBookOnBreak?: boolean } = {}) {
     if (!patient || !doctor || !iso) return;
     setError(null);
     setSubmitting(true);
@@ -146,10 +155,16 @@ export function CreateAppointmentDialog({
           dateTime: iso,
           duration,
           notes: notes.trim() || undefined,
+          treatmentType: treatmentType || undefined,
+          forceBookOnBreak: opts.forceBookOnBreak,
         }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (res.status === 409 && data?.error === "break_time_confirm_required") {
+          setBreakConfirm({ label: data.breakLabel ?? "Break time" });
+          return;
+        }
         if (res.status === 409 && data?.conflicts) {
           setConflicts(data.conflicts as ConflictItem[]);
           setError("This time conflicts with an existing appointment.");
@@ -233,6 +248,24 @@ export function CreateAppointmentDialog({
           />
         </div>
 
+        <div className="mb-3">
+          <label className="block text-[12px] font-medium text-[#425466] mb-1">
+            Treatment type (optional)
+          </label>
+          <select
+            value={treatmentType}
+            onChange={(e) => setTreatmentType(e.target.value as TreatmentType | "")}
+            className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+          >
+            <option value="">— Select —</option>
+            {TREATMENT_OPTIONS.map((t) => (
+              <option key={t} value={t}>
+                {treatmentLabelFor(t)}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="mb-4">
           <label className="block text-[12px] font-medium text-[#425466] mb-1">
             Notes (optional)
@@ -282,12 +315,59 @@ export function CreateAppointmentDialog({
           <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-[4px] text-[14px]">
             Cancel
           </Button>
-          <Button onClick={submit} disabled={!canSave} className="h-8 rounded-[4px] text-[14px] gap-1.5">
+          <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-[4px] text-[14px] gap-1.5">
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {submitting ? "Scheduling…" : "Schedule"}
           </Button>
         </div>
       </div>
+
+      {/* Break-time confirmation dialog — appears when API returns break_time_confirm_required */}
+      {breakConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setBreakConfirm(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-[420px] rounded-[8px] border border-[#e5edf5] bg-white p-6"
+            style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Coffee className="h-5 w-5 text-[#F59E0B]" strokeWidth={1.75} />
+              <h3 className="text-[16px] font-semibold text-[#061b31]">
+                Book during break time?
+              </h3>
+            </div>
+            <p className="text-[13px] text-[#425466] mb-4">
+              {doctor?.name ?? "The doctor"}&apos;s schedule has{" "}
+              <strong>&ldquo;{breakConfirm.label}&rdquo;</strong> blocked at this time.
+              The doctor will be notified by email if you book anyway.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setBreakConfirm(null)}
+                disabled={submitting}
+                className="h-8 rounded-[4px] text-[13px]"
+              >
+                Pick another time
+              </Button>
+              <Button
+                onClick={() => {
+                  setBreakConfirm(null);
+                  submit({ forceBookOnBreak: true });
+                }}
+                disabled={submitting}
+                className="h-8 rounded-[4px] text-[13px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5"
+              >
+                {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
+                Book on break
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

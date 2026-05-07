@@ -146,6 +146,69 @@ export type ReminderEmailResult =
   | { ok: true; id: string }
   | { ok: false; reason: 'invalid_email' | 'bounce_hard' | 'unknown'; message: string }
 
+/**
+ * Notify a doctor that a new appointment was booked on their calendar. Fail-soft:
+ * any email error is swallowed and logged so the booking flow never fails on
+ * notification problems. Skipped silently if RESEND_API_KEY is unset (dev environments).
+ */
+export async function sendDoctorBookingNotification(args: {
+  to: string
+  doctorName: string | null
+  patientName: string
+  dateTime: Date
+  duration: number
+  branchName: string
+  treatmentLabel: string | null
+  bookedByName: string | null
+  appointmentUrl: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const dt = args.dateTime
+  const dateStr = dt.toLocaleString('en-MY', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+  const greeting = args.doctorName ? `Hi ${args.doctorName.split(' ')[0]},` : 'Hi,'
+  const treatmentLine = args.treatmentLabel
+    ? `<p style="margin: 6px 0; color: #425466;"><strong>Treatment:</strong> ${args.treatmentLabel}</p>`
+    : ''
+  const bookedByLine = args.bookedByName
+    ? `<p style="margin: 6px 0; color: #697386; font-size: 13px;">Booked by ${args.bookedByName}</p>`
+    : ''
+  try {
+    await resend.emails.send({
+      from: 'SmartChiro <noreply@smartchiro.org>',
+      to: args.to,
+      subject: `New appointment with ${args.patientName} — ${dateStr}`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #061b31;">
+          <p style="margin: 0 0 16px; font-size: 15px;">${greeting}</p>
+          <p style="margin: 0 0 16px; font-size: 15px;">A new appointment has just been booked on your calendar.</p>
+          <div style="background: #F6F9FC; border: 1px solid #e5edf5; border-radius: 6px; padding: 16px; margin: 16px 0;">
+            <p style="margin: 0 0 8px; font-size: 17px; font-weight: 600;">${args.patientName}</p>
+            <p style="margin: 6px 0; color: #425466;"><strong>When:</strong> ${dateStr} (${args.duration} min)</p>
+            <p style="margin: 6px 0; color: #425466;"><strong>Branch:</strong> ${args.branchName}</p>
+            ${treatmentLine}
+            ${bookedByLine}
+          </div>
+          <p style="margin: 24px 0 0;">
+            <a href="${args.appointmentUrl}" style="background: #635BFF; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">View appointment</a>
+          </p>
+          <p style="margin: 32px 0 0; font-size: 12px; color: #697386;">SmartChiro · Appointment notification</p>
+        </div>
+      `,
+      text: `${greeting}\n\nA new appointment has been booked.\n\nPatient: ${args.patientName}\nWhen: ${dateStr} (${args.duration} min)\nBranch: ${args.branchName}${args.treatmentLabel ? `\nTreatment: ${args.treatmentLabel}` : ''}${args.bookedByName ? `\nBooked by: ${args.bookedByName}` : ''}\n\nView: ${args.appointmentUrl}`,
+    })
+  } catch (e) {
+    console.error('appointment-booked notification failed', { to: args.to, error: e })
+  }
+}
+
 export async function sendReminderEmail(args: {
   to: string
   subject: string

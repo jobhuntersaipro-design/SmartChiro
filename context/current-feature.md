@@ -1,22 +1,49 @@
-# Current Feature
+# Current Feature: Appointment Tabs Redesign (Zendenta-inspired List View)
 
 ## Status
 
-No active feature.
-
-> The Appointments Calendar feature shipped 2026-05-05 (see History below).
-> Reload a parked feature with `/feature load <spec.md>`, e.g. WhatsApp Worker
-> spec at `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`.
+In Progress
 
 ## Spec
 
-<!-- Populated by `/feature load <spec.md>` -->
+`docs/superpowers/specs/2026-05-05-appointment-tabs-redesign-spec.md`
+
+Branch: `feat/appointment-tabs-redesign` (matches repo convention `feat/...`; spec-suggested `claude/...-YRF8p` not used).
 
 ## Goals
 
-<!-- Populated by `/feature load` -->
+- Add a **List View** mode to `/dashboard/appointments` as the default landing tab (Calendar View remains as power-user grid via toggle, persisted to `localStorage`)
+- Implement **status tabs** with live counts: All | Today | Upcoming | Completed | Cancelled | No-show
+- Build **rich appointment cards** (Zendenta-style): patient avatar, name, time, doctor, treatment type, left accent bar colored by status, hover kebab actions
+- Add a **mini calendar sidebar** (280px) with branch selector, doctor multi-select, and date dot indicators for days with appointments
+- Replace the floating popover with a **slide-in detail panel** (420px from right, overlay with backdrop): patient header, appointment info, notes, reminders, RBAC-gated actions (Edit / Mark Complete / Cancel / View-or-Create Visit)
+- Add **summary stat cards** (4 across) above the list: Today's count, This Week, Completion Rate, Revenue (paid + pending)
+- All RBAC, conflict detection, and reminder logic stays unchanged — reuse existing `CreateAppointmentDialog`, `EditAppointmentDialog`, `CancelAppointmentDialog`, `DeleteAppointmentDialog`, `ReminderStatusBadge`, `ExternalLink`
 
 ## Notes
+
+### Key implementation points (from spec)
+
+- **New components** (10 files, all under `src/components/appointments/`): `AppointmentsPageShell`, `AppointmentsListView`, `AppointmentSidebarFilters`, `AppointmentStatCards`, `AppointmentTabs`, `AppointmentCardList`, `AppointmentCard`, `AppointmentDetailPanel` + 2 API routes (`counts`, `calendar-markers`)
+- **Files to modify**: `src/app/dashboard/appointments/page.tsx` (render shell), `src/app/api/appointments/route.ts` (add `tab` query param), `src/components/calendar/AppointmentsCalendarView.tsx` (extract shared filter state to shell, accept as props)
+- **Files NOT changed**: `AppointmentEventCard`, `AppointmentEventPopover`, `ConflictOverrideDialog`, all dialog components, all reminder/invoice/visit dialogs
+- **API additions**:
+  - Extend `GET /api/appointments` with `?tab=today|upcoming|completed|cancelled|noshow`
+  - New `GET /api/appointments/counts` (per-status counts via `prisma.appointment.groupBy`)
+  - New `GET /api/appointments/calendar-markers` (date array for mini-calendar dots)
+- **URL state**: `?view=list|calendar&branch=&doctors=&date=&tab=&appointment=` for shareable links + deep-linking detail panel
+- **Design tokens**: Reuse existing — only one new utility class `.appointment-card-accent` in `globals.css` for the 4px left accent bar
+- **Status colors** (status pill + accent bar): SCHEDULED `#635BFF` (animated dot), CHECKED_IN `#15BE53`, IN_PROGRESS `#F5A623` (pulse), COMPLETED `#30B130`, CANCELLED `#DF1B41`, NO_SHOW `#697386`
+- **Animations**: Detail panel `translateX 100%→0` 200ms ease-out; tab underline 150ms; card hover shadow+border 150ms; reuse existing `animate-subtle-blink` for SCHEDULED/IN_PROGRESS pulse
+- **Responsive**: ≥1280px full 3-panel; 1024-1279 sidebar→icon rail + detail overlays; 768-1023 sidebar→drawer + detail full-screen modal; <768px list view only + bottom-sheet detail
+- **Accessibility**: `role="tablist"/"tab"` with `aria-selected`; detail panel `role="dialog"` with focus trap; Escape closes; arrow keys cycle tabs; cards Enter/Space to open
+- **Out of scope (this PR)**: AI-suggested times, in-app messaging, WhatsApp from detail panel, drag-to-reschedule in list view, time-based heatmap, patient-facing portal
+
+### Testing plan (from spec §16)
+
+- **Unit (Vitest)**: `AppointmentCard` status variants, `AppointmentTabs` active styling + count badges + keyboard nav, `AppointmentStatCards` count derivation, tab filter logic edge cases (midnight + timezone)
+- **API integration**: `/counts` correctness + RBAC (cross-branch → 404), `/calendar-markers` date array + range, `?tab=today` and `?tab=upcoming` filters
+- **Manual E2E**: List view default, tab counts match, card → detail panel, Esc/backdrop close, Mark Complete optimistic update, mini-calendar dots, view toggle preserves state, deep-link `?appointment=xxx`, `+ New Appointment` from list, DOCTOR cannot Delete in panel, responsive breakpoints
 
 ### Deferred / Parked Features
 - **WhatsApp Worker (Baileys)** — sibling repo `~/Desktop/smartchiro-wa-worker`. Not started. Specs preserved at:

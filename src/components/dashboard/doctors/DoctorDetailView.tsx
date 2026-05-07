@@ -14,6 +14,7 @@ import { DoctorOverviewTab } from "./DoctorOverviewTab";
 import { DoctorPatientsTab } from "./DoctorPatientsTab";
 import { DoctorScheduleTab } from "./DoctorScheduleTab";
 import { DoctorProfessionalTab } from "./DoctorProfessionalTab";
+import { DoctorAvailabilityTab } from "./DoctorAvailabilityTab";
 
 interface DoctorDetailViewProps {
   doctorId: string;
@@ -24,6 +25,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "patients", label: "Patients" },
   { id: "schedule", label: "Schedule" },
+  { id: "availability", label: "Availability" },
   { id: "professional", label: "Professional" },
 ] as const;
 
@@ -238,6 +240,9 @@ export function DoctorDetailView({ doctorId, currentUserId }: DoctorDetailViewPr
       )}
       {activeTab === "schedule" && (
         <DoctorScheduleTab doctor={doctor} />
+      )}
+      {activeTab === "availability" && (
+        <DoctorAvailabilityTab doctorId={doctorId} doctor={doctor} currentUserId={currentUserId} />
       )}
       {activeTab === "professional" && (
         <DoctorProfessionalTab doctor={doctor} />
