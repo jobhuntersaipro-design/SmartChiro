@@ -250,4 +250,127 @@ describe("POST /api/appointments", () => {
     );
     expect(res.status).toBe(401);
   });
+
+  it("returns 409 break_time_confirm_required when slot overlaps doctor's break", async () => {
+    const { owner, doctor, branch, patient } = await buildFixture();
+    // 12-1 PM lunch every day
+    await prisma.doctorBreakTime.createMany({
+      data: [0, 1, 2, 3, 4, 5, 6].map((dow) => ({
+        userId: doctor.id,
+        branchId: branch.id,
+        dayOfWeek: dow,
+        startMinute: 12 * 60,
+        endMinute: 13 * 60,
+        label: "Lunch",
+      })),
+    });
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+
+    // Pick tomorrow at 12:30 PM in local time
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(12, 30, 0, 0);
+
+    const res = await POST(
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({
+          patientId: patient.id,
+          doctorId: doctor.id,
+          dateTime: tomorrow.toISOString(),
+          duration: 30,
+        }),
+      })
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toBe("break_time_confirm_required");
+    expect(body.breakLabel).toBe("Lunch");
+  });
+
+  it("forceBookOnBreak: true bypasses the break-time gate", async () => {
+    const { owner, doctor, branch, patient } = await buildFixture();
+    await prisma.doctorBreakTime.create({
+      data: {
+        userId: doctor.id,
+        branchId: branch.id,
+        dayOfWeek: new Date(Date.now() + 86_400_000).getDay(),
+        startMinute: 12 * 60,
+        endMinute: 13 * 60,
+        label: "Lunch",
+      },
+    });
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(12, 30, 0, 0);
+
+    const res = await POST(
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({
+          patientId: patient.id,
+          doctorId: doctor.id,
+          dateTime: tomorrow.toISOString(),
+          duration: 30,
+          forceBookOnBreak: true,
+        }),
+      })
+    );
+    expect(res.status).toBe(201);
+  });
+
+  it("accepts treatmentType and persists it on the row", async () => {
+    const { owner, doctor, patient } = await buildFixture();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+
+    const res = await POST(
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({
+          patientId: patient.id,
+          doctorId: doctor.id,
+          dateTime: futureIso(48 * 60 * 60 * 1000),
+          treatmentType: "GONSTEAD",
+        }),
+      })
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.appointment.treatmentType).toBe("GONSTEAD");
+  });
+
+  it("writes an AppointmentAuditLog CREATE row when appointment is created", async () => {
+    const { owner, doctor, patient } = await buildFixture();
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      id: owner.id,
+      email: "owner@t",
+      name: "Owner",
+    } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+
+    const res = await POST(
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({
+          patientId: patient.id,
+          doctorId: doctor.id,
+          dateTime: futureIso(48 * 60 * 60 * 1000),
+          treatmentType: "ADJUSTMENT",
+        }),
+      })
+    );
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    const logs = await prisma.appointmentAuditLog.findMany({
+      where: { appointmentId: body.appointment.id },
+    });
+    expect(logs).toHaveLength(1);
+    expect(logs[0].action).toBe("CREATE");
+    expect(logs[0].actorId).toBe(owner.id);
+  });
 });

@@ -53,6 +53,30 @@
   }
 }
 
+/* Left accent bar on AppointmentCard — colored by status (set inline). */
+.appointment-card-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 8px 0 0 8px;
+}
+
+/* Slide-in detail panel keyframes — translateX from off-screen right. */
+@keyframes appointment-panel-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.animate-appointment-panel-in {
+  animation: appointment-panel-in 200ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-appointment-panel-in {
+    animation: none;
+  }
+}
+
 @theme inline {
   --font-heading: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;

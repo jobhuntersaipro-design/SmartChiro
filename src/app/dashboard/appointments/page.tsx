@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { AppointmentsCalendarView } from "@/components/calendar/AppointmentsCalendarView";
+import { AppointmentsPageShell } from "@/components/appointments/AppointmentsPageShell";
 
 export default async function AppointmentsPage() {
   const session = await auth();
@@ -43,7 +43,7 @@ export default async function AppointmentsPage() {
   }));
 
   return (
-    <AppointmentsCalendarView
+    <AppointmentsPageShell
       currentUserId={session.user.id}
       branches={userBranches}
     />

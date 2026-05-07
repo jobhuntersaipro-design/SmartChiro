@@ -191,6 +191,88 @@ describe("GET /api/appointments (calendar list)", () => {
     expect(body2.appointments).toHaveLength(3);
   });
 
+  it("filters by ?tab=upcoming (excludes past + completed/cancelled/noshow)", async () => {
+    const { owner, doctorA, branch, patient } = await buildFixture();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await prisma.appointment.createMany({
+      data: [
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: future, duration: 30, status: "SCHEDULED" },
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: new Date(future.getTime() + 30 * 60_000), duration: 30, status: "COMPLETED" },
+      ],
+    });
+
+    const res = await GET(
+      new Request(
+        urlOf({
+          branchId: branch.id,
+          start: new Date(Date.now() - 60_000).toISOString(),
+          end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          tab: "upcoming",
+        })
+      )
+    );
+    const body = await res.json();
+    expect(body.appointments).toHaveLength(1);
+    expect(body.appointments[0].status).toBe("SCHEDULED");
+  });
+
+  it("filters by ?tab=completed", async () => {
+    const { owner, doctorA, branch, patient } = await buildFixture();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await prisma.appointment.createMany({
+      data: [
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: future, duration: 30, status: "SCHEDULED" },
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: new Date(future.getTime() + 30 * 60_000), duration: 30, status: "COMPLETED" },
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: new Date(future.getTime() + 60 * 60_000), duration: 30, status: "CANCELLED" },
+      ],
+    });
+
+    const res = await GET(
+      new Request(
+        urlOf({
+          branchId: branch.id,
+          start: new Date(Date.now() - 60_000).toISOString(),
+          end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          tab: "completed",
+        })
+      )
+    );
+    const body = await res.json();
+    expect(body.appointments).toHaveLength(1);
+    expect(body.appointments[0].status).toBe("COMPLETED");
+  });
+
+  it("filters by ?tab=cancelled (overrides default exclude-cancelled)", async () => {
+    const { owner, doctorA, branch, patient } = await buildFixture();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await prisma.appointment.createMany({
+      data: [
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: future, duration: 30, status: "SCHEDULED" },
+        { branchId: branch.id, doctorId: doctorA.id, patientId: patient.id, dateTime: new Date(future.getTime() + 30 * 60_000), duration: 30, status: "CANCELLED" },
+      ],
+    });
+
+    const res = await GET(
+      new Request(
+        urlOf({
+          branchId: branch.id,
+          start: new Date(Date.now() - 60_000).toISOString(),
+          end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          tab: "cancelled",
+        })
+      )
+    );
+    const body = await res.json();
+    expect(body.appointments).toHaveLength(1);
+    expect(body.appointments[0].status).toBe("CANCELLED");
+  });
+
   it("returns 422 when window exceeds 500-event cap", async () => {
     const { owner, doctorA, branch, patient } = await buildFixture();
     vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);

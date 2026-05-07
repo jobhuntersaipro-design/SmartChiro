@@ -3,6 +3,29 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { findConflictingAppointments } from "@/lib/appointments";
+import { overlapsBreak } from "@/lib/availability";
+import { logAppointmentEvent } from "@/lib/appointment-audit";
+import { sendDoctorBookingNotification } from "@/lib/email";
+import { treatmentLabelFor } from "@/lib/treatment-colors";
+
+const TREATMENT_TYPES = [
+  "INITIAL_CONSULT",
+  "ADJUSTMENT",
+  "GONSTEAD",
+  "DIVERSIFIED",
+  "ACTIVATOR",
+  "DROP_TABLE",
+  "SOFT_TISSUE",
+  "SPINAL_DECOMPRESSION",
+  "REHAB_EXERCISE",
+  "X_RAY",
+  "FOLLOW_UP",
+  "WELLNESS_CHECK",
+  "PEDIATRIC",
+  "PRENATAL",
+  "SPORTS_REHAB",
+  "OTHER",
+] as const;
 
 const MAX_EVENTS_PER_QUERY = 500;
 
@@ -34,16 +57,48 @@ export async function GET(req: Request): Promise<Response> {
   const doctorIdsParam = url.searchParams.get("doctorIds");
   const doctorIds = doctorIdsParam ? doctorIdsParam.split(",").filter(Boolean) : null;
   const includeCancelled = url.searchParams.get("includeCancelled") === "true";
+  const tab = url.searchParams.get("tab");
 
-  const statusFilter = includeCancelled
-    ? undefined
-    : { notIn: ["CANCELLED", "NO_SHOW"] as ("CANCELLED" | "NO_SHOW")[] };
+  // `tab` overrides the default cancel-exclusion when set.
+  // - completed/cancelled/noshow: explicit single-status filters
+  // - today: SCHEDULED+CHECKED_IN+IN_PROGRESS within today's bounds
+  // - upcoming: any non-terminal status, server time forward
+  type ApptStatus =
+    | "SCHEDULED"
+    | "CHECKED_IN"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "CANCELLED"
+    | "NO_SHOW";
+  let statusFilter: { in?: ApptStatus[]; notIn?: ApptStatus[]; equals?: ApptStatus } | undefined =
+    includeCancelled
+      ? undefined
+      : { notIn: ["CANCELLED", "NO_SHOW"] };
+  let dateFilter: { gte?: Date; lt?: Date; gt?: Date } = { gte: startDate, lt: endDate };
+
+  if (tab === "completed") {
+    statusFilter = { equals: "COMPLETED" };
+  } else if (tab === "cancelled") {
+    statusFilter = { equals: "CANCELLED" };
+  } else if (tab === "noshow") {
+    statusFilter = { equals: "NO_SHOW" };
+  } else if (tab === "today") {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    dateFilter = { gte: dayStart, lt: dayEnd };
+    statusFilter = { in: ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS"] };
+  } else if (tab === "upcoming") {
+    dateFilter = { gt: new Date() };
+    statusFilter = { in: ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS"] };
+  }
 
   // First check the count to enforce the 500-event cap.
   const count = await prisma.appointment.count({
     where: {
       branchId,
-      dateTime: { gte: startDate, lt: endDate },
+      dateTime: dateFilter,
       ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
       ...(statusFilter ? { status: statusFilter } : {}),
     },
@@ -58,7 +113,7 @@ export async function GET(req: Request): Promise<Response> {
   const appointments = await prisma.appointment.findMany({
     where: {
       branchId,
-      dateTime: { gte: startDate, lt: endDate },
+      dateTime: dateFilter,
       ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
       ...(statusFilter ? { status: statusFilter } : {}),
     },
@@ -69,6 +124,7 @@ export async function GET(req: Request): Promise<Response> {
       duration: true,
       status: true,
       notes: true,
+      treatmentType: true,
       patient: {
         select: { id: true, firstName: true, lastName: true, phone: true },
       },
@@ -76,6 +132,11 @@ export async function GET(req: Request): Promise<Response> {
         select: { id: true, name: true, image: true },
       },
       branch: { select: { id: true, name: true } },
+      invoices: {
+        where: { status: { in: ["DRAFT", "SENT", "OVERDUE"] } },
+        select: { id: true },
+        take: 1,
+      },
     },
   });
 
@@ -86,6 +147,8 @@ export async function GET(req: Request): Promise<Response> {
       duration: a.duration,
       status: a.status,
       notes: a.notes,
+      treatmentType: a.treatmentType,
+      hasUnpaidInvoice: a.invoices.length > 0,
       patient: a.patient,
       doctor: a.doctor,
       branch: a.branch,
@@ -99,6 +162,9 @@ const Body = z.object({
   dateTime: z.string().datetime(),
   duration: z.number().int().positive().max(480).optional(),
   notes: z.string().optional(),
+  treatmentType: z.enum(TREATMENT_TYPES).optional(),
+  /** Bypass the break-time confirmation gate. Frontend sets this on retry after the user clicks "Book on break" in the dialog. */
+  forceBookOnBreak: z.boolean().optional(),
 });
 
 export async function POST(req: Request): Promise<Response> {
@@ -112,7 +178,7 @@ export async function POST(req: Request): Promise<Response> {
       { status: 422 }
     );
   }
-  const { patientId, doctorId, dateTime, duration = 30, notes } = parsed.data;
+  const { patientId, doctorId, dateTime, duration = 30, notes, treatmentType, forceBookOnBreak } = parsed.data;
 
   // Past-time guard
   const newStart = new Date(dateTime);
@@ -169,6 +235,25 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
+  // Break-time confirmation gate. If the chosen slot overlaps the doctor's break,
+  // require the client to retry with `forceBookOnBreak: true` after showing a confirm dialog.
+  if (!forceBookOnBreak) {
+    const docBreaks = await prisma.doctorBreakTime.findMany({
+      where: { userId: doctorId, branchId: patient.branchId },
+      select: { userId: true, branchId: true, dayOfWeek: true, startMinute: true, endMinute: true, label: true },
+    });
+    if (overlapsBreak(doctorId, newStart, newEnd, docBreaks)) {
+      return NextResponse.json(
+        {
+          error: "break_time_confirm_required",
+          breakLabel:
+            docBreaks.find((b) => b.dayOfWeek === newStart.getDay())?.label ?? "Break time",
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const created = await prisma.appointment.create({
     data: {
       patientId,
@@ -178,8 +263,59 @@ export async function POST(req: Request): Promise<Response> {
       duration,
       status: "SCHEDULED",
       notes: notes ?? null,
+      treatmentType: treatmentType ?? null,
     },
   });
+
+  // Hydrate names for audit + email — use what we already have without an extra query
+  const [patientFull, doctorFull, branchFull] = await Promise.all([
+    prisma.patient.findUnique({
+      where: { id: patientId },
+      select: { firstName: true, lastName: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: doctorId },
+      select: { id: true, name: true, email: true },
+    }),
+    prisma.branch.findUnique({
+      where: { id: patient.branchId },
+      select: { name: true },
+    }),
+  ]);
+  const patientName = patientFull
+    ? `${patientFull.firstName} ${patientFull.lastName}`
+    : "Unknown patient";
+
+  // Audit log — fail-soft
+  await logAppointmentEvent({
+    appointmentId: created.id,
+    action: "CREATE",
+    actor: { id: user.id, email: user.email ?? "unknown", name: user.name ?? null },
+    snapshot: { patientName, dateTime: created.dateTime },
+    changes: {
+      dateTime: { from: null, to: created.dateTime.toISOString() },
+      doctorId: { from: null, to: created.doctorId },
+      duration: { from: null, to: created.duration },
+      status: { from: null, to: created.status },
+      treatmentType: { from: null, to: created.treatmentType ?? null },
+      notes: { from: null, to: created.notes ?? null },
+    },
+  });
+
+  // Notify the doctor — only if they are not the booker (no point emailing yourself)
+  if (doctorFull?.email && doctorFull.id !== user.id) {
+    void sendDoctorBookingNotification({
+      to: doctorFull.email,
+      doctorName: doctorFull.name ?? null,
+      patientName,
+      dateTime: created.dateTime,
+      duration: created.duration,
+      branchName: branchFull?.name ?? "Your branch",
+      treatmentLabel: created.treatmentType ? treatmentLabelFor(created.treatmentType) : null,
+      bookedByName: user.name ?? user.email ?? null,
+      appointmentUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/appointments?appointment=${created.id}`,
+    });
+  }
 
   return NextResponse.json(
     {
@@ -189,6 +325,7 @@ export async function POST(req: Request): Promise<Response> {
         duration: created.duration,
         status: created.status,
         notes: created.notes,
+        treatmentType: created.treatmentType,
         patientId: created.patientId,
         doctorId: created.doctorId,
         branchId: created.branchId,
