@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ImageIcon, Upload, X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import {
@@ -22,7 +23,6 @@ interface PatientXray {
 
 interface PatientImageSidebarProps {
   patientId: string;
-  userId: string;
   currentXrayId: string;
   /** X-ray IDs currently loaded in multi-view grid slots */
   loadedXrayIds?: string[];
@@ -31,6 +31,8 @@ interface PatientImageSidebarProps {
   onSelectXray: (xray: PatientXray) => void;
   isOpen: boolean;
   onToggle: () => void;
+  /** When true, J/K and arrow keys cycle through the X-ray list */
+  enableKeyboardCycling?: boolean;
 }
 
 type FileUploadStatus = "pending" | "validating" | "uploading" | "done" | "error";
@@ -45,13 +47,13 @@ interface UploadFileEntry {
 
 export function PatientImageSidebar({
   patientId,
-  userId,
   currentXrayId,
   loadedXrayIds,
   activeGridXrayId,
   onSelectXray,
   isOpen,
   onToggle,
+  enableKeyboardCycling = false,
 }: PatientImageSidebarProps) {
   const [xrays, setXrays] = useState<PatientXray[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +93,39 @@ export function PatientImageSidebar({
   useEffect(() => {
     fetchXrays();
   }, [fetchXrays]);
+
+  // Cycle the active X-ray with J/K or arrow keys (single-view mode only).
+  // Skips when typing in inputs/textareas and ignores meta/ctrl/alt combos.
+  useEffect(() => {
+    if (!enableKeyboardCycling) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable
+      ) return;
+
+      const key = e.key.toLowerCase();
+      let direction = 0;
+      if (key === "k" || e.key === "ArrowUp") direction = -1;
+      else if (key === "j" || e.key === "ArrowDown") direction = 1;
+      if (direction === 0) return;
+
+      if (xrays.length === 0) return;
+      const idx = xrays.findIndex((x) => x.id === currentXrayId);
+      if (idx < 0) return;
+      const nextIdx = (idx + direction + xrays.length) % xrays.length;
+      const next = xrays[nextIdx];
+      if (next && next.id !== currentXrayId) {
+        e.preventDefault();
+        onSelectXray(next);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [enableKeyboardCycling, xrays, currentXrayId, onSelectXray]);
 
   // Infinite scroll — load more when near bottom
   const handleScroll = useCallback(() => {
@@ -445,7 +480,7 @@ export function PatientImageSidebar({
                     entry.status === "error") && (
                     <button
                       onClick={() => removeFromQueue(entry.id)}
-                      className="flex-shrink-0"
+                      className="shrink-0"
                       style={{ color: "#A3ACB9" }}
                     >
                       <X size={10} />
@@ -516,6 +551,8 @@ export function PatientImageSidebar({
                 <button
                   key={xray.id}
                   onClick={() => onSelectXray(xray)}
+                  onMouseEnter={(e) => { if (!isActive && !isLoadedInGrid) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+                  onMouseLeave={(e) => { if (!isActive && !isLoadedInGrid) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
                   className="flex flex-col overflow-hidden text-left transition-colors"
                   style={{
                     borderRadius: 4,
@@ -533,11 +570,19 @@ export function PatientImageSidebar({
                       backgroundColor: "#1A1F36",
                     }}
                   >
-                    <img
+                    {/* `unoptimized` so Next.js doesn't transcode X-ray
+                        thumbnails — clinicians want pixel-accurate previews
+                        and the source is already a small JPEG/PNG. Using
+                        `<Image fill>` instead of `<img>` to satisfy
+                        @next/next/no-img-element. */}
+                    <Image
                       src={src}
                       alt={xray.title ?? "X-ray"}
-                      className="h-full w-full object-contain"
+                      fill
+                      className="object-contain"
                       draggable={false}
+                      unoptimized
+                      sizes="280px"
                     />
                   </div>
 
@@ -585,6 +630,8 @@ export function PatientImageSidebar({
       {/* Toggle Button (right edge) */}
       <button
         onClick={onToggle}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; e.currentTarget.style.color = "#64748d"; }}
         className="absolute top-3 flex items-center justify-center transition-colors"
         style={{
           right: -16,

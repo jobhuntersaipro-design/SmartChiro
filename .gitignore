@@ -40,6 +40,9 @@ yarn-error.log*
 e2e/.auth/
 playwright-report/
 test-results/
+# debug screenshots dumped at the repo root (Playwright manual runs etc.) —
+# legit assets in subfolders like context/screenshots/ are not affected.
+/*.png
 
 # superpowers brainstorm artifacts
 .superpowers/

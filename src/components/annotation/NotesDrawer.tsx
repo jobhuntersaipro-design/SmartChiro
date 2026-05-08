@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { useXrayNotes } from '@/hooks/useXrayNotes'
@@ -17,15 +17,22 @@ export function NotesDrawer({ xrayId, xrayTitle, open, onOpenChange }: NotesDraw
   const [draft, setDraft] = useState('')
   const [showHistory, setShowHistory] = useState(false)
 
-  useEffect(() => {
+  // Reset the draft to the canonical body whenever the loaded note changes
+  // (different x-ray, or a new revision). Done during render with a ref to
+  // detect the id change — React 19's recommended pattern for "adjust state
+  // when a prop changes", instead of an effect that would cascade renders.
+  // See: https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const lastNoteIdRef = useRef<string | null | undefined>(current?.id)
+  if (current?.id !== lastNoteIdRef.current) {
+    lastNoteIdRef.current = current?.id
     setDraft(current?.bodyMd ?? '')
-  }, [current?.id])
+  }
 
   const dirty = draft !== (current?.bodyMd ?? '')
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[420px] flex flex-col gap-0 p-0">
+      <SheetContent side="right" className="w-105 flex flex-col gap-0 p-0">
         <SheetHeader className="px-5 py-4 border-b border-[#e5edf5]">
           <SheetTitle className="text-[15px] font-medium text-[#061b31]">
             Notes — {xrayTitle ?? 'X-ray'}
@@ -38,7 +45,7 @@ export function NotesDrawer({ xrayId, xrayTitle, open, onOpenChange }: NotesDraw
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Add notes about this X-ray…"
             maxLength={10_000}
-            className="w-full h-[240px] resize-none rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] p-3 text-[14px] text-[#0a2540] outline-none focus:border-[#533afd]"
+            className="w-full h-60 resize-none rounded-md border border-[#e5edf5] bg-[#f6f9fc] p-3 text-[14px] text-[#0a2540] outline-none focus:border-[#533afd]"
           />
           {draft.length > 9_000 && (
             <p className="mt-1 text-[11px] text-[#697386]">{draft.length} / 10000</p>
@@ -56,7 +63,7 @@ export function NotesDrawer({ xrayId, xrayTitle, open, onOpenChange }: NotesDraw
             {showHistory && (
               <ul className="mt-3 space-y-3">
                 {history.map((h) => (
-                  <li key={h.id} className="rounded-[4px] border border-[#e5edf5] bg-white p-3">
+                  <li key={h.id} className="rounded-md border border-[#e5edf5] bg-white p-3">
                     <p className="text-[11px] uppercase tracking-wide text-[#697386]">
                       {h.author.name ?? h.author.email} · {new Date(h.createdAt).toLocaleString()}
                     </p>
@@ -75,7 +82,7 @@ export function NotesDrawer({ xrayId, xrayTitle, open, onOpenChange }: NotesDraw
           <Button
             disabled={!dirty || loading}
             onClick={() => saveNote(draft)}
-            className="bg-[#533afd] text-white hover:bg-[#4434d4] rounded-[4px]"
+            className="bg-[#533afd] text-white hover:bg-[#4434d4] rounded-md"
           >
             {loading ? 'Saving…' : 'Save note'}
           </Button>

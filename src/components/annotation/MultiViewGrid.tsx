@@ -16,7 +16,7 @@ interface MultiViewGridProps {
   activeSlotIndex: number;
   onSlotClick: (index: number) => void;
   cssFilter?: string;
-  flipped?: boolean;
+  imageTransform?: string;
   viewStates: ViewportState[];
   onViewStateChange: (index: number, state: ViewportState) => void;
 }
@@ -26,7 +26,7 @@ export function ViewportCell({
   isActive,
   onClick,
   cssFilter,
-  flipped,
+  imageTransform,
   viewState,
   onViewStateChange,
   shapes,
@@ -35,7 +35,7 @@ export function ViewportCell({
   isActive: boolean;
   onClick: () => void;
   cssFilter?: string;
-  flipped?: boolean;
+  imageTransform?: string;
   viewState: ViewportState;
   onViewStateChange: (state: ViewportState) => void;
   /** Read-only shapes to render as annotation overlay */
@@ -72,12 +72,16 @@ export function ViewportCell({
     }
   }, [imageLoaded, fitToViewport]);
 
-  // When slot changes, reset image loaded state but DON'T reset viewport —
-  // the parent manages cached viewport state per xray via gridViewStates
+  // When the X-ray loaded in this slot changes (e.g. user picks a different
+  // thumbnail for the right pane in comparison mode), reset both the
+  // image-loaded flag AND the cached viewport state. Without the viewport
+  // reset the new image would render at the previous image's pan/zoom — a
+  // jarring "stale state on swap" bug — instead of fitting to the cell.
   const prevXrayIdRef = useRef(slot.xrayId);
   useEffect(() => {
     if (prevXrayIdRef.current !== slot.xrayId) {
       setImageLoaded(false);
+      onViewStateChangeRef.current({ zoom: 0, panX: 0, panY: 0 });
       prevXrayIdRef.current = slot.xrayId;
     }
   }, [slot.xrayId]);
@@ -96,11 +100,16 @@ export function ViewportCell({
     setShowHint(false);
   }, []);
 
-  // Use refs for wheel handler to avoid stale closures with native listener
+  // Use refs for wheel handler to avoid stale closures with native listener.
+  // Assign in an effect (React 19 lint disallows direct ref mutation during
+  // render — though it's harmless here, the effect form is the canonical
+  // pattern for "latest value" mirrors).
   const viewStateRef = useRef(viewState);
-  viewStateRef.current = viewState;
   const onViewStateChangeRef = useRef(onViewStateChange);
-  onViewStateChangeRef.current = onViewStateChange;
+  useEffect(() => {
+    viewStateRef.current = viewState;
+    onViewStateChangeRef.current = onViewStateChange;
+  });
 
   // Native wheel listener with { passive: false } so preventDefault() works
   useEffect(() => {
@@ -207,6 +216,9 @@ export function ViewportCell({
           willChange: "transform",
         }}
       >
+        {/* Raw <img>: same parent-transform + pixelated-rendering pipeline
+            as AnnotationCanvas; Next/Image fights it. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={slot.imageUrl}
           alt={slot.title}
@@ -216,7 +228,7 @@ export function ViewportCell({
             display: "block",
             imageRendering: viewState.zoom > 2 ? "pixelated" : "auto",
             filter: cssFilter || undefined,
-            transform: flipped ? "scaleX(-1)" : undefined,
+            transform: imageTransform,
           }}
           onLoad={() => setImageLoaded(true)}
           draggable={false}
@@ -302,7 +314,7 @@ export function MultiViewGrid({
   activeSlotIndex,
   onSlotClick,
   cssFilter,
-  flipped,
+  imageTransform,
   viewStates,
   onViewStateChange,
 }: MultiViewGridProps) {
@@ -334,7 +346,7 @@ export function MultiViewGrid({
             isActive={i === activeSlotIndex}
             onClick={() => onSlotClick(i)}
             cssFilter={cssFilter}
-            flipped={flipped}
+            imageTransform={imageTransform}
             viewState={viewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
             onViewStateChange={(state) => onViewStateChange(i, state)}
           />

@@ -1,4 +1,5 @@
-import type { Point, ShapeMeasurement } from "@/types/annotation";
+import type { BaseShape, Point, ShapeMeasurement } from "@/types/annotation";
+import { computeBoundingBox } from "@/types/annotation";
 
 /**
  * Compute ruler (distance) measurement between two points (pixel-based).
@@ -83,16 +84,52 @@ export function computeCobbAngle(
 }
 
 /**
+ * Compute axis-aligned rectangle area in pixels\u00B2 from bounding box dimensions.
+ */
+export function computeRectArea(
+  width: number,
+  height: number
+): { pixelArea: number; label: string; unit: "px\u00B2" } {
+  const pixelArea = Math.max(0, width) * Math.max(0, height);
+  return { pixelArea, label: `${Math.round(pixelArea)} px\u00B2`, unit: "px\u00B2" };
+}
+
+/**
+ * Compute ellipse area in pixels\u00B2 from bounding box dimensions.
+ * Area = \u03C0 \u00D7 (width / 2) \u00D7 (height / 2)
+ */
+export function computeEllipseArea(
+  width: number,
+  height: number
+): { pixelArea: number; label: string; unit: "px\u00B2" } {
+  const a = Math.max(0, width) / 2;
+  const b = Math.max(0, height) / 2;
+  const pixelArea = Math.PI * a * b;
+  return { pixelArea, label: `${Math.round(pixelArea)} px\u00B2`, unit: "px\u00B2" };
+}
+
+/**
  * Format a measurement value for display.
- * Converts pixel values to mm/cm when calibrated. Leaves degrees unchanged.
+ * Converts pixel values to mm/cm and pixel\u00B2 values to mm\u00B2/cm\u00B2 when calibrated.
+ * Leaves degrees unchanged.
  */
 export function formatMeasurement(
   pixelValue: number,
-  unit: "px" | "mm" | "deg",
+  unit: "px" | "mm" | "deg" | "px\u00B2" | "mm\u00B2",
   pixelsPerMm: number | null
 ): string {
   if (unit === "deg") {
     return `${pixelValue.toFixed(1)}\u00B0`;
+  }
+  if (unit === "px\u00B2" || unit === "mm\u00B2") {
+    if (pixelsPerMm && pixelsPerMm > 0) {
+      const mm2Value = pixelValue / (pixelsPerMm * pixelsPerMm);
+      if (mm2Value >= 100) {
+        return `${(mm2Value / 100).toFixed(1)} cm\u00B2`;
+      }
+      return `${mm2Value.toFixed(1)} mm\u00B2`;
+    }
+    return `${Math.round(pixelValue)} px\u00B2`;
   }
   if (pixelsPerMm && pixelsPerMm > 0) {
     const mmValue = pixelValue / pixelsPerMm;
@@ -117,4 +154,255 @@ export function recalibrateMeasurement(
     calibrated: pixelsPerMm !== null && pixelsPerMm > 0 && measurement.unit !== "deg",
     label,
   };
+}
+
+/**
+ * Generate the next stable measurement ID for a shape kind, given the existing shapes.
+ * Counts how many shapes of the same kind already exist and returns prefix + (n+1).
+ *   line / polyline → L#
+ *   ruler           → L# (treated as a line measurement for printing)
+ *   angle           → A#
+ *   cobb_angle      → C#
+ *   rectangle       → R#
+ *   ellipse         → E#
+ * Returns null for shape kinds that don't get printed (text, freehand).
+ */
+export function getMeasurementIdPrefix(shapeType: string): string | null {
+  switch (shapeType) {
+    case "line":
+    case "polyline":
+    case "ruler":
+      return "L";
+    case "angle":
+      return "A";
+    case "cobb_angle":
+      return "C";
+    case "rectangle":
+      return "R";
+    case "ellipse":
+      return "E";
+    default:
+      return null;
+  }
+}
+
+export function nextMeasurementId(
+  shapeType: string,
+  existingShapes: { type: string; measurementId?: string }[]
+): string | undefined {
+  const prefix = getMeasurementIdPrefix(shapeType);
+  if (!prefix) return undefined;
+  const samePrefixCount = existingShapes.filter(
+    (s) => getMeasurementIdPrefix(s.type) === prefix
+  ).length;
+  return `${prefix}${samePrefixCount + 1}`;
+}
+
+/**
+ * Find all shapes that have a `pointRefs` entry pointing at any vertex of
+ * `targetShapeId`. Used by the cascade-delete dialog to warn the user before
+ * removing a landmark that other measurements snap-followed, and by the
+ * layers panel to render the "used by N" indicator.
+ *
+ * Returns an array of `{shape, vertexIndices}` — `vertexIndices` is the set
+ * of dependent's own vertex indices that ref *into* the target shape (so the
+ * dialog can describe "L3 endpoint #1 follows P3" if needed).
+ */
+export function findDependentsOfShape(
+  targetShapeId: string,
+  shapes: BaseShape[],
+): Array<{ shape: BaseShape; vertexIndices: number[] }> {
+  const out: Array<{ shape: BaseShape; vertexIndices: number[] }> = [];
+  for (const s of shapes) {
+    if (s.id === targetShapeId) continue;
+    if (!s.pointRefs?.length) continue;
+    const indices: number[] = [];
+    for (let i = 0; i < s.pointRefs.length; i++) {
+      const ref = s.pointRefs[i];
+      if (ref && ref.shapeId === targetShapeId) indices.push(i);
+    }
+    if (indices.length > 0) out.push({ shape: s, vertexIndices: indices });
+  }
+  return out;
+}
+
+/**
+ * Map `shapeId → number-of-shapes-that-reference-it` across all shapes. Used
+ * by the layers panel to show "used by 3" badges on landmark rows so users
+ * know deleting will impact dependents.
+ */
+export function buildDependentCounts(shapes: BaseShape[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const s of shapes) {
+    if (!s.pointRefs?.length) continue;
+    const referencedTargets = new Set<string>();
+    for (const ref of s.pointRefs) {
+      if (ref) referencedTargets.add(ref.shapeId);
+    }
+    // One dependent shape may ref the same target multiple times — count it
+    // once so "used by N" reflects shape-count not ref-count.
+    for (const targetId of referencedTargets) {
+      counts.set(targetId, (counts.get(targetId) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
+ * Recompute bounding box and measurement-derived fields (angle endpoints,
+ * cobb perpendiculars / intersection / classification / label) from the
+ * shape's current `points`. Returns the original shape if the type doesn't
+ * have derived fields. Used both by `resolveShapeRefs` (after resolving
+ * pointRefs) and by `handleMoveVertex` (after a direct vertex drag) so the
+ * canvas/measurement readout stays in sync with the geometry.
+ */
+export function recomputeShapeDerived(shape: BaseShape): BaseShape {
+  const bb = computeBoundingBox(shape.points);
+  const next: BaseShape = {
+    ...shape,
+    x: bb.x,
+    y: bb.y,
+    width: bb.width,
+    height: bb.height,
+  };
+
+  if (shape.type === "angle" && shape.points.length >= 3 && shape.measurement) {
+    const m = computeAngleMeasurement(shape.points[0], shape.points[1], shape.points[2]);
+    next.measurement = {
+      ...shape.measurement,
+      value: m.degrees,
+      label: m.label,
+    };
+  } else if (shape.type === "cobb_angle" && shape.points.length >= 4 && shape.measurement) {
+    const pts = shape.points;
+    const cobb = computeCobbAngle(pts[0], pts[1], pts[2], pts[3]);
+    next.line1 = [pts[0].x, pts[0].y, pts[1].x, pts[1].y];
+    next.line2 = [pts[2].x, pts[2].y, pts[3].x, pts[3].y];
+    next.perpendicular1 = cobb.perp1;
+    next.perpendicular2 = cobb.perp2;
+    next.intersection = cobb.intersection;
+    next.cobbClassification = cobb.classification;
+    next.measurement = {
+      ...shape.measurement,
+      value: cobb.degrees,
+      label: `${cobb.degrees.toFixed(1)}° — ${cobb.classification}`,
+    };
+  }
+
+  return next;
+}
+
+/**
+ * Resolve a shape's `pointRefs` against a map of all shapes, returning a new
+ * shape whose `points` reflect the *current* positions of each referenced
+ * source vertex. Bounding box and measurement-derived fields are recomputed
+ * via `recomputeShapeDerived` when any ref resolved to a new position.
+ *
+ * If the shape has no refs, no refs resolved, or all refs resolved to the
+ * same coords as the stored points, the original shape is returned (referential
+ * equality preserved so React skips re-rendering downstream).
+ *
+ * If a referenced source shape was deleted or its vertex index is out of
+ * bounds, that point falls back to the last-known stored coordinate — the
+ * dependent measurement keeps showing where it was last drawn rather than
+ * collapsing.
+ */
+export function resolveShapeRefs(
+  shape: BaseShape,
+  shapeMap: Map<string, BaseShape>
+): BaseShape {
+  if (!shape.pointRefs || shape.pointRefs.length === 0) return shape;
+  // Cheap check: no non-null entries → no refs to resolve.
+  if (!shape.pointRefs.some((r) => r != null)) return shape;
+
+  let didChange = false;
+  const newPoints: Point[] = shape.points.map((p, i) => {
+    const ref = shape.pointRefs![i];
+    if (!ref) return p;
+    const source = shapeMap.get(ref.shapeId);
+    if (!source) return p;
+    const sourcePt = source.points[ref.vertexIndex];
+    if (!sourcePt) return p;
+    if (sourcePt.x !== p.x || sourcePt.y !== p.y) didChange = true;
+    return { x: sourcePt.x, y: sourcePt.y };
+  });
+  if (!didChange) return shape;
+
+  return recomputeShapeDerived({ ...shape, points: newPoints });
+}
+
+/** Shape kinds whose vertices receive global P-numbered labels and are
+ *  snap-targets for new measurements. Kept in sync with the SNAPPABLE_KINDS
+ *  set in useDrawingTools so a vertex you can snap to is also a vertex with
+ *  a visible label. */
+const LABELED_VERTEX_KINDS = new Set(["point", "line", "polyline", "angle", "cobb_angle", "ruler"]);
+
+/**
+ * Compute a global P-numbering for every vertex on every dot-bearing shape
+ * (point, line, polyline, ruler, angle, cobb_angle).
+ *
+ * Vertices that snap-followed an existing landmark inherit the source's
+ * label instead of getting a fresh number — so a ruler whose endpoints
+ * snapped to P1 and P2 displays "P1—P2", not "P3—P4". Free vertices (not
+ * snapped to anything) get the next available P# in createdAt order.
+ *
+ * Returns a Map keyed by shape id, valued as the array of labels in vertex
+ * order.
+ */
+export function computeGlobalPointLabels<
+  S extends {
+    id: string;
+    type: string;
+    points: { x: number; y: number }[];
+    pointRefs?: ({ shapeId: string; vertexIndex: number } | null)[];
+    createdAt?: string | Date;
+  }
+>(shapes: S[]): Map<string, string[]> {
+  const sorted = [...shapes].sort((a, b) => {
+    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return ta - tb;
+  });
+  const shapeById = new Map<string, S>();
+  for (const s of sorted) shapeById.set(s.id, s);
+
+  // Pass 1: assign fresh P# only to "owner" vertices (no ref). Ref'd vertices
+  // get a placeholder we resolve in pass 2.
+  const out = new Map<string, string[]>();
+  let counter = 1;
+  for (const s of sorted) {
+    if (!LABELED_VERTEX_KINDS.has(s.type)) continue;
+    const labels: string[] = [];
+    for (let i = 0; i < s.points.length; i++) {
+      const ref = s.pointRefs?.[i];
+      labels.push(ref ? "" : `P${counter++}`);
+    }
+    out.set(s.id, labels);
+  }
+
+  // Pass 2: resolve ref'd vertices to the source's label. Recurses through
+  // chains of refs (ref-of-ref) with a depth guard against accidental cycles.
+  function resolve(shapeId: string, vertexIndex: number, depth = 0): string {
+    if (depth > 16) return `P?`;
+    const labels = out.get(shapeId);
+    if (!labels) return `P?`;
+    const cached = labels[vertexIndex];
+    if (cached) return cached;
+    const shape = shapeById.get(shapeId);
+    const ref = shape?.pointRefs?.[vertexIndex];
+    if (!ref) return `P?`;
+    const resolved = resolve(ref.shapeId, ref.vertexIndex, depth + 1);
+    labels[vertexIndex] = resolved; // memoize
+    return resolved;
+  }
+
+  for (const s of sorted) {
+    const labels = out.get(s.id);
+    if (!labels) continue;
+    for (let i = 0; i < labels.length; i++) {
+      if (labels[i] === "") labels[i] = resolve(s.id, i);
+    }
+  }
+
+  return out;
 }

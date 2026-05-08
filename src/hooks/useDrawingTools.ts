@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   BaseShape,
   Point,
   ShapeStyle,
   ToolId,
+  VertexRef,
   ViewTransform,
 } from "@/types/annotation";
 import {
@@ -21,6 +22,50 @@ const MIN_LINE_LENGTH = 3;
 const MIN_FREEHAND_POINTS = 2;
 const ERASER_RADIUS = 8;
 const FREEHAND_SIMPLIFY_TOLERANCE = 1.5;
+/** Snap-to-vertex radius (device pixels). Matches the vertex dot visual radius. */
+const VERTEX_SNAP_PIXELS = 12;
+/** Shape kinds whose vertex dots act as snap targets. Angle/cobb/ruler
+ *  vertices are included so any landmark a user has placed can be re-used
+ *  as a snap target for new measurements. All these kinds render numbered
+ *  dots via computeGlobalPointLabels. */
+const SNAPPABLE_KINDS = new Set(["polyline", "line", "point", "angle", "cobb_angle", "ruler"]);
+
+/**
+ * If `point` is within the snap radius of any visible polyline/line vertex,
+ * return that vertex's coordinates and id; otherwise return the original point.
+ * Snap radius is converted from device px to image px via zoom.
+ */
+function snapToVertex(
+  point: Point,
+  shapes: BaseShape[],
+  zoom: number,
+): { point: Point; snapped: boolean; sourceShapeId?: string; vertexIndex?: number } {
+  const r = VERTEX_SNAP_PIXELS / zoom;
+  const r2 = r * r;
+  let bestDist2 = Infinity;
+  let bestPoint = point;
+  let bestId: string | undefined;
+  let bestIndex: number | undefined;
+  for (const s of shapes) {
+    if (!s.visible) continue;
+    if (!SNAPPABLE_KINDS.has(s.type)) continue;
+    for (let i = 0; i < s.points.length; i++) {
+      const v = s.points[i];
+      const dx = v.x - point.x;
+      const dy = v.y - point.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < r2 && d2 < bestDist2) {
+        bestDist2 = d2;
+        bestPoint = { x: v.x, y: v.y };
+        bestId = s.id;
+        bestIndex = i;
+      }
+    }
+  }
+  return bestPoint === point
+    ? { point, snapped: false }
+    : { point: bestPoint, snapped: true, sourceShapeId: bestId, vertexIndex: bestIndex };
+}
 
 // ─── Types ───
 
@@ -29,11 +74,16 @@ interface DrawingState {
   shapeId: string | null;
   startPoint: Point | null;
   currentPoints: Point[];
+  /** Parallel to `currentPoints`. Tracks snap-source refs so the committed
+   *  shape carries `pointRefs` for live-following. */
+  currentRefs: (VertexRef | null)[];
   // For text
   textInputActive: boolean;
   textPosition: Point | null;
   // For multi-click measurement tools (angle=3 clicks, cobb=4 clicks)
   measurementClicks: Point[];
+  /** Parallel to `measurementClicks`. */
+  measurementClickRefs: (VertexRef | null)[];
 }
 
 interface UseDrawingToolsOptions {
@@ -41,6 +91,10 @@ interface UseDrawingToolsOptions {
   transform: ViewTransform;
   shapes: BaseShape[];
   currentStyle: ShapeStyle;
+  /** Image dimensions in image-pixel space. Used to detect clicks on the dark
+   *  margin outside the image, which finalize an in-progress line/polyline. */
+  imageWidth: number;
+  imageHeight: number;
   onAddShape: (shape: BaseShape) => void;
   onDeleteShapes: (ids: string[]) => void;
 }
@@ -49,6 +103,20 @@ export interface PendingShape {
   shape: BaseShape;
   screenX: number;
   screenY: number;
+}
+
+/**
+ * A line/polyline that just committed straight to canvas (skipping the
+ * pending accept/reject UI). The canvas anchors a small undo button next
+ * to its last vertex for ~3s — clicking the button removes the shape and
+ * sticks the user back in the same tool, so they can redraw.
+ */
+export interface RecentCommit {
+  shapeId: string;
+  screenX: number;
+  screenY: number;
+  /** When the commit happened — used to expire the undo button after a delay. */
+  ts: number;
 }
 
 interface UseDrawingToolsReturn {
@@ -65,11 +133,47 @@ interface UseDrawingToolsReturn {
   pendingShape: PendingShape | null;
   acceptPending: () => void;
   rejectPending: () => void;
+  /** True while the polyline tool has at least one locked vertex placed. */
+  polylineActive: boolean;
+  /** Image-space position of the latest *locked* polyline vertex, or null. */
+  polylineLastVertex: Point | null;
+  /** Commit the in-progress polyline (drops the trailing ghost) and stay in the polyline tool. */
+  commitPolyline: () => void;
+  /** Remove the last locked polyline vertex; if it was the only one, cancel the draw. */
+  popPolylineVertex: () => void;
+  /**
+   * Pop the last click of any in-progress draw (line, polyline, angle, cobb,
+   * calibrate). Returns true if anything was popped — callers use this to
+   * decide whether to fall through to global undo.
+   */
+  popLastDrawClick: () => boolean;
+  /** Just-committed line/polyline that's currently showing the undo button. */
+  recentCommit: RecentCommit | null;
+  /** Dismiss the undo button without removing the shape. */
+  dismissRecentCommit: () => void;
+  /** Remove the just-committed shape and dismiss the undo button. */
+  undoRecentCommit: () => void;
+  /**
+   * Image-space anchor for the *mid-draw* undo affordance, or null when no
+   * click-tool draw is in progress. Click handler should call
+   * `popLastDrawClick()` — pops vertex (polyline), pops measurement click
+   * (angle/cobb), or cancels (line/calibrate which need 2 clicks).
+   */
+  inProgressUndoAnchor: Point | null;
+  /** True when the in-progress draw is in a state that can be committed
+   *  via `acceptInProgress()` — currently only polyline with ≥2 vertices.
+   *  Drives whether the in-progress pill shows the green Accept icon. */
+  canAcceptInProgress: boolean;
+  /** Commit the in-progress draw as-is (only meaningful when
+   *  `canAcceptInProgress` is true). */
+  acceptInProgress: () => void;
+  /** True iff there is any in-progress click-tool draw that has at least one click placed. */
+  hasInProgressDraw: boolean;
 }
 
 const DRAWING_TOOLS: ToolId[] = [
-  "line", "freehand", "text", "eraser",
-  "ruler", "angle", "cobb_angle",
+  "point", "line", "polyline", "ruler", "arrow",
+  "text", "angle", "cobb_angle", "calibrate",
 ];
 
 function createInitialDrawingState(): DrawingState {
@@ -78,9 +182,11 @@ function createInitialDrawingState(): DrawingState {
     shapeId: null,
     startPoint: null,
     currentPoints: [],
+    currentRefs: [],
     textInputActive: false,
     textPosition: null,
     measurementClicks: [],
+    measurementClickRefs: [],
   };
 }
 
@@ -138,6 +244,8 @@ import {
   computeRulerMeasurement,
   computeAngleMeasurement,
   computeCobbAngle,
+  computeRectArea,
+  computeEllipseArea,
   formatMeasurement,
 } from "@/lib/measurements";
 
@@ -146,15 +254,77 @@ export function useDrawingTools({
   transform,
   shapes,
   currentStyle,
+  imageWidth,
+  imageHeight,
   onAddShape,
   onDeleteShapes,
 }: UseDrawingToolsOptions): UseDrawingToolsReturn {
   const stateRef = useRef<DrawingState>(createInitialDrawingState());
   const drawingShapeRef = useRef<BaseShape | null>(null);
 
-  // Pending shape for confirmation UI
+  // Pending shape for confirmation UI (used by point/angle/cobb/calibrate)
   const [pendingShape, setPendingShapeState] = useState<PendingShape | null>(null);
   const pendingRef = useRef<PendingShape | null>(null);
+
+  // Recently-committed line/polyline (skips pending → straight to canvas).
+  // Drives the small "undo" button anchored near the last vertex.
+  const [recentCommit, setRecentCommitState] = useState<RecentCommit | null>(null);
+  const recentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismissRecentCommit = useCallback(() => {
+    if (recentTimerRef.current) {
+      clearTimeout(recentTimerRef.current);
+      recentTimerRef.current = null;
+    }
+    setRecentCommitState(null);
+  }, []);
+
+  const undoRecentCommit = useCallback(() => {
+    setRecentCommitState((prev) => {
+      if (prev) onDeleteShapes([prev.shapeId]);
+      return null;
+    });
+    if (recentTimerRef.current) {
+      clearTimeout(recentTimerRef.current);
+      recentTimerRef.current = null;
+    }
+  }, [onDeleteShapes]);
+
+  // Clear the auto-hide timer if the hook unmounts mid-window so the
+  // setTimeout doesn't fire on a stale setState.
+  useEffect(() => {
+    return () => {
+      if (recentTimerRef.current) clearTimeout(recentTimerRef.current);
+    };
+  }, []);
+
+  // Force a re-render of the parent component (via this hook's state) so the
+  // SVG layer reflects ref-only mutations like cancelDrawing or popLastDrawClick.
+  // The parent doesn't see ref changes on its own — bumping `forceTick` causes
+  // useDrawingTools to re-run and return the latest `drawingShapeRef.current`.
+  const [, setForceTick] = useState(0);
+  const bump = useCallback(() => setForceTick((n) => n + 1), []);
+
+  /**
+   * Commit a line or polyline directly to the canvas (no pending UI) and
+   * surface the undo button anchored at the last-vertex screen position.
+   * Auto-clears the undo button after 3s.
+   */
+  const commitDirectAndShowUndo = useCallback(
+    (shape: BaseShape) => {
+      onAddShape(shape);
+      const last = shape.points[shape.points.length - 1] ?? { x: shape.x + shape.width, y: shape.y + shape.height };
+      const screenX = last.x * transform.zoom + transform.panX;
+      const screenY = last.y * transform.zoom + transform.panY;
+      if (recentTimerRef.current) clearTimeout(recentTimerRef.current);
+      setRecentCommitState({ shapeId: shape.id, screenX, screenY, ts: Date.now() });
+      recentTimerRef.current = setTimeout(() => {
+        setRecentCommitState(null);
+        recentTimerRef.current = null;
+      }, 3000);
+    },
+    [onAddShape, transform.zoom, transform.panX, transform.panY]
+  );
 
   const commitPending = useCallback(() => {
     const p = pendingRef.current;
@@ -210,19 +380,127 @@ export function useDrawingTools({
     drawingShapeRef.current = null;
   }, []);
 
-  const buildLineShape = useCallback(
-    (start: Point, end: Point): BaseShape => {
-      const shape = createBaseShape("line", currentStyle, getNextZIndex(shapes));
+  // Switching tools mid-draw should never leave a half-finished click-tool
+  // shape on the canvas. Reset any in-progress draw whenever activeTool
+  // changes — covers both toolbar clicks and keyboard shortcuts (M, L, A, …).
+  // Pending shapes are left alone (they're already a valid commit awaiting
+  // user accept/reject and shouldn't be silently discarded by a tool swap).
+  const lastActiveToolRef = useRef(activeTool);
+  if (lastActiveToolRef.current !== activeTool) {
+    lastActiveToolRef.current = activeTool;
+    if (stateRef.current.isDrawing) {
+      stateRef.current = createInitialDrawingState();
+      drawingShapeRef.current = null;
+    }
+  }
+
+  const buildPointShape = useCallback(
+    (pos: Point): BaseShape => {
+      const shape = createBaseShape("point", currentStyle, getNextZIndex(shapes));
+      shape.points = [pos];
+      shape.x = pos.x;
+      shape.y = pos.y;
+      shape.width = 0;
+      shape.height = 0;
+      return shape;
+    },
+    [currentStyle, shapes]
+  );
+
+  const buildArrowShape = useCallback(
+    (start: Point, end: Point, id: string): BaseShape => {
+      const shape = createBaseShape("arrow", currentStyle, getNextZIndex(shapes));
+      shape.id = id;
       shape.points = [start, end];
       const bb = computeBoundingBox([start, end]);
       shape.x = bb.x;
       shape.y = bb.y;
       shape.width = bb.width;
       shape.height = bb.height;
+      shape.arrowEnd = true;
+      shape.arrowSize = 12;
       shape.lineCap = "round";
       return shape;
     },
     [currentStyle, shapes]
+  );
+
+  const buildCalibrationShape = useCallback(
+    (points: Point[], id: string, refs?: (VertexRef | null)[]): BaseShape => {
+      // Calibration looks like a 2-point line in yellow with end ticks. The
+      // final pixelsPerMm value is filled in after the user enters the mm length.
+      const shape = createBaseShape("calibration", { ...currentStyle, strokeColor: "#FFCC00" }, getNextZIndex(shapes));
+      shape.id = id;
+      shape.points = points;
+      if (refs && refs.some((r) => r != null)) {
+        shape.pointRefs = refs.slice(0, points.length);
+      }
+      const bb = computeBoundingBox(points);
+      shape.x = bb.x;
+      shape.y = bb.y;
+      shape.width = bb.width;
+      shape.height = bb.height;
+      shape.showEndTicks = true;
+      shape.tickLength = 8;
+      shape.lineCap = "round";
+      return shape;
+    },
+    [currentStyle, shapes]
+  );
+
+  const buildPolylineShape = useCallback(
+    (points: Point[], id: string, refs?: (VertexRef | null)[]): BaseShape => {
+      const shape = createBaseShape("polyline", currentStyle, getNextZIndex(shapes));
+      shape.id = id;
+      shape.points = points;
+      if (refs && refs.some((r) => r != null)) {
+        shape.pointRefs = refs.slice(0, points.length);
+      }
+      const bb = computeBoundingBox(points);
+      shape.x = bb.x;
+      shape.y = bb.y;
+      shape.width = bb.width;
+      shape.height = bb.height;
+      shape.closed = false;
+      shape.lineCap = "round";
+      return shape;
+    },
+    [currentStyle, shapes]
+  );
+
+  // Ruler is a 2-point distance measurement, distinct from a Line annotation:
+  // it always uses the teal MEASUREMENT_STYLE, shows end ticks + a length
+  // pill, and reports mm when the image is calibrated (px otherwise via
+  // formatMeasurement). Snap-aware so users can ruler between two existing
+  // landmarks without re-clicking.
+  const buildRulerShape = useCallback(
+    (points: Point[], id: string, refs?: (VertexRef | null)[]): BaseShape => {
+      const shape = createBaseShape("ruler", MEASUREMENT_STYLE, getNextZIndex(shapes));
+      shape.id = id;
+      shape.points = points;
+      if (refs && refs.some((r) => r != null)) {
+        shape.pointRefs = refs.slice(0, points.length);
+      }
+      const bb = computeBoundingBox(points);
+      shape.x = bb.x;
+      shape.y = bb.y;
+      shape.width = bb.width;
+      shape.height = bb.height;
+      shape.showEndTicks = true;
+      shape.tickLength = 8;
+      shape.lineCap = "round";
+      if (points.length >= 2) {
+        const m = computeRulerMeasurement(points[0], points[1]);
+        shape.measurement = {
+          value: m.pixelLength,
+          unit: "px",
+          calibrated: false,
+          label: m.label,
+        };
+      }
+      return shape;
+    },
+    [shapes]
   );
 
   // ─── Pointer Down ───
@@ -230,21 +508,71 @@ export function useDrawingTools({
     (e: React.PointerEvent, containerRect: DOMRect): boolean => {
       if (!isDrawingTool || e.button !== 0) return false;
 
+      // Any new pointer-down means the user has moved on from the last commit;
+      // hide the post-commit undo pill so it doesn't linger over fresh work.
+      dismissRecentCommit();
+
       // Auto-accept any pending shape when starting a new drawing
       if (pendingRef.current) {
         commitPending();
       }
 
-      const imagePos = toImage(e.clientX, e.clientY, containerRect);
+      const rawPos = toImage(e.clientX, e.clientY, containerRect);
+      // Tools that take vertex inputs snap to existing polyline/line/point dots
+      // so the user can reuse a numbered point as a measurement endpoint.
+      // When a click snaps, capture {shapeId, vertexIndex} so the resulting
+      // shape can follow the source vertex live (see resolveShapeRefs).
+      const snapTools: ToolId[] = ["angle", "cobb_angle", "line", "polyline", "calibrate", "ruler"];
+      const snapResult = snapTools.includes(activeTool)
+        ? snapToVertex(rawPos, shapes, transform.zoom)
+        : null;
+      const imagePos = snapResult ? snapResult.point : rawPos;
+      const clickRef: VertexRef | null =
+        snapResult && snapResult.snapped && snapResult.sourceShapeId !== undefined && snapResult.vertexIndex !== undefined
+          ? { shapeId: snapResult.sourceShapeId, vertexIndex: snapResult.vertexIndex }
+          : null;
       const state = stateRef.current;
 
-      // ─── Eraser ───
-      if (activeTool === "eraser") {
-        const hit = hitTestEraser(imagePos, shapes, transform.zoom);
-        if (hit) {
-          onDeleteShapes([hit.id]);
+      // Click on the dark margin outside the image acts like the Done button:
+      // for in-progress polylines, commit if valid; for lines/angles/cobbs with
+      // an incomplete sequence, cancel. Lets the user finalize without aiming
+      // at the floating Done button.
+      const outsideImage =
+        rawPos.x < 0 || rawPos.x > imageWidth || rawPos.y < 0 || rawPos.y > imageHeight;
+      if (outsideImage && state.isDrawing && state.shapeId) {
+        if (activeTool === "polyline") {
+          // Mirror commitPolyline: drop the trailing ghost, commit if ≥2 real vertices.
+          const real = state.currentPoints.slice(0, -1);
+          const realRefs = state.currentRefs.slice(0, -1);
+          if (real.length >= 2) {
+            const shape = buildPolylineShape(real, state.shapeId, realRefs);
+            commitDirectAndShowUndo({ ...shape });
+          }
+          stateRef.current = createInitialDrawingState();
+          drawingShapeRef.current = null;
+          return true;
         }
-        state.isDrawing = true;
+        if (
+          activeTool === "line" ||
+          activeTool === "ruler" ||
+          activeTool === "angle" ||
+          activeTool === "cobb_angle" ||
+          activeTool === "calibrate"
+        ) {
+          // Sequence incomplete — discard the in-progress shape.
+          stateRef.current = createInitialDrawingState();
+          drawingShapeRef.current = null;
+          return true;
+        }
+      }
+      // For everything else, an outside-image click is a no-op so the parent
+      // can fall back to pan/select behavior.
+      if (outsideImage) return false;
+
+      // ─── Point: single-click commit ───
+      if (activeTool === "point") {
+        const shape = buildPointShape(imagePos);
+        setPending({ ...shape });
         return true;
       }
 
@@ -262,10 +590,12 @@ export function useDrawingTools({
           state.isDrawing = true;
           state.shapeId = generateId();
           state.measurementClicks = [imagePos];
+          state.measurementClickRefs = [clickRef];
           updateAnglePreview(imagePos);
           return true;
         }
         state.measurementClicks.push(imagePos);
+        state.measurementClickRefs.push(clickRef);
         if (state.measurementClicks.length >= 3) {
           commitAngle();
           return true;
@@ -280,10 +610,12 @@ export function useDrawingTools({
           state.isDrawing = true;
           state.shapeId = generateId();
           state.measurementClicks = [imagePos];
+          state.measurementClickRefs = [clickRef];
           updateCobbPreview(imagePos);
           return true;
         }
         state.measurementClicks.push(imagePos);
+        state.measurementClickRefs.push(clickRef);
         if (state.measurementClicks.length >= 4) {
           commitCobb();
           return true;
@@ -292,54 +624,120 @@ export function useDrawingTools({
         return true;
       }
 
-      // ─── Drag-based tools (line, freehand, ruler) ───
+      // ─── Polyline (multi-click placement; double-click / Enter / Esc to finish) ───
+      if (activeTool === "polyline") {
+        if (!state.isDrawing) {
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          // [v1, ghost] + [refV1, ghostRef=clickRef-of-current-pos]
+          state.currentPoints = [imagePos, imagePos];
+          state.currentRefs = [clickRef, clickRef];
+          drawingShapeRef.current = buildPolylineShape(state.currentPoints, state.shapeId, state.currentRefs);
+        } else {
+          // Lock the current ghost as a real vertex and append a new ghost.
+          const lockedPts = state.currentPoints.slice(0, -1);
+          const lockedRefs = state.currentRefs.slice(0, -1);
+          state.currentPoints = [...lockedPts, imagePos, imagePos];
+          state.currentRefs = [...lockedRefs, clickRef, clickRef];
+          drawingShapeRef.current = buildPolylineShape(state.currentPoints, state.shapeId!, state.currentRefs);
+        }
+        return true;
+      }
+
+      // ─── Line: 2-click placement (click 1 → vertex + ghost; click 2 → commit). ───
+      if (activeTool === "line") {
+        if (!state.isDrawing) {
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          state.currentPoints = [imagePos, imagePos]; // [v1, ghost]
+          state.currentRefs = [clickRef, clickRef];
+          drawingShapeRef.current = buildPolylineShape(state.currentPoints, state.shapeId, state.currentRefs);
+          return true;
+        }
+        // Second click → final endpoint → commit straight to canvas (no
+        // accept/reject pending). The undo button anchors next to the final
+        // vertex for ~3s in case the user wants to back out.
+        const v1 = state.currentPoints[0];
+        const v1Ref = state.currentRefs[0] ?? null;
+        const finalShape = buildPolylineShape([v1, imagePos], state.shapeId!, [v1Ref, clickRef]);
+        commitDirectAndShowUndo({ ...finalShape });
+        stateRef.current = createInitialDrawingState();
+        drawingShapeRef.current = null;
+        return true;
+      }
+
+      // ─── Ruler: 2-click distance measurement (snap-aware on both clicks). ───
+      // Like Line, but creates a "ruler" shape with measurement style + end
+      // ticks + a length pill (px or mm depending on calibration).
+      if (activeTool === "ruler") {
+        if (!state.isDrawing) {
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          state.currentPoints = [imagePos, imagePos];
+          state.currentRefs = [clickRef, clickRef];
+          drawingShapeRef.current = buildRulerShape(state.currentPoints, state.shapeId, state.currentRefs);
+          return true;
+        }
+        const v1 = state.currentPoints[0];
+        const v1Ref = state.currentRefs[0] ?? null;
+        const finalShape = buildRulerShape([v1, imagePos], state.shapeId!, [v1Ref, clickRef]);
+        commitDirectAndShowUndo({ ...finalShape });
+        stateRef.current = createInitialDrawingState();
+        drawingShapeRef.current = null;
+        return true;
+      }
+
+      // ─── Calibrate: 2-click placement (click 1 → vertex + ghost; click 2 → opens dialog). ───
+      if (activeTool === "calibrate") {
+        if (!state.isDrawing) {
+          state.isDrawing = true;
+          state.shapeId = generateId();
+          state.currentPoints = [imagePos, imagePos];
+          state.currentRefs = [clickRef, clickRef];
+          drawingShapeRef.current = buildCalibrationShape(state.currentPoints, state.shapeId, state.currentRefs);
+          return true;
+        }
+        const v1 = state.currentPoints[0];
+        const v1Ref = state.currentRefs[0] ?? null;
+        const finalShape = buildCalibrationShape([v1, imagePos], state.shapeId!, [v1Ref, clickRef]);
+        // Calibration commits silently — the parent surfaces a dialog using
+        // pendingShape detection; on accept the shape's pixelsPerMm gets stored.
+        setPending({ ...finalShape });
+        stateRef.current = createInitialDrawingState();
+        drawingShapeRef.current = null;
+        return true;
+      }
+
+      // ─── Drag-based tools (arrow only). ───
       state.isDrawing = true;
       state.startPoint = imagePos;
       state.shapeId = generateId();
 
-      if (activeTool === "freehand") {
-        state.currentPoints = [imagePos];
+      if (activeTool === "arrow") {
+        const preview = buildArrowShape(imagePos, imagePos, state.shapeId);
+        drawingShapeRef.current = preview;
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        return true;
       }
 
-      // Create preview shape
-      const zIndex = getNextZIndex(shapes);
-      let preview: BaseShape;
-      if (activeTool === "freehand") {
-        preview = createBaseShape("freehand", currentStyle, zIndex);
-        preview.id = state.shapeId;
-        preview.points = [imagePos];
-        preview.tension = 0.3;
-      } else if (activeTool === "line") {
-        preview = buildLineShape(imagePos, imagePos);
-        preview.id = state.shapeId;
-      } else if (activeTool === "ruler") {
-        preview = createBaseShape("ruler", MEASUREMENT_STYLE, zIndex);
-        preview.id = state.shapeId;
-        preview.points = [imagePos, imagePos];
-        preview.showEndTicks = true;
-        preview.tickLength = 8;
-        preview.labelPosition = "auto";
-        preview.lineCap = "round";
-        const bb = computeBoundingBox([imagePos, imagePos]);
-        preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
-      } else {
-        return false;
-      }
-
-      drawingShapeRef.current = preview;
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      return true;
+      return false;
     },
     [
       isDrawingTool,
       activeTool,
       toImage,
+      imageWidth,
+      imageHeight,
       shapes,
       transform.zoom,
-      currentStyle,
-      onDeleteShapes,
-      buildLineShape,
+      buildPolylineShape,
+      buildRulerShape,
+      buildCalibrationShape,
+      buildPointShape,
+      buildArrowShape,
+      setPending,
       commitPending,
+      commitDirectAndShowUndo,
     ]
   );
 
@@ -348,7 +746,21 @@ export function useDrawingTools({
     (e: React.PointerEvent, containerRect: DOMRect): void => {
       if (!isDrawingTool) return;
 
-      const imagePos = toImage(e.clientX, e.clientY, containerRect);
+      const rawPos = toImage(e.clientX, e.clientY, containerRect);
+      // Snap measurement-vertex tools to existing polyline/line/point dots so
+      // the user can reuse a numbered point as a measurement endpoint.
+      const snapTools: ToolId[] = ["angle", "cobb_angle", "line", "polyline", "calibrate", "ruler"];
+      const snapResult = snapTools.includes(activeTool)
+        ? snapToVertex(rawPos, shapes, transform.zoom)
+        : null;
+      const imagePos = snapResult ? snapResult.point : rawPos;
+      // Ghost ref tracks the cursor's currently-snapped vertex (or null when free)
+      // so if the user clicks-to-commit while still snapped, the lock-in inherits
+      // a live ref. Lines/rulers/calibrate also inherit ghost refs into their final point.
+      const ghostRef: VertexRef | null =
+        snapResult && snapResult.snapped && snapResult.sourceShapeId !== undefined && snapResult.vertexIndex !== undefined
+          ? { shapeId: snapResult.sourceShapeId, vertexIndex: snapResult.vertexIndex }
+          : null;
       const state = stateRef.current;
 
       // Angle preview cursor
@@ -363,64 +775,66 @@ export function useDrawingTools({
         return;
       }
 
-      // Eraser drag
-      if (activeTool === "eraser" && state.isDrawing) {
-        const hit = hitTestEraser(imagePos, shapes, transform.zoom);
-        if (hit) {
-          onDeleteShapes([hit.id]);
-        }
+      // Polyline: ghost endpoint follows cursor
+      if (activeTool === "polyline" && state.isDrawing && state.shapeId) {
+        const next = [...state.currentPoints];
+        next[next.length - 1] = imagePos;
+        state.currentPoints = next;
+        const nextRefs = [...state.currentRefs];
+        nextRefs[nextRefs.length - 1] = ghostRef;
+        state.currentRefs = nextRefs;
+        drawingShapeRef.current = buildPolylineShape(next, state.shapeId, nextRefs);
+        return;
+      }
+
+      // Line: ghost endpoint follows cursor between click 1 and click 2
+      if (activeTool === "line" && state.isDrawing && state.shapeId) {
+        const v1 = state.currentPoints[0];
+        const v1Ref = state.currentRefs[0] ?? null;
+        let v2 = imagePos;
+        if (e.shiftKey) v2 = constrainAngle(v1, imagePos);
+        // When user holds shift to constrain, the ghost is no longer truly snapped —
+        // but the visual position is offset, so we drop the ghost ref to be safe.
+        const v2Ref = e.shiftKey ? null : ghostRef;
+        state.currentPoints = [v1, v2];
+        state.currentRefs = [v1Ref, v2Ref];
+        drawingShapeRef.current = buildPolylineShape([v1, v2], state.shapeId, [v1Ref, v2Ref]);
+        return;
+      }
+
+      // Calibrate: ghost endpoint follows cursor between click 1 and click 2
+      if (activeTool === "calibrate" && state.isDrawing && state.shapeId) {
+        const v1 = state.currentPoints[0];
+        const v1Ref = state.currentRefs[0] ?? null;
+        let v2 = imagePos;
+        if (e.shiftKey) v2 = constrainAngle(v1, imagePos);
+        const v2Ref = e.shiftKey ? null : ghostRef;
+        state.currentPoints = [v1, v2];
+        state.currentRefs = [v1Ref, v2Ref];
+        drawingShapeRef.current = buildCalibrationShape([v1, v2], state.shapeId, [v1Ref, v2Ref]);
+        return;
+      }
+
+      // Ruler: ghost endpoint follows cursor between click 1 and click 2
+      if (activeTool === "ruler" && state.isDrawing && state.shapeId) {
+        const v1 = state.currentPoints[0];
+        const v1Ref = state.currentRefs[0] ?? null;
+        let v2 = imagePos;
+        if (e.shiftKey) v2 = constrainAngle(v1, imagePos);
+        const v2Ref = e.shiftKey ? null : ghostRef;
+        state.currentPoints = [v1, v2];
+        state.currentRefs = [v1Ref, v2Ref];
+        drawingShapeRef.current = buildRulerShape([v1, v2], state.shapeId, [v1Ref, v2Ref]);
         return;
       }
 
       if (!state.isDrawing || !state.startPoint) return;
 
-      let endPoint = imagePos;
-
-      // Freehand
-      if (activeTool === "freehand") {
-        state.currentPoints.push(imagePos);
-        const preview = drawingShapeRef.current;
-        if (preview) {
-          preview.points = [...state.currentPoints];
-          const bb = computeBoundingBox(preview.points);
-          preview.x = bb.x;
-          preview.y = bb.y;
-          preview.width = bb.width;
-          preview.height = bb.height;
-          drawingShapeRef.current = { ...preview };
-        }
-        return;
-      }
-
-      // Apply modifiers
-      if (activeTool === "line") {
-        if (e.shiftKey) {
-          endPoint = constrainAngle(state.startPoint, imagePos);
-        }
-        const preview = buildLineShape(state.startPoint, endPoint);
-        preview.id = state.shapeId!;
-        drawingShapeRef.current = preview;
-        return;
-      }
-
-      // Ruler (drag-based)
-      if (activeTool === "ruler") {
-        if (e.shiftKey) {
-          endPoint = constrainAngle(state.startPoint, imagePos);
-        }
-        const preview = createBaseShape("ruler", MEASUREMENT_STYLE, getNextZIndex(shapes));
-        preview.id = state.shapeId!;
-        preview.points = [state.startPoint, endPoint];
-        preview.showEndTicks = true;
-        preview.tickLength = 8;
-        preview.labelPosition = "auto";
-        preview.lineCap = "round";
-        const bb = computeBoundingBox([state.startPoint, endPoint]);
-        preview.x = bb.x; preview.y = bb.y; preview.width = bb.width; preview.height = bb.height;
-        const m = computeRulerMeasurement(state.startPoint, endPoint);
-        const label = formatMeasurement(m.pixelLength, m.unit, null);
-        preview.measurement = { value: m.pixelLength, unit: m.unit, calibrated: false, label };
-        drawingShapeRef.current = preview;
+      // Arrow drag — Shift = constrain to 45° increments
+      if (activeTool === "arrow") {
+        let endPoint = imagePos;
+        if (e.shiftKey) endPoint = constrainAngle(state.startPoint, imagePos);
+        drawingShapeRef.current = buildArrowShape(state.startPoint, endPoint, state.shapeId!);
         return;
       }
     },
@@ -430,8 +844,10 @@ export function useDrawingTools({
       toImage,
       shapes,
       transform.zoom,
-      onDeleteShapes,
-      buildLineShape,
+      buildPolylineShape,
+      buildRulerShape,
+      buildArrowShape,
+      buildCalibrationShape,
     ]
   );
 
@@ -440,13 +856,18 @@ export function useDrawingTools({
     (e: React.PointerEvent): void => {
       const state = stateRef.current;
 
-      if (activeTool === "eraser") {
-        state.isDrawing = false;
-        return;
-      }
-
-      // Don't commit click-to-place tools on pointer up
-      if (activeTool === "text" || activeTool === "angle" || activeTool === "cobb_angle") {
+      // Click-to-place tools (point, text, angle, cobb_angle, polyline, line,
+      // calibrate) all commit/advance state on pointerdown — pointerup is a no-op.
+      if (
+        activeTool === "point" ||
+        activeTool === "text" ||
+        activeTool === "angle" ||
+        activeTool === "cobb_angle" ||
+        activeTool === "polyline" ||
+        activeTool === "line" ||
+        activeTool === "ruler" ||
+        activeTool === "calibrate"
+      ) {
         return;
       }
 
@@ -454,44 +875,15 @@ export function useDrawingTools({
 
       const shape = drawingShapeRef.current;
 
-      // Validate minimum size
+      // Arrow validation
       let valid = true;
-      if (activeTool === "line") {
+      if (activeTool === "arrow") {
         if (shape.points.length >= 2) {
           const dist = Math.hypot(
             shape.points[1].x - shape.points[0].x,
-            shape.points[1].y - shape.points[0].y
+            shape.points[1].y - shape.points[0].y,
           );
           valid = dist >= MIN_LINE_LENGTH;
-        } else {
-          valid = false;
-        }
-      } else if (activeTool === "freehand") {
-        valid = state.currentPoints.length >= MIN_FREEHAND_POINTS;
-        if (valid) {
-          const tolerance = FREEHAND_SIMPLIFY_TOLERANCE / transform.zoom;
-          shape.points = simplifyPoints(state.currentPoints, tolerance);
-          shape.simplify = true;
-          const bb = computeBoundingBox(shape.points);
-          shape.x = bb.x;
-          shape.y = bb.y;
-          shape.width = bb.width;
-          shape.height = bb.height;
-        }
-      }
-
-      // Ruler validation
-      if (activeTool === "ruler") {
-        if (shape.points.length >= 2) {
-          const dist = Math.hypot(
-            shape.points[1].x - shape.points[0].x,
-            shape.points[1].y - shape.points[0].y
-          );
-          valid = dist >= MIN_LINE_LENGTH;
-          if (valid) {
-            const m = computeRulerMeasurement(shape.points[0], shape.points[1]);
-            shape.measurement = { value: m.pixelLength, unit: m.unit, calibrated: false, label: m.label };
-          }
         } else {
           valid = false;
         }
@@ -501,55 +893,229 @@ export function useDrawingTools({
         setPending({ ...shape });
       }
 
-      // Reset state
       stateRef.current = createInitialDrawingState();
       drawingShapeRef.current = null;
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        // Pointer capture may not be active for click-style tools.
+      }
     },
-    [activeTool, transform.zoom, setPending]
+    [activeTool, setPending]
   );
+
+  // Finalize an in-progress polyline. Drops the trailing ghost endpoint and
+  // commits straight to canvas if the chain has at least two real vertices.
+  // No accept/reject pending — the undo button at the last vertex serves as
+  // the back-out affordance.
+  const commitPolyline = useCallback(() => {
+    const state = stateRef.current;
+    if (activeTool !== "polyline" || !state.isDrawing || !state.shapeId) return;
+    const real = state.currentPoints.slice(0, -1); // drop ghost
+    const realRefs = state.currentRefs.slice(0, -1);
+    if (real.length >= 2) {
+      const shape = buildPolylineShape(real, state.shapeId, realRefs);
+      commitDirectAndShowUndo({ ...shape });
+    }
+    stateRef.current = createInitialDrawingState();
+    drawingShapeRef.current = null;
+  }, [activeTool, buildPolylineShape, commitDirectAndShowUndo]);
+
+  // Pop the last *locked* polyline vertex. If only one locked vertex remains,
+  // cancel the in-progress draw entirely. Used by Cmd+Z and Backspace during draw.
+  const popPolylineVertex = useCallback(() => {
+    const state = stateRef.current;
+    if (activeTool !== "polyline" || !state.isDrawing || !state.shapeId) return;
+    // currentPoints layout: [v1, v2, ..., vN, ghost]
+    // Locked count = currentPoints.length - 1.
+    if (state.currentPoints.length <= 2) {
+      // Only one locked vertex (or fewer) — cancelling the draw entirely.
+      stateRef.current = createInitialDrawingState();
+      drawingShapeRef.current = null;
+      return;
+    }
+    const lockedPts = state.currentPoints.slice(0, -2);
+    const lockedRefs = state.currentRefs.slice(0, -2);
+    const ghost = state.currentPoints[state.currentPoints.length - 1];
+    const ghostRef = state.currentRefs[state.currentRefs.length - 1] ?? null;
+    state.currentPoints = [...lockedPts, ghost];
+    state.currentRefs = [...lockedRefs, ghostRef];
+    drawingShapeRef.current = buildPolylineShape(state.currentPoints, state.shapeId, state.currentRefs);
+  }, [activeTool, buildPolylineShape]);
 
   // ─── Double Click ───
   const handleDoubleClick = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (_e: React.MouseEvent, _containerRect: DOMRect): void => {
-      // No click-to-place tools remaining that commit on double-click
+      if (activeTool === "polyline") {
+        commitPolyline();
+      }
     },
-    []
+    [activeTool, commitPolyline]
   );
 
+  // ─── Pop the last click of an in-progress draw ───
+  //
+  // Tool-aware: polyline pops a vertex, angle/cobb pop a measurement click,
+  // line/calibrate pop the single click (which cancels the draw since both
+  // require 2 clicks). Returns true when something was popped, so callers can
+  // skip a global undo. Used by Backspace and by Cmd+Z mid-draw.
+  const popLastDrawClick = useCallback((): boolean => {
+    const state = stateRef.current;
+    if (!state.isDrawing) return false;
+
+    if (activeTool === "polyline" && state.shapeId) {
+      // [v1, v2, ..., vN, ghost] — popping vN drops to [v1, ..., v(N-1), ghost].
+      // If only one locked vertex remains, cancel the draw entirely.
+      if (state.currentPoints.length <= 2) {
+        stateRef.current = createInitialDrawingState();
+        drawingShapeRef.current = null;
+        return true;
+      }
+      const nextPts = [
+        ...state.currentPoints.slice(0, -2),
+        state.currentPoints[state.currentPoints.length - 1],
+      ];
+      const nextRefs = [
+        ...state.currentRefs.slice(0, -2),
+        state.currentRefs[state.currentRefs.length - 1] ?? null,
+      ];
+      state.currentPoints = nextPts;
+      state.currentRefs = nextRefs;
+      drawingShapeRef.current = buildPolylineShape(nextPts, state.shapeId, nextRefs);
+      return true;
+    }
+
+    if ((activeTool === "angle" || activeTool === "cobb_angle") && state.measurementClicks.length >= 1) {
+      if (state.measurementClicks.length === 1) {
+        cancelDrawing();
+        return true;
+      }
+      state.measurementClicks.pop();
+      state.measurementClickRefs.pop();
+      return true;
+    }
+
+    if ((activeTool === "line" || activeTool === "calibrate" || activeTool === "ruler") && state.currentPoints.length >= 2) {
+      // Line/ruler/calibrate currently sit at [v1, ghost] after click 1 — pop = cancel.
+      cancelDrawing();
+      return true;
+    }
+
+    return false;
+  }, [activeTool, buildPolylineShape, cancelDrawing]);
+
+  // ─── Mount-only window keydown listener for Esc / Enter ───
+  //
+  // Latest onAddShape captured in a ref so the mount-only listener below
+  // never goes stale. (Prop value can change every render.)
+  const onAddShapeRef = useRef(onAddShape);
+  onAddShapeRef.current = onAddShape;
+
+  // Mount-only window keydown listener — registered ONCE on mount and never
+  // removed until unmount. Reads from refs only, so it always sees fresh
+  // state. Critical: deps are [] intentionally. With changing deps, the
+  // effect's cleanup ran mid-event-propagation under React 19's concurrent
+  // commit, removing the listener AFTER document-bubble but BEFORE window-
+  // bubble. With deps=[], the listener is bound once and stays bound, so
+  // window-bubble Esc reliably reaches it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement | null)?.isContentEditable
+      ) return;
+
+      // Most key presses mean the user has moved on — dismiss the post-commit
+      // undo pill. Skip modifier keys so a bare Shift/Ctrl tap doesn't kill it.
+      if (
+        recentTimerRef.current &&
+        e.key !== "Shift" &&
+        e.key !== "Control" &&
+        e.key !== "Meta" &&
+        e.key !== "Alt"
+      ) {
+        if (recentTimerRef.current) clearTimeout(recentTimerRef.current);
+        recentTimerRef.current = null;
+        setRecentCommitState(null);
+      }
+
+      let handled = false;
+      if (pendingRef.current) {
+        if (e.key === "Escape" || e.key.toLowerCase() === "n") {
+          e.preventDefault();
+          pendingRef.current = null;
+          setPendingShapeState(null);
+          handled = true;
+        } else if (e.key === "Enter" || e.key.toLowerCase() === "y") {
+          e.preventDefault();
+          const p = pendingRef.current;
+          if (p) {
+            onAddShapeRef.current(p.shape);
+            pendingRef.current = null;
+            setPendingShapeState(null);
+          }
+          handled = true;
+        }
+      } else if (stateRef.current.isDrawing && e.key === "Escape") {
+        stateRef.current = createInitialDrawingState();
+        drawingShapeRef.current = null;
+        handled = true;
+      }
+      if (handled) bump();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ─── Key Down ───
+  //
+  // All keyboard interactions for in-progress / pending state live here so they
+  // read directly from refs (always fresh) rather than React state captured in
+  // the parent's keydown effect closure (potentially stale under concurrent
+  // rendering). The parent just delegates to this and bumps a render tick.
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): boolean => {
       const state = stateRef.current;
 
-      // Angle-specific keys
-      if (activeTool === "angle" && state.isDrawing) {
-        if (e.key === "Escape") {
-          cancelDrawing();
+      // Pending shape (post-commit confirmation): Esc/N rejects, Enter/Y accepts.
+      // Read from ref so we don't miss a pending that was just set this tick.
+      if (pendingRef.current) {
+        if (e.key === "Enter" || e.key.toLowerCase() === "y") {
+          e.preventDefault();
+          commitPending();
           return true;
         }
-        if (e.key === "Backspace" && state.measurementClicks.length > 1) {
-          state.measurementClicks.pop();
+        if (e.key === "Escape" || e.key.toLowerCase() === "n") {
+          e.preventDefault();
+          pendingRef.current = null;
+          setPendingShapeState(null);
           return true;
         }
       }
 
-      // Cobb-specific keys
-      if (activeTool === "cobb_angle" && state.isDrawing) {
-        if (e.key === "Escape") {
-          cancelDrawing();
-          return true;
-        }
-        if (e.key === "Backspace" && state.measurementClicks.length > 1) {
-          state.measurementClicks.pop();
-          return true;
-        }
+      // Universal Esc — cancels any in-progress draw, regardless of tool.
+      if (e.key === "Escape" && state.isDrawing) {
+        cancelDrawing();
+        return true;
+      }
+
+      // Polyline Enter commits the chain
+      if (activeTool === "polyline" && state.isDrawing && e.key === "Enter") {
+        commitPolyline();
+        return true;
+      }
+
+      // Backspace pops the last click for click-based tools (mirror Cmd+Z)
+      if (e.key === "Backspace" && state.isDrawing) {
+        if (popLastDrawClick()) return true;
       }
 
       return false;
     },
-    [activeTool, cancelDrawing]
+    [activeTool, cancelDrawing, commitPending, commitPolyline, popLastDrawClick]
   );
 
   // ─── Angle Helpers ───
@@ -575,9 +1141,11 @@ export function useDrawingTools({
     const state = stateRef.current;
     if (state.measurementClicks.length < 3) { cancelDrawing(); return; }
     const pts = state.measurementClicks;
+    const refs = state.measurementClickRefs.slice(0, pts.length);
     const shape = createBaseShape("angle", MEASUREMENT_STYLE, getNextZIndex(shapes));
     shape.id = state.shapeId!;
     shape.points = [...pts];
+    if (refs.some((r) => r != null)) shape.pointRefs = refs;
     shape.arcRadius = 30;
     shape.showSupplementary = false;
     const bb = computeBoundingBox(pts);
@@ -618,9 +1186,11 @@ export function useDrawingTools({
     const state = stateRef.current;
     if (state.measurementClicks.length < 4) { cancelDrawing(); return; }
     const pts = state.measurementClicks;
+    const refs = state.measurementClickRefs.slice(0, pts.length);
     const shape = createBaseShape("cobb_angle", MEASUREMENT_STYLE, getNextZIndex(shapes));
     shape.id = state.shapeId!;
     shape.points = [...pts];
+    if (refs.some((r) => r != null)) shape.pointRefs = refs;
     shape.showPerpendiculars = true;
     shape.showClassification = true;
     const bb = computeBoundingBox(pts);
@@ -668,6 +1238,50 @@ export function useDrawingTools({
     [currentStyle, shapes, onAddShape]
   );
 
+  // Polyline draw state derived for the parent component (Done button anchor + active flag).
+  const polylineActive =
+    activeTool === "polyline" &&
+    stateRef.current.isDrawing &&
+    stateRef.current.currentPoints.length >= 2;
+  const polylineLastVertex: Point | null = polylineActive
+    ? // Last locked vertex sits at currentPoints.length - 2 (the final entry is the ghost).
+      stateRef.current.currentPoints[stateRef.current.currentPoints.length - 2] ?? null
+    : null;
+
+  // Anchor (image-space) for the mid-draw undo affordance:
+  //   - line / calibrate: v1 (the only placed vertex). Click undo = cancel.
+  //   - polyline: last locked vertex. Click undo = pop that vertex (or cancel
+  //     if it was the only one).
+  //   - angle / cobb: last placed measurement click. Click undo = pop click.
+  // Returns null when no in-progress click-tool draw is active.
+  let inProgressUndoAnchor: Point | null = null;
+  // Whether the in-progress draw is in a state that can be Accepted (committed
+  // as-is without further clicks). Polyline can be committed once it has ≥2
+  // locked vertices via commitPolyline; line/ruler/calibrate need exactly 2
+  // clicks to be valid (after click 1 they're not yet committable); angle/
+  // cobb auto-commit on their final click via setPending so this flag stays
+  // false for them.
+  let canAcceptInProgress = false;
+  if (stateRef.current.isDrawing) {
+    if ((activeTool === "line" || activeTool === "calibrate" || activeTool === "ruler") && stateRef.current.currentPoints.length >= 1) {
+      inProgressUndoAnchor = stateRef.current.currentPoints[0] ?? null;
+    } else if (activeTool === "polyline" && stateRef.current.currentPoints.length >= 2) {
+      inProgressUndoAnchor = stateRef.current.currentPoints[stateRef.current.currentPoints.length - 2] ?? null;
+      // Polyline needs ≥2 locked vertices to commit. currentPoints layout is
+      // [v1, v2, ..., vN, ghost] so locked = currentPoints.length - 1.
+      canAcceptInProgress = stateRef.current.currentPoints.length - 1 >= 2;
+    } else if ((activeTool === "angle" || activeTool === "cobb_angle") && stateRef.current.measurementClicks.length >= 1) {
+      inProgressUndoAnchor = stateRef.current.measurementClicks[stateRef.current.measurementClicks.length - 1] ?? null;
+    }
+  }
+
+  // Accept the in-progress draw — only meaningful for polyline (commits the
+  // chain). Other tools either auto-commit on their final click (line/ruler/
+  // calibrate, angle, cobb) or have no committable mid-state.
+  const acceptInProgress = useCallback(() => {
+    if (activeTool === "polyline") commitPolyline();
+  }, [activeTool, commitPolyline]);
+
   return {
     handlePointerDown,
     handlePointerMove,
@@ -686,6 +1300,18 @@ export function useDrawingTools({
     pendingShape,
     acceptPending,
     rejectPending,
+    polylineActive,
+    polylineLastVertex,
+    commitPolyline,
+    popPolylineVertex,
+    popLastDrawClick,
+    hasInProgressDraw: stateRef.current.isDrawing,
+    recentCommit,
+    dismissRecentCommit,
+    undoRecentCommit,
+    inProgressUndoAnchor,
+    canAcceptInProgress,
+    acceptInProgress,
   };
 }
 

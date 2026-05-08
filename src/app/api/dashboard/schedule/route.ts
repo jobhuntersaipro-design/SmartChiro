@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayEnd = new Date(todayStart.getTime() + 86400000);
 
-  let where: Record<string, unknown> = {
+  const where: Record<string, unknown> = {
     dateTime: { gte: todayStart, lt: todayEnd },
   };
 

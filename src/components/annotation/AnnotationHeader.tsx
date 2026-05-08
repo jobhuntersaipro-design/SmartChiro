@@ -7,7 +7,11 @@ import {
   X,
   Pencil,
   Check,
+  CheckCircle2,
   FlipHorizontal2,
+  FlipVertical2,
+  RotateCw,
+  Contrast,
   Sun,
   RotateCcw,
   FileText,
@@ -28,12 +32,18 @@ interface AnnotationHeaderProps {
   adjustments: ImageAdjustments;
   onBrightnessChange: (v: number) => void;
   onContrastChange: (v: number) => void;
-  onWindowCenterChange: (v: number) => void;
   onResetAdjustments: () => void;
   isAdjustmentsModified: boolean;
-  // Flip
+  // Orientation
   flipped: boolean;
   onFlipChange: (v: boolean) => void;
+  flippedV: boolean;
+  onFlipVChange: (v: boolean) => void;
+  rotation: 0 | 90 | 180 | 270;
+  onRotate90: () => void;
+  // Invert
+  inverted: boolean;
+  onInvertChange: (v: boolean) => void;
   // Notes
   notesCount?: number;
   onOpenNotes?: () => void;
@@ -202,22 +212,32 @@ function AdjustPopover({
   adjustments,
   onBrightnessChange,
   onContrastChange,
-  onWindowCenterChange,
   onResetAdjustments,
   isAdjustmentsModified,
   flipped,
   onFlipChange,
+  flippedV,
+  onFlipVChange,
+  rotation,
+  onRotate90,
+  inverted,
+  onInvertChange,
   onClose,
   onShowShortcuts,
 }: {
   adjustments: ImageAdjustments;
   onBrightnessChange: (v: number) => void;
   onContrastChange: (v: number) => void;
-  onWindowCenterChange: (v: number) => void;
   onResetAdjustments: () => void;
   isAdjustmentsModified: boolean;
   flipped: boolean;
   onFlipChange: (v: boolean) => void;
+  flippedV: boolean;
+  onFlipVChange: (v: boolean) => void;
+  rotation: 0 | 90 | 180 | 270;
+  onRotate90: () => void;
+  inverted: boolean;
+  onInvertChange: (v: boolean) => void;
   onClose: () => void;
   onShowShortcuts?: () => void;
 }) {
@@ -236,7 +256,7 @@ function AdjustPopover({
   return (
     <div
       ref={popoverRef}
-      className="absolute right-0 top-full z-50 mt-1 flex w-[280px] flex-col gap-3 p-4"
+      className="absolute right-0 top-full z-50 mt-1 flex w-70 flex-col gap-3 p-4"
       style={{
         backgroundColor: "#FFFFFF",
         border: "1px solid #e5edf5",
@@ -274,16 +294,34 @@ function AdjustPopover({
         max={100}
         onChange={onContrastChange}
       />
-      <AdjustmentSlider
-        label="Window"
-        value={adjustments.windowCenter}
-        min={0}
-        max={255}
-        onChange={onWindowCenterChange}
-      />
       <div style={{ height: 1, backgroundColor: "#e5edf5", margin: "2px 0" }} />
+      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748d" }}>
+        Orientation
+      </span>
+      <button
+        onClick={onRotate90}
+        onMouseEnter={(e) => { if (rotation === 0) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseLeave={(e) => { if (rotation === 0) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
+        className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
+        style={{
+          borderRadius: 4,
+          border: "1px solid #e5edf5",
+          backgroundColor: rotation !== 0 ? "#ededfc" : "#FFFFFF",
+          color: rotation !== 0 ? "#533afd" : "#273951",
+        }}
+      >
+        <span className="flex items-center gap-1.5">
+          <RotateCw size={13} strokeWidth={1.5} />
+          Rotate 90°
+        </span>
+        <span className="tabular-nums" style={{ color: rotation !== 0 ? "#533afd" : "#A3ACB9" }}>
+          {rotation}°
+        </span>
+      </button>
       <button
         onClick={() => onFlipChange(!flipped)}
+        onMouseEnter={(e) => { if (!flipped) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseLeave={(e) => { if (!flipped) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
           borderRadius: 4,
@@ -297,6 +335,42 @@ function AdjustPopover({
           Flip horizontally
         </span>
         {flipped && <Check size={13} strokeWidth={2} />}
+      </button>
+      <button
+        onClick={() => onFlipVChange(!flippedV)}
+        onMouseEnter={(e) => { if (!flippedV) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseLeave={(e) => { if (!flippedV) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
+        className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
+        style={{
+          borderRadius: 4,
+          border: "1px solid #e5edf5",
+          backgroundColor: flippedV ? "#ededfc" : "#FFFFFF",
+          color: flippedV ? "#533afd" : "#273951",
+        }}
+      >
+        <span className="flex items-center gap-1.5">
+          <FlipVertical2 size={13} strokeWidth={1.5} />
+          Flip vertically
+        </span>
+        {flippedV && <Check size={13} strokeWidth={2} />}
+      </button>
+      <button
+        onClick={() => onInvertChange(!inverted)}
+        onMouseEnter={(e) => { if (!inverted) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseLeave={(e) => { if (!inverted) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
+        className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
+        style={{
+          borderRadius: 4,
+          border: "1px solid #e5edf5",
+          backgroundColor: inverted ? "#ededfc" : "#FFFFFF",
+          color: inverted ? "#533afd" : "#273951",
+        }}
+      >
+        <span className="flex items-center gap-1.5">
+          <Contrast size={13} strokeWidth={1.5} />
+          Invert colors
+        </span>
+        {inverted && <Check size={13} strokeWidth={2} />}
       </button>
       {onShowShortcuts && (
         <div className="flex items-center justify-between pt-2 border-t border-[#e5edf5]">
@@ -313,6 +387,98 @@ function AdjustPopover({
   );
 }
 
+/**
+ * Save button with three transient states:
+ *   - "Save"     — idle (or "Save" with an orange dot when dirty).
+ *   - "Saving…"  — while a manual save is in flight.
+ *   - "Saved"    — flashes for ~1.5s after the user-initiated save completes.
+ *
+ * Auto-saves don't trigger the "Saved" flash — only manual clicks do, so the
+ * button stays predictable while the auto-save runs in the background.
+ */
+function SaveButton({
+  isSaving,
+  isDirty,
+  onSave,
+}: {
+  isSaving: boolean;
+  isDirty: boolean;
+  onSave: () => void;
+}) {
+  const [showSaved, setShowSaved] = useState(false);
+  const manualClickRef = useRef(false);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevSavingRef = useRef(isSaving);
+
+  useEffect(() => {
+    // Detect the manual-save completion edge: was saving last render, no longer is.
+    if (prevSavingRef.current && !isSaving && manualClickRef.current) {
+      manualClickRef.current = false;
+      // Defer the setState off the effect body to avoid a cascading render.
+      // setTimeout(0) is enough — we just need it to run after the current
+      // commit phase completes.
+      const showTimer = setTimeout(() => setShowSaved(true), 0);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = setTimeout(() => setShowSaved(false), 1500);
+      prevSavingRef.current = isSaving;
+      return () => clearTimeout(showTimer);
+    }
+    prevSavingRef.current = isSaving;
+  }, [isSaving]);
+
+  useEffect(() => () => {
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+  }, []);
+
+  const handleClick = () => {
+    manualClickRef.current = true;
+    onSave();
+  };
+
+  // External keyboard shortcut (Cmd/Ctrl+S in AnnotationCanvas) dispatches this
+  // so the "Saved" flash + manualClick semantics stay consistent with the
+  // button click — instead of the parent calling autoSave.saveNow() directly
+  // and bypassing the flash logic that lives here.
+  useEffect(() => {
+    const handler = () => handleClick();
+    window.addEventListener("annotation:trigger-manual-save", handler);
+    return () => window.removeEventListener("annotation:trigger-manual-save", handler);
+    // handleClick is stable enough — it closes over `onSave` which is recreated
+    // on parent renders, but the latest version is captured each effect run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSave]);
+
+  const label = isSaving ? "Saving..." : showSaved ? "Saved" : "Save";
+  const Icon = showSaved ? CheckCircle2 : Save;
+  const bg = showSaved ? "#30B130" : "#533afd";
+  const hoverBg = showSaved ? "#28A028" : "#4434d4";
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isSaving}
+      onMouseEnter={(e) => { if (!isSaving && !showSaved) e.currentTarget.style.backgroundColor = hoverBg; }}
+      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = bg; }}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors"
+      style={{
+        borderRadius: 4,
+        backgroundColor: bg,
+        opacity: isSaving ? 0.6 : 1,
+        position: "relative",
+      }}
+    >
+      <Icon size={14} />
+      {label}
+      {isDirty && !showSaved && !isSaving && (
+        <span
+          className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
+          style={{ backgroundColor: "#F5A623" }}
+        />
+      )}
+    </button>
+  );
+}
+
 export function AnnotationHeader({
   xrayTitle,
   patientName,
@@ -325,17 +491,23 @@ export function AnnotationHeader({
   adjustments,
   onBrightnessChange,
   onContrastChange,
-  onWindowCenterChange,
   onResetAdjustments,
   isAdjustmentsModified,
   flipped,
   onFlipChange,
+  flippedV,
+  onFlipVChange,
+  rotation,
+  onRotate90,
+  inverted,
+  onInvertChange,
   notesCount = 0,
   onOpenNotes,
   onShowShortcuts,
 }: AnnotationHeaderProps) {
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const adjustModified = isAdjustmentsModified || flipped;
+  const adjustModified =
+    isAdjustmentsModified || flipped || flippedV || rotation !== 0 || inverted;
 
   return (
     <div
@@ -364,6 +536,8 @@ export function AnnotationHeader({
         <div className="relative">
           <button
             onClick={() => setAdjustOpen((prev) => !prev)}
+            onMouseEnter={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            onMouseLeave={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{
               borderRadius: 4,
@@ -388,11 +562,16 @@ export function AnnotationHeader({
               adjustments={adjustments}
               onBrightnessChange={onBrightnessChange}
               onContrastChange={onContrastChange}
-              onWindowCenterChange={onWindowCenterChange}
               onResetAdjustments={onResetAdjustments}
-              isAdjustmentsModified={isAdjustmentsModified}
+              isAdjustmentsModified={adjustModified}
               flipped={flipped}
               onFlipChange={onFlipChange}
+              flippedV={flippedV}
+              onFlipVChange={onFlipVChange}
+              rotation={rotation}
+              onRotate90={onRotate90}
+              inverted={inverted}
+              onInvertChange={onInvertChange}
               onClose={() => setAdjustOpen(false)}
               onShowShortcuts={onShowShortcuts}
             />
@@ -401,6 +580,8 @@ export function AnnotationHeader({
         {onOpenNotes && (
           <button
             onClick={onOpenNotes}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f6f9fc")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
           >
@@ -408,28 +589,15 @@ export function AnnotationHeader({
             Notes{notesCount > 0 ? ` · ${notesCount}` : ""}
           </button>
         )}
-        <button
-          onClick={onSave}
-          disabled={isSaving}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors"
-          style={{
-            borderRadius: 4,
-            backgroundColor: "#533afd",
-            opacity: isSaving ? 0.6 : 1,
-            position: "relative",
-          }}
-        >
-          <Save size={14} />
-          {isSaving ? "Saving..." : "Save"}
-          {isDirty && (
-            <span
-              className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
-              style={{ backgroundColor: "#F5A623" }}
-            />
-          )}
-        </button>
+        <SaveButton
+          isSaving={isSaving}
+          isDirty={isDirty}
+          onSave={onSave}
+        />
         <button
           onClick={onClose}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748d"; }}
           className="flex items-center justify-center transition-colors"
           style={{
             width: 32,

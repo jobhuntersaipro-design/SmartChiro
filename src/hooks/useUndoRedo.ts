@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { BaseShape, CanvasCommand, CommandType } from "@/types/annotation";
+import type { BaseShape, CanvasCommand, CommandType, ToolId } from "@/types/annotation";
 
 const MAX_HISTORY = 100;
 
@@ -24,12 +24,21 @@ interface UseUndoRedoReturn {
     type: CommandType,
     shapeId: string,
     shapeBefore: BaseShape | null,
-    shapeAfter: BaseShape | null
+    shapeAfter: BaseShape | null,
+    authoringTool?: ToolId,
   ) => void;
   pushBatch: (commands: Omit<CanvasCommand, "id" | "timestamp">[]) => void;
   clear: () => void;
   historyLength: number;
   pointer: number;
+  /**
+   * Undo only the topmost command authored with one of `tools`. When the top
+   * isn't from a matching tool, this is a no-op — used by tool-scoped Cmd+Z so
+   * line/polyline only undo their own actions.
+   */
+  undoForTools: (tools: ToolId[]) => void;
+  /** True iff the top of the undo stack was authored with one of `tools`. */
+  canUndoForTools: (tools: ToolId[]) => boolean;
 }
 
 function applyUndo(shapes: BaseShape[], command: CanvasCommand): BaseShape[] {
@@ -114,7 +123,8 @@ export function useUndoRedo({
       type: CommandType,
       shapeId: string,
       shapeBefore: BaseShape | null,
-      shapeAfter: BaseShape | null
+      shapeAfter: BaseShape | null,
+      authoringTool?: ToolId,
     ) => {
       const command: CanvasCommand = {
         id: generateId(),
@@ -123,6 +133,7 @@ export function useUndoRedo({
         shapeBefore,
         shapeAfter,
         shapeId,
+        authoringTool,
       };
 
       // Fork: discard everything after current pointer
@@ -193,6 +204,34 @@ export function useUndoRedo({
     rerender();
   }, [rerender]);
 
+  // Tool-scoped undo: only fires if the topmost command was authored with one
+  // of the supplied tool ids. The user wants line/polyline Cmd+Z to NOT cross
+  // tool boundaries — switching to Line and pressing Cmd+Z should only roll
+  // back actions made with Line, not the polyline before it.
+  const canUndoForTools = useCallback((tools: ToolId[]) => {
+    if (pointerRef.current < 0) return false;
+    const top = historyRef.current[pointerRef.current];
+    return !!top.authoringTool && tools.includes(top.authoringTool);
+  }, []);
+
+  const undoForTools = useCallback(
+    (tools: ToolId[]) => {
+      if (!canUndoForTools(tools)) return;
+      const command = historyRef.current[pointerRef.current];
+      pointerRef.current--;
+      setShapes((prev) => applyUndo(prev, command));
+      onDirty();
+      rerender();
+    },
+    [canUndoForTools, rerender, setShapes, onDirty],
+  );
+
+  // Refs are the source of truth for undo state; mutations call `rerender()`
+  // to schedule a re-render, so by the time React reads this return object
+  // the refs reflect the latest mutation. The React 19 `react-hooks/refs`
+  // rule (downgraded to a warning in eslint.config.mjs) flags these reads,
+  // but the state-mirror alternative would require duplicate state for every
+  // ref — doubling memory and adding sync churn for no behavioral gain.
   return {
     canUndo: pointerRef.current >= 0,
     canRedo: pointerRef.current < historyRef.current.length - 1,
@@ -203,5 +242,7 @@ export function useUndoRedo({
     clear,
     historyLength: historyRef.current.length,
     pointer: pointerRef.current,
+    canUndoForTools,
+    undoForTools,
   };
 }

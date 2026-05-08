@@ -1,34 +1,88 @@
-# Current Feature
+# Current Feature: X-Ray Viewer Fine-Tuning
 
 ## Status
 
-No active feature.
-
-> The Appointments Calendar feature shipped 2026-05-05 (see History below).
-> Reload a parked feature with `/feature load <spec.md>`, e.g. WhatsApp Worker
-> spec at `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`.
+In Progress
 
 ## Spec
 
-<!-- Populated by `/feature load <spec.md>` -->
+- **Reference (read as wishlist, not a rebuild plan):**
+  - `context/features/xray-new-phase-1-spec.md` — Overview, scope, AI strategy
+  - `context/features/xray-new-phase-2-spec.md` — Canvas engine, transforms
+  - `context/features/xray-new-phase-3-spec.md` — Tools, measurements, AI landmarks
+
+**Framing:** the 3-part spec describes a clean-slate Konva.js viewer at `/app/viewer/page.tsx` with no DB, no patient context, no auth. We are NOT doing that. We already shipped a patient-scoped, DB-persisted, SVG-based annotation system at `/dashboard/xrays/[id]/annotate` across ~10 prior features (see History). Treat the spec as a feature checklist and fine-tune what we have. Reuse the existing renderer, RBAC, multi-view, measurement library, R2 upload, and notes drawer.
 
 ## Goals
 
-<!-- Populated by `/feature load` -->
+Each item below maps a spec capability to current state. Only the **Add** and **Improve** rows are work; **Have** rows are noted so they're not redone.
+
+### Image manipulation
+- Have: pan, zoom (Ctrl+wheel), brightness, contrast, flip H, reset, fullscreen via `useViewerInputs`
+- Add: rotate 90° (currently only flip H exists) ✅
+- Add: flip vertical (currently only horizontal exists) ✅
+- Re-add: **invert colors** (removed in xray-enhance-2) ✅. W/L stays removed.
+- **Deferred** (user decision 2026-05-08): magnify glass lens.
+
+### Measurements
+- Have: ruler / line, angle, Cobb angle, ruler-dot
+- Re-add: **polyline** ✅, **calibration** ✅ (per-annotation via existing `imageAdjustments.pixelsPerMm` JSON — no migration; per-Xray persistence deferred)
+- Add: stable measurement IDs for print labeling — `L1, L2…` for line/distance, `A1, A2…` for angles, `C1, C2…` for Cobb ✅
+- **Deferred** (user decision 2026-05-08): rectangle area, ellipse area — shape types/renderers exist but no toolbar buttons / draw flows shipped.
+
+### Annotations
+- Have: text label, arrow, freehand draw (8 shape types) — keep current 8-color palette and 0.5–20px stroke slider; spec's exact 5-color/3-chip target deferred per user decision 2026-05-08.
+
+### View management
+- Have: side-by-side, 2x2, 4x4 multi-view; thumbnails sidebar with batch upload; click thumbnail to switch
+- Add: **keyboard shortcuts (J/K or arrow keys) to cycle active image** in single-view mode ✅
+
+### Saving / export
+- Have: PNG + PDF export pipeline (sharp + pdf-lib), auto-save with retry
+- **Deferred** (user decision 2026-05-08): browser Print + measurement summary stylesheet.
+
+### AI landmark detection — Deferred
+Not started. Privacy boundary, route shape, and Heliyon param panel preserved below for the future branch. **Do not start in this branch** (user decision 2026-05-08).
 
 ## Notes
 
-### Deferred / Parked Features
-- **WhatsApp Worker (Baileys)** — sibling repo `~/Desktop/smartchiro-wa-worker`. Not started. Specs preserved at:
+### Locked Decisions
+1. **No greenfield viewer route.** All work continues at `/dashboard/xrays/[id]/annotate`. The spec's `/app/viewer/page.tsx` is ignored.
+2. **No Konva migration.** SVG renderer stays. Cost of swap >> benefit; Konva's drag/transformer/hit-detection wins are already implemented in our SVG renderer over the past month.
+3. **No removing patient context from the viewer itself.** The spec's "no patient, no auth, ephemeral" stance is for AI privacy only — applied at the `/api/viewer/detect-landmarks` boundary, not the whole viewer.
+4. **PII strip happens server-side.** Client never touches the Anthropic API. Server fetches image from R2, sends bytes only, returns landmarks. Patient ID stays in our DB.
+5. **AI accuracy expectation: 5–30mm off.** Position as "starting point — verify." Not "AI does the analysis." See spec Part 1 §AI strategy.
+
+### Non-Goals
+- Konva rewrite of the canvas engine.
+- DICOM support.
+- Custom-trained landmark CNN (v2 — log drag corrections to build a dataset).
+- Hanging protocols, presentation states, study forwarding.
+
+### Privacy boundary for AI route (locked per user)
+```
+Client (annotate page)
+   │  POST /api/viewer/detect-landmarks  { xrayId }
+   ▼
+Next.js API route
+   │  1. auth check (canViewXray on xrayId)
+   │  2. fetch image bytes from R2
+   │  3. call Anthropic with image bytes ONLY
+   ▼
+Anthropic Claude vision
+   │  receives: image bytes
+   │  receives NOT: xrayId, patientId, name, IC, branch, filename, any DB ids
+```
+
+### Deferred / Parked Features (preserved across rebase)
+- **WhatsApp Worker (Baileys)** — sibling repo `~/Desktop/smartchiro-wa-worker`. Not started. Specs at:
   - `docs/superpowers/specs/2026-04-29-smartchiro-wa-worker-contract.md`
   - `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`
   - `docs/superpowers/specs/2026-04-29-appointment-reminders-design.md` §8
 
-  Reload via `/feature load docs/superpowers/specs/2026-04-30-wa-worker-implementation.md` when ready to ship.
-
 ### Follow-up Issues (queued, not started)
-- **Session `branchRole` shape fix** — root cause of the Q2 "Create Branch button hidden" bug shipped 2026-05-05 was [src/lib/auth.ts:53-60](../src/lib/auth.ts#L53-L60) picking `branchMemberships[0]` arbitrarily. Replace with a per-branch role lookup helper so multi-branch users get correct role in each context.
-- **Seed user.id drift** — `prisma/seed-personal.ts` runs before NextAuth ever creates the user. After a `migrate reset` + fresh login, the seeded BranchMember rows are orphaned (link to old cuid). Two options: (a) move membership upserts into a post-login one-shot hook keyed by `SEED_USER_EMAIL`, or (b) ship `scripts/restore-memberships.mjs` as the official recovery path with a small `scripts/README.md`.
+- **Session `branchRole` shape fix** — root cause of the Q2 "Create Branch button hidden" bug (shipped 2026-05-05) was [src/lib/auth.ts:53-60](../src/lib/auth.ts#L53-L60) picking `branchMemberships[0]` arbitrarily. Replace with a per-branch role lookup helper.
+- **Seed user.id drift** — `prisma/seed-personal.ts` runs before NextAuth ever creates the user. After `migrate reset` + fresh login, seeded BranchMember rows are orphaned. Either move membership upserts into a post-login hook keyed by `SEED_USER_EMAIL`, or ship `scripts/restore-memberships.mjs` as the official recovery path.
 
 ## History
 
