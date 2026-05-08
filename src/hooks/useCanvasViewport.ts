@@ -11,6 +11,7 @@ import {
   CANVAS_PADDING,
   screenToImage,
   imageToScreen,
+  applyZoomAroundAnchor,
 } from "@/types/annotation";
 
 interface UseCanvasViewportOptions {
@@ -34,20 +35,33 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
   }, []);
 
-  // Zoom centered on a specific point (e.g. cursor position)
+  // Zoom centered on a specific point (e.g. cursor position).
+  // Absolute target zoom — useful for slider input or "zoom to 200%" jumps.
+  // For wheel events, prefer `zoomBy` so the multiplier composes with the
+  // freshest committed state (avoids sticky feel + drift on rapid events).
   const zoomAtPoint = useCallback(
     (newZoom: number, anchorScreenX: number, anchorScreenY: number) => {
-      const clamped = clampZoom(newZoom);
       setTransform((prev) => {
-        // Convert anchor from screen to image space using old transform
-        const imagePos = screenToImage(anchorScreenX, anchorScreenY, prev);
-        // Compute new pan so the same image point stays under the cursor
-        const newPanX = anchorScreenX - imagePos.x * clamped;
-        const newPanY = anchorScreenY - imagePos.y * clamped;
-        return { zoom: clamped, panX: newPanX, panY: newPanY };
+        // Use applyZoomAroundAnchor with factor = newZoom / prev.zoom so the
+        // helper handles clamping + the cursor-anchor invariant identically
+        // to the wheel path.
+        const factor = newZoom / prev.zoom;
+        return applyZoomAroundAnchor(prev, factor, anchorScreenX, anchorScreenY);
       });
     },
-    [clampZoom]
+    []
+  );
+
+  // Zoom by a multiplicative factor (e.g. 1.1 in, 0.9 out) anchored on the
+  // given screen point. Reads the freshest zoom inside setTransform so rapid
+  // wheel events compose cleanly without drift or stale-base stalling.
+  const zoomBy = useCallback(
+    (factor: number, anchorScreenX: number, anchorScreenY: number) => {
+      setTransform((prev) =>
+        applyZoomAroundAnchor(prev, factor, anchorScreenX, anchorScreenY)
+      );
+    },
+    []
   );
 
   // Zoom centered on viewport center
@@ -133,17 +147,9 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
       const mouseY = e.clientY - rect.top;
       const direction = e.deltaY < 0 ? 1 : -1;
       const factor = direction > 0 ? ZOOM_SCROLL_STEP : 1 / ZOOM_SCROLL_STEP;
-      setTransform((prev) => {
-        const newZoom = clampZoom(prev.zoom * factor);
-        const imagePos = screenToImage(mouseX, mouseY, prev);
-        return {
-          zoom: newZoom,
-          panX: mouseX - imagePos.x * newZoom,
-          panY: mouseY - imagePos.y * newZoom,
-        };
-      });
+      zoomBy(factor, mouseX, mouseY);
     },
-    [clampZoom]
+    [zoomBy]
   );
 
   // Pan by delta
@@ -178,6 +184,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     zoomIn,
     zoomOut,
     zoomAtPoint,
+    zoomBy,
     zoomAtCenter,
     fitToViewport,
     zoomToActual,

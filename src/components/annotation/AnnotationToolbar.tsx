@@ -3,13 +3,15 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Hand,
+  Dot,
   Minus,
-  Pencil,
+  Spline,
   Type,
-  Ruler,
   TriangleRight,
-  Eraser,
   Scaling,
+  ArrowRight,
+  Ruler,
+  Settings2,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -23,14 +25,16 @@ interface ToolItem {
 }
 
 const tools: ToolItem[] = [
-  { id: "hand", label: "Pan", shortcut: "H", description: "Click and drag to move around the X-ray. Click on shapes to select them.", icon: <Hand size={18} strokeWidth={1.5} /> },
-  { id: "freehand", label: "Freehand", shortcut: "P", description: "Draw freely with your cursor", icon: <Pencil size={18} strokeWidth={1.5} />, separator: true },
-  { id: "line", label: "Line", shortcut: "L", description: "Draw a straight line between two points", icon: <Minus size={18} strokeWidth={1.5} /> },
-  { id: "text", label: "Text", shortcut: "T", description: "Click to add a text label", icon: <Type size={18} strokeWidth={1.5} /> },
-  { id: "eraser", label: "Eraser", shortcut: "X", description: "Click on any annotation to remove it", icon: <Eraser size={18} strokeWidth={1.5} />, separator: true },
-  { id: "ruler", label: "Ruler", shortcut: "M", description: "Measure distance between two points", icon: <Ruler size={18} strokeWidth={1.5} /> },
-  { id: "angle", label: "Angle", shortcut: "⇧M", description: "Measure the angle between three points", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
-  { id: "cobb_angle", label: "Cobb Angle", shortcut: "⌘⇧M", description: "Measure Cobb angle between two lines", icon: <Scaling size={18} strokeWidth={1.5} /> },
+  { id: "hand", label: "Pan", shortcut: "H", description: "Click and drag to move around the X-ray. Click a shape to select it; Backspace or Delete removes it.", icon: <Hand size={18} strokeWidth={1.5} /> },
+  { id: "point", label: "Point", shortcut: "D", description: "Click to drop a numbered landmark (P1, P2, ...). Used for anatomical reference points; can be reused as endpoints for line/angle/cobb tools.", icon: <Dot size={28} strokeWidth={2.5} /> },
+  { id: "line", label: "Line", shortcut: "L", description: "Click two points to draw a measured line. Each endpoint becomes a numbered, draggable dot.", icon: <Minus size={18} strokeWidth={1.5} /> },
+  { id: "polyline", label: "Polyline", shortcut: "⇧L", description: "Click to chain vertices. Numbered dots can be snapped by line/angle/cobb. Done button, double-click, or Enter to finish.", icon: <Spline size={18} strokeWidth={1.5} /> },
+  { id: "ruler", label: "Ruler", shortcut: "M", description: "Click two points to measure distance between them. Snap-aware — start or end on an existing landmark to chain measurements. Shows mm when calibrated, px otherwise.", icon: <Ruler size={18} strokeWidth={1.5} /> },
+  { id: "angle", label: "Angle", shortcut: "A", description: "Click three points (endpoint, vertex, endpoint) to measure an angle.", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
+  { id: "cobb_angle", label: "Cobb angle", shortcut: "⇧A", description: "Click four points — two for each line — to measure Cobb angle between two lines.", icon: <Scaling size={18} strokeWidth={1.5} />, separator: true },
+  { id: "arrow", label: "Arrow", shortcut: "R", description: "Drag to draw an arrow. For patient communication — pointing at areas of interest.", icon: <ArrowRight size={18} strokeWidth={1.5} /> },
+  { id: "text", label: "Text", shortcut: "T", description: "Click to add a text label. For patient communication.", icon: <Type size={18} strokeWidth={1.5} />, separator: true },
+  { id: "calibrate", label: "Calibrate", shortcut: "K", description: "Click two points on a known reference (e.g., a vertebra of known size), then enter the real-world length. All measurements convert to mm/cm afterwards.", icon: <Settings2 size={18} strokeWidth={1.5} /> },
 ];
 
 interface AnnotationToolbarProps {
@@ -88,13 +92,13 @@ export function AnnotationToolbar({
     const btn = buttonRefsMap.current.get(toolId);
     if (btn) {
       setTooltipRect(btn.getBoundingClientRect());
-      setHoveredTool(toolId);
     }
   }, []);
 
   const handleMouseEnter = useCallback(
     (toolId: string) => {
       if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      setHoveredTool(toolId);
       hoverTimerRef.current = setTimeout(() => showTooltip(toolId), 400);
     },
     [showTooltip]
@@ -121,6 +125,7 @@ export function AnnotationToolbar({
     <div className="flex flex-col items-center gap-1 py-2">
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
+        const isHovered = hoveredTool === tool.id;
         const prevTool = i > 0 ? tools[i - 1] : null;
         return (
           <div key={tool.id} className="flex flex-col items-center">
@@ -142,8 +147,12 @@ export function AnnotationToolbar({
                 width: 36,
                 height: 36,
                 borderRadius: 4,
-                backgroundColor: isActive ? "#533afd" : "rgba(255,255,255,.06)",
-                color: isActive ? "#FFFFFF" : "#cdd5e2",
+                backgroundColor: isActive
+                  ? "#533afd"
+                  : isHovered
+                    ? "rgba(255,255,255,.14)"
+                    : "rgba(255,255,255,.06)",
+                color: isActive ? "#FFFFFF" : isHovered ? "#FFFFFF" : "#cdd5e2",
               }}
             >
               {tool.icon}

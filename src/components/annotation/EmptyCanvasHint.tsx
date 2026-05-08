@@ -70,7 +70,7 @@ export function EmptyCanvasHint() {
       </span>
       <button
         onClick={() => setDismissed(true)}
-        className="pointer-events-auto ml-1 flex items-center justify-center rounded-[4px] transition-colors"
+        className="pointer-events-auto ml-1 flex items-center justify-center rounded-mdansition-colors"
         style={{
           width: 20,
           height: 20,

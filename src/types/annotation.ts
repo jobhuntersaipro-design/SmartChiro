@@ -1,12 +1,18 @@
 // ─── Base Shape System ───
 
 export type ShapeType =
+  | "point"
   | "line"
+  | "polyline"
+  | "rectangle"
+  | "ellipse"
   | "freehand"
   | "text"
+  | "arrow"
   | "ruler"
   | "angle"
-  | "cobb_angle";
+  | "cobb_angle"
+  | "calibration";
 
 export interface ShapeStyle {
   strokeColor: string;
@@ -20,6 +26,18 @@ export interface ShapeStyle {
 export interface Point {
   x: number;
   y: number;
+}
+
+/**
+ * Stable reference to another shape's vertex. When a measurement vertex is
+ * placed via snap-to-vertex, we record where it snapped from so the
+ * measurement can follow live if the source vertex moves.
+ *
+ * `vertexIndex` is an index into the source shape's `points` array.
+ */
+export interface VertexRef {
+  shapeId: string;
+  vertexIndex: number;
 }
 
 export interface BaseShape {
@@ -38,10 +56,29 @@ export interface BaseShape {
   rotation: number; // degrees
   // Type-specific data
   points: Point[]; // vertices, control points, etc.
+  /**
+   * Parallel array to `points`. When `pointRefs[i]` is non-null, this vertex
+   * was placed by snapping to another shape's vertex; at render time the
+   * resolver replaces `points[i]` with the source vertex's current position
+   * so this shape follows live if the source moves. A null entry (or omitted
+   * `pointRefs` array) means the vertex is free.
+   *
+   * Optional + sparse: shapes saved before live-references shipped don't
+   * carry this field, and the renderer falls back to the static `points`
+   * coords when `pointRefs` is missing or all-null.
+   */
+  pointRefs?: (VertexRef | null)[];
   text: string | null; // for text shapes
   fontSize: number | null;
-  // Measurement data (for ruler, angle, cobb_angle shapes)
+  // Measurement data (for ruler, angle, cobb_angle, rectangle, ellipse shapes)
   measurement: ShapeMeasurement | null;
+  /**
+   * Stable, human-readable ID for this measurement / shape, e.g. "L1", "A2", "C1",
+   * "R1", "E1". Assigned at creation time by counting prior shapes of the same kind.
+   * Used for the print summary to label each row consistently with the canvas.
+   * Optional because non-measurement shapes (text, freehand, line, polyline) don't need it.
+   */
+  measurementId?: string;
 
   // ─── Extended shape-specific fields ───
 
@@ -67,6 +104,12 @@ export interface BaseShape {
   showClassification?: boolean;
   cobbClassification?: string;
 
+  // Polyline
+  closed?: boolean;
+
+  // Rectangle
+  cornerRadius?: number;
+
   // Arrow
   arrowStart?: boolean;
   arrowEnd?: boolean;
@@ -87,9 +130,9 @@ export interface BaseShape {
 
 export interface ShapeMeasurement {
   value: number; // computed measurement value
-  unit: "px" | "mm" | "deg";
+  unit: "px" | "mm" | "deg" | "px²" | "mm²";
   calibrated: boolean;
-  label: string; // display string, e.g. "45.2°" or "12.5 mm"
+  label: string; // display string, e.g. "45.2°" or "12.5 mm" or "1284 px²"
 }
 
 // ─── Canvas State (stored in Annotation.canvasState) ───
@@ -115,16 +158,19 @@ export interface ImageAdjustments {
   brightness: number;   // -100 to 100, default 0
   contrast: number;     // -100 to 100, default 0
   invert: boolean;      // negative image, default false
-  windowCenter: number; // for window/level control, default 128
-  windowWidth: number;  // for window/level control, default 256
+  /**
+   * Pixels per millimeter, derived from the user's calibration line. When set,
+   * all length/area measurements display in mm/cm/mm²/cm² instead of px/px².
+   * Persisted via the existing `imageAdjustments` JSON column on Annotation —
+   * no Prisma migration needed.
+   */
+  pixelsPerMm?: number;
 }
 
 export const DEFAULT_IMAGE_ADJUSTMENTS: ImageAdjustments = {
   brightness: 0,
   contrast: 0,
   invert: false,
-  windowCenter: 128,
-  windowWidth: 256,
 };
 
 // ─── Undo / Redo ───
@@ -143,6 +189,13 @@ export interface CanvasCommand {
   shapeBefore: BaseShape | null;
   shapeAfter: BaseShape | null;
   shapeId: string;
+  /**
+   * The active tool when this command was pushed. Used by tool-scoped Cmd+Z:
+   * while in line/polyline mode, undo is restricted to commands authored with
+   * the same tool — so users don't accidentally undo a polyline while drawing
+   * lines, or vice versa.
+   */
+  authoringTool?: ToolId;
   // For BATCH commands
   children?: CanvasCommand[];
 }
@@ -157,13 +210,15 @@ export interface UndoRedoStack {
 
 export type ToolId =
   | "hand"
+  | "point"
   | "line"
-  | "freehand"
-  | "text"
-  | "eraser"
+  | "polyline"
   | "ruler"
   | "angle"
-  | "cobb_angle";
+  | "cobb_angle"
+  | "arrow"
+  | "text"
+  | "calibrate";
 
 export type ToolState =
   | "idle"
@@ -292,6 +347,40 @@ export function imageToScreen(
   return {
     x: imageX * transform.zoom + transform.panX,
     y: imageY * transform.zoom + transform.panY,
+  };
+}
+
+/**
+ * Compute a new viewport transform that scales `prev.zoom` by `factor` while
+ * keeping the image-space point under `(anchorScreenX, anchorScreenY)` fixed
+ * on screen.
+ *
+ * Math:
+ *   imagePos = screenToImage(anchor, prev)               // pixel currently under cursor
+ *   newZoom  = clamp(prev.zoom * factor, [min, max])
+ *   newPan   = anchor - imagePos * newZoom               // anchor stays on imagePos
+ *
+ * Why a multiplier (not an absolute zoom): wheel events can fire faster than
+ * React commits state. A caller that reads `state.zoom` from a closure and
+ * passes `state.zoom * factor` will compute against a stale base on rapid
+ * events, which makes zoom feel sticky and (with chained calls) accumulates
+ * drift away from the cursor. Taking the factor lets `setTransform`'s `prev`
+ * provide the freshest zoom value at the moment of update.
+ *
+ * Pure function — `prev` is not mutated.
+ */
+export function applyZoomAroundAnchor(
+  prev: ViewTransform,
+  factor: number,
+  anchorScreenX: number,
+  anchorScreenY: number
+): ViewTransform {
+  const newZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, prev.zoom * factor));
+  const imagePos = screenToImage(anchorScreenX, anchorScreenY, prev);
+  return {
+    zoom: newZoom,
+    panX: anchorScreenX - imagePos.x * newZoom,
+    panY: anchorScreenY - imagePos.y * newZoom,
   };
 }
 

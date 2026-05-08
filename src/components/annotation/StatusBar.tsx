@@ -53,7 +53,7 @@ export function StatusBar({
             {onRetrySave && (
               <button
                 onClick={onRetrySave}
-                className="rounded-[4px] px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
                 style={{ color: "#533afd" }}
               >
                 Retry
@@ -111,7 +111,7 @@ export function StatusBar({
             onClick={onUndo}
             disabled={!canUndo}
             aria-label="Undo"
-            className="flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            className="flex items-center justify-center rounded-md hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
             style={{ width: 24, height: 24, color: canUndo ? "#425466" : "#A3ACB9" }}
           >
             <Undo2 size={14} strokeWidth={1.5} />
@@ -120,7 +120,7 @@ export function StatusBar({
             onClick={onRedo}
             disabled={!canRedo}
             aria-label="Redo"
-            className="flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            className="flex items-center justify-center rounded-mdver:bg-[#f6f9fc] disabled:cursor-not-allowed"
             style={{ width: 24, height: 24, color: canRedo ? "#425466" : "#A3ACB9" }}
           >
             <Redo2 size={14} strokeWidth={1.5} />

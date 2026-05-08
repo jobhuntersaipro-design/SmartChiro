@@ -18,6 +18,8 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     shortcuts: [
       { keys: ["H"], description: "Pan / Hand tool" },
       { keys: ["Space"], description: "Temporary pan (hold)" },
+      { keys: ["J"], description: "Next X-ray" },
+      { keys: ["K"], description: "Previous X-ray" },
       { keys: ["\u2318", "0"], description: "Fit to viewport" },
       { keys: ["\u2318", "1"], description: "Zoom to 100%" },
       { keys: ["\u2318", "="], description: "Zoom in" },
@@ -97,12 +99,12 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-100 flex items-center justify-center"
       style={{ backgroundColor: "rgba(26, 31, 54, 0.90)" }}
       onClick={onClose}
     >
       <div
-        className="relative max-h-[85vh] w-full max-w-[720px] overflow-y-auto"
+        className="relative max-h-[85vh] w-full max-w-180 overflow-y-auto"
         style={{
           backgroundColor: "#FFFFFF",
           borderRadius: 8,

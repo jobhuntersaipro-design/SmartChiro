@@ -5,7 +5,12 @@ import {
   computeCobbAngle,
   formatMeasurement,
   recalibrateMeasurement,
+  getMeasurementIdPrefix,
+  nextMeasurementId,
+  findDependentsOfShape,
+  buildDependentCounts,
 } from "@/lib/measurements";
+import type { BaseShape } from "@/types/annotation";
 
 // ─── computeRulerMeasurement ───
 
@@ -256,5 +261,170 @@ describe("recalibrateMeasurement", () => {
     const result = recalibrateMeasurement(m, 4);
     expect(result.calibrated).toBe(false);
     expect(result.label).toBe("45.0°");
+  });
+});
+
+// ─── getMeasurementIdPrefix ───
+
+describe("getMeasurementIdPrefix", () => {
+  it("returns L for line, polyline, and ruler (all distance-style measurements)", () => {
+    expect(getMeasurementIdPrefix("line")).toBe("L");
+    expect(getMeasurementIdPrefix("polyline")).toBe("L");
+    expect(getMeasurementIdPrefix("ruler")).toBe("L");
+  });
+
+  it("returns A for angles and C for cobb angles", () => {
+    expect(getMeasurementIdPrefix("angle")).toBe("A");
+    expect(getMeasurementIdPrefix("cobb_angle")).toBe("C");
+  });
+
+  it("returns R for rectangles and E for ellipses", () => {
+    expect(getMeasurementIdPrefix("rectangle")).toBe("R");
+    expect(getMeasurementIdPrefix("ellipse")).toBe("E");
+  });
+
+  it("returns null for non-measurement shapes", () => {
+    expect(getMeasurementIdPrefix("text")).toBeNull();
+    expect(getMeasurementIdPrefix("freehand")).toBeNull();
+    expect(getMeasurementIdPrefix("arrow")).toBeNull();
+    expect(getMeasurementIdPrefix("point")).toBeNull();
+    expect(getMeasurementIdPrefix("calibration")).toBeNull();
+  });
+});
+
+// ─── nextMeasurementId ───
+
+describe("nextMeasurementId", () => {
+  it("starts at 1 when no shapes of the same family exist", () => {
+    expect(nextMeasurementId("line", [])).toBe("L1");
+    expect(nextMeasurementId("angle", [{ type: "ruler" }])).toBe("A1");
+  });
+
+  it("counts across the whole L family (line + polyline + ruler share the L prefix)", () => {
+    const shapes = [
+      { type: "line" },
+      { type: "polyline" },
+      { type: "ruler" },
+    ];
+    expect(nextMeasurementId("line", shapes)).toBe("L4");
+    expect(nextMeasurementId("ruler", shapes)).toBe("L4");
+  });
+
+  it("ignores shapes of unrelated families", () => {
+    const shapes = [
+      { type: "angle" },
+      { type: "angle" },
+      { type: "cobb_angle" },
+      { type: "text" },
+    ];
+    expect(nextMeasurementId("angle", shapes)).toBe("A3");
+    expect(nextMeasurementId("cobb_angle", shapes)).toBe("C2");
+    expect(nextMeasurementId("rectangle", shapes)).toBe("R1");
+  });
+
+  it("returns undefined for non-measurement shapes", () => {
+    expect(nextMeasurementId("text", [])).toBeUndefined();
+    expect(nextMeasurementId("freehand", [{ type: "freehand" }])).toBeUndefined();
+  });
+});
+
+// ─── findDependentsOfShape ───
+
+function s(over: Partial<BaseShape> & { id: string }): BaseShape {
+  // Tests only touch id + pointRefs; other fields are filler so the cast is safe.
+  return {
+    id: over.id,
+    type: "line",
+    label: null,
+    zIndex: 0,
+    visible: true,
+    locked: false,
+    style: { strokeColor: "#000", strokeWidth: 1, strokeOpacity: 1, fillColor: null, fillOpacity: 0, lineDash: [] },
+    x: 0, y: 0, width: 0, height: 0, rotation: 0,
+    points: [],
+    text: null,
+    fontSize: null,
+    measurement: null,
+    ...over,
+  };
+}
+
+describe("findDependentsOfShape", () => {
+  it("returns the shapes whose pointRefs land on the target's vertices", () => {
+    const target = s({ id: "P1" });
+    const dep = s({
+      id: "L1",
+      pointRefs: [{ shapeId: "P1", vertexIndex: 0 }, null],
+    });
+    const unrelated = s({ id: "L2", pointRefs: [null, { shapeId: "P2", vertexIndex: 0 }] });
+    const result = findDependentsOfShape("P1", [target, dep, unrelated]);
+    expect(result).toHaveLength(1);
+    expect(result[0].shape.id).toBe("L1");
+    expect(result[0].vertexIndices).toEqual([0]);
+  });
+
+  it("collects every dependent vertex when one shape refs the target multiple times", () => {
+    const cobb = s({
+      id: "C1",
+      pointRefs: [
+        { shapeId: "P1", vertexIndex: 0 },
+        null,
+        { shapeId: "P1", vertexIndex: 1 },
+        null,
+      ],
+    });
+    const result = findDependentsOfShape("P1", [s({ id: "P1" }), cobb]);
+    expect(result).toHaveLength(1);
+    expect(result[0].vertexIndices).toEqual([0, 2]);
+  });
+
+  it("returns [] when no shape references the target", () => {
+    expect(findDependentsOfShape("P1", [s({ id: "P1" }), s({ id: "L1" })])).toEqual([]);
+  });
+
+  it("excludes the target itself even if it accidentally self-references", () => {
+    const self = s({ id: "P1", pointRefs: [{ shapeId: "P1", vertexIndex: 0 }] });
+    expect(findDependentsOfShape("P1", [self])).toEqual([]);
+  });
+});
+
+// ─── buildDependentCounts ───
+
+describe("buildDependentCounts", () => {
+  it("counts each referencing shape once per target, even with repeated refs", () => {
+    const shapes = [
+      s({ id: "P1" }),
+      s({
+        id: "C1",
+        pointRefs: [
+          { shapeId: "P1", vertexIndex: 0 },
+          { shapeId: "P1", vertexIndex: 1 },
+        ],
+      }),
+      s({ id: "L1", pointRefs: [{ shapeId: "P1", vertexIndex: 0 }, null] }),
+    ];
+    const counts = buildDependentCounts(shapes);
+    expect(counts.get("P1")).toBe(2);
+  });
+
+  it("returns an empty map when no shape has pointRefs", () => {
+    const counts = buildDependentCounts([s({ id: "P1" }), s({ id: "L1" })]);
+    expect(counts.size).toBe(0);
+  });
+
+  it("aggregates counts across multiple targets", () => {
+    const shapes = [
+      s({
+        id: "L1",
+        pointRefs: [
+          { shapeId: "P1", vertexIndex: 0 },
+          { shapeId: "P2", vertexIndex: 0 },
+        ],
+      }),
+      s({ id: "L2", pointRefs: [{ shapeId: "P2", vertexIndex: 0 }, null] }),
+    ];
+    const counts = buildDependentCounts(shapes);
+    expect(counts.get("P1")).toBe(1);
+    expect(counts.get("P2")).toBe(2);
   });
 });

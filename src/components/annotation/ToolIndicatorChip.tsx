@@ -1,19 +1,19 @@
 'use client'
 
-import {
-  Hand, Minus, Pencil, Type, Ruler, TriangleRight, Eraser, Scaling,
-} from 'lucide-react'
+import { Hand, Dot, Minus, Spline, Type, TriangleRight, Scaling, ArrowRight, Ruler, Settings2 } from 'lucide-react'
 import type { ToolId } from '@/types/annotation'
 
 const TOOL_META: Record<ToolId, { label: string; icon: React.ReactNode }> = {
   hand:       { label: 'Pan',        icon: <Hand size={14} strokeWidth={1.5} /> },
-  freehand:   { label: 'Freehand',   icon: <Pencil size={14} strokeWidth={1.5} /> },
+  point:      { label: 'Point',      icon: <Dot size={20} strokeWidth={2.5} /> },
   line:       { label: 'Line',       icon: <Minus size={14} strokeWidth={1.5} /> },
-  text:       { label: 'Text',       icon: <Type size={14} strokeWidth={1.5} /> },
-  eraser:     { label: 'Eraser',     icon: <Eraser size={14} strokeWidth={1.5} /> },
+  polyline:   { label: 'Polyline',   icon: <Spline size={14} strokeWidth={1.5} /> },
   ruler:      { label: 'Ruler',      icon: <Ruler size={14} strokeWidth={1.5} /> },
   angle:      { label: 'Angle',      icon: <TriangleRight size={14} strokeWidth={1.5} /> },
-  cobb_angle: { label: 'Cobb Angle', icon: <Scaling size={14} strokeWidth={1.5} /> },
+  cobb_angle: { label: 'Cobb angle', icon: <Scaling size={14} strokeWidth={1.5} /> },
+  arrow:      { label: 'Arrow',      icon: <ArrowRight size={14} strokeWidth={1.5} /> },
+  text:       { label: 'Text',       icon: <Type size={14} strokeWidth={1.5} /> },
+  calibrate:  { label: 'Calibrate',  icon: <Settings2 size={14} strokeWidth={1.5} /> },
 }
 
 interface ToolIndicatorChipProps {

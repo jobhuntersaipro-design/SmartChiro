@@ -5,17 +5,30 @@ import { useEffect } from 'react'
 export type WheelIntent =
   | { kind: 'zoom'; deltaY: number }
   | { kind: 'window-level'; deltaY: number }
-  | { kind: 'scroll-series'; direction: 1 | -1 }
+  | { kind: 'pan'; deltaX: number; deltaY: number }
 
 export type PointerIntent =
   | { kind: 'tool' }
   | { kind: 'pan' }
   | { kind: 'window-level' }
 
-export function interpretWheelEvent(e: Pick<WheelEvent, 'ctrlKey' | 'metaKey' | 'shiftKey' | 'deltaY'>): WheelIntent {
+/**
+ * Maps a wheel event to one of three intents:
+ *   - Ctrl/Cmd  → zoom
+ *   - Shift     → window-level fine-tune
+ *   - otherwise → pan (trackpad two-finger drag, mouse wheel scroll on a
+ *     zoomed image, etc.)
+ *
+ * Note: image-cycling lives on J/K (PatientImageSidebar), not on the wheel,
+ * so plain wheel can be reclaimed for the more common "navigate the image"
+ * gesture. On a trackpad the user's finger swipe maps directly to image pan
+ * via deltaX/deltaY; on a mouse wheel only deltaY is non-zero so panning is
+ * vertical-only — that's expected.
+ */
+export function interpretWheelEvent(e: Pick<WheelEvent, 'ctrlKey' | 'metaKey' | 'shiftKey' | 'deltaX' | 'deltaY'>): WheelIntent {
   if (e.ctrlKey || e.metaKey) return { kind: 'zoom', deltaY: e.deltaY }
   if (e.shiftKey) return { kind: 'window-level', deltaY: e.deltaY }
-  return { kind: 'scroll-series', direction: e.deltaY > 0 ? 1 : -1 }
+  return { kind: 'pan', deltaX: e.deltaX, deltaY: e.deltaY }
 }
 
 export function interpretPointerDown(e: Pick<PointerEvent, 'button'>): PointerIntent {
@@ -29,16 +42,15 @@ export interface UseViewerInputsOptions {
   onPan: (dx: number, dy: number) => void
   onZoom: (deltaY: number, point: { x: number; y: number }) => void
   onWindowLevel: (dx: number, dy: number) => void
-  onScrollSeries: (direction: 1 | -1) => void
 }
 
 /**
  * Wires native pointer/wheel events on the canvas root:
  *  - middle-drag -> onPan
  *  - right-drag  -> onWindowLevel (suppresses native context menu)
- *  - wheel       -> onZoom (Ctrl/Meta), onWindowLevel fine-tune (Shift), onScrollSeries (none)
+ *  - wheel       -> onZoom (Ctrl/Meta), onWindowLevel fine-tune (Shift), onPan (none)
  */
-export function useViewerInputs({ canvasRef, onPan, onZoom, onWindowLevel, onScrollSeries }: UseViewerInputsOptions) {
+export function useViewerInputs({ canvasRef, onPan, onZoom, onWindowLevel }: UseViewerInputsOptions) {
   useEffect(() => {
     const el = canvasRef.current
     if (!el) return
@@ -70,9 +82,11 @@ export function useViewerInputs({ canvasRef, onPan, onZoom, onWindowLevel, onScr
     function onContextMenu(e: MouseEvent) { e.preventDefault() }
     function onWheel(e: WheelEvent) {
       const intent = interpretWheelEvent(e)
-      if (intent.kind === 'scroll-series') {
+      if (intent.kind === 'pan') {
         e.preventDefault()
-        onScrollSeries(intent.direction)
+        // Wheel deltaX/deltaY point in the *scroll* direction; image pan is
+        // the inverse so the picture follows the finger / scroll content.
+        onPan(-intent.deltaX, -intent.deltaY)
       } else if (intent.kind === 'zoom') {
         e.preventDefault()
         const rect = el!.getBoundingClientRect()
@@ -95,5 +109,5 @@ export function useViewerInputs({ canvasRef, onPan, onZoom, onWindowLevel, onScr
       el.removeEventListener('contextmenu', onContextMenu)
       el.removeEventListener('wheel', onWheel as EventListener)
     }
-  }, [canvasRef, onPan, onZoom, onWindowLevel, onScrollSeries])
+  }, [canvasRef, onPan, onZoom, onWindowLevel])
 }

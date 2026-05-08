@@ -21,9 +21,11 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setErr(null);
 
     async function startAndPoll() {
+      // Reset stale error from a previous open — moved out of the effect body
+      // since synchronous setState in an effect cascades renders.
+      setErr(null);
       const r = await fetch(`/api/branches/${branchId}/wa/connect`, { method: "POST" });
       if (!r.ok) {
         setErr("Failed to start WhatsApp session");
@@ -53,22 +55,24 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-[420px] rounded-[8px] border border-[#E3E8EE] bg-white p-6 shadow-lg">
+      <div className="w-105 rounded-2xl border border-[#E3E8EE] bg-white p-6 shadow-lg">
         <div className="mb-3 text-[18px] font-medium text-[#0A2540]">Connect WhatsApp</div>
         <p className="mb-4 text-[15px] text-[#425466]">
           Scan this QR with the WhatsApp app on the owner&apos;s phone (Settings → Linked
           Devices → Link a Device).
         </p>
         {err && (
-          <div className="mb-3 rounded-[4px] bg-[#FDE7EC] p-2 text-[14px] text-[#DF1B41]">
+          <div className="mb-3 rounded-md bg-[#FDE7EC] p-2 text-[14px] text-[#DF1B41]">
             {err}
           </div>
         )}
         {status === "PAIRING" && qr ? (
+          // Base64 data URL — Next/Image doesn't optimize data URLs.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             alt="WhatsApp pairing QR"
             src={`data:image/png;base64,${qr}`}
-            className="mx-auto h-[260px] w-[260px] rounded-[6px] border border-[#E3E8EE]"
+            className="mx-auto h-65 w-65 rounded-[6px] border border-[#E3E8EE]"
           />
         ) : status === "CONNECTED" ? (
           <div className="rounded-[6px] bg-[#E5F8E5] p-4 text-center text-[#30B130]">
@@ -85,7 +89,7 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-[4px] border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
+            className="rounded-md border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
           >
             Close
           </button>

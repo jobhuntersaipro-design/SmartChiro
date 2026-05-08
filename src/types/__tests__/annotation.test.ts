@@ -5,8 +5,11 @@ import {
   computeBoundingBox,
   simplifyPoints,
   createEmptyCanvasState,
+  applyZoomAroundAnchor,
   DEFAULT_SHAPE_STYLE,
   ANNOTATION_COLOR_PRESETS,
+  ZOOM_MIN,
+  ZOOM_MAX,
   type Point,
   type ViewTransform,
 } from '../annotation'
@@ -236,5 +239,98 @@ describe('ANNOTATION_COLOR_PRESETS', () => {
 
   it('starts with red', () => {
     expect(ANNOTATION_COLOR_PRESETS[0]).toBe('#FF3B30')
+  })
+})
+
+// ─── applyZoomAroundAnchor ───
+//
+// The cursor-anchor invariant: the image-space pixel under the anchor
+// before the zoom must equal the image-space pixel under the anchor
+// after the zoom. These tests catch all three "broken zoom" variants
+// (zoom-to-corner, zoom-to-center, off-by-one drift) since any of them
+// would violate the invariant.
+
+describe('applyZoomAroundAnchor', () => {
+  // Round-trip the anchor through the new transform: the image-space pixel
+  // that was under the cursor before should still be under the cursor after.
+  function imageUnderAnchor(t: ViewTransform, ax: number, ay: number): Point {
+    return screenToImage(ax, ay, t)
+  }
+
+  it('keeps the anchor pixel fixed for a single zoom-in step', () => {
+    const prev: ViewTransform = { zoom: 1, panX: 0, panY: 0 }
+    const ax = 350
+    const ay = 220
+    const before = imageUnderAnchor(prev, ax, ay)
+    const next = applyZoomAroundAnchor(prev, 1.1, ax, ay)
+    const after = imageUnderAnchor(next, ax, ay)
+    expect(after.x).toBeCloseTo(before.x, 9)
+    expect(after.y).toBeCloseTo(before.y, 9)
+    expect(next.zoom).toBeCloseTo(1.1)
+  })
+
+  it('keeps the anchor pixel fixed when starting from a non-zero pan', () => {
+    const prev: ViewTransform = { zoom: 1.5, panX: -120, panY: 80 }
+    const ax = 410
+    const ay = 305
+    const before = imageUnderAnchor(prev, ax, ay)
+    const next = applyZoomAroundAnchor(prev, 0.7, ax, ay)
+    const after = imageUnderAnchor(next, ax, ay)
+    expect(after.x).toBeCloseTo(before.x, 9)
+    expect(after.y).toBeCloseTo(before.y, 9)
+  })
+
+  // The chained-zoom test catches variant 3 (the "almost-correct" off-by-one
+  // drift): each step composes against the previous step's *output*, so any
+  // small per-step error accumulates over many steps.
+  it('accumulates no drift across many chained zoom steps', () => {
+    let t: ViewTransform = { zoom: 1, panX: 50, panY: -30 }
+    const ax = 612
+    const ay = 188
+    const initialImagePos = imageUnderAnchor(t, ax, ay)
+
+    // 12 zoom-ins followed by 12 zoom-outs back to ~original zoom.
+    for (let i = 0; i < 12; i++) t = applyZoomAroundAnchor(t, 1.1, ax, ay)
+    for (let i = 0; i < 12; i++) t = applyZoomAroundAnchor(t, 1 / 1.1, ax, ay)
+
+    const final = imageUnderAnchor(t, ax, ay)
+    // Tighter than 1px tolerance — drift in variant 3 is measured in pixels
+    // per step, so even sub-pixel chained drift would fail this.
+    expect(final.x).toBeCloseTo(initialImagePos.x, 6)
+    expect(final.y).toBeCloseTo(initialImagePos.y, 6)
+  })
+
+  it('clamps to ZOOM_MAX when the factor would exceed it', () => {
+    const prev: ViewTransform = { zoom: ZOOM_MAX * 0.95, panX: 0, panY: 0 }
+    const next = applyZoomAroundAnchor(prev, 5, 100, 100)
+    expect(next.zoom).toBe(ZOOM_MAX)
+  })
+
+  it('clamps to ZOOM_MIN when the factor would go below it', () => {
+    const prev: ViewTransform = { zoom: ZOOM_MIN * 1.05, panX: 0, panY: 0 }
+    const next = applyZoomAroundAnchor(prev, 0.1, 100, 100)
+    expect(next.zoom).toBe(ZOOM_MIN)
+  })
+
+  it('still anchors to the cursor when zoom is clamped', () => {
+    // Verify the invariant doesn't break at the clamp boundary — important
+    // because cursor anchoring uses `newZoom`, and a naive impl that uses
+    // the unclamped target would drift when the user keeps zooming past max.
+    const prev: ViewTransform = { zoom: ZOOM_MAX * 0.99, panX: 0, panY: 0 }
+    const ax = 200
+    const ay = 200
+    const before = imageUnderAnchor(prev, ax, ay)
+    const next = applyZoomAroundAnchor(prev, 5, ax, ay)
+    const after = imageUnderAnchor(next, ax, ay)
+    expect(next.zoom).toBe(ZOOM_MAX)
+    expect(after.x).toBeCloseTo(before.x, 6)
+    expect(after.y).toBeCloseTo(before.y, 6)
+  })
+
+  it('does not mutate the input transform', () => {
+    const prev: ViewTransform = { zoom: 1, panX: 10, panY: 20 }
+    const snapshot = { ...prev }
+    applyZoomAroundAnchor(prev, 1.5, 100, 100)
+    expect(prev).toEqual(snapshot)
   })
 })
