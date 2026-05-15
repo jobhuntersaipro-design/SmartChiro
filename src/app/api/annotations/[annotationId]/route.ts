@@ -1,8 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { BaseShape } from "@/types/annotation";
+import { extractLandmarkCorrections } from "@/lib/landmark-corrections";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB hard cap
 const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB warning
+
+/**
+ * Persist any AI-landmark drag corrections from the saved canvasState into
+ * the AiLandmarkCorrection table. Each row is keyed on (xrayId,
+ * landmarkName) and upserted so the latest user-corrected position wins.
+ *
+ * Fail-soft: any error here is logged but never propagates — the annotation
+ * save itself must succeed even if the learning-data write fails (Xray width
+ * missing, transient DB issue, etc.).
+ */
+async function captureLandmarkCorrections(
+  annotationId: string,
+  canvasState: { shapes?: BaseShape[] },
+) {
+  try {
+    const shapes = canvasState.shapes ?? [];
+    const rows = extractLandmarkCorrections(shapes);
+    if (rows.length === 0) return;
+
+    const annotation = await prisma.annotation.findUnique({
+      where: { id: annotationId },
+      select: {
+        createdById: true,
+        xrayId: true,
+        xray: { select: { width: true, height: true } },
+      },
+    });
+    if (!annotation || !annotation.xray.width || !annotation.xray.height) return;
+
+    const { xrayId, createdById, xray } = annotation;
+    // upsert one row per (xrayId, landmarkName). Sequential is fine — N≤16
+    // landmarks per X-ray, so the overhead is negligible vs the gain of
+    // straightforward error handling.
+    for (const row of rows) {
+      await prisma.aiLandmarkCorrection.upsert({
+        where: {
+          xrayId_landmarkName: { xrayId, landmarkName: row.landmarkName },
+        },
+        update: {
+          userId: createdById,
+          displayName: row.displayName,
+          finalX: row.finalX,
+          finalY: row.finalY,
+          imageWidth: xray.width!,
+          imageHeight: xray.height!,
+        },
+        create: {
+          xrayId,
+          userId: createdById,
+          landmarkName: row.landmarkName,
+          displayName: row.displayName,
+          aiX: row.aiX,
+          aiY: row.aiY,
+          finalX: row.finalX,
+          finalY: row.finalY,
+          imageWidth: xray.width!,
+          imageHeight: xray.height!,
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Failed to capture landmark corrections (fail-soft):", err);
+  }
+}
 
 export async function PUT(
   request: NextRequest,
@@ -37,6 +103,11 @@ export async function PUT(
         version: { increment: 1 },
       },
     });
+
+    // Side-channel: capture any AI-landmark corrections the user just made.
+    // Awaited so the request can be observed by tests, but fail-soft so it
+    // never blocks the annotation save.
+    await captureLandmarkCorrections(annotationId, canvasState);
 
     return NextResponse.json({
       success: true,

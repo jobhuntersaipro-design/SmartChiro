@@ -1,7 +1,21 @@
 "use client";
 
 import type { BaseShape } from "@/types/annotation";
-import { formatMeasurement } from "@/lib/measurements";
+import { formatMeasurement, LANDMARK_LABEL_SENTINEL } from "@/lib/measurements";
+
+// A vertex label of LANDMARK_LABEL_SENTINEL means "snap-followed a landmark
+// — render no inline label." `null` to VertexMarker omits the label and
+// renders just the dot. Centralized so every call site stays consistent.
+function vertexLabelFor(
+  vertexLabels: string[] | undefined,
+  i: number,
+  fallback: string,
+): string | null {
+  const raw = vertexLabels?.[i];
+  if (raw === undefined) return fallback;
+  if (raw === LANDMARK_LABEL_SENTINEL) return null;
+  return raw;
+}
 
 interface ShapeRendererProps {
   shape: BaseShape;
@@ -43,6 +57,11 @@ export function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm
           label={vertexLabels?.[0]}
           selected={selected}
         />
+      )}
+
+      {/* ─── AI Landmark (cyan dot + label, dashed ring when AI-source) ─── */}
+      {shape.type === "landmark" && shape.points.length >= 1 && (
+        <LandmarkRenderer shape={shape} zoom={zoom} selected={selected} />
       )}
 
       {/* ─── Legacy line shape (kept for backwards-compat with old saves) ─── */}
@@ -90,7 +109,7 @@ export function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm
 
       {/* ─── Angle ─── */}
       {shape.type === "angle" && shape.points.length >= 2 && (
-        <AngleRenderer shape={shape} zoom={zoom} sw={sw} vertexLabels={vertexLabels} />
+        <AngleRenderer shape={shape} zoom={zoom} sw={sw} vertexLabels={vertexLabels} pixelsPerMm={pixelsPerMm} />
       )}
 
       {/* ─── Cobb Angle ─── */}
@@ -299,7 +318,7 @@ function RulerRenderer({
           y={p.y}
           zoom={zoom}
           color={shape.style.strokeColor}
-          label={vertexLabels?.[i] ?? `${i + 1}`}
+          label={vertexLabelFor(vertexLabels, i, `${i + 1}`)}
         />
       ))}
     </>
@@ -308,7 +327,19 @@ function RulerRenderer({
 
 // ─── Angle Renderer ───
 
-function AngleRenderer({ shape, zoom, sw, vertexLabels }: { shape: BaseShape; zoom: number; sw: number; vertexLabels?: string[] }) {
+function AngleRenderer({
+  shape,
+  zoom,
+  sw,
+  vertexLabels,
+  pixelsPerMm,
+}: {
+  shape: BaseShape;
+  zoom: number;
+  sw: number;
+  vertexLabels?: string[];
+  pixelsPerMm?: number;
+}) {
   const points = shape.points;
 
   // Draw the rays
@@ -347,7 +378,22 @@ function AngleRenderer({ shape, zoom, sw, vertexLabels }: { shape: BaseShape; zo
   const pillPadX = 6 / zoom;
   const pillPadY = 3 / zoom;
   const pillRadius = 4 / zoom;
-  const label = shape.measurement?.label;
+
+  // Build the label live so it reflects: (1) the current ray geometry after
+  // vertex drags, and (2) any calibration changes since the shape was drawn.
+  // Format: "45.0° · 25 mm — 38 mm" when calibrated, "45.0° · 100 px — 150 px"
+  // otherwise. Falls back to the stored angle-only label if we can't compute.
+  let label = shape.measurement?.label;
+  if (hasFullAngle && vertex) {
+    const r1 = Math.hypot(points[0].x - vertex.x, points[0].y - vertex.y);
+    const r2 = Math.hypot(points[2].x - vertex.x, points[2].y - vertex.y);
+    const angleLabel = shape.measurement?.label ?? "";
+    const lenA = formatMeasurement(r1, "px", pixelsPerMm ?? null);
+    const lenB = formatMeasurement(r2, "px", pixelsPerMm ?? null);
+    label = angleLabel
+      ? `${angleLabel} · ${lenA} — ${lenB}`
+      : `${lenA} — ${lenB}`;
+  }
 
   return (
     <>
@@ -378,7 +424,7 @@ function AngleRenderer({ shape, zoom, sw, vertexLabels }: { shape: BaseShape; zo
           y={p.y}
           zoom={zoom}
           color={shape.style.strokeColor}
-          label={vertexLabels?.[i] ?? `${i + 1}`}
+          label={vertexLabelFor(vertexLabels, i, `${i + 1}`)}
         />
       ))}
       {/* Label */}
@@ -519,7 +565,7 @@ function CobbAngleRenderer({ shape, zoom, sw, vertexLabels }: { shape: BaseShape
           y={p.y}
           zoom={zoom}
           color={shape.style.strokeColor}
-          label={vertexLabels?.[i] ?? `${i + 1}`}
+          label={vertexLabelFor(vertexLabels, i, `${i + 1}`)}
         />
       ))}
     </>
@@ -808,7 +854,7 @@ function PolylineRenderer({
           y={p.y}
           zoom={zoom}
           color={shape.style.strokeColor}
-          label={vertexLabels?.[i] ?? `${i + 1}`}
+          label={vertexLabelFor(vertexLabels, i, `${i + 1}`)}
         />
       ))}
       {/* Total length / ID label above first vertex */}
@@ -849,7 +895,9 @@ function PointRenderer({
   const p = shape.points[0];
   if (!p) return null;
   const color = selected ? "#FBBF24" : shape.style.strokeColor;
-  const labelText = label ?? shape.measurementId ?? "P";
+  // User-renamed label wins over the auto P# — gives users a way to label
+  // a point as "tilt origin" or similar from the Layers tab.
+  const labelText = shape.label ?? label ?? shape.measurementId ?? "P";
 
   // Uniform label-inside-dot — same VertexMarker the polyline/line dots use,
   // so every dot on the canvas reads identically.
@@ -863,6 +911,90 @@ function PointRenderer({
       color={color}
       label={labelText}
     />
+  );
+}
+
+// ─── Landmark Renderer (AI-detected anatomical points) ───
+//
+// Visual identity uses traffic-light colors so the review state is obvious at
+// a glance:
+//   - RED solid ring  → source = "ai" (placed by the model, not yet reviewed)
+//   - GREEN solid ring → source = "manual" (user has dragged / accepted)
+//   - Amber ring        → currently selected (overrides both)
+// Label sits off to the right of the dot showing the displayName, which is
+// much more useful than a 1-character index for anatomical features.
+function LandmarkRenderer({
+  shape,
+  zoom,
+  selected,
+}: {
+  shape: BaseShape;
+  zoom: number;
+  selected?: boolean;
+}) {
+  const p = shape.points[0];
+  if (!p) return null;
+  const ringRadius = 7 / zoom;
+  const ringWidth = 1.75 / zoom;
+  const dotRadius = 2 / zoom;
+  const labelFont = 11 / zoom;
+  const labelOffset = (ringRadius + 4) / 1;
+  const isAi = shape.landmarkSource !== "manual";
+  const ringColor = selected
+    ? "#FBBF24" // amber selection override
+    : isAi
+      ? "#EF4444" // red — unreviewed AI placement
+      : "#10B981"; // green — user-reviewed / manual
+  const label = shape.label ?? shape.landmarkName ?? "";
+
+  return (
+    <g>
+      {/* Halo for contrast on bright X-rays */}
+      <circle
+        cx={p.x}
+        cy={p.y}
+        r={ringRadius}
+        stroke="#FFFFFF"
+        strokeOpacity={0.85}
+        strokeWidth={ringWidth + 1.5 / zoom}
+        fill="none"
+      />
+      {/* Solid status ring (red = AI, green = manual, amber = selected) */}
+      <circle
+        cx={p.x}
+        cy={p.y}
+        r={ringRadius}
+        stroke={ringColor}
+        strokeWidth={ringWidth}
+        fill="none"
+      />
+      {/* Center dot */}
+      <circle cx={p.x} cy={p.y} r={dotRadius} fill={ringColor} />
+
+      {/* Label off to the right with a backdrop pill so it stays readable */}
+      {label && (
+        <g pointerEvents="none">
+          <rect
+            x={p.x + labelOffset}
+            y={p.y - labelFont * 0.65}
+            width={Math.max(label.length, 1) * labelFont * 0.55 + 6 / zoom}
+            height={labelFont * 1.25}
+            fill="rgba(10,18,32,0.78)"
+            rx={3 / zoom}
+            ry={3 / zoom}
+          />
+          <text
+            x={p.x + labelOffset + 3 / zoom}
+            y={p.y + labelFont * 0.32}
+            fontSize={labelFont}
+            fontFamily="ui-sans-serif, system-ui, sans-serif"
+            fill="#FFFFFF"
+          >
+            {label}
+          </text>
+        </g>
+      )}
+    </g>
   );
 }
 

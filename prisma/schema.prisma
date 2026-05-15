@@ -40,6 +40,7 @@ model User {
   xrayNotes        XrayNote[]        @relation("XrayNoteAuthor")
   timeOff          DoctorTimeOff[]   @relation("DoctorTimeOff")
   breakTimes       DoctorBreakTime[] @relation("DoctorBreakTime")
+  landmarkCorrections AiLandmarkCorrection[] @relation("AiLandmarkCorrectionUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -575,8 +576,9 @@ model Xray {
   uploadedById String
   uploadedBy   User   @relation("XrayUploader", fields: [uploadedById], references: [id])
 
-  annotations Annotation[]
-  notes       XrayNote[]
+  annotations         Annotation[]
+  notes               XrayNote[]
+  landmarkCorrections AiLandmarkCorrection[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -617,6 +619,60 @@ model Annotation {
 
   @@index([xrayId])
   @@index([createdById])
+}
+
+// Captures every (xrayId, landmarkName) pair where the user dragged an AI-
+// placed landmark to a different position. Populated whenever an annotation
+// is saved: we walk the canvasState shapes, find any landmark with
+// `landmarkSource = "manual"` and `landmarkOriginalX/Y` set, and upsert one
+// row per landmark.
+//
+// Purpose: build a labeled dataset of (image, landmark, correctPosition)
+// triples for future model improvement (few-shot prompt examples, fine-
+// tuning, or an internal small-model). The table is queryable independent
+// of the annotation JSON it came from, so analytics + training-data
+// extraction can scan it directly without parsing every annotation.
+model AiLandmarkCorrection {
+  id String @id @default(cuid())
+
+  xrayId String
+  xray   Xray   @relation(fields: [xrayId], references: [id], onDelete: Cascade)
+
+  // The user whose drag produced the most recent correction stored here.
+  // When multiple users correct the same landmark on the same X-ray, the
+  // latest save wins (the row is upserted, not appended). Disagreement
+  // between users is acceptable signal loss for v1; if we need it later
+  // we can drop the unique constraint and aggregate at training time.
+  userId String
+  user   User   @relation("AiLandmarkCorrectionUser", fields: [userId], references: [id])
+
+  // Canonical snake_case name from the detect-landmarks contract, e.g.
+  // "top_of_femoral_head_1". Stable across schema revisions of the prompt.
+  landmarkName String
+  // Human-readable label as shown on the canvas at correction time.
+  displayName String
+
+  // Claude's original placement at the time of detection. Frozen — never
+  // overwritten across re-corrections, since the goal is to learn the
+  // (AI guess) → (truth) delta.
+  aiX Float
+  aiY Float
+
+  // The user's final position after dragging.
+  finalX Float
+  finalY Float
+
+  // Image dimensions at correction time. Needed to normalize coordinates
+  // for cross-image training (training pipeline divides by these).
+  imageWidth  Int
+  imageHeight Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([xrayId, landmarkName])
+  @@index([landmarkName])
+  @@index([userId])
 }
 
 model XrayNote {

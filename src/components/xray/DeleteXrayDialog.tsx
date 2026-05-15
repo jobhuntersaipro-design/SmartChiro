@@ -45,7 +45,7 @@ export function DeleteXrayDialog({ open, onOpenChange, xrayIds, xrayTitles, onCo
           You can restore archived X-rays later from the &quot;Show archived&quot; toggle.
         </p>
         {xrayTitles.length > 0 && (
-          <ul className="mt-2 max-h-[160px] overflow-y-auto rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] p-3 text-[13px] text-[#425466]">
+          <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-[#e5edf5] bg-[#f6f9fc] p-3 text-[13px] text-[#425466]">
             {xrayTitles.map((t, i) => <li key={i}>• {t || 'Untitled'}</li>)}
           </ul>
         )}
@@ -55,7 +55,7 @@ export function DeleteXrayDialog({ open, onOpenChange, xrayIds, xrayTitles, onCo
           <Button
             onClick={handleConfirm}
             disabled={busy}
-            className="bg-[#DF1B41] hover:bg-[#c4153a] text-white rounded-[4px]"
+            className="bg-[#DF1B41] hover:bg-[#c4153a] text-white rounded-md"
           >
             {busy ? 'Archiving…' : 'Archive'}
           </Button>

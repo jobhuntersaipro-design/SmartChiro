@@ -1,10 +1,11 @@
 'use client'
 
-import { Hand, Dot, Minus, Spline, Type, TriangleRight, Scaling, ArrowRight, Ruler, Settings2 } from 'lucide-react'
+import { Hand, MousePointer2, Dot, Minus, Spline, Type, TriangleRight, Scaling, ArrowRight, Ruler, Settings2 } from 'lucide-react'
 import type { ToolId } from '@/types/annotation'
 
 const TOOL_META: Record<ToolId, { label: string; icon: React.ReactNode }> = {
   hand:       { label: 'Pan',        icon: <Hand size={14} strokeWidth={1.5} /> },
+  select:     { label: 'Select',     icon: <MousePointer2 size={14} strokeWidth={1.5} /> },
   point:      { label: 'Point',      icon: <Dot size={20} strokeWidth={2.5} /> },
   line:       { label: 'Line',       icon: <Minus size={14} strokeWidth={1.5} /> },
   polyline:   { label: 'Polyline',   icon: <Spline size={14} strokeWidth={1.5} /> },

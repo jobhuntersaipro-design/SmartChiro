@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   Eye,
@@ -24,7 +24,16 @@ import {
 } from "lucide-react";
 import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
 import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotation";
-import { formatMeasurement, computeGlobalPointLabels } from "@/lib/measurements";
+import {
+  formatMeasurement,
+  computeGlobalPointLabels,
+  resolveLandmarkLabelForDisplay,
+} from "@/lib/measurements";
+import {
+  computePelvicAnalysis,
+  formatParamValue,
+  type ParamResult,
+} from "@/lib/pelvic-analysis";
 
 const shapeIcons: Record<ShapeType, React.ReactNode> = {
   point: <Dot size={20} strokeWidth={2.5} />,
@@ -39,12 +48,134 @@ const shapeIcons: Record<ShapeType, React.ReactNode> = {
   angle: <TriangleRight size={14} strokeWidth={1.5} />,
   cobb_angle: <Scaling size={14} strokeWidth={1.5} />,
   calibration: <Ruler size={14} strokeWidth={1.5} />,
+  landmark: <Dot size={20} strokeWidth={2.5} />,
 };
 
-function getShapeDisplayName(shape: BaseShape, index: number): string {
+/**
+ * Human-readable shape category used in default layer names. Differs from
+ * `shape.type` in two places that matter to users:
+ *  - A `polyline` with exactly two points was drawn with the LINE tool and
+ *    should read as "Line", not "Polyline". A polyline with 3+ points is a
+ *    true multi-segment path and keeps the "Polyline" name.
+ *  - `cobb_angle` displays as "Cobb angle" instead of the snake_case.
+ */
+function effectiveDisplayType(shape: BaseShape): string {
+  if (shape.type === "polyline" && shape.points.length === 2) return "Line";
+  const typeName =
+    shape.type.charAt(0).toUpperCase() + shape.type.slice(1).replace("_", " ");
+  return typeName;
+}
+
+/**
+ * Build a Map<shapeId, displayIndex> where the index is scoped PER display
+ * type — so two line-shapes get "Line 1" / "Line 2" regardless of how many
+ * landmarks or other shape types sit above them in the layer list. Walks in
+ * the same sortedShapes order the layers list renders in so the user sees
+ * 1 at the top, 2 below, etc.
+ */
+function buildPerTypeIndices(shapes: BaseShape[]): Map<string, number> {
+  const counters = new Map<string, number>();
+  const idToIndex = new Map<string, number>();
+  for (const s of shapes) {
+    const t = effectiveDisplayType(s);
+    const next = (counters.get(t) ?? 0) + 1;
+    counters.set(t, next);
+    idToIndex.set(s.id, next);
+  }
+  return idToIndex;
+}
+
+function getShapeDisplayName(shape: BaseShape, perTypeIndex: number): string {
   if (shape.label) return shape.label;
-  const typeName = shape.type.charAt(0).toUpperCase() + shape.type.slice(1).replace("_", " ");
-  return `${typeName} ${index + 1}`;
+  return `${effectiveDisplayType(shape)} ${perTypeIndex}`;
+}
+
+/**
+ * Inline-editable layer name. Double-click to edit; Enter / blur commits;
+ * Escape cancels. The displayed text falls through `shape.label` →
+ * `getShapeDisplayName`, so committing an empty string clears the custom
+ * label and reverts to the auto-generated name.
+ */
+function LayerNameEditor({
+  shape,
+  index,
+  selected,
+  onRename,
+}: {
+  shape: BaseShape;
+  index: number;
+  selected: boolean;
+  onRename: (id: string, label: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  const commit = useCallback(() => {
+    const trimmed = draft.trim();
+    onRename(shape.id, trimmed === "" ? null : trimmed);
+    setEditing(false);
+  }, [draft, onRename, shape.id]);
+
+  const cancel = useCallback(() => setEditing(false), []);
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            cancel();
+          }
+          // Don't bubble — keystrokes here shouldn't trigger canvas shortcuts.
+          e.stopPropagation();
+        }}
+        className="flex-1 truncate text-xs"
+        style={{
+          color: "#061b31",
+          background: "#FFFFFF",
+          border: "1px solid #533afd",
+          borderRadius: 3,
+          padding: "1px 4px",
+          outline: "none",
+          minWidth: 0,
+        }}
+      />
+    );
+  }
+
+  const displayName = shape.label ?? getShapeDisplayName(shape, index);
+  return (
+    <span
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        setDraft(displayName);
+        setEditing(true);
+      }}
+      className="flex-1 truncate text-xs cursor-text select-none"
+      style={{
+        color: selected ? "#061b31" : "#273951",
+      }}
+      title="Double-click to rename"
+    >
+      {displayName}
+    </span>
+  );
 }
 
 function getDashPatternName(dash: number[]): string {
@@ -88,6 +219,12 @@ interface PropertiesPanelProps {
    *  editing an existing calibration line; null when editing the stale
    *  (line-less) calibration ratio. */
   onEditCalibration?: (shapeId: string | null) => void;
+  /**
+   * Reset the given AI-detected landmarks back to their original positions,
+   * in a single undo batch. The Pelvic Analysis section calls this when the
+   * user clicks "Reset all" to revert their manual adjustments en masse.
+   */
+  onResetLandmarksToAi?: (ids: string[]) => void;
 }
 
 export function PropertiesPanel({
@@ -108,6 +245,7 @@ export function PropertiesPanel({
   dependentCounts,
   onClearCalibration,
   onEditCalibration,
+  onResetLandmarksToAi,
 }: PropertiesPanelProps) {
   const [activeTab, setActiveTab] = useState<"layers" | "properties" | "measurements">("layers");
 
@@ -180,11 +318,20 @@ export function PropertiesPanel({
     seenIds.add(s.id);
     dedupedShapes.push(s);
   }
-  const sortedShapes = [...dedupedShapes].sort((a, b) => b.zIndex - a.zIndex);
+  // Layers list shows smallest # on top: the first-drawn shape sits at the
+  // top of its type group, the latest at the bottom. zIndex is assigned
+  // monotonically at creation (getNextZIndex = max+1), so ascending zIndex
+  // == creation order == numeric suffix order ("Line 1" above "Line 2").
+  const sortedShapes = [...dedupedShapes].sort((a, b) => a.zIndex - b.zIndex);
   const selectedShape =
     selectedShapeIds.length === 1
       ? dedupedShapes.find((s) => s.id === selectedShapeIds[0])
       : null;
+
+  // Per-display-type counters so Line / Polyline / Ruler / etc. each get
+  // their own 1-based sequence in the layer name fallback. Built once over
+  // sortedShapes (top-down) so the topmost row of a given type is #1.
+  const perTypeIndices = buildPerTypeIndices(sortedShapes);
 
   // Globally-unique P# labels for every dot on every point/line/polyline.
   // Same source-of-truth as the canvas renderer so layer panel and dot labels
@@ -405,18 +552,12 @@ export function PropertiesPanel({
                     >
                       {shapeIcons[shape.type]}
                     </span>
-                    <span
-                      className="flex-1 truncate text-xs"
-                      style={{
-                        color: isSelected ? "#061b31" : "#273951",
-                      }}
-                    >
-                      {/* For Point shapes, use the P# label as the row name so
-                          the layer entry matches what the dot shows on canvas. */}
-                      {shape.type === "point" && vertexLabels[0]
-                        ? vertexLabels[0]
-                        : getShapeDisplayName(shape, index)}
-                    </span>
+                    <LayerNameEditor
+                      shape={shape}
+                      index={perTypeIndices.get(shape.id) ?? index + 1}
+                      selected={isSelected}
+                      onRename={(id, label) => onUpdateShape(id, { label })}
+                    />
                     {/* "used by N" badge: this shape is referenced by N other
                         measurements via pointRefs. Warns the user that
                         deleting it will trigger the cascade dialog. */}
@@ -505,47 +646,57 @@ export function PropertiesPanel({
                       polyline (e.g. "○ P3 — ○ P4 — ○ P5"). Indented and muted so
                       the parent row stays the focus; click still selects the
                       whole parent shape. */}
-                  {showVertexChildren && vertexLabels.length > 0 && (
-                    <div
-                      onClick={(e) => handleLayerClick(shape.id, e)}
-                      className="flex flex-wrap items-center cursor-pointer"
-                      style={{
-                        paddingLeft: 38,
-                        paddingRight: 8,
-                        paddingTop: 1,
-                        paddingBottom: 3,
-                        rowGap: 2,
-                        backgroundColor: isSelected ? "rgba(83, 58, 253, 0.04)" : "transparent",
-                      }}
-                      title={`${vertexLabels.join(" — ")} (vertices of ${getShapeDisplayName(shape, index)})`}
-                    >
-                      {vertexLabels.map((label, vi) => (
-                        <span key={`${shape.id}:${vi}`} className="flex items-center gap-1">
-                          {vi > 0 && (
-                            <span className="text-[11px]" style={{ color: "#A3ACB9", padding: "0 4px" }}>
-                              —
+                  {showVertexChildren && vertexLabels.length > 0 && (() => {
+                    // Translate any LANDMARK_LABEL_SENTINEL entries into the
+                    // actual landmark display name ("Iliac crest 1" etc.)
+                    // before we render. Falls back to the raw label if the
+                    // ref can't be resolved.
+                    const displayLabels = vertexLabels.map(
+                      (l, vi) =>
+                        resolveLandmarkLabelForDisplay(l, shape.pointRefs, vi, shapes) ?? l,
+                    );
+                    return (
+                      <div
+                        onClick={(e) => handleLayerClick(shape.id, e)}
+                        className="flex flex-wrap items-center cursor-pointer"
+                        style={{
+                          paddingLeft: 38,
+                          paddingRight: 8,
+                          paddingTop: 1,
+                          paddingBottom: 3,
+                          rowGap: 2,
+                          backgroundColor: isSelected ? "rgba(83, 58, 253, 0.04)" : "transparent",
+                        }}
+                        title={`${displayLabels.join(" — ")} (vertices of ${getShapeDisplayName(shape, perTypeIndices.get(shape.id) ?? index + 1)})`}
+                      >
+                        {displayLabels.map((label, vi) => (
+                          <span key={`${shape.id}:${vi}`} className="flex items-center gap-1">
+                            {vi > 0 && (
+                              <span className="text-[11px]" style={{ color: "#A3ACB9", padding: "0 4px" }}>
+                                —
+                              </span>
+                            )}
+                            {/* Hollow ring matching the on-canvas dot style */}
+                            <span
+                              aria-hidden="true"
+                              className="inline-block"
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: "50%",
+                                border: `1.5px solid ${shape.style.strokeColor}`,
+                                backgroundColor: "transparent",
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span className="text-[11px] tabular-nums" style={{ color: "#64748d" }}>
+                              {label}
                             </span>
-                          )}
-                          {/* Hollow ring matching the on-canvas dot style */}
-                          <span
-                            aria-hidden="true"
-                            className="inline-block"
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: "50%",
-                              border: `1.5px solid ${shape.style.strokeColor}`,
-                              backgroundColor: "transparent",
-                              flexShrink: 0,
-                            }}
-                          />
-                          <span className="text-[11px] tabular-nums" style={{ color: "#64748d" }}>
-                            {label}
                           </span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -573,14 +724,21 @@ export function PropertiesPanel({
         )}
 
         {activeTab === "measurements" && (
-          <MeasurementSummary
-            shapes={shapes}
-            selectedShapeIds={selectedShapeIds}
-            onLayerClick={handleLayerClick}
-            pixelsPerMm={pixelsPerMm}
-            onClearCalibration={onClearCalibration}
-            onEditCalibration={onEditCalibration}
-          />
+          <>
+            <PelvicAnalysisSection
+              shapes={shapes}
+              pixelsPerMm={pixelsPerMm}
+              onResetLandmarksToAi={onResetLandmarksToAi}
+            />
+            <MeasurementSummary
+              shapes={shapes}
+              selectedShapeIds={selectedShapeIds}
+              onLayerClick={handleLayerClick}
+              pixelsPerMm={pixelsPerMm}
+              onClearCalibration={onClearCalibration}
+              onEditCalibration={onEditCalibration}
+            />
+          </>
         )}
       </div>
     </div>
@@ -621,6 +779,39 @@ function ShapeProperties({
           {shape.type.charAt(0).toUpperCase() + shape.type.slice(1).replace("_", " ")}
         </p>
       </PropertyField>
+
+      {/* Reset to AI — only visible for landmarks the user has dragged. */}
+      {shape.type === "landmark" &&
+        shape.landmarkSource === "manual" &&
+        shape.landmarkOriginalX != null &&
+        shape.landmarkOriginalY != null && (
+          <PropertyField label="AI suggestion">
+            <button
+              type="button"
+              onClick={() =>
+                onUpdate({
+                  points: [
+                    {
+                      x: shape.landmarkOriginalX!,
+                      y: shape.landmarkOriginalY!,
+                    },
+                  ],
+                  landmarkSource: "ai",
+                })
+              }
+              className="text-xs px-2 py-1 transition-colors"
+              style={{
+                border: "1px solid #e5edf5",
+                borderRadius: 4,
+                backgroundColor: "#ffffff",
+                color: "#533afd",
+              }}
+              title="Snap this landmark back to its original AI-suggested position."
+            >
+              Reset to AI position
+            </button>
+          </PropertyField>
+        )}
 
       {/* Stroke Color */}
       <PropertyField label="Stroke color">
@@ -1350,4 +1541,170 @@ function NumberInput({
       />
     </div>
   );
+}
+
+// ─── Pelvic Analysis Section ───
+//
+// Mounted at the top of the Measurements tab when at least one landmark
+// shape is present. Recomputes the four Heliyon parameters (FHHD, ICHD,
+// ALFHRF, DOCS) on every render — landmark drags push fresh `shapes` props
+// through, so values stay live without any explicit listener.
+//
+// Each row renders the computed value when all required landmarks are
+// present; otherwise it lists the missing landmark names so the user knows
+// what to place. When px-only (no calibration), a one-line hint nudges the
+// user toward the calibration tool.
+function PelvicAnalysisSection({
+  shapes,
+  pixelsPerMm,
+  onResetLandmarksToAi,
+}: {
+  shapes: BaseShape[];
+  pixelsPerMm?: number;
+  onResetLandmarksToAi?: (ids: string[]) => void;
+}) {
+  const landmarkShapes = shapes.filter(
+    (s) => s.type === "landmark" && s.visible && s.points.length >= 1,
+  );
+  const landmarks = landmarkShapes
+    .map((s) => ({
+      name: s.landmarkName ?? "",
+      x: s.points[0].x,
+      y: s.points[0].y,
+    }))
+    .filter((l) => l.name !== "");
+
+  if (landmarks.length === 0) return null;
+
+  // Manual landmarks that still remember where the AI placed them are the
+  // candidates for "Reset all" — anything else either is still AI-placed or
+  // was hand-drawn from scratch and has no original to revert to.
+  const resettableIds = landmarkShapes
+    .filter(
+      (s) =>
+        s.landmarkSource === "manual" &&
+        s.landmarkOriginalX != null &&
+        s.landmarkOriginalY != null,
+    )
+    .map((s) => s.id);
+
+  const analysis = computePelvicAnalysis(landmarks, pixelsPerMm ?? null);
+  const params: ParamResult[] = [
+    analysis.fhhd,
+    analysis.ichd,
+    analysis.alfhrf,
+    analysis.docs,
+  ];
+  const hasMm = pixelsPerMm != null && pixelsPerMm > 0;
+
+  return (
+    <div
+      className="p-3"
+      style={{ borderBottom: "1px solid #e5edf5" }}
+    >
+      <div className="flex items-baseline justify-between mb-2 gap-2">
+        <p className="text-xs font-medium" style={{ color: "#061b31" }}>
+          Pelvic Analysis
+        </p>
+        <div className="flex items-baseline gap-2">
+          {resettableIds.length > 0 && onResetLandmarksToAi && (
+            <button
+              type="button"
+              onClick={() => onResetLandmarksToAi(resettableIds)}
+              className="text-[10px] transition-colors"
+              style={{ color: "#533afd" }}
+              title={`Revert ${resettableIds.length} manually adjusted landmark${resettableIds.length === 1 ? "" : "s"} back to the AI suggestion.`}
+            >
+              Reset all to AI
+            </button>
+          )}
+          <span className="text-[10px]" style={{ color: "#64748d" }}>
+            {landmarks.length} landmark{landmarks.length === 1 ? "" : "s"}
+          </span>
+        </div>
+      </div>
+      {!hasMm && (
+        <p
+          className="text-[10px] mb-2 px-2 py-1"
+          style={{
+            backgroundColor: "#FEF6E6",
+            border: "1px solid #F5E0B5",
+            borderRadius: 4,
+            color: "#9A6712",
+          }}
+        >
+          Calibrate to display distances in mm
+        </p>
+      )}
+      <div className="space-y-1.5">
+        {params.map((p) => (
+          <PelvicParamRow key={p.id} result={p} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PelvicParamRow({ result }: { result: ParamResult }) {
+  const formatted = formatParamValue(result);
+  const isMissing = result.value === null;
+
+  return (
+    <div
+      className="flex items-baseline justify-between gap-2 px-2 py-1"
+      style={{
+        backgroundColor: isMissing ? "#f6f9fc" : "#ffffff",
+        border: "1px solid #e5edf5",
+        borderRadius: 4,
+      }}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-1.5">
+          <span
+            className="text-xs font-medium tabular-nums"
+            style={{ color: "#061b31" }}
+          >
+            {result.label}
+          </span>
+          <span
+            className="text-[10px] truncate"
+            style={{ color: "#64748d" }}
+            title={result.description}
+          >
+            {result.description}
+          </span>
+        </div>
+        {isMissing && result.missing.length > 0 && (
+          <p
+            className="text-[10px] mt-0.5 italic"
+            style={{ color: "#9A6712" }}
+            title={result.missing.join(", ")}
+          >
+            Missing: {result.missing.map(humanizeLandmarkName).join(", ")}
+          </p>
+        )}
+      </div>
+      <span
+        className="text-xs font-medium tabular-nums shrink-0"
+        style={{ color: isMissing ? "#A3ACB9" : "#533afd" }}
+      >
+        {formatted ?? "—"}
+      </span>
+    </div>
+  );
+}
+
+// snake_case landmark id → terse human label for the "missing" hint line.
+// Kept local to the panel: the canonical displayName lives on each shape's
+// `label` field once placed, but missing landmarks have no shape yet.
+function humanizeLandmarkName(name: string): string {
+  const map: Record<string, string> = {
+    top_of_left_femoral_head: "L femoral head",
+    top_of_right_femoral_head: "R femoral head",
+    top_of_left_iliac_crest: "L iliac crest",
+    top_of_right_iliac_crest: "R iliac crest",
+    second_sacral_tubercle: "S2 tubercle",
+    center_of_symphysis_pubis: "symphysis pubis",
+  };
+  return map[name] ?? name.replace(/_/g, " ");
 }

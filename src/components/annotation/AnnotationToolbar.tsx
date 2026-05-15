@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Hand,
+  MousePointer2,
   Dot,
   Minus,
   Spline,
@@ -12,6 +13,8 @@ import {
   ArrowRight,
   Ruler,
   Settings2,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
 
@@ -25,11 +28,14 @@ interface ToolItem {
 }
 
 const tools: ToolItem[] = [
-  { id: "hand", label: "Pan", shortcut: "H", description: "Click and drag to move around the X-ray. Click a shape to select it; Backspace or Delete removes it.", icon: <Hand size={18} strokeWidth={1.5} /> },
+  { id: "hand", label: "Pan", shortcut: "H", description: "Click and drag empty canvas to move around the X-ray. Click a shape to select it; Shift or Cmd+click to multi-select. Backspace or Delete removes selection.", icon: <Hand size={18} strokeWidth={1.5} /> },
+  { id: "select", label: "Select", shortcut: "V", description: "Click and drag empty canvas to box-select shapes. Click a shape to select; Shift or Cmd+click to multi-select. Backspace or Delete removes selection.", icon: <MousePointer2 size={18} strokeWidth={1.5} /> },
   { id: "point", label: "Point", shortcut: "D", description: "Click to drop a numbered landmark (P1, P2, ...). Used for anatomical reference points; can be reused as endpoints for line/angle/cobb tools.", icon: <Dot size={28} strokeWidth={2.5} /> },
-  { id: "line", label: "Line", shortcut: "L", description: "Click two points to draw a measured line. Each endpoint becomes a numbered, draggable dot.", icon: <Minus size={18} strokeWidth={1.5} /> },
-  { id: "polyline", label: "Polyline", shortcut: "⇧L", description: "Click to chain vertices. Numbered dots can be snapped by line/angle/cobb. Done button, double-click, or Enter to finish.", icon: <Spline size={18} strokeWidth={1.5} /> },
-  { id: "ruler", label: "Ruler", shortcut: "M", description: "Click two points to measure distance between them. Snap-aware — start or end on an existing landmark to chain measurements. Shows mm when calibrated, px otherwise.", icon: <Ruler size={18} strokeWidth={1.5} /> },
+  // Line tool removed — Ruler does everything Line did (2 click-to-place
+  // points + draggable endpoints) plus the live length readout. Legacy
+  // `line` shapes already on canvas still render via ShapeRenderer.
+  { id: "polyline", label: "Polyline", shortcut: "⇧L", description: "Click to chain vertices. Numbered dots can be snapped by ruler/angle/cobb. Done button, double-click, or Enter to finish.", icon: <Spline size={18} strokeWidth={1.5} /> },
+  { id: "ruler", label: "Ruler", shortcut: "M", description: "Click two points to measure distance. Endpoints are draggable and snap to existing landmarks. Shows mm when calibrated, px otherwise.", icon: <Ruler size={18} strokeWidth={1.5} /> },
   { id: "angle", label: "Angle", shortcut: "A", description: "Click three points (endpoint, vertex, endpoint) to measure an angle.", icon: <TriangleRight size={18} strokeWidth={1.5} /> },
   { id: "cobb_angle", label: "Cobb angle", shortcut: "⇧A", description: "Click four points — two for each line — to measure Cobb angle between two lines.", icon: <Scaling size={18} strokeWidth={1.5} />, separator: true },
   { id: "arrow", label: "Arrow", shortcut: "R", description: "Drag to draw an arrow. For patient communication — pointing at areas of interest.", icon: <ArrowRight size={18} strokeWidth={1.5} /> },
@@ -40,6 +46,12 @@ const tools: ToolItem[] = [
 interface AnnotationToolbarProps {
   activeTool: ToolId;
   onToolChange: (tool: ToolId) => void;
+  /** AI Landmark Detection — trial feature. */
+  onDetectLandmarks?: () => void;
+  /** True while a detect-landmarks request is in flight. */
+  detectingLandmarks?: boolean;
+  /** Disabled when no image is active or in multi-view mode. */
+  detectLandmarksDisabled?: boolean;
 }
 
 function ToolTooltip({
@@ -82,6 +94,9 @@ function ToolTooltip({
 export function AnnotationToolbar({
   activeTool,
   onToolChange,
+  onDetectLandmarks,
+  detectingLandmarks = false,
+  detectLandmarksDisabled = false,
 }: AnnotationToolbarProps) {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
@@ -163,6 +178,54 @@ export function AnnotationToolbar({
 
       {hoveredToolData && tooltipRect && (
         <ToolTooltip tool={hoveredToolData} anchorRect={tooltipRect} />
+      )}
+
+      {/* AI Landmark Detection — separator + action button (independent of
+          activeTool, since this is a one-shot action, not a drawing mode).
+          Trial feature — render only when a handler is wired. */}
+      {onDetectLandmarks && (
+        <>
+          <div
+            style={{ width: 24, height: 1, backgroundColor: "#1c2738", margin: "8px 0 4px" }}
+          />
+          <button
+            onClick={onDetectLandmarks}
+            disabled={detectingLandmarks || detectLandmarksDisabled}
+            aria-label="Detect anatomical landmarks (AI)"
+            title={
+              detectLandmarksDisabled
+                ? "Available in single-view mode with an active X-ray"
+                : "Detect anatomical landmarks — image bytes are sent to Anthropic. No patient information is included. AI placement is approximate; verify and adjust."
+            }
+            className="flex items-center justify-center transition-colors"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 4,
+              backgroundColor: detectingLandmarks
+                ? "rgba(34, 211, 238, 0.18)"
+                : "rgba(255, 255, 255, 0.06)",
+              color: detectLandmarksDisabled ? "#586070" : "#22D3EE",
+              cursor:
+                detectingLandmarks || detectLandmarksDisabled ? "not-allowed" : "pointer",
+              opacity: detectLandmarksDisabled ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (detectingLandmarks || detectLandmarksDisabled) return;
+              e.currentTarget.style.backgroundColor = "rgba(34, 211, 238, 0.18)";
+            }}
+            onMouseLeave={(e) => {
+              if (detectingLandmarks || detectLandmarksDisabled) return;
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)";
+            }}
+          >
+            {detectingLandmarks ? (
+              <Loader2 size={18} strokeWidth={1.5} className="animate-spin" />
+            ) : (
+              <Sparkles size={18} strokeWidth={1.5} />
+            )}
+          </button>
+        </>
       )}
     </div>
   );
