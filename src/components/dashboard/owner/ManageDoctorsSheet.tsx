@@ -66,7 +66,7 @@ export function ManageDoctorsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[420px] sm:max-w-[420px] border-l border-[#e5edf5] p-0">
+      <SheetContent className="w-105 sm:max-w-105 border-l border-[#e5edf5] p-0">
         <SheetHeader className="px-5 py-4 border-b border-[#e5edf5]">
           <SheetTitle className="text-[16px] font-light text-[#061b31]">
             Manage Doctors — {branchName}

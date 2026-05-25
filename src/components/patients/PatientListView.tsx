@@ -272,7 +272,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       />
 
       {/* Filter bar — sticky to top of viewport while scrolling */}
-      <div className="sticky top-[52px] z-20 -mx-2 px-2 py-2 bg-[#f6f9fc]/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-[#f6f9fc]/80">
+      <div className="sticky top-13 z-20 -mx-2 px-2 py-2 bg-[#f6f9fc]/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-[#f6f9fc]/80">
         <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748d] pointer-events-none" strokeWidth={1.75} />
@@ -284,7 +284,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
               placeholder="Search patients by name, IC, phone, email…"
               className="w-full h-8 rounded-[4px] border border-[#e5edf5] bg-white pl-8 pr-12 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] transition-colors"
             />
-            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-[18px] px-1 rounded border border-[#e5edf5] bg-[#f6f9fc] text-[10px] font-medium text-[#94a3b8] pointer-events-none">/</kbd>
+            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-4.5 px-1 rounded border border-[#e5edf5] bg-[#f6f9fc] text-[10px] font-medium text-[#94a3b8] pointer-events-none">/</kbd>
           </div>
 
           {isAdmin && (

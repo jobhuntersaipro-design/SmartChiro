@@ -68,7 +68,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         : 'This password reset link is invalid or has already been used.'
 
     return (
-      <div className="w-full max-w-[420px]">
+      <div className="w-full max-w-105">
         <div className="mb-8 text-center flex flex-col items-center">
           <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
             <span className="text-[14px] font-bold text-white">Smart Chiro</span>
@@ -79,7 +79,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
         <Link
           href="/forgot-password"
-          className="flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
+          className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
         >
           Request a new reset link
         </Link>
@@ -88,7 +88,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <div className="w-full max-w-[420px]">
+    <div className="w-full max-w-105">
       <div className="mb-8 text-center flex flex-col items-center">
         <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
           <span className="text-[14px] font-bold text-white">Smart Chiro</span>
@@ -121,7 +121,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-[40px] w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
@@ -154,7 +154,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="h-[40px] w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
@@ -176,7 +176,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : 'Update password'}
           </button>

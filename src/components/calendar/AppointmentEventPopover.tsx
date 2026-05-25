@@ -67,7 +67,7 @@ export function AppointmentEventPopover({
   return (
     <div
       ref={ref}
-      className="fixed z-40 w-[320px] rounded-[6px] border border-[#e5edf5] bg-white"
+      className="fixed z-40 w-80 rounded-[6px] border border-[#e5edf5] bg-white"
       style={{ top, left, boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
     >
       <div className="px-4 pt-3 pb-2 border-b border-[#e5edf5]">

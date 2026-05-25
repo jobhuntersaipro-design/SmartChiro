@@ -148,7 +148,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
                       {p.gender ?? "-"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-[4px] px-[6px] py-[1px] text-[11px] font-light ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-[4px] px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
                         {p.status ?? "active"}
                       </span>
                     </td>

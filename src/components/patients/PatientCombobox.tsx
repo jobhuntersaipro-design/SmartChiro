@@ -94,7 +94,7 @@ export function PatientCombobox({ value, onChange, disabled }: Props) {
               />
             </div>
           </div>
-          <div className="max-h-[260px] overflow-y-auto">
+          <div className="max-h-65 overflow-y-auto">
             {loading && (
               <div className="px-3 py-2 text-[13px] text-[#64748d]">Loading…</div>
             )}

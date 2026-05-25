@@ -466,7 +466,7 @@ export function PastAppointmentTable({
               >
                 <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
               </button>
-              <span className="text-[12px] text-[#64748d] tabular-nums px-2 min-w-[64px] text-center">
+              <span className="text-[12px] text-[#64748d] tabular-nums px-2 min-w-16 text-center">
                 Page{" "}
                 <span className="text-[#273951] font-medium">{page}</span> of{" "}
                 <span className="text-[#273951] font-medium">{totalPages}</span>

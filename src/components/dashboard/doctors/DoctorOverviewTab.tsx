@@ -137,12 +137,12 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                         </span>
                       </div>
                       {a.notes && (
-                        <p className="text-[12px] text-[#64748d] truncate mt-0.5 ml-[22px]">{a.notes}</p>
+                        <p className="text-[12px] text-[#64748d] truncate mt-0.5 ml-5.5">{a.notes}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-[12px] text-[#64748d]">{a.duration}min</span>
-                      <span className={`rounded-[4px] px-[6px] py-[1px] text-[11px] font-light ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-[4px] px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
                         {a.status.replace("_", " ")}
                       </span>
                     </div>
@@ -186,7 +186,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                     <span className="text-[12px] text-[#64748d]">{formatDate(v.visitDate)}</span>
                   </div>
                   {v.assessment && (
-                    <p className="text-[13px] text-[#64748d] line-clamp-2 ml-[22px]">{v.assessment}</p>
+                    <p className="text-[13px] text-[#64748d] line-clamp-2 ml-5.5">{v.assessment}</p>
                   )}
                 </div>
               ))

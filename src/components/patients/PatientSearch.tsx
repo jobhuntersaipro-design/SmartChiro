@@ -9,8 +9,8 @@ interface PatientSearchProps {
 
 export function PatientSearch({ value, onChange }: PatientSearchProps) {
   return (
-    <div className="relative flex-1 max-w-[400px]">
-      <Search className="absolute left-2.5 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[#64748d]" strokeWidth={2} />
+    <div className="relative flex-1 max-w-100">
+      <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748d]" strokeWidth={2} />
       <input
         type="text"
         placeholder="Search patients by name, email, or phone..."

@@ -116,7 +116,7 @@ export function ScheduleTable({
                     {appt.branch?.name ?? "—"}
                   </td>
                 )}
-                <td className="px-4 py-3 text-[14px] text-[#64748d] truncate max-w-[200px]">
+                <td className="px-4 py-3 text-[14px] text-[#64748d] truncate max-w-50">
                   {appt.notes ?? "—"}
                 </td>
                 <td className="px-4 py-3">

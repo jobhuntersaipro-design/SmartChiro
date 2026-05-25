@@ -70,11 +70,11 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
     <aside
       className={cn(
         "flex h-screen flex-col border-r border-border bg-white transition-all duration-200",
-        collapsed ? "w-[68px]" : "w-[220px]"
+        collapsed ? "w-17" : "w-55"
       )}
     >
       {/* Logo */}
-      <div className="flex h-[52px] items-center gap-2.5 px-4 border-b border-border">
+      <div className="flex h-13 items-center gap-2.5 px-4 border-b border-border">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] bg-primary text-primary-foreground text-[15px] font-semibold">
           SC
         </div>
@@ -92,7 +92,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 pt-3">
-        <div className="space-y-[2px]">
+        <div className="space-y-0.5">
           {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
@@ -104,7 +104,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-[4px] px-2 py-[6px] text-[15px] transition-all duration-200",
+                  "flex items-center gap-2.5 rounded-[4px] px-2 py-1.5 text-[15px] transition-all duration-200",
                   isActive
                     ? "bg-[#ededfc] text-[#533afd] font-normal"
                     : "text-[#273951] hover:bg-[#f6f9fc] hover:text-[#061b31] font-normal hover:translate-x-0.5"
@@ -122,7 +122,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
       </nav>
 
       {/* Bottom section */}
-      <div className="px-3 pb-3 space-y-[2px]">
+      <div className="px-3 pb-3 space-y-0.5">
         {/* New Appointment button */}
         <Button
           className={cn(
@@ -141,7 +141,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-[4px] px-2 py-[6px] transition-all duration-200 hover:bg-[#f6f9fc] outline-none",
+              "flex w-full items-center gap-2.5 rounded-[4px] px-2 py-1.5 transition-all duration-200 hover:bg-[#f6f9fc] outline-none",
               collapsed && "justify-center px-0"
             )}
           >
@@ -159,7 +159,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
                       {user.name ?? user.email}
                     </span>
                     {isOwner && (
-                      <span className="shrink-0 rounded-full bg-[#ededfc] px-1.5 py-[1px] text-[10px] font-medium text-[#533afd]">
+                      <span className="shrink-0 rounded-full bg-[#ededfc] px-1.5 py-0.25 text-[10px] font-medium text-[#533afd]">
                         Owner
                       </span>
                     )}
@@ -172,7 +172,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
           <DropdownMenuContent
             side="top"
             align="start"
-            className="w-[200px] rounded-[6px] border border-[#e5edf5] shadow-md"
+            className="w-50 rounded-[6px] border border-[#e5edf5] shadow-md"
           >
             <div className="px-3 py-2">
               <p className="text-[14px] font-medium text-[#061b31] truncate">

@@ -200,7 +200,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
       {/* Dialog */}
       <div
-        className="relative z-10 w-full max-w-[660px] max-h-[92vh] rounded-[8px] border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-[8px] border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)" }}
       >
         {/* ─── Header ─── */}

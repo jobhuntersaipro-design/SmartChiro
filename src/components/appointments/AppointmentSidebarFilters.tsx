@@ -84,7 +84,7 @@ export function AppointmentSidebarFilters({
   return (
     <aside
       aria-label="Appointment filters"
-      className="hidden xl:flex w-[280px] shrink-0 flex-col gap-4 border-r border-[#e5edf5] bg-white p-4 overflow-y-auto"
+      className="hidden xl:flex w-70 shrink-0 flex-col gap-4 border-r border-[#e5edf5] bg-white p-4 overflow-y-auto"
     >
       {/* Branch */}
       {branches.length > 1 && (
@@ -122,7 +122,7 @@ export function AppointmentSidebarFilters({
                 : `${doctorIds.length} doctors`}
             </span>
           </PopoverTrigger>
-          <PopoverContent className="w-[260px] p-0" align="start">
+          <PopoverContent className="w-65 p-0" align="start">
             <Command>
               <CommandInput placeholder="Search doctor..." className="h-9" />
               <CommandList>

@@ -64,7 +64,7 @@ export function DoctorCard({
                 {doctor.name ?? "Unnamed"}
               </span>
               <span
-                className={`shrink-0 rounded-[4px] px-[6px] py-[1px] text-[10px] font-light ${
+                className={`shrink-0 rounded-[4px] px-1.5 py-0.25 text-[10px] font-light ${
                   doctor.isActive
                     ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
                     : "bg-[#F0F3F7] text-[#64748d]"

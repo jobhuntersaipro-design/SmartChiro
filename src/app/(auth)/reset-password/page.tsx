@@ -20,7 +20,7 @@ export default async function ResetPasswordPage({
   if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white px-4">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-105">
           <div className="mb-8 text-center flex flex-col items-center">
             <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
               <span className="text-[14px] font-bold text-white">Smart Chiro</span>
@@ -35,7 +35,7 @@ export default async function ResetPasswordPage({
 
           <Link
             href="/forgot-password"
-            className="flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
+            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
           >
             Request a new reset link
           </Link>

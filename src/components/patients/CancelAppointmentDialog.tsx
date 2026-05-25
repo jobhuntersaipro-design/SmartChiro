@@ -54,7 +54,7 @@ export function CancelAppointmentDialog({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[440px] rounded-[8px] border border-[#e5edf5] bg-white p-6"
+        className="w-110 rounded-[8px] border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <h2 className="text-[18px] font-medium text-[#0A2540] mb-2">Cancel appointment?</h2>

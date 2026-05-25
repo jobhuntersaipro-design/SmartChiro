@@ -403,7 +403,7 @@ function BreakTimeSection({
         </div>
         {doctor.branches.length > 1 && (
           <Select value={activeBranch} onValueChange={(v) => v && setActiveBranch(v)}>
-            <SelectTrigger className="h-8 w-[180px] rounded-[4px] text-[13px]">
+            <SelectTrigger className="h-8 w-45 rounded-[4px] text-[13px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -437,7 +437,7 @@ function BreakTimeSection({
                 }
                 disabled={!canEdit}
               >
-                <SelectTrigger className="h-8 w-[80px] rounded-[4px] text-[12px]">
+                <SelectTrigger className="h-8 w-20 rounded-[4px] text-[12px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

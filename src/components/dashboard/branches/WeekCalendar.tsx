@@ -77,7 +77,7 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
       className="rounded-[6px] border border-[#e5edf5] bg-white overflow-auto"
       style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
     >
-      <div className="min-w-[700px]">
+      <div className="min-w-175">
         {/* Day headers */}
         <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-[#e5edf5] sticky top-0 bg-white z-10">
           <div className="px-2 py-2" />

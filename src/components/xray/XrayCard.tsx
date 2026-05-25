@@ -74,7 +74,7 @@ export function XrayCard({
         onClick={handleClick}
         className="block"
       >
-        <div className="h-[160px] bg-[#1A1F36] flex items-center justify-center overflow-hidden relative">
+        <div className="h-40 bg-[#1A1F36] flex items-center justify-center overflow-hidden relative">
           {xray.thumbnailUrl ? (
             <img src={xray.thumbnailUrl} alt={xray.title ?? 'X-ray'} className="w-full h-full object-contain" />
           ) : (

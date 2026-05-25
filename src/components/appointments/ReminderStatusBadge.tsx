@@ -65,7 +65,7 @@ export function ReminderStatusBadge({ appointmentId }: Props) {
         {p.label}
       </button>
       {open && rows && (
-        <div className="absolute right-0 z-20 mt-1 w-[320px] rounded-[6px] border border-[#E3E8EE] bg-white p-3 shadow-md">
+        <div className="absolute right-0 z-20 mt-1 w-80 rounded-[6px] border border-[#E3E8EE] bg-white p-3 shadow-md">
           <div className="mb-2 text-[12px] uppercase tracking-wide text-[#697386]">
             Reminders
           </div>

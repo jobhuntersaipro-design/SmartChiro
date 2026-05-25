@@ -183,7 +183,7 @@ export function AppointmentDetailPanel({
         aria-modal="true"
         aria-labelledby="appointment-detail-title"
         tabIndex={-1}
-        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[420px] bg-white border-l border-[#e5edf5] shadow-lg overflow-y-auto animate-appointment-panel-in focus:outline-none"
+        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-105 bg-white border-l border-[#e5edf5] shadow-lg overflow-y-auto animate-appointment-panel-in focus:outline-none"
       >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-white border-b border-[#e5edf5]">

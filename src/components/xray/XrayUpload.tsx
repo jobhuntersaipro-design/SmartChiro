@@ -169,7 +169,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
   }
 
   return (
-    <div className="w-full max-w-[520px]">
+    <div className="w-full max-w-130">
       {/* Drop zone */}
       {stage === 'idle' && (
         <label

@@ -194,7 +194,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
   }
 
   return (
-    <div className="max-w-[720px]">
+    <div className="max-w-180">
       {/* Toast */}
       {toast && (
         <div
@@ -388,7 +388,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               </p>
             )}
 
-            <div className="space-y-3 max-w-[360px]">
+            <div className="space-y-3 max-w-90">
               {user.hasPassword && (
                 <div>
                   <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">

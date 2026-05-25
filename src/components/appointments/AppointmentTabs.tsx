@@ -69,7 +69,7 @@ export function AppointmentTabs({ active, counts, onChange }: Props) {
           >
             {tab.label}
             {isActive ? (
-              <span className="inline-flex items-center justify-center min-w-[22px] h-[20px] px-1.5 rounded-full bg-[#F0EEFF] text-[12px] font-medium text-[#635BFF] tabular-nums">
+              <span className="inline-flex items-center justify-center min-w-5.5 h-5 px-1.5 rounded-full bg-[#F0EEFF] text-[12px] font-medium text-[#635BFF] tabular-nums">
                 {count ?? 0}
               </span>
             ) : (
@@ -80,7 +80,7 @@ export function AppointmentTabs({ active, counts, onChange }: Props) {
             {isActive && (
               <span
                 aria-hidden="true"
-                className="absolute left-3 right-3 -bottom-px h-[2px] bg-[#635BFF] transition-all"
+                className="absolute left-3 right-3 -bottom-px h-0.5 bg-[#635BFF] transition-all"
               />
             )}
           </button>

@@ -255,7 +255,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
 
       {/* Dialog */}
       <div
-        className="relative z-10 w-full max-w-[600px] max-h-[90vh] flex flex-col rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-150 max-h-[90vh] flex flex-col rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"
         style={{
           boxShadow:
             "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px",

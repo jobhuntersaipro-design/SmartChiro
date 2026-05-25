@@ -140,7 +140,7 @@ export function DoctorDetailView({ doctorId, currentUserId }: DoctorDetailViewPr
                   {doctor.name ?? "Unnamed"}
                 </h1>
                 <span
-                  className={`rounded-[4px] px-[8px] py-[2px] text-[11px] font-light ${
+                  className={`rounded-[4px] px-2 py-0.5 text-[11px] font-light ${
                     doctor.profile?.isActive !== false
                       ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
                       : "bg-[#F0F3F7] text-[#64748d]"

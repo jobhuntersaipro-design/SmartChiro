@@ -58,7 +58,7 @@ export function DeleteAppointmentDialog({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[460px] rounded-[8px] border border-[#e5edf5] bg-white p-6"
+        className="w-115 rounded-[8px] border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <div className="flex items-start gap-3 mb-3">

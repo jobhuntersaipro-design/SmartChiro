@@ -48,6 +48,35 @@ Example v4 configuration:
 }
 ```
 
+### Arbitrary values: when to use them
+
+Tailwind v4 uses a continuous spacing scale (1 unit = `0.25rem` = 4px), so
+nearly every px value has a token equivalent. The Tailwind IntelliSense
+extension flags arbitrary values that have one (e.g. `max-w-[420px]` →
+`max-w-105`, `h-[40px]` → `h-10`, `py-[6px]` → `py-1.5`).
+
+**Prefer token classes** for spacing/sizing utilities:
+`w / h / max-w / max-h / min-w / min-h / m* / p* / gap* / top / bottom /
+left / right / inset* / space-x / space-y / size`.
+
+**Arbitrary values are still fine** when:
+- They reference a CSS variable: `shadow-(--shadow-card)` (v4 paren syntax,
+  not `[var(--shadow-card)]`).
+- They're a hardcoded brand color: `bg-[#635BFF]`, `text-[#061b31]` —
+  the project intentionally uses explicit hex per the Stripe design tokens
+  block, not abstract var names.
+- They're font-size / line-height / tracking values that don't match
+  Tailwind's default typography scale: the project's `text-[14px]`,
+  `text-[15px]`, `text-[23px]` are part of the 15%-bumped Stripe scale
+  and don't have token equivalents until/unless registered under
+  `@theme { --font-size-* }`.
+- They're tight `rounded-[4px]` / `rounded-[6px]` — the project's Stripe
+  radius scale doesn't match Tailwind defaults.
+
+If you find yourself writing `*-[Npx]` for one of the spacing utilities
+above and the IDE doesn't flag it, double-check the prefix is in the list
+— if so, switch to the token form.
+
 ## File Organization
 
 - Components: `src/components/[feature]/ComponentName.tsx`

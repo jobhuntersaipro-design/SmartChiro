@@ -19,7 +19,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[480px] rounded-[8px] border border-[#e5edf5] bg-white p-6"
+        className="w-120 rounded-[8px] border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <div className="flex items-start gap-3 mb-3">
@@ -35,7 +35,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
           </div>
         </div>
 
-        <ul className="rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] divide-y divide-[#e5edf5] mb-4 max-h-[200px] overflow-auto">
+        <ul className="rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] divide-y divide-[#e5edf5] mb-4 max-h-50 overflow-auto">
           {conflicts.map((c) => (
             <li key={c.id} className="px-3 py-2 text-[13px]">
               <span className="font-medium text-[#061b31]">

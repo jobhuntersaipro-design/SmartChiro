@@ -131,7 +131,7 @@ export function CreateDoctorDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-[560px] rounded-[8px] p-0 gap-0">
+      <DialogContent className="max-w-140 rounded-[8px] p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="text-[18px] font-light text-[#061b31]">
             Add New Doctor

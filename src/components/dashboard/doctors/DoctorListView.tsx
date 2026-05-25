@@ -359,7 +359,7 @@ function EmptyState({
       <h3 className="text-[16px] font-medium text-[#061b31] mb-1">
         {hasSearch ? "No doctors found" : "No doctors yet"}
       </h3>
-      <p className="text-[14px] text-[#64748d] max-w-[300px]">
+      <p className="text-[14px] text-[#64748d] max-w-75">
         {hasSearch
           ? "Try adjusting your search or filters."
           : "Add your first doctor to get started managing your clinic."}
@@ -457,7 +457,7 @@ function DoctorTable({
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`rounded-[4px] px-[6px] py-[1px] text-[10px] font-light ${
+                  className={`rounded-[4px] px-1.5 py-0.25 text-[10px] font-light ${
                     d.isActive
                       ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
                       : "bg-[#F0F3F7] text-[#64748d]"

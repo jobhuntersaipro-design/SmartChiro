@@ -48,7 +48,7 @@ export default async function VerifyEmailPage({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f6f9fc] px-4">
-      <div className="w-full max-w-[420px]">
+      <div className="w-full max-w-105">
         <div className="mb-8 text-center flex flex-col items-center">
           <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
             <span className="text-[14px] font-bold text-white">Smart Chiro</span>
@@ -68,7 +68,7 @@ export default async function VerifyEmailPage({
 
           <Link
             href="/login"
-            className="mt-6 flex h-[40px] w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
+            className="mt-6 flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
           >
             {status === 'success' || status === 'already-verified'
               ? 'Sign in to your account'

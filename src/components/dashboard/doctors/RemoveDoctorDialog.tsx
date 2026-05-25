@@ -65,7 +65,7 @@ export function RemoveDoctorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[440px] rounded-[8px]">
+      <DialogContent className="max-w-110 rounded-[8px]">
         <DialogHeader>
           <DialogTitle className="text-[18px] font-light text-[#061b31]">
             Remove Doctor

@@ -121,7 +121,7 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
       </button>
       {open && (
         <div
-          className="absolute right-0 top-8 z-20 w-[140px] rounded-[6px] border border-[#e5edf5] bg-white py-1"
+          className="absolute right-0 top-8 z-20 w-35 rounded-[6px] border border-[#e5edf5] bg-white py-1"
           style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
         >
           <button

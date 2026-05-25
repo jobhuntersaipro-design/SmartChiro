@@ -125,7 +125,7 @@ export function CalendarFilterBar({
         </Button>
         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
           <PopoverTrigger
-            className="inline-flex items-center h-8 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[13px] font-medium text-[#061b31] gap-1.5 min-w-[170px] hover:bg-[#fafbfd] transition-colors"
+            className="inline-flex items-center h-8 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[13px] font-medium text-[#061b31] gap-1.5 min-w-42.5 hover:bg-[#fafbfd] transition-colors"
           >
             {dateLabel}
             <ChevronDown className="h-3.5 w-3.5 ml-auto opacity-50" strokeWidth={2} />
@@ -168,7 +168,7 @@ export function CalendarFilterBar({
         {/* Branch select */}
         {branches.length > 1 && (
           <Select value={branchId} onValueChange={(v) => v && onBranchChange(v)}>
-            <SelectTrigger className="h-8 w-[200px] rounded-[4px] text-[13px]">
+            <SelectTrigger className="h-8 w-50 rounded-[4px] text-[13px]">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>
             <SelectContent>
@@ -184,7 +184,7 @@ export function CalendarFilterBar({
         {/* Doctor multi-select */}
         <Popover open={doctorPickerOpen} onOpenChange={setDoctorPickerOpen}>
           <PopoverTrigger
-            className="inline-flex items-center h-8 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[13px] gap-1.5 min-w-[160px] hover:bg-[#fafbfd] transition-colors"
+            className="inline-flex items-center h-8 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[13px] gap-1.5 min-w-40 hover:bg-[#fafbfd] transition-colors"
           >
             {doctorIds.length === 0
               ? "All doctors"
@@ -193,7 +193,7 @@ export function CalendarFilterBar({
               : `${doctorIds.length} doctors`}
             <ChevronDown className="h-3.5 w-3.5 ml-auto opacity-50" strokeWidth={2} />
           </PopoverTrigger>
-          <PopoverContent className="w-[260px] p-0" align="end">
+          <PopoverContent className="w-65 p-0" align="end">
             <Command>
               <CommandInput placeholder="Search doctor..." className="h-9" />
               <CommandList>

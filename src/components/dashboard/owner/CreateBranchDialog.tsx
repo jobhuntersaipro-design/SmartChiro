@@ -43,7 +43,7 @@ const inputErrorClass =
   "h-9 rounded-[4px] border-[#df1b41] bg-[#FDE8EC]/30 text-[15px] focus:ring-1 focus:ring-[#df1b41] focus:border-[#df1b41] focus:bg-white transition-all duration-200";
 
 const timeInputClass =
-  "h-8 w-[90px] rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] px-2 text-[14px] text-[#061b31] text-center focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "h-8 w-22.5 rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] px-2 text-[14px] text-[#061b31] text-center focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -202,7 +202,7 @@ export function CreateBranchDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[580px] rounded-[8px] border border-[#e5edf5] p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-145 rounded-[8px] border border-[#e5edf5] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-[18px] font-light tracking-[-0.18px] text-[#061b31]">
             Register New Clinic

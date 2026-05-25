@@ -462,7 +462,7 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                     <AlertTriangle className="h-3.5 w-3.5 text-[#DF1B41]" strokeWidth={1.5} />
                     <span className="text-[13px] font-medium text-[#DF1B41]">Allergies</span>
                   </div>
-                  <p className="text-[13px] text-[#273951] ml-[22px]">{patient.allergies}</p>
+                  <p className="text-[13px] text-[#273951] ml-5.5">{patient.allergies}</p>
                 </div>
               )}
               {patient.medicalHistory && (

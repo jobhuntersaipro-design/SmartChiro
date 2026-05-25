@@ -346,13 +346,13 @@ export function DoctorDayCalendar({
           {/* Current-time indicator (full width across all doctor columns) */}
           {currentMinuteOffset !== null && (
             <div
-              className="absolute left-[80px] right-0 pointer-events-none z-10 flex items-center"
+              className="absolute left-20 right-0 pointer-events-none z-10 flex items-center"
               style={{ top: pxFromMinutes(currentMinuteOffset) }}
             >
               <span className="absolute -left-12 -top-2.5 inline-flex items-center justify-center bg-[#061b31] text-white text-[11px] font-medium tabular-nums rounded-[3px] px-1.5 py-0.5">
                 {format(now, "h:mm a")}
               </span>
-              <div className="h-[1.5px] w-full bg-[#DF1B41]" />
+              <div className="h-0.38 w-full bg-[#DF1B41]" />
             </div>
           )}
         </div>

@@ -133,7 +133,7 @@ export function SeriesStrip({
                       style={{ borderColor: active ? '#533afd' : 'transparent' }}
                       title={x.title ?? 'X-ray'}
                     >
-                      <div className="w-[80px] h-[80px] bg-[#1A1F36]">
+                      <div className="w-20 h-20 bg-[#1A1F36]">
                         {x.thumbnailUrl ? (
                           <img
                             src={x.thumbnailUrl}
@@ -142,7 +142,7 @@ export function SeriesStrip({
                           />
                         ) : null}
                       </div>
-                      <p className="text-[10px] text-[#cdd5e2] mt-0.5 truncate w-[80px] px-0.5">
+                      <p className="text-[10px] text-[#cdd5e2] mt-0.5 truncate w-20 px-0.5">
                         {x.bodyRegion ? x.bodyRegion.split('_')[0].slice(0, 6) : '—'} ·{' '}
                         {new Date(x.createdAt).toLocaleDateString('en-MY', {
                           day: '2-digit', month: 'short',

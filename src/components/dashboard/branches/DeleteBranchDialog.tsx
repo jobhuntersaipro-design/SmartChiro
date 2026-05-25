@@ -59,7 +59,7 @@ export function DeleteBranchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] rounded-[6px] border border-[#e5edf5]">
+      <DialogContent className="sm:max-w-110 rounded-[6px] border border-[#e5edf5]">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FEF2F4]">

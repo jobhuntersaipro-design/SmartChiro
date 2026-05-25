@@ -37,7 +37,7 @@ export function DeletePatientDialog({ patient, open, onOpenChange, onDelete }: D
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => onOpenChange(false)} />
       <div
-        className="relative z-10 w-full max-w-[440px] rounded-[8px] border border-[#e5edf5] bg-white p-6 animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-110 rounded-[8px] border border-[#e5edf5] bg-white p-6 animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between mb-4">

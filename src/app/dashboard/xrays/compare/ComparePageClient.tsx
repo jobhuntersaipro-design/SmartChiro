@@ -198,7 +198,7 @@ export function ComparePageClient({
   return (
     <div className="flex h-screen flex-col bg-[#1A1F36]">
       {/* Header */}
-      <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-[#2D3348] bg-[#1A1F36] px-4">
+      <div className="flex h-13 shrink-0 items-center justify-between border-b border-[#2D3348] bg-[#1A1F36] px-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
@@ -217,7 +217,7 @@ export function ComparePageClient({
           >
             <ZoomOut size={16} strokeWidth={1.5} />
           </button>
-          <span className="min-w-[44px] text-center text-[13px] text-[#8B93A7]">
+          <span className="min-w-11 text-center text-[13px] text-[#8B93A7]">
             {Math.round(leftView.zoom * 100)}%
           </span>
           <button
@@ -288,10 +288,10 @@ export function ComparePageClient({
 
         {/* Divider */}
         <div
-          className="z-20 flex w-[6px] shrink-0 cursor-col-resize items-center justify-center bg-[#2D3348] transition-colors hover:bg-[#533afd]"
+          className="z-20 flex w-1.5 shrink-0 cursor-col-resize items-center justify-center bg-[#2D3348] transition-colors hover:bg-[#533afd]"
           onPointerDown={handleDividerPointerDown}
         >
-          <div className="h-8 w-[2px] rounded-full bg-[#8B93A7]" />
+          <div className="h-8 w-0.5 rounded-full bg-[#8B93A7]" />
         </div>
 
         {/* Right panel */}
