@@ -5,7 +5,6 @@ import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 
-import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
 import { EditAppointmentDialog } from "@/components/patients/EditAppointmentDialog";
 import { CancelAppointmentDialog } from "@/components/patients/CancelAppointmentDialog";
 import { DeleteAppointmentDialog } from "@/components/patients/DeleteAppointmentDialog";
@@ -38,21 +37,25 @@ interface Props {
   selectedDate: Date;
   selectedAppointmentId: string | null;
   activeTab: AppointmentTabId;
+  refreshKey: number;
   onBranchChange: (id: string) => void;
   onDoctorIdsChange: (ids: string[]) => void;
   onDateChange: (date: Date) => void;
   onActiveTabChange: (tab: AppointmentTabId) => void;
   onSelectedAppointmentIdChange: (id: string | null) => void;
+  onOpenCreate: () => void;
+  onChanged: () => void;
 }
 
-// Window for the list-view fetch — broad enough to power "All" / "Upcoming"
-// without re-fetching when the user toggles the show-cancelled / tab options.
+// Window for the list-view fetch. Narrow enough to stay under the 500-event
+// API cap for busy clinics, wide enough to cover the "Upcoming" tab and the
+// last week of history surfaced in stat cards.
 function getWindow(selectedDate: Date): { start: Date; end: Date } {
   const start = new Date(selectedDate);
-  start.setMonth(start.getMonth() - 1);
+  start.setDate(start.getDate() - 7);
   start.setHours(0, 0, 0, 0);
   const end = new Date(selectedDate);
-  end.setMonth(end.getMonth() + 2);
+  end.setDate(end.getDate() + 30);
   end.setHours(0, 0, 0, 0);
   return { start, end };
 }
@@ -76,11 +79,14 @@ export function AppointmentsListView({
   selectedDate,
   selectedAppointmentId,
   activeTab,
+  refreshKey,
   onBranchChange,
   onDoctorIdsChange,
   onDateChange,
   onActiveTabChange,
   onSelectedAppointmentIdChange,
+  onOpenCreate,
+  onChanged,
 }: Props) {
   const [appointments, setAppointments] = useState<CalendarAppointment[]>([]);
   const [counts, setCounts] = useState<AppointmentCounts>({
@@ -98,8 +104,8 @@ export function AppointmentsListView({
   const [showCancelled, setShowCancelled] = useState(false);
   const [showNoShow, setShowNoShow] = useState(false);
 
-  // Dialog state
-  const [createOpen, setCreateOpen] = useState(false);
+  // Dialog state — the create dialog itself lives in the page shell (mounted
+  // once at top level). We only manage edit/cancel/delete locally.
   const [editId, setEditId] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<CalendarAppointment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CalendarAppointment | null>(null);
@@ -168,7 +174,7 @@ export function AppointmentsListView({
     } finally {
       setLoading(false);
     }
-  }, [branchId, doctorIds, selectedDate]);
+  }, [branchId, doctorIds, selectedDate, refreshKey]);
 
   useEffect(() => {
     fetchAll();
@@ -281,7 +287,7 @@ export function AppointmentsListView({
               activeTab === "today" || activeTab === "upcoming" ? (
                 <Button
                   size="sm"
-                  onClick={() => setCreateOpen(true)}
+                  onClick={onOpenCreate}
                   className="h-8 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" strokeWidth={2} />
@@ -306,29 +312,17 @@ export function AppointmentsListView({
           onEdit={() => setEditId(selectedAppointment.id)}
           onCancel={() => setCancelTarget(selectedAppointment)}
           onDelete={() => setDeleteTarget(selectedAppointment)}
-          onChanged={() => fetchAll()}
+          onChanged={onChanged}
         />
       )}
 
-      <CreateAppointmentDialog
-        open={createOpen}
-        isAdmin={isAdmin}
-        currentUserId={currentUserId}
-        prefilledPatient={null}
-        prefilledDoctor={null}
-        onClose={() => setCreateOpen(false)}
-        onCreated={() => {
-          setCreateOpen(false);
-          fetchAll();
-        }}
-      />
       <EditAppointmentDialog
         appointmentId={editId}
         isAdmin={isAdmin}
         onClose={() => setEditId(null)}
         onUpdated={() => {
           setEditId(null);
-          fetchAll();
+          onChanged();
         }}
       />
       <CancelAppointmentDialog
@@ -342,7 +336,7 @@ export function AppointmentsListView({
         onClose={() => setCancelTarget(null)}
         onCancelled={() => {
           setCancelTarget(null);
-          fetchAll();
+          onChanged();
         }}
       />
       <DeleteAppointmentDialog
@@ -356,7 +350,7 @@ export function AppointmentsListView({
         onClose={() => setDeleteTarget(null)}
         onDeleted={() => {
           setDeleteTarget(null);
-          fetchAll();
+          onChanged();
         }}
       />
       <Toaster richColors closeButton position="bottom-right" />

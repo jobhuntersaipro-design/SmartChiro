@@ -308,7 +308,10 @@ export function AppointmentsCalendarView({
   // ─── Drag-and-drop handler ───
   const conflictResolverRef = useRef<((override: boolean) => void) | null>(null);
 
-  const handleEventDrop = useCallback(
+  // Single mutation handler — react-big-calendar fires the same shape for
+  // both drop and resize, and `newDuration` derives correctly from `newEnd - newStart`
+  // for either gesture.
+  const handleEventMutation = useCallback(
     async ({
       event,
       start,
@@ -411,7 +414,6 @@ export function AppointmentsCalendarView({
     [currentUserId, fetchAppointments, isAdmin]
   );
 
-  const handleEventResize = handleEventDrop; // same logic
 
   // ─── Render ───
   if (branches.length === 0) {
@@ -538,8 +540,8 @@ export function AppointmentsCalendarView({
           onSelectEvent={(event: CalendarEvent, e: React.SyntheticEvent<HTMLElement>) =>
             handleSelectEvent(event, e)
           }
-          onEventDrop={handleEventDrop as never}
-          onEventResize={handleEventResize as never}
+          onEventDrop={handleEventMutation as never}
+          onEventResize={handleEventMutation as never}
           resizable
           step={15}
           timeslots={4}

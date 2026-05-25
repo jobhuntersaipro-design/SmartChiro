@@ -85,7 +85,7 @@ describe("GET /api/appointments/:id/reminders", () => {
     expect(body.reminders[0].channel).toBe("WHATSAPP");
   });
 
-  it("returns 403 for non-members", async () => {
+  it("returns 404 for non-members (avoids cross-branch enumeration)", async () => {
     const { u, a } = await buildFixture(null);
 
     vi.mocked(getCurrentUser).mockResolvedValue({ id: u.id } as never);
@@ -94,6 +94,6 @@ describe("GET /api/appointments/:id/reminders", () => {
     const res = await GET(new Request("http://x"), {
       params: Promise.resolve({ appointmentId: a.id }),
     });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
   });
 });

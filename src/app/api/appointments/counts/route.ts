@@ -54,6 +54,7 @@ export async function GET(req: Request): Promise<Response> {
     grouped,
     todayCount,
     upcomingCount,
+    staleCount,
   ] = await Promise.all([
     prisma.appointment.groupBy({
       by: ["status"],
@@ -74,6 +75,13 @@ export async function GET(req: Request): Promise<Response> {
         status: { in: ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS"] },
       },
     }),
+    prisma.appointment.count({
+      where: {
+        ...baseWhere,
+        dateTime: { lt: now },
+        status: "SCHEDULED",
+      },
+    }),
   ]);
 
   const counts = {
@@ -83,7 +91,7 @@ export async function GET(req: Request): Promise<Response> {
     completed: 0,
     cancelled: 0,
     noshow: 0,
-    stale: 0,
+    stale: staleCount,
   };
 
   for (const row of grouped) {
@@ -93,15 +101,6 @@ export async function GET(req: Request): Promise<Response> {
     else if (row.status === "CANCELLED") counts.cancelled = c;
     else if (row.status === "NO_SHOW") counts.noshow = c;
   }
-
-  // Stale = SCHEDULED appointments whose dateTime is in the past
-  counts.stale = await prisma.appointment.count({
-    where: {
-      ...baseWhere,
-      dateTime: { lt: now },
-      status: "SCHEDULED",
-    },
-  });
 
   return NextResponse.json({ counts });
 }

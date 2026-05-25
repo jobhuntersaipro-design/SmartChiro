@@ -88,6 +88,9 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
 
   // ─── Create dialog (top-level) ───
   const [createOpen, setCreateOpen] = useState(false);
+  // Bump on create/edit/cancel/delete so the list re-fetches without us having
+  // to mutate `selectedDate` (which would also trigger an unrelated URL push).
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Persist view mode choice (skip the very first render before localStorage is read)
   useEffect(() => {
@@ -108,7 +111,10 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
       if (selectedAppointmentId) params.set("appointment", selectedAppointmentId);
     }
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [viewMode, branchId, doctorIds, selectedDate, activeTab, selectedAppointmentId, router]);
+    // `router` is stable across renders in Next App Router — excluded to avoid
+    // a needless redundant URL-replace cycle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, branchId, doctorIds, selectedDate, activeTab, selectedAppointmentId]);
 
   return (
     <div className="flex flex-col gap-4 h-[calc(100vh-110px)]">
@@ -179,11 +185,14 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
             selectedDate={selectedDate}
             selectedAppointmentId={selectedAppointmentId}
             activeTab={activeTab}
+            refreshKey={refreshKey}
             onBranchChange={setBranchId}
             onDoctorIdsChange={setDoctorIds}
             onDateChange={setSelectedDate}
             onActiveTabChange={setActiveTab}
             onSelectedAppointmentIdChange={setSelectedAppointmentId}
+            onOpenCreate={() => setCreateOpen(true)}
+            onChanged={() => setRefreshKey((k) => k + 1)}
           />
         ) : (
           <div className="px-6 pb-4 h-full">
@@ -207,8 +216,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
         onClose={() => setCreateOpen(false)}
         onCreated={() => {
           setCreateOpen(false);
-          // Force list/calendar re-fetch by bumping the date state to itself.
-          setSelectedDate(new Date(selectedDate.getTime()));
+          setRefreshKey((k) => k + 1);
         }}
       />
     </div>

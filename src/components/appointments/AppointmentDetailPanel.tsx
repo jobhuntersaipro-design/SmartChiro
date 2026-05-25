@@ -83,7 +83,9 @@ export function AppointmentDetailPanel({
   }, [apptId]);
 
   // Lazy-load extra patient + linked visit info — keyed on appointment id so we
-  // don't re-fetch on every parent render.
+  // don't re-fetch on every parent render. A single GET returns everything we
+  // need; the `recentVisits` array includes appointmentId so we can find the
+  // visit linked to this appointment without a second round-trip.
   const apptIdForFetch = appointment?.id;
   const patientId = appointment?.patient.id;
   useEffect(() => {
@@ -102,17 +104,9 @@ export function AppointmentDetailPanel({
           dateOfBirth: j.patient.dateOfBirth ?? null,
           icNumber: j.patient.icNumber ?? null,
         });
-      })
-      .catch(() => {});
-
-    fetch(`/api/patients/${patientId}?include=detail`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (cancelled || !j?.patient?.visits) return;
-        const linked = j.patient.visits.find(
-          (v: { appointmentId: string | null; id: string; visitDate: string }) =>
-            v.appointmentId === apptIdForFetch
-        );
+        const visits: Array<{ id: string; visitDate: string; appointmentId: string | null }> =
+          j.patient.recentVisits ?? [];
+        const linked = visits.find((v) => v.appointmentId === apptIdForFetch);
         if (linked) setLinkedVisit({ id: linked.id, visitDate: linked.visitDate });
       })
       .catch(() => {});

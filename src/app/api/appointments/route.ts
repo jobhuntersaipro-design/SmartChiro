@@ -7,6 +7,7 @@ import { overlapsBreak } from "@/lib/availability";
 import { logAppointmentEvent } from "@/lib/appointment-audit";
 import { sendDoctorBookingNotification } from "@/lib/email";
 import { treatmentLabelFor } from "@/lib/treatment-colors";
+import type { AppointmentStatus } from "@/types/appointment";
 
 const TREATMENT_TYPES = [
   "INITIAL_CONSULT",
@@ -63,14 +64,9 @@ export async function GET(req: Request): Promise<Response> {
   // - completed/cancelled/noshow: explicit single-status filters
   // - today: SCHEDULED+CHECKED_IN+IN_PROGRESS within today's bounds
   // - upcoming: any non-terminal status, server time forward
-  type ApptStatus =
-    | "SCHEDULED"
-    | "CHECKED_IN"
-    | "IN_PROGRESS"
-    | "COMPLETED"
-    | "CANCELLED"
-    | "NO_SHOW";
-  let statusFilter: { in?: ApptStatus[]; notIn?: ApptStatus[]; equals?: ApptStatus } | undefined =
+  let statusFilter:
+    | { in?: AppointmentStatus[]; notIn?: AppointmentStatus[]; equals?: AppointmentStatus }
+    | undefined =
     includeCancelled
       ? undefined
       : { notIn: ["CANCELLED", "NO_SHOW"] };
@@ -237,7 +233,9 @@ export async function POST(req: Request): Promise<Response> {
 
   // Break-time confirmation gate. If the chosen slot overlaps the doctor's break,
   // require the client to retry with `forceBookOnBreak: true` after showing a confirm dialog.
-  if (!forceBookOnBreak) {
+  // Only OWNER/ADMIN can use the bypass — a DOCTOR sending the flag is treated as if absent.
+  const canBypassBreak = forceBookOnBreak === true && role !== "DOCTOR";
+  if (!canBypassBreak) {
     const docBreaks = await prisma.doctorBreakTime.findMany({
       where: { userId: doctorId, branchId: patient.branchId },
       select: { userId: true, branchId: true, dayOfWeek: true, startMinute: true, endMinute: true, label: true },

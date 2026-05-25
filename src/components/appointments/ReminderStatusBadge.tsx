@@ -21,9 +21,11 @@ export function ReminderStatusBadge({ appointmentId }: Props) {
   const [summary, setSummary] = useState<Summary>("none");
 
   useEffect(() => {
+    let cancelled = false;
     fetch(`/api/appointments/${appointmentId}/reminders`)
-      .then((r) => r.json())
-      .then((j: { reminders: Reminder[] }) => {
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { reminders: Reminder[] } | null) => {
+        if (cancelled || !j) return;
         setRows(j.reminders);
         if (j.reminders.length === 0) return setSummary("none");
         if (j.reminders.some((r) => r.status === "FAILED")) return setSummary("failed");
@@ -32,7 +34,14 @@ export function ReminderStatusBadge({ appointmentId }: Props) {
           return setSummary("sent");
         }
         setSummary("pending");
+      })
+      .catch(() => {
+        // Network/parse failure — stay in "none" (badge is hidden). The detail
+        // panel still works without the reminder summary.
       });
+    return () => {
+      cancelled = true;
+    };
   }, [appointmentId]);
 
   if (summary === "none") return null;

@@ -60,7 +60,7 @@ export async function GET(
       branch: { select: { id: true, name: true } },
       _count: { select: { visits: true, xrays: true, appointments: true, documents: true } },
       visits: {
-        select: { id: true, visitDate: true, subjective: true, visitType: true },
+        select: { id: true, visitDate: true, subjective: true, visitType: true, appointmentId: true },
         orderBy: { visitDate: "desc" },
         take: 5,
       },
@@ -181,6 +181,7 @@ export async function GET(
         visitDate: v.visitDate.toISOString(),
         subjective: v.subjective,
         visitType: v.visitType,
+        appointmentId: v.appointmentId,
       })),
       xrays: patient.xrays.map((x) => ({
         id: x.id,

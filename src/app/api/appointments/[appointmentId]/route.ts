@@ -28,7 +28,7 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const role = await getUserBranchRole(user.id, appt.branchId);
-  if (!role) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   return NextResponse.json({
     appointment: {
