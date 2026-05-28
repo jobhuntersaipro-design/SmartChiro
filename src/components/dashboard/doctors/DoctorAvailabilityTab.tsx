@@ -16,6 +16,10 @@ interface Props {
   doctorId: string;
   doctor: DoctorDetail;
   currentUserId: string;
+  /** Threaded from the page-level server component: caller has an OWNER/ADMIN
+   * seat somewhere, or is editing themselves. The API still enforces real
+   * branch-scoped RBAC; this just hides affordances the server would reject. */
+  isAdminLike: boolean;
 }
 
 const LEAVE_TYPES = [
@@ -59,16 +63,16 @@ function timeStrToMinutes(s: string): number {
   return h * 60 + m;
 }
 
-export function DoctorAvailabilityTab({ doctorId, doctor, currentUserId }: Props) {
-  // The DOCTOR's own role at the branch is always DOCTOR (or OWNER if they own it),
-  // not the CALLER's role. Optimistically render the edit UI for everyone — the API
-  // enforces the actual RBAC (DOCTOR can only edit own; OWNER/ADMIN can edit anyone
-  // at their branch). Failed mutations surface a toast / error inline.
-  const canEdit = useMemo(() => {
-    void doctor;
-    void currentUserId;
-    return true;
-  }, [doctor, currentUserId]);
+export function DoctorAvailabilityTab({ doctorId, doctor, currentUserId, isAdminLike }: Props) {
+  // canEdit gates the visible affordances. The API still enforces the actual
+  // branch-scoped RBAC (DOCTOR edits own; OWNER/ADMIN edits any doctor at
+  // their branch). A self-view is always editable; otherwise OWNER/ADMIN
+  // anywhere is allowed to attempt.
+  void doctor;
+  const canEdit = useMemo(
+    () => isAdminLike || currentUserId === doctorId,
+    [isAdminLike, currentUserId, doctorId]
+  );
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">

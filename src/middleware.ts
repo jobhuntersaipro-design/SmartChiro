@@ -32,5 +32,10 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
+  // The previous matcher used `.*\\.png$` which excluded ALL .png paths
+  // globally (including any future /dashboard/*.png routes). Narrow to the
+  // Next.js static asset prefixes plus the root favicon/logo files only.
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon\\.ico|logo\\.png|.*\\.(?:js|css|map|svg|ico)$).*)',
+  ],
 }

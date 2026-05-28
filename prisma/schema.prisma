@@ -666,6 +666,10 @@ model Appointment {
   @@index([doctorId])
   @@index([dateTime])
   @@index([status])
+  // Composite for the calendar window query — filters by branch + date range
+  // together. Without this Postgres can only use one of the single-column
+  // indexes and scans the rest.
+  @@index([branchId, dateTime])
 }
 
 // ─── Billing ───

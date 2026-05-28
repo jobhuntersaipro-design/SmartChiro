@@ -72,20 +72,43 @@ export async function materializePending(now: Date): Promise<number> {
   return inserted;
 }
 
-export async function dispatchDue(now: Date): Promise<{ processed: number }> {
-  const due = await prisma.appointmentReminder.findMany({
-    where: { status: "PENDING", scheduledFor: { lte: now } },
-    orderBy: { scheduledFor: "asc" },
-    take: BATCH_SIZE,
-    select: { id: true },
-  });
+// How long a claimed row is invisible to other dispatchers. processOne should
+// always finish well under this window; if the runner crashes, the row
+// becomes visible again on the next cron tick after this many minutes.
+const CLAIM_LEASE_MS = 15 * 60 * 1000;
 
-  let processed = 0;
-  for (const { id } of due) {
-    await processOne(id, now);
-    processed++;
-  }
-  return { processed };
+export async function dispatchDue(now: Date): Promise<{ processed: number }> {
+  // Atomically claim a batch using Postgres `FOR UPDATE SKIP LOCKED` so two
+  // concurrent cron invocations can't double-dispatch the same reminder.
+  // The claim is implemented by bumping `scheduledFor` past `now`, so the
+  // standard `status: PENDING AND scheduledFor <= now` filter won't see it
+  // again until the lease expires (or processOne updates the row to its
+  // terminal state).
+  const lease = new Date(now.getTime() + CLAIM_LEASE_MS);
+  const claimed = await prisma.$queryRaw<Array<{ id: string }>>`
+    UPDATE "AppointmentReminder"
+    SET "scheduledFor" = ${lease}
+    WHERE id IN (
+      SELECT id FROM "AppointmentReminder"
+      WHERE status = 'PENDING' AND "scheduledFor" <= ${now}
+      ORDER BY "scheduledFor" ASC
+      LIMIT ${BATCH_SIZE}
+      FOR UPDATE SKIP LOCKED
+    )
+    RETURNING id
+  `;
+
+  // Process concurrently — processOne has its own try/catch at the channel
+  // boundary, so a single failure doesn't break the batch.
+  await Promise.all(
+    claimed.map(({ id }) =>
+      processOne(id, now).catch((e) =>
+        console.error("processOne failed", { reminderId: id, error: e })
+      )
+    )
+  );
+
+  return { processed: claimed.length };
 }
 
 async function processOne(reminderId: string, now: Date): Promise<void> {

@@ -20,30 +20,23 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     select: { id: true },
   });
 
-  // Allow reading audit history for already-deleted branches if any rows exist
+  // Branch no longer exists → 404 unconditionally. The previous behavior of
+  // allowing audit-log access for callers who authored rows acted as a
+  // timing-attack oracle: someone evicted from a branch could probe whether
+  // a branch ID had ever existed in the audit log. Audit history for deleted
+  // branches should be reachable only via a future ADMIN-scoped route.
   if (!branch) {
-    const orphanRows = await prisma.branchAuditLog.count({ where: { branchId } });
-    if (orphanRows === 0) {
-      return NextResponse.json({ error: "Branch not found" }, { status: 404 });
-    }
-    // No live branch → no membership to check → only allow if caller authored at least one row
-    const authoredRows = await prisma.branchAuditLog.count({
-      where: { branchId, actorId: session.user.id },
-    });
-    if (authoredRows === 0) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-  } else {
-    const membership = await prisma.branchMember.findUnique({
-      where: { userId_branchId: { userId: session.user.id, branchId } },
-    });
-    if (!membership) {
-      // Match existing pattern: cross-branch leak returns 404, not 403
-      return NextResponse.json({ error: "Branch not found" }, { status: 404 });
-    }
-    if (membership.role === "DOCTOR") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+  }
+  const membership = await prisma.branchMember.findUnique({
+    where: { userId_branchId: { userId: session.user.id, branchId } },
+  });
+  if (!membership) {
+    // Match existing pattern: cross-branch leak returns 404, not 403
+    return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+  }
+  if (membership.role === "DOCTOR") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const limitParam = parseInt(req.nextUrl.searchParams.get("limit") ?? "", 10);

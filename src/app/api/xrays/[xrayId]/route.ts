@@ -94,8 +94,15 @@ export async function PATCH(
     const { title, bodyRegion, viewType, status } = body;
 
     const data: Record<string, unknown> = {};
-    if (title !== undefined)
-      data.title = typeof title === "string" ? title.slice(0, 200) : null;
+    if (title !== undefined) {
+      if (title !== null && typeof title !== "string") {
+        return NextResponse.json(
+          { error: "VALIDATION_ERROR", message: "title must be a string or null." },
+          { status: 400 }
+        );
+      }
+      data.title = title === null ? null : title.slice(0, 200);
+    }
     if (bodyRegion !== undefined) {
       if (bodyRegion !== null && !ALLOWED_BODY_REGIONS.includes(bodyRegion)) {
         return NextResponse.json(

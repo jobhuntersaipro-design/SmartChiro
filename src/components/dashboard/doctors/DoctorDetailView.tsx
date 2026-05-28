@@ -19,6 +19,10 @@ import { DoctorAvailabilityTab } from "./DoctorAvailabilityTab";
 interface DoctorDetailViewProps {
   doctorId: string;
   currentUserId: string;
+  /** True if the caller has an OWNER/ADMIN seat anywhere, or is viewing their
+   * own profile. Drives UI gating for the Availability tab — the API enforces
+   * the real branch-scoped RBAC regardless. */
+  isAdminLike: boolean;
 }
 
 const TABS = [
@@ -40,7 +44,7 @@ function getInitials(name: string | null, email: string): string {
   return email.slice(0, 2).toUpperCase();
 }
 
-export function DoctorDetailView({ doctorId, currentUserId }: DoctorDetailViewProps) {
+export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: DoctorDetailViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabId) || "overview";
@@ -242,7 +246,12 @@ export function DoctorDetailView({ doctorId, currentUserId }: DoctorDetailViewPr
         <DoctorScheduleTab doctor={doctor} />
       )}
       {activeTab === "availability" && (
-        <DoctorAvailabilityTab doctorId={doctorId} doctor={doctor} currentUserId={currentUserId} />
+        <DoctorAvailabilityTab
+          doctorId={doctorId}
+          doctor={doctor}
+          currentUserId={currentUserId}
+          isAdminLike={isAdminLike}
+        />
       )}
       {activeTab === "professional" && (
         <DoctorProfessionalTab doctor={doctor} />

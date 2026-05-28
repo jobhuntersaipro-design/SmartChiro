@@ -25,13 +25,21 @@ export async function GET(
     where: { userId_branchId: { userId: session.user.id, branchId } },
   });
   if (!membership) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Cross-branch leak → 404 (not 403) to match the convention everywhere
+    // else in the codebase.
+    return NextResponse.json({ error: "Branch not found" }, { status: 404 });
   }
 
   // Build where clause
   const where: Record<string, unknown> = { branchId };
 
-  if (doctorId) {
+  // DOCTOR-scoped read: the patient-detail endpoint enforces per-doctor
+  // isolation, but this branch-scoped endpoint didn't — a DOCTOR could list
+  // every patient in the branch. Restrict to their assigned patients.
+  if (membership.role === "DOCTOR") {
+    where.doctorId = session.user.id;
+  } else if (doctorId) {
+    // OWNER/ADMIN keep the explicit doctorId filter.
     where.doctorId = doctorId;
   }
 

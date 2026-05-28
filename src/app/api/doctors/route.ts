@@ -272,7 +272,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Helper to build DoctorListItem from userId
+// Helper to build DoctorListItem from userId. Folds the three count queries
+// into the same Prisma call so we make one DB round-trip instead of four.
 async function buildDoctorListItem(userId: string): Promise<DoctorListItem> {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
@@ -281,14 +282,15 @@ async function buildDoctorListItem(userId: string): Promise<DoctorListItem> {
       branchMemberships: {
         include: { branch: { select: { id: true, name: true } } },
       },
+      _count: {
+        select: {
+          assignedPatients: true,
+          visits: true,
+          uploadedXrays: true,
+        },
+      },
     },
   });
-
-  const [patientCount, visitCount, xrayCount] = await Promise.all([
-    prisma.patient.count({ where: { doctorId: userId } }),
-    prisma.visit.count({ where: { doctorId: userId } }),
-    prisma.xray.count({ where: { uploadedById: userId } }),
-  ]);
 
   return {
     id: user.id,
@@ -304,7 +306,11 @@ async function buildDoctorListItem(userId: string): Promise<DoctorListItem> {
       role: m.role,
       memberId: m.id,
     })),
-    stats: { patientCount, visitCount, xrayCount },
+    stats: {
+      patientCount: user._count.assignedPatients,
+      visitCount: user._count.visits,
+      xrayCount: user._count.uploadedXrays,
+    },
     createdAt: user.createdAt.toISOString(),
   };
 }

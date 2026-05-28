@@ -25,6 +25,8 @@ export function validateTemplate(tpl: string): ValidateResult {
 export function renderTemplate(tpl: string, ctx: TemplateContext): string {
   const v = validateTemplate(tpl);
   if (!v.ok) throw new Error(v.message);
+  // Single-pass replace — values inserted here are NOT re-scanned for `{x}`
+  // placeholders, so a name like "Hi {date}" stays literal in the output.
   return tpl.replace(/\{(\w+)\}/g, (_, name: string) => {
     return ctx[name as keyof TemplateContext];
   });

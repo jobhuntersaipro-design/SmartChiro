@@ -115,11 +115,9 @@ export async function GET(
     });
     nextAppointment = upcoming?.dateTime.toISOString() ?? null;
 
-    // Visit counts by type
-    const allVisits = await prisma.visit.findMany({
-      where: { patientId },
-      select: { visitType: true },
-    });
+    // Visit counts by type — let Postgres aggregate instead of loading every
+    // visit row into Node (a patient with hundreds of visits would otherwise
+    // ship a large result set just to compute a 5-bucket count).
     visitsByType = {
       initial: 0,
       follow_up: 0,
@@ -127,9 +125,14 @@ export async function GET(
       reassessment: 0,
       discharge: 0,
     };
-    for (const v of allVisits) {
-      const t = v.visitType ?? "follow_up";
-      if (t in visitsByType) visitsByType[t]++;
+    const grouped = await prisma.visit.groupBy({
+      by: ["visitType"],
+      where: { patientId },
+      _count: { _all: true },
+    });
+    for (const row of grouped) {
+      const t = row.visitType ?? "follow_up";
+      if (t in visitsByType) visitsByType[t] = row._count._all;
     }
   }
 
@@ -238,6 +241,7 @@ export async function PATCH(
 
   const VALID_REMINDER_CHANNELS = ["WHATSAPP", "EMAIL", "BOTH", "NONE"] as const;
   const VALID_LANGUAGES = ["en", "ms"] as const;
+  const VALID_PATIENT_STATUSES = ["active", "inactive", "discharged"] as const;
   if (reminderChannel !== undefined && reminderChannel !== null && !VALID_REMINDER_CHANNELS.includes(reminderChannel)) {
     return NextResponse.json(
       { error: `Invalid reminderChannel. Must be one of: ${VALID_REMINDER_CHANNELS.join(", ")}` },
@@ -247,6 +251,12 @@ export async function PATCH(
   if (preferredLanguage !== undefined && preferredLanguage !== null && !VALID_LANGUAGES.includes(preferredLanguage)) {
     return NextResponse.json(
       { error: `Invalid preferredLanguage. Must be one of: ${VALID_LANGUAGES.join(", ")}` },
+      { status: 400 }
+    );
+  }
+  if (status !== undefined && status !== null && !VALID_PATIENT_STATUSES.includes(status)) {
+    return NextResponse.json(
+      { error: `Invalid status. Must be one of: ${VALID_PATIENT_STATUSES.join(", ")}` },
       { status: 400 }
     );
   }

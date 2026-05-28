@@ -7,6 +7,20 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 const TOKEN_EXPIRY_HOURS = 24
 
+/**
+ * Minimal HTML escape for values interpolated into email HTML templates.
+ * Patient names, branch names, etc. can contain `<`/`>`/`&` characters that
+ * would otherwise break the rendered email or inject unintended markup.
+ */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export async function createVerificationToken(email: string): Promise<string> {
   const token = randomBytes(32).toString('hex')
   const expires = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000)
@@ -46,7 +60,7 @@ export async function sendVerificationEmail(email: string, name: string) {
           Verify your email
         </h1>
         <p style="color: #273951; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
-          Hi ${name}, thanks for signing up for SmartChiro. Please verify your email address to get started.
+          Hi ${escapeHtml(name)}, thanks for signing up for SmartChiro. Please verify your email address to get started.
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
           <a href="${verifyUrl}" style="display: inline-block; background: #533afd; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
@@ -116,7 +130,7 @@ export async function sendPasswordResetEmail(
           Reset your password
         </h1>
         <p style="color: #273951; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
-          Hi ${name}, we received a request to reset your SmartChiro password. Click the button below to choose a new one. If you didn't request this, you can safely ignore this email — your password won't change.
+          Hi ${escapeHtml(name)}, we received a request to reset your SmartChiro password. Click the button below to choose a new one. If you didn't request this, you can safely ignore this email — your password won't change.
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
           <a href="${resetUrl}" style="display: inline-block; background: #533afd; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
@@ -173,12 +187,15 @@ export async function sendDoctorBookingNotification(args: {
     minute: '2-digit',
     hour12: true,
   })
-  const greeting = args.doctorName ? `Hi ${args.doctorName.split(' ')[0]},` : 'Hi,'
+  const greetingName = args.doctorName ? args.doctorName.split(' ')[0] : null
+  const greeting = greetingName ? `Hi ${escapeHtml(greetingName)},` : 'Hi,'
+  const patientNameSafe = escapeHtml(args.patientName)
+  const branchNameSafe = escapeHtml(args.branchName)
   const treatmentLine = args.treatmentLabel
-    ? `<p style="margin: 6px 0; color: #425466;"><strong>Treatment:</strong> ${args.treatmentLabel}</p>`
+    ? `<p style="margin: 6px 0; color: #425466;"><strong>Treatment:</strong> ${escapeHtml(args.treatmentLabel)}</p>`
     : ''
   const bookedByLine = args.bookedByName
-    ? `<p style="margin: 6px 0; color: #697386; font-size: 13px;">Booked by ${args.bookedByName}</p>`
+    ? `<p style="margin: 6px 0; color: #697386; font-size: 13px;">Booked by ${escapeHtml(args.bookedByName)}</p>`
     : ''
   try {
     await resend.emails.send({
@@ -190,9 +207,9 @@ export async function sendDoctorBookingNotification(args: {
           <p style="margin: 0 0 16px; font-size: 15px;">${greeting}</p>
           <p style="margin: 0 0 16px; font-size: 15px;">A new appointment has just been booked on your calendar.</p>
           <div style="background: #F6F9FC; border: 1px solid #e5edf5; border-radius: 6px; padding: 16px; margin: 16px 0;">
-            <p style="margin: 0 0 8px; font-size: 17px; font-weight: 600;">${args.patientName}</p>
+            <p style="margin: 0 0 8px; font-size: 17px; font-weight: 600;">${patientNameSafe}</p>
             <p style="margin: 6px 0; color: #425466;"><strong>When:</strong> ${dateStr} (${args.duration} min)</p>
-            <p style="margin: 6px 0; color: #425466;"><strong>Branch:</strong> ${args.branchName}</p>
+            <p style="margin: 6px 0; color: #425466;"><strong>Branch:</strong> ${branchNameSafe}</p>
             ${treatmentLine}
             ${bookedByLine}
           </div>
@@ -202,7 +219,7 @@ export async function sendDoctorBookingNotification(args: {
           <p style="margin: 32px 0 0; font-size: 12px; color: #697386;">SmartChiro · Appointment notification</p>
         </div>
       `,
-      text: `${greeting}\n\nA new appointment has been booked.\n\nPatient: ${args.patientName}\nWhen: ${dateStr} (${args.duration} min)\nBranch: ${args.branchName}${args.treatmentLabel ? `\nTreatment: ${args.treatmentLabel}` : ''}${args.bookedByName ? `\nBooked by: ${args.bookedByName}` : ''}\n\nView: ${args.appointmentUrl}`,
+      text: `${greetingName ? `Hi ${greetingName},` : 'Hi,'}\n\nA new appointment has been booked.\n\nPatient: ${args.patientName}\nWhen: ${dateStr} (${args.duration} min)\nBranch: ${args.branchName}${args.treatmentLabel ? `\nTreatment: ${args.treatmentLabel}` : ''}${args.bookedByName ? `\nBooked by: ${args.bookedByName}` : ''}\n\nView: ${args.appointmentUrl}`,
     })
   } catch (e) {
     console.error('appointment-booked notification failed', { to: args.to, error: e })

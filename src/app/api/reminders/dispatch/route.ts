@@ -21,5 +21,9 @@ async function handler(req: Request): Promise<Response> {
   return NextResponse.json({ ok: true, inserted, processed });
 }
 
+// Both methods are exported because Vercel Cron's default trigger is GET;
+// `vercel.json` requests POST explicitly, but we keep GET as a safety net so
+// a config drift doesn't silently disable the dispatch loop. Both handlers
+// gate on CRON_SECRET, so unauthorized prefetch / browser hits 401.
 export const POST = handler;
 export const GET = handler;
