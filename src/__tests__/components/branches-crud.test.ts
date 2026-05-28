@@ -17,7 +17,6 @@ import type { BranchAuditEntry } from '@/types/branch'
 describe('branchToFormData', () => {
   it('maps a full branch to form data, converting nulls to empty strings', () => {
     const data = branchToFormData({
-      id: 'b1',
       name: 'KLCC',
       address: null,
       city: 'KL',
@@ -28,10 +27,6 @@ describe('branchToFormData', () => {
       website: null,
       operatingHours: null,
       treatmentRooms: null,
-      ownerName: 'Dr Lam',
-      licenseNumber: null,
-      specialties: null,
-      insuranceProviders: null,
       billingContactName: null,
       billingContactEmail: null,
       billingContactPhone: null,
@@ -46,10 +41,9 @@ describe('branchToFormData', () => {
 
   it('preserves an integer treatmentRooms value', () => {
     const data = branchToFormData({
-      id: 'b1', name: 'X', address: null, city: null, state: null, zip: null,
+      name: 'X', address: null, city: null, state: null, zip: null,
       phone: null, email: null, website: null, operatingHours: null,
-      treatmentRooms: 4, ownerName: null, licenseNumber: null, specialties: null,
-      insuranceProviders: null, billingContactName: null,
+      treatmentRooms: 4, billingContactName: null,
       billingContactEmail: null, billingContactPhone: null,
     })
     expect(data.treatmentRooms).toBe(4)

@@ -11,7 +11,7 @@ let ownerId: string, adminId: string, doctorId: string, outsiderId: string
 let branchId: string, patientId: string, xrayId: string
 
 function req(method: string, url: string, body?: Record<string, unknown>) {
-  const init: RequestInit = { method, headers: { 'Content-Type': 'application/json' } }
+  const init: ConstructorParameters<typeof NextRequest>[1] = { method, headers: { 'Content-Type': 'application/json' } }
   if (body) init.body = JSON.stringify(body)
   return new NextRequest(`http://localhost:3000${url}`, init)
 }

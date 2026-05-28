@@ -29,9 +29,14 @@ function createTestShape(id: string, label: string): BaseShape {
     style: {
       strokeColor: "#FF0000",
       strokeWidth: 2,
+      strokeOpacity: 1,
       fillColor: null,
-      opacity: 1,
+      fillOpacity: 1,
+      lineDash: [],
     },
+    text: null,
+    fontSize: null,
+    measurement: null,
   };
 }
 

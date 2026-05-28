@@ -353,6 +353,7 @@ describe('API response shapes', () => {
       lastVisit: null,
       totalVisits: 5,
       totalXrays: 2,
+      upcomingAppointment: null,
       createdAt: '2026-01-01T00:00:00Z',
       xrays: [],
       initialTreatmentFee: null,
@@ -404,17 +405,17 @@ describe('API response shapes', () => {
       { visitType: null },
     ]
 
-    const filterType = 'follow_up'
-    const filtered = visits.filter((v) =>
-      filterType === 'all' ? true : v.visitType === filterType,
-    )
+    const applyFilter = (filterType: 'follow_up' | 'all') =>
+      filterType === 'all'
+        ? visits
+        : visits.filter((v) => v.visitType === filterType)
+
+    const filtered = applyFilter('follow_up')
     expect(filtered).toHaveLength(2)
     expect(filtered.every((v) => v.visitType === 'follow_up')).toBe(true)
 
     // "all" filter returns everything
-    const allFiltered = visits.filter((v) =>
-      'all' === 'all' ? true : v.visitType === 'all',
-    )
+    const allFiltered = applyFilter('all')
     expect(allFiltered).toHaveLength(5)
   })
 })

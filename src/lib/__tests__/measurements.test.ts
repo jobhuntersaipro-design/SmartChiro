@@ -333,7 +333,6 @@ describe("nextMeasurementId", () => {
 function s(over: Partial<BaseShape> & { id: string }): BaseShape {
   // Tests only touch id + pointRefs; other fields are filler so the cast is safe.
   return {
-    id: over.id,
     type: "line",
     label: null,
     zIndex: 0,

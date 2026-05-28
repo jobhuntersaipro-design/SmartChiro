@@ -24,7 +24,6 @@ async function createTestImage(w = 100, h = 100): Promise<Buffer> {
 function makeShape(overrides: Partial<BaseShape> & { type: BaseShape["type"] }): BaseShape {
   return {
     id: `shape-${Math.random().toString(36).slice(2, 8)}`,
-    type: overrides.type,
     label: null,
     zIndex: 0,
     visible: true,

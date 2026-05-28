@@ -18,7 +18,7 @@ describe("diffSnapshots", () => {
   });
 
   it("captures null-to-value transitions", () => {
-    const d = diffSnapshots({ notes: null }, { notes: "hello" });
+    const d = diffSnapshots<{ notes: string | null }>({ notes: null }, { notes: "hello" });
     expect(d.notes).toEqual({ from: null, to: "hello" });
   });
 });

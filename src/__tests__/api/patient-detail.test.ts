@@ -12,7 +12,7 @@ vi.mock('@/lib/auth', () => ({
 const TEST_PREFIX = `test-ptdtl-${Date.now()}`
 
 function createRequest(method: string, url: string, body?: Record<string, unknown>): NextRequest {
-  const init: RequestInit = { method, headers: { 'Content-Type': 'application/json' } }
+  const init: ConstructorParameters<typeof NextRequest>[1] = { method, headers: { 'Content-Type': 'application/json' } }
   if (body) init.body = JSON.stringify(body)
   return new NextRequest(`http://localhost:3000${url}`, init)
 }
