@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToR2, getPresignedDownloadUrl, buildExportKey } from "@/lib/r2";
 import { renderAnnotatedPng, renderAnnotatedPdf } from "@/lib/export-renderer";
+import { auth } from "@/lib/auth";
+import { canManageXray } from "@/lib/auth/xray";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
 
 type RouteParams = { params: Promise<{ xrayId: string; annotationId: string }> };
@@ -9,6 +11,14 @@ type RouteParams = { params: Promise<{ xrayId: string; annotationId: string }> }
 // POST /api/xrays/{xrayId}/annotations/{annotationId}/export
 export async function POST(request: NextRequest, { params }: RouteParams) {
   const { xrayId, annotationId } = await params;
+
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  if (!(await canManageXray(session.user.id, xrayId))) {
+    return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  }
 
   try {
     const body = await request.json();
@@ -25,16 +35,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Validate DPI for PDF
     const clampedDpi = Math.min(300, Math.max(72, dpi));
 
-    // Load annotation
+    // Load annotation and confirm it belongs to the xrayId in the URL.
     const annotation = await prisma.annotation.findUnique({
       where: { id: annotationId },
     });
 
-    if (!annotation) {
-      return NextResponse.json(
-        { error: "NOT_FOUND", message: "Annotation not found." },
-        { status: 404 }
-      );
+    if (!annotation || annotation.xrayId !== xrayId) {
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
     }
 
     // Load xray with patient and branch info

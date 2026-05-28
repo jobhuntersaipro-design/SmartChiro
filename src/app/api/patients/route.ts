@@ -150,8 +150,15 @@ export async function GET(request: NextRequest) {
         where.doctorId = doctorIdFilter
       }
     } else {
-      // DOCTOR: see only own patients, doctorId filter ignored
+      // DOCTOR: see only own patients, AND only within branches they are
+      // actually a member of (so an orphaned doctorId reference on a patient
+      // in another branch can't leak that patient).
+      const memberBranchIds = user?.branchMemberships.map((m) => m.branchId) ?? []
+      const targetBranchIds = branchIdFilter
+        ? memberBranchIds.includes(branchIdFilter) ? [branchIdFilter] : []
+        : memberBranchIds
       where.doctorId = userId
+      where.branchId = { in: targetBranchIds }
     }
 
     // Status filter
@@ -285,20 +292,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user's active branch, fall back to first membership
+    // Get user's active branch + ALL memberships (so we can resolve the role
+    // for the branch this patient will actually be created in, not the
+    // arbitrary first membership).
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
         activeBranchId: true,
         branchMemberships: {
           select: { branchId: true, role: true },
-          take: 1,
         },
       },
     })
 
     let branchId = user?.activeBranchId ?? user?.branchMemberships[0]?.branchId ?? null
-    const isOwnerOrAdmin = user?.branchMemberships[0]?.role === 'OWNER' || user?.branchMemberships[0]?.role === 'ADMIN'
 
     // If user has no branch at all, create a default one
     if (!branchId) {
@@ -319,6 +326,11 @@ export async function POST(request: NextRequest) {
         data: { activeBranchId: branchId },
       })
     }
+
+    // Resolve the caller's role within THIS branch (not branchMemberships[0]).
+    const membershipInBranch = user?.branchMemberships.find((m) => m.branchId === branchId)
+    const isOwnerOrAdmin =
+      membershipInBranch?.role === 'OWNER' || membershipInBranch?.role === 'ADMIN'
 
     // Resolve assigned doctor
     let assignedDoctorId = session.user.id

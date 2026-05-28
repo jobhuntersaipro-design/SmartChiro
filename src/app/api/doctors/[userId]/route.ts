@@ -50,10 +50,9 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       callerBranchIds.has(m.branchId)
     );
     if (!shared) {
-      return NextResponse.json(
-        { error: "Forbidden: no shared branch" },
-        { status: 403 }
-      );
+      // Return 404 (not 403) to avoid confirming the userId belongs to a
+      // doctor in some branch the caller can't see.
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
   }
 

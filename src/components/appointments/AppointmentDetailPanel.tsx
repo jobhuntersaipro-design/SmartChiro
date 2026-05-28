@@ -324,7 +324,7 @@ export function AppointmentDetailPanel({
             <h4 className="text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-2">
               Notes
             </h4>
-            <p className="text-[13px] text-[#425466] whitespace-pre-wrap break-words">
+            <p className="text-[13px] text-[#425466] whitespace-pre-wrap wrap-break-word">
               {appointment.notes}
             </p>
           </div>

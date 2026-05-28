@@ -286,8 +286,20 @@ export async function PATCH(
     );
   }
 
-  // Validate doctorId if changing
+  // Validate doctorId if changing — reassignment requires OWNER/ADMIN in the
+  // patient's branch. A DOCTOR who happens to be the patient's currently
+  // assigned doctor should not be able to hand them off to anyone else.
   if (doctorId !== undefined) {
+    const callerMembership = await prisma.branchMember.findUnique({
+      where: { userId_branchId: { userId: session.user.id, branchId: patientRef.branchId } },
+      select: { role: true },
+    });
+    if (callerMembership?.role !== "OWNER" && callerMembership?.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Only OWNER or ADMIN can reassign the patient's doctor" },
+        { status: 403 }
+      );
+    }
     const isMember = await prisma.branchMember.findUnique({
       where: { userId_branchId: { userId: doctorId, branchId: patientRef.branchId } },
     });

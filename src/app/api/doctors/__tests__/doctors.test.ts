@@ -167,7 +167,7 @@ describe('GET /api/doctors/[userId]', () => {
     expect(typeof json.doctor.stats.totalXrays).toBe('number')
   })
 
-  it('5. returns 403 if no shared branch', async () => {
+  it('5. returns 404 if no shared branch (avoids cross-branch enumeration)', async () => {
     // Create a totally isolated user
     const isolated = await prisma.user.create({
       data: { email: `${TEST_PREFIX}-isolated@test.com`, name: 'Isolated' },
@@ -184,7 +184,7 @@ describe('GET /api/doctors/[userId]', () => {
       createRequest('GET', `/api/doctors/${isolated.id}`),
       { params: Promise.resolve({ userId: isolated.id }) }
     )
-    expect(res.status).toBe(403)
+    expect(res.status).toBe(404)
 
     // Cleanup
     await prisma.branchMember.deleteMany({ where: { branchId: isolatedBranch.id } })

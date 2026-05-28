@@ -1,33 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { canManageXray } from "@/lib/auth/xray";
 
 type RouteParams = { params: Promise<{ xrayId: string; annotationId: string }> };
 
 // POST /api/xrays/{xrayId}/annotations/{annotationId}/fork — copy annotation
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteParams) {
   const { xrayId, annotationId } = await params;
 
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  if (!(await canManageXray(session.user.id, xrayId))) {
+    return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  }
+
   try {
-    const body = await request.json().catch(() => ({}));
-    const { createdById } = body as { createdById?: string };
-
-    // TODO: Replace with real auth
-    if (!createdById) {
-      return NextResponse.json(
-        { error: "UNAUTHORIZED", message: "Authentication required." },
-        { status: 401 }
-      );
-    }
-
     const source = await prisma.annotation.findUnique({
       where: { id: annotationId },
     });
 
-    if (!source) {
-      return NextResponse.json(
-        { error: "NOT_FOUND", message: "Annotation not found." },
-        { status: 404 }
-      );
+    // Confirm the source belongs to the xrayId in the URL — prevents forking
+    // an annotation from another xray under a spoofed URL segment.
+    if (!source || source.xrayId !== xrayId) {
+      return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
     }
 
     const newLabel = source.label ? `${source.label} (copy)` : "Annotation (copy)";
@@ -40,7 +38,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         imageAdjustments: source.imageAdjustments as object | undefined,
         version: 1,
         xrayId,
-        createdById,
+        createdById: session.user.id,
       },
     });
 

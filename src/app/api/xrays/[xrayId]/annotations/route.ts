@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { canManageXray } from "@/lib/auth/xray";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -10,19 +12,15 @@ export async function GET(
 ) {
   const { xrayId } = await params;
 
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  if (!(await canManageXray(session.user.id, xrayId))) {
+    return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  }
+
   try {
-    const xray = await prisma.xray.findUnique({
-      where: { id: xrayId },
-      select: { id: true },
-    });
-
-    if (!xray) {
-      return NextResponse.json(
-        { error: "NOT_FOUND", message: "X-ray not found." },
-        { status: 404 }
-      );
-    }
-
     const annotations = await prisma.annotation.findMany({
       where: { xrayId },
       select: {
@@ -55,22 +53,22 @@ export async function POST(
 ) {
   const { xrayId } = await params;
 
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  if (!(await canManageXray(session.user.id, xrayId))) {
+    return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  }
+
   try {
     const body = await request.json();
-    const { label, canvasState, imageAdjustments, createdById } = body;
+    const { label, canvasState, imageAdjustments } = body;
 
     if (!canvasState) {
       return NextResponse.json(
         { error: "MISSING_CANVAS_STATE", message: "canvasState is required." },
         { status: 400 }
-      );
-    }
-
-    // TODO: Replace createdById with real auth
-    if (!createdById) {
-      return NextResponse.json(
-        { error: "UNAUTHORIZED", message: "Authentication required." },
-        { status: 401 }
       );
     }
 
@@ -83,20 +81,13 @@ export async function POST(
       );
     }
 
-    // Verify xray exists and is READY
+    // Verify xray is READY (existence already checked by canManageXray)
     const xray = await prisma.xray.findUnique({
       where: { id: xrayId },
-      select: { id: true, status: true },
+      select: { status: true },
     });
 
-    if (!xray) {
-      return NextResponse.json(
-        { error: "NOT_FOUND", message: "X-ray not found." },
-        { status: 404 }
-      );
-    }
-
-    if (xray.status !== "READY") {
+    if (xray?.status !== "READY") {
       return NextResponse.json(
         { error: "XRAY_NOT_READY", message: "X-ray upload has not been confirmed." },
         { status: 400 }
@@ -111,7 +102,7 @@ export async function POST(
         imageAdjustments: imageAdjustments ?? undefined,
         version: 1,
         xrayId,
-        createdById,
+        createdById: session.user.id,
       },
     });
 

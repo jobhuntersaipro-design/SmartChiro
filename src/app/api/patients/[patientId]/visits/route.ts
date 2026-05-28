@@ -172,6 +172,31 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     }
   }
 
+  // Resolve attribution: OWNER/ADMIN can specify the treating doctor; DOCTOR
+  // always books the visit to themselves. Falls back to the caller when no
+  // doctorId is supplied so existing clients (e.g. doctors booking their own
+  // visits) keep working without code changes.
+  const callerMembership = await prisma.branchMember.findUnique({
+    where: { userId_branchId: { userId: session.user.id, branchId: patient.branchId } },
+    select: { role: true },
+  });
+  const isOwnerOrAdmin =
+    callerMembership?.role === "OWNER" || callerMembership?.role === "ADMIN";
+  let attributedDoctorId = session.user.id;
+  if (body.doctorId && isOwnerOrAdmin) {
+    const targetMembership = await prisma.branchMember.findUnique({
+      where: { userId_branchId: { userId: body.doctorId, branchId: patient.branchId } },
+      select: { userId: true },
+    });
+    if (!targetMembership) {
+      return NextResponse.json(
+        { error: "doctorId must be a member of the patient's branch" },
+        { status: 400 }
+      );
+    }
+    attributedDoctorId = body.doctorId;
+  }
+
   // Validate vitals ranges
   if (body.bloodPressureSys !== undefined && body.bloodPressureSys !== null) {
     if (body.bloodPressureSys < 50 || body.bloodPressureSys > 300) {
@@ -211,7 +236,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       referrals: body.referrals || null,
       nextVisitDays: body.nextVisitDays ?? null,
       patientId,
-      doctorId: session.user.id,
+      doctorId: attributedDoctorId,
       ...(body.questionnaire
         ? {
             questionnaire: {

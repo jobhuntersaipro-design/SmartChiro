@@ -34,37 +34,37 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Uniform response for new vs existing email to prevent account
+    // enumeration. The actual create + email send is skipped on collision
+    // but the response shape and status are identical.
+    const normalizedEmail = email.toLowerCase()
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: normalizedEmail },
+      select: { id: true },
     })
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'A user with this email already exists' },
-        { status: 409 }
-      )
-    }
+    if (!existingUser) {
+      const hashedPassword = await hash(password, 12)
 
-    const hashedPassword = await hash(password, 12)
+      await prisma.user.create({
+        data: {
+          name,
+          email: normalizedEmail,
+          password: hashedPassword,
+        },
+      })
 
-    await prisma.user.create({
-      data: {
-        name,
-        email: email.toLowerCase(),
-        password: hashedPassword,
-      },
-    })
-
-    // Send verification email (don't block registration if email fails)
-    try {
-      await sendVerificationEmail(email.toLowerCase(), name)
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError)
+      // Send verification email (don't block registration if email fails)
+      try {
+        await sendVerificationEmail(normalizedEmail, name)
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError)
+      }
     }
 
     return NextResponse.json(
-      { message: 'User registered successfully. Please check your email to verify your account.' },
-      { status: 201 }
+      { message: 'If this email is not already registered, a verification email has been sent.' },
+      { status: 200 }
     )
   } catch (error) {
     console.error('Registration error:', error)

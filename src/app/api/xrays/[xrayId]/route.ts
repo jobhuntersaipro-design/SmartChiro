@@ -22,6 +22,14 @@ export async function GET(
 ) {
   const { xrayId } = await params;
 
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  if (!(await canManageXray(session.user.id, xrayId))) {
+    return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+  }
+
   try {
     const xray = await prisma.xray.findUnique({
       where: { id: xrayId },
