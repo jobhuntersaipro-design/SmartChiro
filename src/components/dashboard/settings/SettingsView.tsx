@@ -276,7 +276,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name"
                   maxLength={100}
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
               <div>
@@ -288,7 +288,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +60 12 345 6789"
                   maxLength={20}
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
             </div>
@@ -299,7 +299,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               <Input
                 value={user.email}
                 disabled
-                className="h-9 rounded-[4px] border-[#e5edf5] bg-[#f6f9fc] text-[14px] text-[#64748d]"
+                className="h-9 rounded-md border-[#e5edf5] bg-[#f6f9fc] text-[14px] text-[#64748d]"
               />
               <p className="text-[12px] text-[#a3acb9] mt-1">
                 Email cannot be changed.
@@ -342,7 +342,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 setPhone(user.phone ?? "");
               }}
               disabled={!hasAccountChanges() || savingAccount}
-              className="rounded-[4px] border-[#e5edf5] text-[13px] cursor-pointer"
+              className="rounded-md border-[#e5edf5] text-[13px] cursor-pointer"
             >
               Cancel
             </Button>
@@ -350,7 +350,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               size="sm"
               onClick={handleSaveAccount}
               disabled={!hasAccountChanges() || savingAccount}
-              className="rounded-[4px] bg-[#533afd] hover:bg-[#4434d4] text-white text-[13px] cursor-pointer"
+              className="rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[13px] cursor-pointer"
             >
               {savingAccount ? (
                 <>
@@ -400,7 +400,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                      className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                     />
                     <button
                       type="button"
@@ -429,7 +429,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                   />
                   <button
                     type="button"
@@ -454,7 +454,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password"
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
             </div>
@@ -471,7 +471,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 setConfirmPassword("");
               }}
               disabled={!hasPasswordInput || savingPassword}
-              className="rounded-[4px] border-[#e5edf5] text-[13px] cursor-pointer"
+              className="rounded-md border-[#e5edf5] text-[13px] cursor-pointer"
             >
               Cancel
             </Button>
@@ -479,7 +479,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               size="sm"
               onClick={handleChangePassword}
               disabled={!hasPasswordInput || savingPassword}
-              className="rounded-[4px] bg-[#533afd] hover:bg-[#4434d4] text-white text-[13px] cursor-pointer"
+              className="rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[13px] cursor-pointer"
             >
               {savingPassword ? (
                 <>
@@ -510,7 +510,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             {/* Google */}
             <div className="flex items-center justify-between p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-[#f6f9fc]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#f6f9fc]">
                   <svg
                     className="h-5 w-5"
                     viewBox="0 0 24 24"
@@ -562,7 +562,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             {/* Email/Password */}
             <div className="flex items-center justify-between p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-[#f6f9fc]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#f6f9fc]">
                   <Lock
                     className="h-5 w-5 text-[#64748d]"
                     strokeWidth={1.5}

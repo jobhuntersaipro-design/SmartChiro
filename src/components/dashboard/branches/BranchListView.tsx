@@ -145,7 +145,7 @@ export function BranchListView({ userName }: BranchListViewProps) {
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
+          className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
           Create Branch
@@ -170,10 +170,10 @@ export function BranchListView({ userName }: BranchListViewProps) {
               placeholder="Search branches..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 rounded-[4px] border-[#e5edf5] bg-[#f6f9fc] text-[14px] placeholder:text-[#64748d] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+              className="pl-9 h-9 rounded-md border-[#e5edf5] bg-[#f6f9fc] text-[14px] placeholder:text-[#64748d] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
             />
           </div>
-          <div className="flex rounded-[4px] border border-[#e5edf5] overflow-hidden">
+          <div className="flex rounded-md border border-[#e5edf5] overflow-hidden">
             <button
               onClick={() => setViewMode("grid")}
               className={`flex h-9 w-9 items-center justify-center transition-colors cursor-pointer ${
@@ -203,7 +203,7 @@ export function BranchListView({ userName }: BranchListViewProps) {
           action={
             <Button
               onClick={() => setCreateOpen(true)}
-              className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] cursor-pointer"
+              className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] cursor-pointer"
             >
               Create Branch
             </Button>

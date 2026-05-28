@@ -123,7 +123,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
               variant="outline"
               size="sm"
               onClick={() => handleTabChange("settings")}
-              className="rounded-[4px] border-[#e5edf5] text-[14px] text-[#273951] cursor-pointer"
+              className="rounded-md border-[#e5edf5] text-[14px] text-[#273951] cursor-pointer"
             >
               <Pencil className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
               Edit

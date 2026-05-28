@@ -178,14 +178,14 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
                       type="time"
                       value={hours[day]?.open ?? "09:00"}
                       onChange={(e) => updateDayHours(day, "open", e.target.value)}
-                      className="w-28 h-8 rounded-[4px] border-[#e5edf5] text-[14px]"
+                      className="w-28 h-8 rounded-md border-[#e5edf5] text-[14px]"
                     />
                     <span className="text-[13px] text-[#64748d]">to</span>
                     <Input
                       type="time"
                       value={hours[day]?.close ?? "18:00"}
                       onChange={(e) => updateDayHours(day, "close", e.target.value)}
-                      className="w-28 h-8 rounded-[4px] border-[#e5edf5] text-[14px]"
+                      className="w-28 h-8 rounded-md border-[#e5edf5] text-[14px]"
                     />
                     <button
                       onClick={() => toggleDay(day)}
@@ -248,7 +248,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="h-9 px-6 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
+            className="h-9 px-6 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer"
           >
             {saving ? "Saving..." : "Save Changes"}
           </Button>
@@ -284,7 +284,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
             variant="outline"
             size="sm"
             onClick={() => setDeleteOpen(true)}
-            className="rounded-[4px] border-[#DF1B41]/30 text-[#DF1B41] hover:bg-[#DF1B41] hover:text-white text-[14px] cursor-pointer"
+            className="rounded-md border-[#DF1B41]/30 text-[#DF1B41] hover:bg-[#DF1B41] hover:text-white text-[14px] cursor-pointer"
           >
             Delete Branch
           </Button>

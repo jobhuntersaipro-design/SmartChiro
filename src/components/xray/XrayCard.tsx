@@ -81,12 +81,12 @@ export function XrayCard({
             <ScanLine className="w-10 h-10 text-[#4a5568] opacity-40" />
           )}
           {archived && (
-            <span className="absolute top-2 left-2 rounded-[4px] bg-[#697386] px-2 py-0.5 text-[10px] text-white">
+            <span className="absolute top-2 left-2 rounded-md bg-[#697386] px-2 py-0.5 text-[10px] text-white">
               Archived
             </span>
           )}
           {xray.status === 'UPLOADING' && (
-            <span className="absolute top-2 left-2 rounded-[4px] bg-[#0570DE] px-2 py-0.5 text-[10px] text-white">
+            <span className="absolute top-2 left-2 rounded-md bg-[#0570DE] px-2 py-0.5 text-[10px] text-white">
               Uploading…
             </span>
           )}
@@ -106,7 +106,7 @@ export function XrayCard({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commitRename}
             onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setDraft(xray.title ?? ''); setEditing(false) } }}
-            className="w-full rounded-[4px] border border-[#533afd] px-2 py-1 text-[14px] outline-none"
+            className="w-full rounded-md border border-[#533afd] px-2 py-1 text-[14px] outline-none"
           />
         ) : (
           <button
@@ -141,7 +141,7 @@ export function XrayCard({
 
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="absolute top-2 right-2 z-10 hidden group-hover:flex h-7 w-7 items-center justify-center rounded-[4px] bg-white/90 hover:bg-white text-[#425466]"
+          className="absolute top-2 right-2 z-10 hidden group-hover:flex h-7 w-7 items-center justify-center rounded-md bg-white/90 hover:bg-white text-[#425466]"
           aria-label="More actions"
         >
           <MoreVertical className="w-4 h-4" />

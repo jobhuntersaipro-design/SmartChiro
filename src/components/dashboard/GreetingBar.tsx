@@ -118,7 +118,7 @@ export function GreetingBar({
         </p>
         <button
           onClick={refreshQuote}
-          className="absolute bottom-3 right-3 flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#533afd] active:scale-90 cursor-pointer"
+          className="absolute bottom-3 right-3 flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#533afd] active:scale-90 cursor-pointer"
           title="New quote"
         >
           <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.5} />

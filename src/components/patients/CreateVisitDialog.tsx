@@ -19,13 +19,13 @@ interface CreateVisitDialogProps {
 // ─── Shared Styles ───
 
 const inputClass =
-  "flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
 
 const selectClass =
-  "flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const textareaClass =
-  "flex w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
+  "flex w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
 
 const VISIT_TYPES = [
   { value: "initial", label: "Initial" },
@@ -63,7 +63,7 @@ function SectionHeader({
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full items-center justify-between py-2.5 px-1 text-left transition-colors hover:bg-[#f6f9fc] rounded-[4px] -mx-1"
+      className="flex w-full items-center justify-between py-2.5 px-1 text-left transition-colors hover:bg-[#f6f9fc] rounded-md -mx-1"
     >
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
@@ -115,7 +115,7 @@ function SliderField({
               key={n}
               type="button"
               onClick={() => onChange(n)}
-              className={`h-9 rounded-[4px] border text-[13px] font-medium transition-all duration-150 ${
+              className={`h-9 rounded-md border text-[13px] font-medium transition-all duration-150 ${
                 selected
                   ? `${colorFor(n)} scale-105 shadow-sm`
                   : "bg-white text-[#273951] border-[#e5edf5] hover:border-[#c1c9d2] hover:bg-[#f6f9fc]"
@@ -266,7 +266,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           <h2 className="text-[18px] font-light text-[#061b31]">Add Visit</h2>
           <button
             onClick={handleClose}
-            className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
+            className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -683,7 +683,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
 
           {/* Submit Error */}
           {submitError && (
-            <div className="flex items-center gap-2 rounded-[4px] border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+            <div className="flex items-center gap-2 rounded-md border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2 text-[13px] text-[#DF1B41]">
               <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               {submitError}
             </div>
@@ -697,7 +697,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             variant="outline"
             onClick={handleClose}
             disabled={submitting}
-            className="rounded-[4px] border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]"
+            className="rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]"
           >
             Cancel
           </Button>
@@ -705,7 +705,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             type="submit"
             disabled={submitting}
             onClick={handleSubmit}
-            className="rounded-[4px] bg-[#533afd] text-white hover:bg-[#4530d4]"
+            className="rounded-md bg-[#533afd] text-white hover:bg-[#4530d4]"
           >
             {submitting ? (
               <>

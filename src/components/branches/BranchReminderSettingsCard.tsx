@@ -146,7 +146,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setWaModal(true)}
-                className="rounded-[4px] bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB]"
+                className="rounded-md bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB]"
               >
                 {waStatus === "CONNECTED" ? "Re-pair" : "Connect WhatsApp"}
               </button>
@@ -166,7 +166,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
                       alert("Failed to disconnect WhatsApp");
                     }
                   }}
-                  className="rounded-[4px] border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
+                  className="rounded-md border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
                 >
                   Disconnect
                 </button>
@@ -181,7 +181,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
           <button
             onClick={save}
             disabled={saving}
-            className="rounded-[4px] bg-[#635BFF] px-4 py-2 text-[14px] text-white hover:bg-[#5851EB] disabled:opacity-50"
+            className="rounded-md bg-[#635BFF] px-4 py-2 text-[14px] text-white hover:bg-[#5851EB] disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>

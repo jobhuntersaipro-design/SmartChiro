@@ -22,19 +22,19 @@ interface AddPatientDialogProps {
 // ─── Shared Styles ───
 
 const inputClass =
-  "flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
 
 const inputNoIconClass =
-  "flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
 
 const selectClass =
-  "flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const selectNoIconClass =
-  "flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const textareaClass =
-  "flex w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
+  "flex w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
 
 const errorInputClass = "border-[#DF1B41]/50 focus:ring-[#DF1B41] focus:border-[#DF1B41]";
 
@@ -200,7 +200,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
       {/* Dialog */}
       <div
-        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-[8px] border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-2xl border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)" }}
       >
         {/* ─── Header ─── */}
@@ -216,7 +216,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
           </div>
           <button
             onClick={handleClose}
-            className="flex items-center justify-center h-8 w-8 rounded-[4px] text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31]"
+            className="flex items-center justify-center h-8 w-8 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31]"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -239,7 +239,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                       // Allow going back to completed steps, or clicking current
                       if (s.id < step) setStep(s.id);
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-[4px] w-full transition-all duration-200 ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md w-full transition-all duration-200 ${
                       isActive
                         ? "bg-[#533afd] text-white"
                         : isCompleted
@@ -648,7 +648,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="h-9 px-4 text-[14px] font-medium rounded-[4px] border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] gap-1.5"
+                  className="h-9 px-4 text-[14px] font-medium rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] gap-1.5"
                 >
                   <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
                   Back
@@ -661,7 +661,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 type="button"
                 variant="ghost"
                 onClick={handleClose}
-                className="h-9 px-4 text-[14px] font-medium rounded-[4px] text-[#64748d] hover:text-[#273951] hover:bg-[#f6f9fc]"
+                className="h-9 px-4 text-[14px] font-medium rounded-md text-[#64748d] hover:text-[#273951] hover:bg-[#f6f9fc]"
               >
                 Cancel
               </Button>
@@ -670,7 +670,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="h-9 px-5 text-[14px] font-medium rounded-[4px] gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 text-[14px] font-medium rounded-md gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Next
                   <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
@@ -679,7 +679,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="h-9 px-5 text-[14px] font-medium rounded-[4px] gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 text-[14px] font-medium rounded-md gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {submitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

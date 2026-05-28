@@ -68,7 +68,7 @@ export default async function VerifyEmailPage({
 
           <Link
             href="/login"
-            className="mt-6 flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
+            className="mt-6 flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
           >
             {status === 'success' || status === 'already-verified'
               ? 'Sign in to your account'

@@ -71,7 +71,7 @@ function QuickActionButton({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3 py-2.5 rounded-[4px] text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
+      className="flex w-full items-center gap-3 px-3 py-2.5 rounded-md text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
     >
       <Icon className="h-4 w-4 text-[#64748d] transition-colors duration-200 group-hover:text-[#533afd]" strokeWidth={1.5} />
       {label}
@@ -91,7 +91,7 @@ function QuickActionLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-[4px] text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
     >
       <Icon className="h-4 w-4 text-[#64748d] transition-colors duration-200 group-hover:text-[#533afd]" strokeWidth={1.5} />
       {label}

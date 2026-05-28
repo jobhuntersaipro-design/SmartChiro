@@ -65,7 +65,7 @@ export function RemoveDoctorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-110 rounded-[8px]">
+      <DialogContent className="max-w-110 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-[18px] font-light text-[#061b31]">
             Remove Doctor
@@ -92,7 +92,7 @@ export function RemoveDoctorDialog({
           </p>
 
           {hasPatients && (
-            <div className="flex items-start gap-2 rounded-[4px] bg-[#FFF8E1] px-3 py-2">
+            <div className="flex items-start gap-2 rounded-md bg-[#FFF8E1] px-3 py-2">
               <AlertTriangle className="h-4 w-4 text-[#9b6829] shrink-0 mt-0.5" />
               <p className="text-[13px] text-[#9b6829]">
                 {doctor.stats.patientCount} patient
@@ -103,7 +103,7 @@ export function RemoveDoctorDialog({
           )}
 
           {error && (
-            <div className="rounded-[4px] bg-[#FEF2F4] px-3 py-2 text-[13px] text-[#df1b41]">
+            <div className="rounded-md bg-[#FEF2F4] px-3 py-2 text-[13px] text-[#df1b41]">
               {error}
             </div>
           )}
@@ -113,14 +113,14 @@ export function RemoveDoctorDialog({
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-[4px] text-[14px]"
+            className="h-9 rounded-md text-[14px]"
           >
             Cancel
           </Button>
           <Button
             onClick={handleRemove}
             disabled={loading}
-            className="h-9 rounded-[4px] bg-[#df1b41] hover:bg-[#c4183c] text-white text-[14px] font-medium px-4"
+            className="h-9 rounded-md bg-[#df1b41] hover:bg-[#c4183c] text-white text-[14px] font-medium px-4"
           >
             {loading ? "Removing..." : "Remove Doctor"}
           </Button>

@@ -15,7 +15,7 @@ export function XrayBatchToolbar({ selectedCount, onDelete, onCancel }: XrayBatc
       <span className="text-[13px] font-medium text-[#061b31]">{selectedCount} selected</span>
       <div className="ml-auto flex gap-2">
         <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-        <Button onClick={onDelete} className="bg-[#DF1B41] hover:bg-[#c4153a] text-white rounded-[4px]">
+        <Button onClick={onDelete} className="bg-[#DF1B41] hover:bg-[#c4153a] text-white rounded-md">
           Archive
         </Button>
       </div>

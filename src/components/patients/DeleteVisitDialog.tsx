@@ -66,14 +66,14 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
           <h2 className="text-[18px] font-light text-[#061b31]">Delete Visit</h2>
           <button
             onClick={handleClose}
-            className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
+            className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
 
         <div className="px-6 py-5">
-          <div className="flex items-start gap-3 rounded-[4px] bg-[#FDE8EC] px-3 py-2.5 mb-4">
+          <div className="flex items-start gap-3 rounded-md bg-[#FDE8EC] px-3 py-2.5 mb-4">
             <AlertTriangle className="h-4 w-4 text-[#DF1B41] mt-0.5 shrink-0" strokeWidth={1.5} />
             <p className="text-[13px] text-[#DF1B41]">
               This will permanently delete this visit and its recovery questionnaire. This action cannot be undone.
@@ -89,7 +89,7 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
           )}
 
           {error && (
-            <div className="flex items-center gap-2 rounded-[4px] border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2 text-[13px] text-[#DF1B41] mt-4">
+            <div className="flex items-center gap-2 rounded-md border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2 text-[13px] text-[#DF1B41] mt-4">
               <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               {error}
             </div>
@@ -102,7 +102,7 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
             variant="outline"
             onClick={handleClose}
             disabled={deleting}
-            className="rounded-[4px] border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]"
+            className="rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]"
           >
             Cancel
           </Button>
@@ -110,7 +110,7 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-[4px] bg-[#DF1B41] text-white hover:bg-[#c41637]"
+            className="rounded-md bg-[#DF1B41] text-white hover:bg-[#c41637]"
           >
             {deleting ? (
               <>

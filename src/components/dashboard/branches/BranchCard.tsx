@@ -81,7 +81,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
       <div className="px-5 pt-5 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] bg-[#ededfc]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#ededfc]">
               <Building2 className="h-4.5 w-4.5 text-[#533afd]" strokeWidth={1.5} />
             </div>
             <div className="min-w-0">
@@ -98,7 +98,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-                className="flex h-7 w-7 items-center justify-center rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
               >
                 <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
               </button>

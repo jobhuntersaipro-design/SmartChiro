@@ -131,7 +131,7 @@ export function CreateDoctorDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-140 rounded-[8px] p-0 gap-0">
+      <DialogContent className="max-w-140 rounded-2xl p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="text-[18px] font-light text-[#061b31]">
             Add New Doctor
@@ -140,7 +140,7 @@ export function CreateDoctorDialog({
 
         <form onSubmit={handleSubmit} className="px-6 pb-6">
           {error && (
-            <div className="mt-4 rounded-[4px] bg-[#FEF2F4] px-3 py-2 text-[13px] text-[#df1b41]">
+            <div className="mt-4 rounded-md bg-[#FEF2F4] px-3 py-2 text-[13px] text-[#df1b41]">
               {error}
             </div>
           )}
@@ -160,7 +160,7 @@ export function CreateDoctorDialog({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Dr. Sarah Chen"
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
 
@@ -174,7 +174,7 @@ export function CreateDoctorDialog({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="sarah@clinic.com"
-                    className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                   />
                 </div>
                 <div>
@@ -185,7 +185,7 @@ export function CreateDoctorDialog({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+60 12-345 6789"
-                    className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                   />
                 </div>
               </div>
@@ -200,7 +200,7 @@ export function CreateDoctorDialog({
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                      className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                     />
                     <button
                       type="button"
@@ -229,7 +229,7 @@ export function CreateDoctorDialog({
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                      className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                     />
                     <button
                       type="button"
@@ -259,7 +259,7 @@ export function CreateDoctorDialog({
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
-                    className="flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+                    className="flex h-9 w-full rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -277,7 +277,7 @@ export function CreateDoctorDialog({
                     onChange={(e) =>
                       setRole(e.target.value as "DOCTOR" | "ADMIN")
                     }
-                    className="flex h-9 w-full rounded-[4px] border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+                    className="flex h-9 w-full rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
                   >
                     <option value="DOCTOR">Doctor</option>
                     <option value="ADMIN">Admin</option>
@@ -303,7 +303,7 @@ export function CreateDoctorDialog({
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
                     placeholder="DC-12345"
-                    className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                   />
                 </div>
                 <div>
@@ -317,7 +317,7 @@ export function CreateDoctorDialog({
                     value={yearsExperience}
                     onChange={(e) => setYearsExperience(e.target.value)}
                     placeholder="8"
-                    className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                   />
                 </div>
               </div>
@@ -330,7 +330,7 @@ export function CreateDoctorDialog({
                   value={specialties}
                   onChange={(e) => setSpecialties(e.target.value)}
                   placeholder="Sports Chiro, Pediatric"
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
 
@@ -342,7 +342,7 @@ export function CreateDoctorDialog({
                   value={education}
                   onChange={(e) => setEducation(e.target.value)}
                   placeholder="Doctor of Chiropractic, Palmer College"
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
             </div>
@@ -360,14 +360,14 @@ export function CreateDoctorDialog({
                   reset();
                   onOpenChange(false);
                 }}
-                className="h-9 rounded-[4px] text-[14px]"
+                className="h-9 rounded-md text-[14px]"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={!isValid || loading}
-                className="h-9 rounded-[4px] bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
+                className="h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
               >
                 {loading ? "Creating..." : "Create Doctor"}
               </Button>

@@ -32,7 +32,7 @@ export function AppointmentActionsMenu({ canEdit, canDelete, onEdit, onCancel, o
           e.stopPropagation();
           setOpen(!open);
         }}
-        className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors"
+        className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors"
         aria-label="Appointment actions"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />

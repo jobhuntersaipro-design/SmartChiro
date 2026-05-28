@@ -51,7 +51,7 @@ export function AppointmentCard({
           onSelect();
         }
       }}
-      className={`relative bg-white rounded-[8px] p-4 mb-2 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] ${
+      className={`relative bg-white rounded-2xl p-4 mb-2 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] ${
         selected
           ? "border border-[#635BFF] bg-[#F0EEFF]"
           : "border border-[#e5edf5] hover:border-[#C1C9D2] hover:shadow-sm"

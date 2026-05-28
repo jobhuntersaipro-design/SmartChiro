@@ -34,7 +34,7 @@ export function BranchPicker({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-9 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:border-[#c1c9d2] active:scale-[0.98]"
+        className="flex items-center gap-2 h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:border-[#c1c9d2] active:scale-[0.98]"
       >
         <Building2 className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
         {label}

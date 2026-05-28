@@ -310,7 +310,7 @@ export function PastAppointmentsTab({
                   key={s}
                   type="button"
                   onClick={() => toggleStatus(s)}
-                  className={`px-2.5 h-7 rounded-[4px] text-[12px] font-medium border cursor-pointer transition-colors duration-200 ${
+                  className={`px-2.5 h-7 rounded-md text-[12px] font-medium border cursor-pointer transition-colors duration-200 ${
                     active
                       ? "bg-[#f5f3ff] border-[#533afd] text-[#533afd]"
                       : "bg-white border-[#e5edf5] text-[#64748d] hover:border-[#cbd5e1] hover:text-[#061b31]"
@@ -329,7 +329,7 @@ export function PastAppointmentsTab({
               <select
                 value={doctorId ?? ""}
                 onChange={(e) => setDoctorId(e.target.value || null)}
-                className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-[4px] h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd] focus:border-[#533afd] transition-colors duration-200"
+                className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-md h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd] focus:border-[#533afd] transition-colors duration-200"
                 aria-label="Doctor"
               >
                 <option value="">All doctors</option>
@@ -351,7 +351,7 @@ export function PastAppointmentsTab({
             <select
               value={range}
               onChange={(e) => setRange(e.target.value as RangePreset)}
-              className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-[4px] h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd] focus:border-[#533afd] transition-colors duration-200"
+              className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-md h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd] focus:border-[#533afd] transition-colors duration-200"
               aria-label="Date range"
             >
               {VALID_RANGES.map((r) => (

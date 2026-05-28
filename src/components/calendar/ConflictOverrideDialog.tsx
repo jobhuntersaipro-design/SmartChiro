@@ -19,7 +19,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-120 rounded-[8px] border border-[#e5edf5] bg-white p-6"
+        className="w-120 rounded-2xl border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <div className="flex items-start gap-3 mb-3">
@@ -35,7 +35,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
           </div>
         </div>
 
-        <ul className="rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] divide-y divide-[#e5edf5] mb-4 max-h-50 overflow-auto">
+        <ul className="rounded-md border border-[#e5edf5] bg-[#F6F9FC] divide-y divide-[#e5edf5] mb-4 max-h-50 overflow-auto">
           {conflicts.map((c) => (
             <li key={c.id} className="px-3 py-2 text-[13px]">
               <span className="font-medium text-[#061b31]">
@@ -55,13 +55,13 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
           <Button
             variant="outline"
             onClick={onCancel}
-            className="h-8 rounded-[4px] border-[#e5edf5] text-[14px]"
+            className="h-8 rounded-md border-[#e5edf5] text-[14px]"
           >
             Cancel
           </Button>
           <Button
             onClick={onOverride}
-            className="h-8 rounded-[4px] bg-[#9b6829] hover:bg-[#7d5520] text-white text-[14px]"
+            className="h-8 rounded-md bg-[#9b6829] hover:bg-[#7d5520] text-white text-[14px]"
           >
             Override and double-book
           </Button>

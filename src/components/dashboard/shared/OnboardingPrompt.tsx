@@ -31,7 +31,7 @@ export function OnboardingPrompt({ onCreateBranch }: OnboardingPromptProps) {
 
         <Button
           onClick={onCreateBranch}
-          className="w-full h-10 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[15px] font-medium mb-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full h-10 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[15px] font-medium mb-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
         >
           <Building2 className="h-4 w-4 mr-2" strokeWidth={1.5} />
           Create your first branch

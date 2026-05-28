@@ -202,7 +202,7 @@ export function ComparePageClient({
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="rounded-[4px] p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
+            className="rounded-md p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
           >
             <ArrowLeft size={18} strokeWidth={1.5} />
           </button>
@@ -213,7 +213,7 @@ export function ComparePageClient({
         <div className="flex items-center gap-2">
           <button
             onClick={() => zoomBoth(1 / 1.25)}
-            className="rounded-[4px] p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
+            className="rounded-md p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
           >
             <ZoomOut size={16} strokeWidth={1.5} />
           </button>
@@ -222,7 +222,7 @@ export function ComparePageClient({
           </span>
           <button
             onClick={() => zoomBoth(1.25)}
-            className="rounded-[4px] p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
+            className="rounded-md p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
           >
             <ZoomIn size={16} strokeWidth={1.5} />
           </button>
@@ -231,7 +231,7 @@ export function ComparePageClient({
 
           <button
             onClick={() => setLinked(!linked)}
-            className={`flex items-center gap-1.5 rounded-[4px] px-2.5 py-1.5 text-[13px] transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors ${
               linked
                 ? "bg-[#533afd]/20 text-[#533afd]"
                 : "text-[#8B93A7] hover:bg-[#2D3348] hover:text-white"
@@ -256,7 +256,7 @@ export function ComparePageClient({
           style={{ width: `${dividerPos}%` }}
         >
           {/* Left label */}
-          <div className="absolute left-3 top-3 z-10 rounded-[4px] bg-black/60 px-2.5 py-1">
+          <div className="absolute left-3 top-3 z-10 rounded-md bg-black/60 px-2.5 py-1">
             <span className="text-[13px] font-medium text-white">{leftXray.title}</span>
             <span className="ml-2 text-[12px] text-[#8B93A7]">{formatDate(leftXray.createdAt)}</span>
           </div>
@@ -300,7 +300,7 @@ export function ComparePageClient({
           style={{ width: `${100 - dividerPos}%` }}
         >
           {/* Right label */}
-          <div className="absolute left-3 top-3 z-10 rounded-[4px] bg-black/60 px-2.5 py-1">
+          <div className="absolute left-3 top-3 z-10 rounded-md bg-black/60 px-2.5 py-1">
             <span className="text-[13px] font-medium text-white">{rightXray.title}</span>
             <span className="ml-2 text-[12px] text-[#8B93A7]">{formatDate(rightXray.createdAt)}</span>
           </div>

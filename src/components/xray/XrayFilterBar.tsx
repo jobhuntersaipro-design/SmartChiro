@@ -71,7 +71,7 @@ export function XrayFilterBar({ state, onChange, count }: XrayFilterBarProps) {
         <select
           value={state.sort}
           onChange={(e) => onChange({ ...state, sort: e.target.value as SortBy })}
-          className="rounded-[4px] border border-[#e5edf5] bg-white px-2 py-1 text-[12px] text-[#425466]"
+          className="rounded-md border border-[#e5edf5] bg-white px-2 py-1 text-[12px] text-[#425466]"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>

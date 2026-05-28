@@ -174,7 +174,7 @@ export function EditAppointmentDialog({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-120 max-h-[90vh] overflow-y-auto rounded-[8px] border border-[#e5edf5] bg-white p-6"
+        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <h2 className="text-[18px] font-medium text-[#0A2540] mb-1">Edit appointment</h2>
@@ -199,7 +199,7 @@ export function EditAppointmentDialog({
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
               <div>
@@ -208,7 +208,7 @@ export function EditAppointmentDialog({
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
             </div>
@@ -224,7 +224,7 @@ export function EditAppointmentDialog({
                 step={15}
                 value={duration}
                 onChange={(e) => setDuration(parseInt(e.target.value || "30", 10))}
-                className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
             </div>
 
@@ -241,7 +241,7 @@ export function EditAppointmentDialog({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
                 >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -261,19 +261,19 @@ export function EditAppointmentDialog({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-[4px] border border-[#e5edf5] bg-white px-2 py-1.5 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-1.5 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
             </div>
 
             {isPast && (
-              <div className="mb-3 rounded-[4px] bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41] inline-flex items-start gap-2">
+              <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41] inline-flex items-start gap-2">
                 <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" strokeWidth={2} />
                 <span>Selected time is in the past.</span>
               </div>
             )}
 
             {conflicts.length > 0 && (
-              <div className="mb-3 rounded-[4px] bg-[#FDE7EC] border border-[#DF1B41]/20 px-3 py-2 text-[13px] text-[#DF1B41]">
+              <div className="mb-3 rounded-md bg-[#FDE7EC] border border-[#DF1B41]/20 px-3 py-2 text-[13px] text-[#DF1B41]">
                 <div className="flex items-center gap-1.5 font-medium mb-1">
                   <AlertCircle className="h-3.5 w-3.5" strokeWidth={2} />
                   Conflicts with existing appointment
@@ -291,7 +291,7 @@ export function EditAppointmentDialog({
             )}
 
             {error && !conflicts.length && (
-              <div className="mb-3 rounded-[4px] bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+              <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
                 {error}
               </div>
             )}
@@ -299,10 +299,10 @@ export function EditAppointmentDialog({
             <p className="text-[11px] text-[#94a3b8] mb-3">Your local time · {tz}</p>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-[4px] text-[14px]">
+              <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">
                 Cancel
               </Button>
-              <Button onClick={submit} disabled={!canSave} className="h-8 rounded-[4px] text-[14px] gap-1.5">
+              <Button onClick={submit} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 {submitting ? "Saving…" : "Save changes"}
               </Button>

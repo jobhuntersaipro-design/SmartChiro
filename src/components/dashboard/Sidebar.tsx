@@ -75,7 +75,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex h-13 items-center gap-2.5 px-4 border-b border-border">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] bg-primary text-primary-foreground text-[15px] font-semibold">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-[15px] font-semibold">
           SC
         </div>
         {!collapsed && (
@@ -104,7 +104,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-[4px] px-2 py-1.5 text-[15px] transition-all duration-200",
+                  "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[15px] transition-all duration-200",
                   isActive
                     ? "bg-[#ededfc] text-[#533afd] font-normal"
                     : "text-[#273951] hover:bg-[#f6f9fc] hover:text-[#061b31] font-normal hover:translate-x-0.5"
@@ -126,7 +126,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         {/* New Appointment button */}
         <Button
           className={cn(
-            "w-full justify-start gap-2 text-[15px] font-medium rounded-[4px]",
+            "w-full justify-start gap-2 text-[15px] font-medium rounded-md",
             collapsed && "justify-center px-0"
           )}
           size={collapsed ? "icon" : "default"}
@@ -141,7 +141,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-[4px] px-2 py-1.5 transition-all duration-200 hover:bg-[#f6f9fc] outline-none",
+              "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-all duration-200 hover:bg-[#f6f9fc] outline-none",
               collapsed && "justify-center px-0"
             )}
           >
@@ -205,7 +205,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         {/* Collapse toggle */}
         <button
           onClick={onToggle}
-          className="flex w-full items-center justify-center rounded-[4px] p-1.5 text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 active:scale-95"
+          className="flex w-full items-center justify-center rounded-md p-1.5 text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 active:scale-95"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />

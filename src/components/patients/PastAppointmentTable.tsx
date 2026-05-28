@@ -288,7 +288,7 @@ function RowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="inline-flex items-center justify-center h-7 w-7 rounded-[4px] text-[#94a3b8] hover:text-[#061b31] hover:bg-[#f6f9fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#533afd] focus-visible:ring-offset-1 cursor-pointer transition-colors duration-200"
+        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[#94a3b8] hover:text-[#061b31] hover:bg-[#f6f9fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#533afd] focus-visible:ring-offset-1 cursor-pointer transition-colors duration-200"
         aria-label="Row actions"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={2} />
@@ -462,7 +462,7 @@ export function PastAppointmentTable({
                 onClick={() => onPageChange(Math.max(1, page - 1))}
                 disabled={page <= 1}
                 aria-label="Previous page"
-                className="inline-flex items-center justify-center h-7 w-7 rounded-[4px] border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
               >
                 <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
               </button>
@@ -476,7 +476,7 @@ export function PastAppointmentTable({
                 onClick={() => onPageChange(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
                 aria-label="Next page"
-                className="inline-flex items-center justify-center h-7 w-7 rounded-[4px] border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
               >
                 <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
               </button>

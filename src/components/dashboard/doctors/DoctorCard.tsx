@@ -64,7 +64,7 @@ export function DoctorCard({
                 {doctor.name ?? "Unnamed"}
               </span>
               <span
-                className={`shrink-0 rounded-[4px] px-1.5 py-0.25 text-[10px] font-light ${
+                className={`shrink-0 rounded-md px-1.5 py-0.25 text-[10px] font-light ${
                   doctor.isActive
                     ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
                     : "bg-[#F0F3F7] text-[#64748d]"
@@ -87,7 +87,7 @@ export function DoctorCard({
         {isAdmin && (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="h-8 w-8 flex items-center justify-center rounded-[4px] hover:bg-[#f6f9fc] transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#f6f9fc] transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4 text-[#64748d]" />
@@ -137,7 +137,7 @@ export function DoctorCard({
         ].map((s) => (
           <div
             key={s.label}
-            className="flex-1 rounded-[4px] bg-[#F6F9FC] px-3 py-2 text-center"
+            className="flex-1 rounded-md bg-[#F6F9FC] px-3 py-2 text-center"
           >
             <div
               className="text-[16px] font-medium text-[#061b31]"

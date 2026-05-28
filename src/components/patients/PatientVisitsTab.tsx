@@ -110,7 +110,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </p>
       <Button
         onClick={onAdd}
-        className="rounded-[4px] bg-[#533afd] text-white hover:bg-[#4530d4]"
+        className="rounded-md bg-[#533afd] text-white hover:bg-[#4530d4]"
       >
         <Plus className="mr-1.5 h-4 w-4" strokeWidth={1.5} />
         Add First Visit
@@ -272,7 +272,7 @@ function VisitCard({
                 ].map(
                   (item) =>
                     item.value && (
-                      <div key={item.key} className="rounded-[4px] bg-[#f6f9fc] p-3">
+                      <div key={item.key} className="rounded-md bg-[#f6f9fc] p-3">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className="inline-flex h-5 w-5 items-center justify-center rounded-[3px] bg-[#533afd] text-[11px] font-bold text-white">
                             {item.key}
@@ -413,7 +413,7 @@ function VisitCard({
                   <Link
                     key={xray.id}
                     href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
-                    className="group relative rounded-[4px] border border-[#e5edf5] overflow-hidden transition-all duration-200 hover:border-[#533afd] hover:shadow-sm"
+                    className="group relative rounded-md border border-[#e5edf5] overflow-hidden transition-all duration-200 hover:border-[#533afd] hover:shadow-sm"
                   >
                     {xray.thumbnailUrl ? (
                       <img
@@ -449,7 +449,7 @@ function VisitCard({
                 e.stopPropagation();
                 onEdit(visit);
               }}
-              className="rounded-[4px] border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] text-[13px]"
+              className="rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] text-[13px]"
             >
               <Pencil className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
               Edit
@@ -461,7 +461,7 @@ function VisitCard({
                 e.stopPropagation();
                 onDelete(visit);
               }}
-              className="rounded-[4px] border-[#e5edf5] text-[#DF1B41] hover:bg-[#FDE8EC] hover:border-[#DF1B41]/20 text-[13px]"
+              className="rounded-md border-[#e5edf5] text-[#DF1B41] hover:bg-[#FDE8EC] hover:border-[#DF1B41]/20 text-[13px]"
             >
               <Trash2 className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
               Delete
@@ -540,7 +540,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="h-8 rounded-[4px] border border-[#e5edf5] bg-white pl-8 pr-6 text-[13px] text-[#273951] appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd]"
+              className="h-8 rounded-md border border-[#e5edf5] bg-white pl-8 pr-6 text-[13px] text-[#273951] appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd]"
             >
               {FILTER_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -553,7 +553,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
           {/* Sort Toggle */}
           <button
             onClick={() => setSortNewest(!sortNewest)}
-            className="flex items-center gap-1 h-8 px-2.5 rounded-[4px] border border-[#e5edf5] bg-white text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+            className="flex items-center gap-1 h-8 px-2.5 rounded-md border border-[#e5edf5] bg-white text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
           >
             <ArrowUpDown className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
             {sortNewest ? "Newest" : "Oldest"}
@@ -563,7 +563,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
         {/* Add Visit Button */}
         <Button
           onClick={() => setCreateOpen(true)}
-          className="rounded-[4px] bg-[#533afd] text-white hover:bg-[#4530d4] text-[13px] h-8"
+          className="rounded-md bg-[#533afd] text-white hover:bg-[#4530d4] text-[13px] h-8"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
           Add Visit
@@ -580,7 +580,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
             variant="outline"
             size="sm"
             onClick={fetchVisits}
-            className="rounded-[4px] border-[#e5edf5] text-[#273951]"
+            className="rounded-md border-[#e5edf5] text-[#273951]"
           >
             Try again
           </Button>

@@ -273,7 +273,7 @@ export function AppointmentsListView({
             </div>
           )}
           {error && (
-            <div className="px-3 py-2 mb-3 rounded-[4px] bg-[#FDE7EC] text-[13px] text-[#DF1B41]">
+            <div className="px-3 py-2 mb-3 rounded-md bg-[#FDE7EC] text-[13px] text-[#DF1B41]">
               {error}
             </div>
           )}
@@ -288,7 +288,7 @@ export function AppointmentsListView({
                 <Button
                   size="sm"
                   onClick={onOpenCreate}
-                  className="h-8 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+                  className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" strokeWidth={2} />
                   New appointment

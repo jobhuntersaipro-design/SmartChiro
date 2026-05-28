@@ -55,11 +55,11 @@ const DAYS = [
 ] as const;
 
 const inputClass =
-  "h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] text-[15px] focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[15px] focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
 const inputErrorClass =
-  "h-9 rounded-[4px] border-[#df1b41] bg-[#FDE8EC]/30 text-[15px] focus:ring-1 focus:ring-[#df1b41] focus:border-[#df1b41] focus:bg-white transition-all duration-200";
+  "h-9 rounded-md border-[#df1b41] bg-[#FDE8EC]/30 text-[15px] focus:ring-1 focus:ring-[#df1b41] focus:border-[#df1b41] focus:bg-white transition-all duration-200";
 const timeInputClass =
-  "h-8 w-22.5 rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] px-2 text-[14px] text-[#061b31] text-center focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "h-8 w-22.5 rounded-md border border-[#e5edf5] bg-[#F6F9FC] px-2 text-[14px] text-[#061b31] text-center focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
 
 const defaultHours: DayHours = { open: "09:00", close: "18:00" };
 
@@ -219,7 +219,7 @@ export function EditBranchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-145 rounded-[8px] border border-[#e5edf5] p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-145 rounded-2xl border border-[#e5edf5] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-[18px] font-light tracking-[-0.18px] text-[#061b31]">
             Edit Clinic
@@ -237,7 +237,7 @@ export function EditBranchDialog({
                 <button
                   type="button"
                   onClick={() => setStep(s.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[4px] text-[13px] font-medium transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "bg-[#ededfc] text-[#533afd]"
                       : isDone
@@ -304,7 +304,7 @@ export function EditBranchDialog({
                   value={ownerName ?? ""}
                   readOnly
                   disabled
-                  className="h-9 rounded-[4px] border-[#e5edf5] bg-[#e5edf5]/50 text-[15px] text-[#64748d] cursor-not-allowed"
+                  className="h-9 rounded-md border-[#e5edf5] bg-[#e5edf5]/50 text-[15px] text-[#64748d] cursor-not-allowed"
                 />
                 <p className="text-[12px] text-[#64748d] mt-1">
                   Owner is set when the clinic is created and cannot be changed here.
@@ -398,7 +398,7 @@ export function EditBranchDialog({
                         <button
                           type="button"
                           onClick={() => toggleDay(key)}
-                          className={`flex items-center justify-center w-10 h-7 rounded-[4px] text-[13px] font-medium transition-all duration-200 cursor-pointer ${
+                          className={`flex items-center justify-center w-10 h-7 rounded-md text-[13px] font-medium transition-all duration-200 cursor-pointer ${
                             isOpen
                               ? "bg-[#ededfc] text-[#533afd]"
                               : "bg-[#f6f9fc] text-[#64748d] hover:bg-[#e5edf5]"
@@ -469,7 +469,7 @@ export function EditBranchDialog({
           )}
 
           {errors._form && (
-            <div className="mt-4 rounded-[4px] border border-[#df1b41]/20 bg-[#FDE8EC] px-3 py-2 animate-in fade-in duration-200">
+            <div className="mt-4 rounded-md border border-[#df1b41]/20 bg-[#FDE8EC] px-3 py-2 animate-in fade-in duration-200">
               <p className="text-[13px] text-[#df1b41]">{errors._form}</p>
             </div>
           )}
@@ -481,7 +481,7 @@ export function EditBranchDialog({
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="h-9 px-4 rounded-[4px] border-[#e5edf5] text-[14px] text-[#061b31] cursor-pointer transition-all duration-200 hover:translate-x-[-2px]"
+                  className="h-9 px-4 rounded-md border-[#e5edf5] text-[14px] text-[#061b31] cursor-pointer transition-all duration-200 hover:translate-x-[-2px]"
                 >
                   <ChevronLeft className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                   Back
@@ -496,7 +496,7 @@ export function EditBranchDialog({
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5 ml-1" strokeWidth={1.5} />
@@ -506,7 +506,7 @@ export function EditBranchDialog({
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="h-9 px-5 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? "Saving..." : "Save Changes"}
                 </Button>

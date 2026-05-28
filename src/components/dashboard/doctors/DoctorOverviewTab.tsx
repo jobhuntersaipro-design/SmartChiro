@@ -142,7 +142,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-[12px] text-[#64748d]">{a.duration}min</span>
-                      <span className={`rounded-[4px] px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
                         {a.status.replace("_", " ")}
                       </span>
                     </div>
@@ -237,7 +237,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                 return (
                   <div
                     key={key}
-                    className={`flex items-center justify-between text-[13px] rounded-[4px] px-2 py-1 ${
+                    className={`flex items-center justify-between text-[13px] rounded-md px-2 py-1 ${
                       isToday ? "bg-[#ededfc]" : ""
                     }`}
                   >

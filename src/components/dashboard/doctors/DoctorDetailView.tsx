@@ -140,7 +140,7 @@ export function DoctorDetailView({ doctorId, currentUserId }: DoctorDetailViewPr
                   {doctor.name ?? "Unnamed"}
                 </h1>
                 <span
-                  className={`rounded-[4px] px-2 py-0.5 text-[11px] font-light ${
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-light ${
                     doctor.profile?.isActive !== false
                       ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
                       : "bg-[#F0F3F7] text-[#64748d]"
@@ -180,7 +180,7 @@ export function DoctorDetailView({ doctorId, currentUserId }: DoctorDetailViewPr
               <Link href={`/dashboard/settings/${doctorId}`}>
                 <Button
                   variant="outline"
-                  className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
+                  className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
                 >
                   <Settings className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Settings

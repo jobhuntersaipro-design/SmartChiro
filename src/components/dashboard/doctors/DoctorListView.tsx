@@ -211,7 +211,7 @@ export function DoctorListView({
         {isAdmin && (
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-[4px] bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
+            className="h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
           >
             <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
             Add Doctor
@@ -230,14 +230,14 @@ export function DoctorListView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search doctors..."
-            className="h-9 rounded-[4px] border-[#e5edf5] bg-[#F6F9FC] pl-9 text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+            className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] pl-9 text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
           />
         </div>
 
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          className="h-9 rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+          className="h-9 rounded-md border border-[#e5edf5] bg-[#F6F9FC] px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
         >
           <option value="all">All Branches</option>
           {branchOptions.map((b) => (
@@ -250,7 +250,7 @@ export function DoctorListView({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+          className="h-9 rounded-md border border-[#e5edf5] bg-[#F6F9FC] px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -260,7 +260,7 @@ export function DoctorListView({
         <div className="flex gap-1">
           <button
             onClick={() => setViewMode("grid")}
-            className={`h-9 w-9 flex items-center justify-center rounded-[4px] transition-colors ${
+            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
               viewMode === "grid"
                 ? "bg-[#ededfc] text-[#533afd]"
                 : "text-[#64748d] hover:bg-[#f6f9fc]"
@@ -270,7 +270,7 @@ export function DoctorListView({
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={`h-9 w-9 flex items-center justify-center rounded-[4px] transition-colors ${
+            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
               viewMode === "list"
                 ? "bg-[#ededfc] text-[#533afd]"
                 : "text-[#64748d] hover:bg-[#f6f9fc]"
@@ -367,7 +367,7 @@ function EmptyState({
       {!hasSearch && isAdmin && (
         <Button
           onClick={onAdd}
-          className="mt-4 h-9 rounded-[4px] bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
+          className="mt-4 h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
           Add Doctor
@@ -457,7 +457,7 @@ function DoctorTable({
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`rounded-[4px] px-1.5 py-0.25 text-[10px] font-light ${
+                  className={`rounded-md px-1.5 py-0.25 text-[10px] font-light ${
                     d.isActive
                       ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
                       : "bg-[#F0F3F7] text-[#64748d]"

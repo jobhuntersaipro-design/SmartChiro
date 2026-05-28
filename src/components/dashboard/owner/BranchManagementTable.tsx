@@ -36,7 +36,7 @@ export function BranchManagementTable({
         <Button
           onClick={onCreateBranch}
           size="sm"
-          className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] font-medium cursor-pointer"
+          className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer"
         >
           <Building2 className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
           Create Branch
@@ -52,7 +52,7 @@ export function BranchManagementTable({
           action={
             <Button
               onClick={onCreateBranch}
-              className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[14px] cursor-pointer"
+              className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] cursor-pointer"
             >
               Create Branch
             </Button>
@@ -175,7 +175,7 @@ function BranchRow({
               e.stopPropagation();
               setMenuOpen(!menuOpen);
             }}
-            className="flex h-8 w-8 items-center justify-center rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
           </button>

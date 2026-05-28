@@ -106,7 +106,7 @@ export function IssueInvoiceDialog({
       }}
     >
       <div
-        className="w-full max-w-md rounded-[8px] bg-white shadow-xl border border-[#e5edf5] overflow-hidden"
+        className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-[#e5edf5] overflow-hidden"
         style={{
           boxShadow:
             "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.08)",
@@ -131,7 +131,7 @@ export function IssueInvoiceDialog({
 
         <form onSubmit={handleSave} className="px-5 py-4 space-y-4">
           {error && (
-            <div className="rounded-[4px] border border-[#fcd0db] bg-[#fef2f5] px-3 py-2 text-[13px] text-[#ea2261]">
+            <div className="rounded-md border border-[#fcd0db] bg-[#fef2f5] px-3 py-2 text-[13px] text-[#ea2261]">
               {error}
             </div>
           )}
@@ -152,7 +152,7 @@ export function IssueInvoiceDialog({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] tabular-nums placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200"
+              className="w-full h-9 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] tabular-nums placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200"
             />
           </div>
 
@@ -169,7 +169,7 @@ export function IssueInvoiceDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={200}
-              className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200"
+              className="w-full h-9 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200"
             />
           </div>
 
@@ -187,7 +187,7 @@ export function IssueInvoiceDialog({
               step="1"
               value={dueDays}
               onChange={(e) => setDueDays(e.target.value)}
-              className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] tabular-nums focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200"
+              className="w-full h-9 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] tabular-nums focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200"
             />
           </div>
         </form>
@@ -198,14 +198,14 @@ export function IssueInvoiceDialog({
             type="button"
             disabled={submitting}
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] cursor-pointer"
+            className="h-9 rounded-md text-[14px] border-[#e5edf5] cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={submitting || !valid}
-            className="h-9 rounded-[4px] text-[14px] bg-[#533afd] hover:bg-[#3f2bd1] text-white cursor-pointer disabled:opacity-60"
+            className="h-9 rounded-md text-[14px] bg-[#533afd] hover:bg-[#3f2bd1] text-white cursor-pointer disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />

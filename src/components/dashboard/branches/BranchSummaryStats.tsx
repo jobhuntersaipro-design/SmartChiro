@@ -27,7 +27,7 @@ export function BranchSummaryStats({ totalBranches, totalDoctors, totalPatients 
         >
           <div className="flex items-center gap-3">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-[4px]"
+              className="flex h-9 w-9 items-center justify-center rounded-md"
               style={{ backgroundColor: `${stat.color}10` }}
             >
               <stat.icon className="h-4.5 w-4.5" style={{ color: stat.color }} strokeWidth={1.5} />

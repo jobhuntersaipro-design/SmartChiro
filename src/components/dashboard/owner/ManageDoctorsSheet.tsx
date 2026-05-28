@@ -79,7 +79,7 @@ export function ManageDoctorsSheet({
             <Button
               onClick={() => setShowAddForm(true)}
               variant="outline"
-              className="w-full h-9 rounded-[4px] border-[#e5edf5] text-[14px] text-[#533afd] hover:bg-[#ededfc] cursor-pointer mb-4"
+              className="w-full h-9 rounded-md border-[#e5edf5] text-[14px] text-[#533afd] hover:bg-[#ededfc] cursor-pointer mb-4"
             >
               <UserPlus className="h-3.5 w-3.5 mr-2" strokeWidth={1.5} />
               Add Doctor
@@ -92,14 +92,14 @@ export function ManageDoctorsSheet({
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
                   placeholder="Search by email..."
-                  className="h-8 pl-8 rounded-[4px] border-[#e5edf5] bg-white text-[14px]"
+                  className="h-8 pl-8 rounded-md border-[#e5edf5] bg-white text-[14px]"
                 />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <select
                   value={addRole}
                   onChange={(e) => setAddRole(e.target.value as BranchRole)}
-                  className="h-8 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] cursor-pointer"
+                  className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] cursor-pointer"
                 >
                   <option value="DOCTOR">Doctor</option>
                   <option value="ADMIN">Admin</option>
@@ -108,7 +108,7 @@ export function ManageDoctorsSheet({
                   onClick={handleAdd}
                   disabled={addLoading || !searchEmail.trim()}
                   size="sm"
-                  className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-[4px] text-[13px] cursor-pointer disabled:opacity-50"
+                  className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[13px] cursor-pointer disabled:opacity-50"
                 >
                   {addLoading ? "Adding..." : "Add"}
                 </Button>
@@ -172,7 +172,7 @@ export function ManageDoctorsSheet({
                         onChange={(e) =>
                           onChangeRole(branchId, member.id, e.target.value as BranchRole)
                         }
-                        className="h-7 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[13px] text-[#273951] cursor-pointer"
+                        className="h-7 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px] text-[#273951] cursor-pointer"
                       >
                         <option value="DOCTOR">Doctor</option>
                         <option value="ADMIN">Admin</option>
@@ -185,7 +185,7 @@ export function ManageDoctorsSheet({
                     {member.role !== "OWNER" && (
                       <button
                         onClick={() => onRemoveDoctor(branchId, member.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-[4px] text-[#64748d] hover:bg-[#FEF2F2] hover:text-[#df1b41] transition-colors cursor-pointer"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-[#64748d] hover:bg-[#FEF2F2] hover:text-[#df1b41] transition-colors cursor-pointer"
                         title="Remove from branch"
                       >
                         <X className="h-3.5 w-3.5" strokeWidth={2} />

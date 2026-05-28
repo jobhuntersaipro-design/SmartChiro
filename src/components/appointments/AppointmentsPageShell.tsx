@@ -133,7 +133,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
           <div
             role="tablist"
             aria-label="View mode"
-            className="inline-flex rounded-[4px] border border-[#e5edf5] overflow-hidden"
+            className="inline-flex rounded-md border border-[#e5edf5] overflow-hidden"
           >
             <button
               role="tab"
@@ -166,7 +166,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
+            className="h-9 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             New Appointment

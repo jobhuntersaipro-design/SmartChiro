@@ -201,7 +201,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
         <div className="rounded-[6px] border border-[#e5edf5] bg-white p-4" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)' }}>
           <div className="flex items-start gap-3">
             {/* Preview */}
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-[4px] bg-[#f6f9fc]">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#f6f9fc]">
               {preview ? (
                 <img
                   src={preview}
@@ -222,7 +222,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
                 {(stage === 'done' || stage === 'error') && (
                   <button
                     onClick={reset}
-                    className="ml-2 flex-shrink-0 rounded-[4px] p-1 text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
+                    className="ml-2 flex-shrink-0 rounded-md p-1 text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
                   >
                     <X className="h-4 w-4" strokeWidth={1.5} />
                   </button>

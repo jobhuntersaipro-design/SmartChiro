@@ -56,7 +56,7 @@ export function DoctorCombobox({ value, onChange, disabled }: Props) {
         type="button"
         disabled={disabled}
         onClick={() => setOpen(!open)}
-        className="flex w-full h-9 items-center justify-between rounded-[4px] border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] hover:border-[#c1c9d2] focus:outline-none focus:ring-1 focus:ring-[#533afd] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="flex w-full h-9 items-center justify-between rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] hover:border-[#c1c9d2] focus:outline-none focus:ring-1 focus:ring-[#533afd] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <span className="inline-flex items-center gap-1.5 min-w-0">
           <User className="h-3.5 w-3.5 text-[#64748d] flex-shrink-0" strokeWidth={1.75} />

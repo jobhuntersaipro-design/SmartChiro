@@ -115,7 +115,7 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
     <div ref={ref} className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="flex items-center justify-center h-7 w-7 rounded-[4px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors"
+        className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
       </button>

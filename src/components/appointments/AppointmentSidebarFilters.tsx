@@ -93,7 +93,7 @@ export function AppointmentSidebarFilters({
             Branch
           </label>
           <Select value={branchId} onValueChange={(v) => v && onBranchChange(v)}>
-            <SelectTrigger className="h-9 w-full rounded-[4px] text-[13px]">
+            <SelectTrigger className="h-9 w-full rounded-md text-[13px]">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +113,7 @@ export function AppointmentSidebarFilters({
           Doctor
         </label>
         <Popover>
-          <PopoverTrigger className="inline-flex items-center w-full h-9 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[13px] text-[#061b31] hover:bg-[#fafbfd] transition-colors">
+          <PopoverTrigger className="inline-flex items-center w-full h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[13px] text-[#061b31] hover:bg-[#fafbfd] transition-colors">
             <span className="truncate">
               {doctorIds.length === 0
                 ? "All doctors"

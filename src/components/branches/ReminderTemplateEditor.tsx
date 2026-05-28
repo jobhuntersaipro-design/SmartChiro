@@ -43,7 +43,7 @@ export function ReminderTemplateEditor({ label, value, onChange, charLimit }: Pr
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         rows={6}
-        className="w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 py-2 text-[15px] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+        className="w-full rounded-md border border-[#E3E8EE] bg-[#F6F9FC] px-3 py-2 text-[15px] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
       />
       <div className="flex flex-wrap gap-1">
         {ALLOWED_PLACEHOLDERS.map((name) => (
@@ -51,7 +51,7 @@ export function ReminderTemplateEditor({ label, value, onChange, charLimit }: Pr
             key={name}
             type="button"
             onClick={() => insert(name)}
-            className="rounded-[4px] border border-[#E3E8EE] bg-white px-2 py-1 text-[13px] text-[#425466] hover:bg-[#F0F3F7]"
+            className="rounded-md border border-[#E3E8EE] bg-white px-2 py-1 text-[13px] text-[#425466] hover:bg-[#F0F3F7]"
           >
             {`{${name}}`}
           </button>

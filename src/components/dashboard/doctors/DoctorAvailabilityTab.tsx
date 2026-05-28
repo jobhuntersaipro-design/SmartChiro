@@ -156,7 +156,7 @@ function TimeOffSection({
           <Button
             size="sm"
             onClick={() => setAdding(true)}
-            className="h-8 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+            className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             Add leave
@@ -173,7 +173,7 @@ function TimeOffSection({
                 value={draft.type}
                 onValueChange={(v) => setDraft({ ...draft, type: v as typeof draft.type })}
               >
-                <SelectTrigger className="h-9 rounded-[4px] text-[13px]">
+                <SelectTrigger className="h-9 rounded-md text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,7 +195,7 @@ function TimeOffSection({
                   setDraft({ ...draft, branchId: v === "all" || v == null ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 rounded-[4px] text-[13px]">
+                <SelectTrigger className="h-9 rounded-md text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,7 +218,7 @@ function TimeOffSection({
                 type="date"
                 value={draft.startDate}
                 onChange={(e) => setDraft({ ...draft, startDate: e.target.value })}
-                className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[13px]"
+                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
               />
             </div>
             <div>
@@ -227,7 +227,7 @@ function TimeOffSection({
                 type="date"
                 value={draft.endDate}
                 onChange={(e) => setDraft({ ...draft, endDate: e.target.value })}
-                className="w-full h-9 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[13px]"
+                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ function TimeOffSection({
               rows={2}
               value={draft.notes}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-              className="w-full rounded-[4px] border border-[#e5edf5] bg-white px-2 py-1.5 text-[13px]"
+              className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-1.5 text-[13px]"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -248,7 +248,7 @@ function TimeOffSection({
               size="sm"
               onClick={() => setAdding(false)}
               disabled={submitting}
-              className="h-8 rounded-[4px] text-[13px]"
+              className="h-8 rounded-md text-[13px]"
             >
               Cancel
             </Button>
@@ -256,7 +256,7 @@ function TimeOffSection({
               size="sm"
               onClick={add}
               disabled={submitting || !draft.startDate || !draft.endDate}
-              className="h-8 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+              className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
             >
               {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               Add
@@ -300,7 +300,7 @@ function TimeOffSection({
                 {canEdit && (
                   <button
                     onClick={() => remove(r.id)}
-                    className="text-[#697386] hover:text-[#DF1B41] transition-colors h-7 w-7 flex items-center justify-center rounded-[4px] hover:bg-[#FDE8EC]"
+                    className="text-[#697386] hover:text-[#DF1B41] transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-[#FDE8EC]"
                     aria-label="Delete leave"
                   >
                     <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -403,7 +403,7 @@ function BreakTimeSection({
         </div>
         {doctor.branches.length > 1 && (
           <Select value={activeBranch} onValueChange={(v) => v && setActiveBranch(v)}>
-            <SelectTrigger className="h-8 w-45 rounded-[4px] text-[13px]">
+            <SelectTrigger className="h-8 w-45 rounded-md text-[13px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -428,7 +428,7 @@ function BreakTimeSection({
           {slots.map((s, idx) => (
             <li
               key={idx}
-              className="flex items-center gap-2 p-2 bg-[#f6f9fc] border border-[#e5edf5] rounded-[4px]"
+              className="flex items-center gap-2 p-2 bg-[#f6f9fc] border border-[#e5edf5] rounded-md"
             >
               <Select
                 value={String(s.dayOfWeek)}
@@ -437,7 +437,7 @@ function BreakTimeSection({
                 }
                 disabled={!canEdit}
               >
-                <SelectTrigger className="h-8 w-20 rounded-[4px] text-[12px]">
+                <SelectTrigger className="h-8 w-20 rounded-md text-[12px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -455,7 +455,7 @@ function BreakTimeSection({
                   updateSlot(idx, { startMinute: timeStrToMinutes(e.target.value) })
                 }
                 disabled={!canEdit}
-                className="h-8 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[12px] tabular-nums"
+                className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px] tabular-nums"
               />
               <span className="text-[12px] text-[#697386]">→</span>
               <input
@@ -465,7 +465,7 @@ function BreakTimeSection({
                   updateSlot(idx, { endMinute: timeStrToMinutes(e.target.value) })
                 }
                 disabled={!canEdit}
-                className="h-8 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[12px] tabular-nums"
+                className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px] tabular-nums"
               />
               <input
                 type="text"
@@ -473,12 +473,12 @@ function BreakTimeSection({
                 value={s.label ?? ""}
                 onChange={(e) => updateSlot(idx, { label: e.target.value })}
                 disabled={!canEdit}
-                className="flex-1 h-8 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[12px]"
+                className="flex-1 h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px]"
               />
               {canEdit && (
                 <button
                   onClick={() => removeSlot(idx)}
-                  className="text-[#697386] hover:text-[#DF1B41] transition-colors h-7 w-7 flex items-center justify-center rounded-[4px] hover:bg-[#FDE8EC]"
+                  className="text-[#697386] hover:text-[#DF1B41] transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-[#FDE8EC]"
                   aria-label="Remove slot"
                 >
                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -495,7 +495,7 @@ function BreakTimeSection({
             variant="outline"
             size="sm"
             onClick={addSlot}
-            className="h-8 rounded-[4px] text-[13px] gap-1.5"
+            className="h-8 rounded-md text-[13px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             Add break
@@ -508,7 +508,7 @@ function BreakTimeSection({
               size="sm"
               onClick={save}
               disabled={saving}
-              className="h-8 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+              className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               Save break times

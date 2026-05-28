@@ -64,13 +64,13 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
             placeholder="Search patients..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-9 h-9 rounded-[4px] border-[#e5edf5] bg-[#f6f9fc] text-[14px] placeholder:text-[#64748d] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+            className="pl-9 h-9 rounded-md border-[#e5edf5] bg-[#f6f9fc] text-[14px] placeholder:text-[#64748d] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
           />
         </div>
         <select
           value={doctorFilter}
           onChange={(e) => { setDoctorFilter(e.target.value); setPage(1); }}
-          className="h-9 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#273951] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] cursor-pointer"
+          className="h-9 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#273951] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] cursor-pointer"
         >
           <option value="">All Doctors</option>
           {members.map((m) => (
@@ -153,7 +153,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
               size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="h-8 w-8 p-0 rounded-[4px] border-[#e5edf5] cursor-pointer"
+              className="h-8 w-8 p-0 rounded-md border-[#e5edf5] cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
             </Button>
@@ -165,7 +165,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPage(pageNum)}
-                  className={`h-8 w-8 p-0 rounded-[4px] text-[13px] cursor-pointer ${
+                  className={`h-8 w-8 p-0 rounded-md text-[13px] cursor-pointer ${
                     page === pageNum
                       ? "bg-[#533afd] hover:bg-[#4434d4] text-white"
                       : "border-[#e5edf5] text-[#273951]"
@@ -180,7 +180,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
               size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="h-8 w-8 p-0 rounded-[4px] border-[#e5edf5] cursor-pointer"
+              className="h-8 w-8 p-0 rounded-md border-[#e5edf5] cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
             </Button>

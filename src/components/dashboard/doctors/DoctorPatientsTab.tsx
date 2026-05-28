@@ -86,13 +86,13 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search patients..."
-            className="w-full h-9 pl-9 pr-3 rounded-[4px] border border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd]"
+            className="w-full h-9 pl-9 pr-3 rounded-md border border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 px-3 rounded-[4px] border border-[#e5edf5] bg-white text-[14px] text-[#273951] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+          className="h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[14px] text-[#273951] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -148,7 +148,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
                       {p.gender ?? "-"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-[4px] px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
                         {p.status ?? "active"}
                       </span>
                     </td>
@@ -178,7 +178,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="h-8 w-8 flex items-center justify-center rounded-[4px] border border-[#e5edf5] hover:bg-[#F6F9FC] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-md border border-[#e5edf5] hover:bg-[#F6F9FC] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
               </button>
@@ -188,7 +188,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="h-8 w-8 flex items-center justify-center rounded-[4px] border border-[#e5edf5] hover:bg-[#F6F9FC] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-md border border-[#e5edf5] hover:bg-[#F6F9FC] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
               </button>

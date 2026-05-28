@@ -442,7 +442,7 @@ export function AppointmentsCalendarView({
               setCreatePrefill(null);
               setCreateOpen(true);
             }}
-            className="h-9 rounded-[4px] bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
+            className="h-9 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
           >
             New Appointment
           </Button>
@@ -480,7 +480,7 @@ export function AppointmentsCalendarView({
       />
 
       {error && (
-        <div className="px-3 py-2 rounded-[4px] bg-[#FDE7EC] text-[13px] text-[#DF1B41]">
+        <div className="px-3 py-2 rounded-md bg-[#FDE7EC] text-[13px] text-[#DF1B41]">
           {error}
         </div>
       )}

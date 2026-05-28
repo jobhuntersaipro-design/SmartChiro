@@ -59,12 +59,12 @@ function EmptyPatientState({
           : "Add your first patient to start tracking visits, X-rays, and appointments."}
       </p>
       {hasFilters ? (
-        <Button variant="outline" onClick={onClearFilters} className="h-8 px-3 text-[13px] rounded-[4px] gap-1.5">
+        <Button variant="outline" onClick={onClearFilters} className="h-8 px-3 text-[13px] rounded-md gap-1.5">
           <X className="h-3.5 w-3.5" strokeWidth={2} />
           Clear filters
         </Button>
       ) : (
-        <Button onClick={onAddPatient} className="h-8 px-3 text-[13px] rounded-[4px] gap-1.5">
+        <Button onClick={onAddPatient} className="h-8 px-3 text-[13px] rounded-md gap-1.5">
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Add Patient
         </Button>
@@ -243,7 +243,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
     setToast("Patient deleted");
   }
 
-  const selectClass = "h-8 rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none";
+  const selectClass = "h-8 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none";
 
   return (
     <div>
@@ -255,7 +255,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="gap-1.5 h-8 px-3 text-[15px] font-medium rounded-[4px]"
+          className="gap-1.5 h-8 px-3 text-[15px] font-medium rounded-md"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Add Patient
@@ -282,7 +282,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search patients by name, IC, phone, email…"
-              className="w-full h-8 rounded-[4px] border border-[#e5edf5] bg-white pl-8 pr-12 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] transition-colors"
+              className="w-full h-8 rounded-md border border-[#e5edf5] bg-white pl-8 pr-12 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] transition-colors"
             />
             <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-4.5 px-1 rounded border border-[#e5edf5] bg-[#f6f9fc] text-[10px] font-medium text-[#94a3b8] pointer-events-none">/</kbd>
           </div>
@@ -306,7 +306,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-[4px] text-[13px] text-[#64748d] hover:text-[#061b31] hover:bg-white transition-colors"
+              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[13px] text-[#64748d] hover:text-[#061b31] hover:bg-white transition-colors"
               title="Clear all filters"
             >
               <X className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -314,7 +314,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
             </button>
           )}
 
-          <div className="flex items-center rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] overflow-hidden">
+          <div className="flex items-center rounded-md border border-[#e5edf5] bg-[#f6f9fc] overflow-hidden">
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "list" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
@@ -352,7 +352,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
           style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
         >
           <p className="text-[15px] text-[#DF1B41] mb-2">{error}</p>
-          <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-[4px]">
+          <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-md">
             Retry
           </Button>
         </div>

@@ -97,7 +97,7 @@ export function DeleteBranchDialog({
             autoFocus
             disabled={loading}
             aria-invalid={showMismatch}
-            className={`h-9 rounded-[4px] text-[14px] focus:ring-1 transition-all duration-200 ${
+            className={`h-9 rounded-md text-[14px] focus:ring-1 transition-all duration-200 ${
               showMismatch
                 ? "border-[#df1b41] bg-[#FDE8EC]/30 focus:ring-[#df1b41] focus:border-[#df1b41]"
                 : "border-[#e5edf5] bg-[#F6F9FC] focus:ring-[#df1b41] focus:border-[#df1b41]"
@@ -116,14 +116,14 @@ export function DeleteBranchDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="rounded-[4px] border-[#e5edf5] text-[14px] cursor-pointer"
+            className="rounded-md border-[#e5edf5] text-[14px] cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             onClick={handleDelete}
             disabled={loading || !matches}
-            className="rounded-[4px] bg-[#DF1B41] hover:bg-[#c01836] text-white text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-[#DF1B41] hover:bg-[#c01836] text-white text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Deleting..." : "Delete Branch"}
           </Button>

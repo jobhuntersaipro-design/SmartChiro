@@ -85,7 +85,7 @@ export function LoginForm({
       {/* Auth Card */}
       <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
         {resetSuccess && (
-          <div className="mb-4 rounded-[4px] border border-[#30B130]/30 bg-[#E8F5E9] p-3">
+          <div className="mb-4 rounded-md border border-[#30B130]/30 bg-[#E8F5E9] p-3">
             <p className="text-[14px] font-medium text-[#0A5D1A]">Password updated</p>
             <p className="mt-1 text-[13px] text-[#273951]">
               Sign in with your new password.
@@ -108,7 +108,7 @@ export function LoginForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
             />
           </div>
 
@@ -135,7 +135,7 @@ export function LoginForm({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
@@ -153,7 +153,7 @@ export function LoginForm({
           </div>
 
           {emailNotVerified && (
-            <div className="rounded-[4px] border border-[#F5A623]/30 bg-[#FFF8ED] p-3">
+            <div className="rounded-md border border-[#F5A623]/30 bg-[#FFF8ED] p-3">
               <p className="text-[14px] text-[#061b31] font-medium">Email not verified</p>
               <p className="mt-1 text-[13px] text-[#273951]">
                 Please check your inbox and click the verification link.
@@ -176,7 +176,7 @@ export function LoginForm({
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />

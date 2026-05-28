@@ -81,7 +81,7 @@ export function BranchActivityLog({ branchId }: BranchActivityLogProps) {
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 rounded-[4px] bg-[#F6F9FC] animate-pulse" />
+            <div key={i} className="h-12 rounded-md bg-[#F6F9FC] animate-pulse" />
           ))}
         </div>
       </div>
@@ -130,7 +130,7 @@ export function BranchActivityLog({ branchId }: BranchActivityLogProps) {
             variant="outline"
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="h-8 px-4 rounded-[4px] border-[#e5edf5] text-[13px] text-[#061b31] cursor-pointer hover:bg-[#F6F9FC] transition-colors duration-200"
+            className="h-8 px-4 rounded-md border-[#e5edf5] text-[13px] text-[#061b31] cursor-pointer hover:bg-[#F6F9FC] transition-colors duration-200"
           >
             {loadingMore ? (
               <>

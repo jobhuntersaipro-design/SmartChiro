@@ -91,7 +91,7 @@ export function SeriesStrip({
                 type="button"
                 onClick={() => prev && navigateTo(prev.id)}
                 disabled={!prev}
-                className="rounded-[4px] p-1 text-[#cdd5e2] enabled:hover:bg-white/5 disabled:opacity-30"
+                className="rounded-md p-1 text-[#cdd5e2] enabled:hover:bg-white/5 disabled:opacity-30"
                 title="Previous X-ray (scroll up)"
                 aria-label="Previous X-ray"
               >
@@ -101,7 +101,7 @@ export function SeriesStrip({
                 type="button"
                 onClick={() => next && navigateTo(next.id)}
                 disabled={!next}
-                className="rounded-[4px] p-1 text-[#cdd5e2] enabled:hover:bg-white/5 disabled:opacity-30"
+                className="rounded-md p-1 text-[#cdd5e2] enabled:hover:bg-white/5 disabled:opacity-30"
                 title="Next X-ray (scroll down)"
                 aria-label="Next X-ray"
               >
@@ -129,7 +129,7 @@ export function SeriesStrip({
                     <Link
                       href={`/dashboard/xrays/${patientId}/${x.id}/annotate`}
                       onClick={() => onBeforeNavigate?.()}
-                      className="block rounded-[4px] overflow-hidden border"
+                      className="block rounded-md overflow-hidden border"
                       style={{ borderColor: active ? '#533afd' : 'transparent' }}
                       title={x.title ?? 'X-ray'}
                     >

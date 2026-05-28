@@ -95,7 +95,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             <button
               onClick={handleResend}
               disabled={resending}
-              className="flex h-10 w-full items-center justify-center rounded-[4px] border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] transition-colors hover:bg-[#f6f9fc] disabled:opacity-60 cursor-pointer"
+              className="flex h-10 w-full items-center justify-center rounded-md border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] transition-colors hover:bg-[#f6f9fc] disabled:opacity-60 cursor-pointer"
             >
               {resending ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -149,7 +149,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Dr. Jane Smith"
-              className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
             />
           </div>
 
@@ -186,7 +186,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
@@ -218,7 +218,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="h-10 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
@@ -242,7 +242,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />

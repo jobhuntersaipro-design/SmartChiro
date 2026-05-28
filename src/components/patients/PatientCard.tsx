@@ -59,15 +59,15 @@ export function PatientCard({ patient }: PatientCardProps) {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="rounded-[4px] bg-[#f6f9fc] px-2 py-1.5 text-center">
+        <div className="rounded-md bg-[#f6f9fc] px-2 py-1.5 text-center">
           <p className="text-[15px] font-semibold text-[#061b31]">{patient.totalVisits}</p>
           <p className="text-[11px] text-[#64748d]">Visits</p>
         </div>
-        <div className="rounded-[4px] bg-[#f6f9fc] px-2 py-1.5 text-center">
+        <div className="rounded-md bg-[#f6f9fc] px-2 py-1.5 text-center">
           <p className="text-[15px] font-semibold text-[#061b31]">{patient.totalXrays}</p>
           <p className="text-[11px] text-[#64748d]">X-Rays</p>
         </div>
-        <div className="rounded-[4px] bg-[#f6f9fc] px-2 py-1.5 text-center">
+        <div className="rounded-md bg-[#f6f9fc] px-2 py-1.5 text-center">
           <p className="text-[15px] font-semibold text-[#061b31] capitalize">{patient.status}</p>
           <p className="text-[11px] text-[#64748d]">Status</p>
         </div>

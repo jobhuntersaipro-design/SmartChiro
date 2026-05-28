@@ -333,7 +333,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
           <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
-              className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
               onClick={handleToggleStatus}
             >
               {isActive ? (
@@ -345,7 +345,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
               onClick={() => setCreateAppointmentOpen(true)}
             >
               <CalendarCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -353,7 +353,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
               onClick={() => setEditOpen(true)}
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -361,7 +361,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
+              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
               onClick={() => setDeleteOpen(true)}
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />

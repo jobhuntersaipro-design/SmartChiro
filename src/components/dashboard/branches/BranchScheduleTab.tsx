@@ -82,7 +82,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
             variant="outline"
             size="sm"
             onClick={goPrev}
-            className="h-8 w-8 p-0 rounded-[4px] border-[#e5edf5] cursor-pointer"
+            className="h-8 w-8 p-0 rounded-md border-[#e5edf5] cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           </Button>
@@ -90,7 +90,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
             variant="outline"
             size="sm"
             onClick={goToday}
-            className="h-8 px-3 rounded-[4px] border-[#e5edf5] text-[13px] cursor-pointer"
+            className="h-8 px-3 rounded-md border-[#e5edf5] text-[13px] cursor-pointer"
           >
             Today
           </Button>
@@ -98,7 +98,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
             variant="outline"
             size="sm"
             onClick={goNext}
-            className="h-8 w-8 p-0 rounded-[4px] border-[#e5edf5] cursor-pointer"
+            className="h-8 w-8 p-0 rounded-md border-[#e5edf5] cursor-pointer"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
           </Button>

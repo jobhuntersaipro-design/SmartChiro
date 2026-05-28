@@ -35,7 +35,7 @@ export default async function ResetPasswordPage({
 
           <Link
             href="/forgot-password"
-            className="flex h-10 w-full items-center justify-center rounded-[4px] bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
+            className="flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4]"
           >
             Request a new reset link
           </Link>

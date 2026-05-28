@@ -91,7 +91,7 @@ export function EditPastAppointmentDialog({
       }}
     >
       <div
-        className="w-full max-w-md rounded-[8px] bg-white shadow-xl border border-[#e5edf5] overflow-hidden"
+        className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-[#e5edf5] overflow-hidden"
         style={{
           boxShadow:
             "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.08)",
@@ -116,7 +116,7 @@ export function EditPastAppointmentDialog({
 
         <form onSubmit={handleSave} className="px-5 py-4 space-y-4">
           {error && (
-            <div className="rounded-[4px] border border-[#fcd0db] bg-[#fef2f5] px-3 py-2 text-[13px] text-[#ea2261]">
+            <div className="rounded-md border border-[#fcd0db] bg-[#fef2f5] px-3 py-2 text-[13px] text-[#ea2261]">
               {error}
             </div>
           )}
@@ -129,7 +129,7 @@ export function EditPastAppointmentDialog({
               {STATUS_OPTIONS.map((opt) => (
                 <label
                   key={opt.value}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-[4px] border cursor-pointer transition-colors duration-200 ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors duration-200 ${
                     status === opt.value
                       ? "border-[#533afd] bg-[#f5f3ff]"
                       : "border-[#e5edf5] hover:bg-[#fafbfd]"
@@ -167,7 +167,7 @@ export function EditPastAppointmentDialog({
               onChange={(e) => setNotes(e.target.value.slice(0, NOTES_MAX))}
               rows={4}
               placeholder="Add notes about this appointment…"
-              className="w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200 resize-none"
+              className="w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200 resize-none"
             />
           </div>
         </form>
@@ -178,14 +178,14 @@ export function EditPastAppointmentDialog({
             type="button"
             disabled={submitting}
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-[4px] text-[14px] border-[#e5edf5] cursor-pointer"
+            className="h-9 rounded-md text-[14px] border-[#e5edf5] cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={submitting || !dirty}
-            className="h-9 rounded-[4px] text-[14px] bg-[#533afd] hover:bg-[#3f2bd1] text-white cursor-pointer disabled:opacity-60"
+            className="h-9 rounded-md text-[14px] bg-[#533afd] hover:bg-[#3f2bd1] text-white cursor-pointer disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
