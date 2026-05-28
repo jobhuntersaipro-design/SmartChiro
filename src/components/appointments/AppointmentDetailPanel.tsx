@@ -196,7 +196,7 @@ export function AppointmentDetailPanel({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-7 w-7 items-center justify-center rounded-[4px] text-[#697386] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF]"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-[#697386] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF]"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
@@ -353,7 +353,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onEdit}
-              className="h-8 rounded-[4px] border-[#e5edf5] text-[13px] gap-1.5"
+              className="h-8 rounded-md border-[#e5edf5] text-[13px] gap-1.5"
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} /> Edit
             </Button>
@@ -364,7 +364,7 @@ export function AppointmentDetailPanel({
               size="sm"
               onClick={handleMarkComplete}
               disabled={completing}
-              className="h-8 rounded-[4px] border-[#e5edf5] text-[13px] text-[#108c3d] gap-1.5"
+              className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#108c3d] gap-1.5"
             >
               {completing ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
@@ -379,7 +379,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onCancel}
-              className="h-8 rounded-[4px] border-[#e5edf5] text-[13px] text-[#9b6829] gap-1.5"
+              className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#9b6829] gap-1.5"
             >
               <XCircle className="h-3.5 w-3.5" strokeWidth={1.75} /> Cancel
             </Button>
@@ -389,7 +389,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onDelete}
-              className="h-8 rounded-[4px] border-[#e5edf5] text-[13px] text-[#DF1B41] gap-1.5"
+              className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#DF1B41] gap-1.5"
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Delete
             </Button>
@@ -400,7 +400,7 @@ export function AppointmentDetailPanel({
               href={`/dashboard/patients/${appointment.patient.id}/details?tab=history&visit=${linkedVisit.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 h-8 rounded-[4px] border border-[#e5edf5] px-3 text-[13px] text-[#635BFF] hover:bg-[#f6f9fc] transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 rounded-md border border-[#e5edf5] px-3 text-[13px] text-[#635BFF] hover:bg-[#f6f9fc] transition-colors"
             >
               <ClipboardList className="h-3.5 w-3.5" strokeWidth={1.75} /> View visit
             </Link>
@@ -412,7 +412,7 @@ export function AppointmentDetailPanel({
                 size="sm"
                 onClick={handleCreateVisit}
                 disabled={creatingVisit}
-                className="h-8 rounded-[4px] border-[#e5edf5] text-[13px] text-[#635BFF] gap-1.5"
+                className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#635BFF] gap-1.5"
               >
                 {creatingVisit ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
