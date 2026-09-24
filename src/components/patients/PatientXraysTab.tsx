@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { XrayUpload } from '@/components/xray/XrayUpload'
 import { XrayCard, type XrayCardData } from '@/components/xray/XrayCard'
@@ -59,19 +60,39 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
   }
 
   async function handleRename(id: string, title: string) {
-    await fetch(`/api/xrays/${id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title }),
-    })
-    onRefresh()
+    try {
+      const res = await fetch(`/api/xrays/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { message?: string } | null
+        toast.error(body?.message ?? `Rename failed (${res.status})`)
+        return
+      }
+      onRefresh()
+    } catch (err) {
+      console.error('rename failed:', err)
+      toast.error('Could not save the new name.')
+    }
   }
 
   async function handleRestore(id: string) {
-    await fetch(`/api/xrays/${id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'READY' }),
-    })
-    onRefresh()
+    try {
+      const res = await fetch(`/api/xrays/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'READY' }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { message?: string } | null
+        toast.error(body?.message ?? `Restore failed (${res.status})`)
+        return
+      }
+      onRefresh()
+    } catch (err) {
+      console.error('restore failed:', err)
+      toast.error('Could not restore the X-ray.')
+    }
   }
 
   function handleNotesOpen(id: string) {

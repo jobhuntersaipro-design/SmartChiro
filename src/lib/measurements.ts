@@ -199,6 +199,51 @@ export function nextMeasurementId(
 }
 
 /**
+ * Human-readable display type for a shape — what the user sees in the
+ * Layers list. A 2-point polyline (drawn with the Line tool) reads as
+ * "Line"; a 3+-point polyline stays "Polyline". cobb_angle becomes
+ * "Cobb angle". Everything else is just the capitalized type name.
+ */
+export function effectiveDisplayType(shape: {
+  type: string;
+  points: { x: number; y: number }[];
+}): string {
+  if (shape.type === "polyline" && shape.points.length === 2) return "Line";
+  return shape.type.charAt(0).toUpperCase() + shape.type.slice(1).replace("_", " ");
+}
+
+/**
+ * Compute the next display label for a freshly-committed shape (e.g.
+ * "Line 3" or "Polyline 2"). Uses max-of-existing + 1 PER display type
+ * so the counter is strictly monotonic — deleting Line 1 and then drawing
+ * another line still yields "Line 2", never re-using "Line 1". Only
+ * considers shapes whose `label` already follows the auto-name pattern;
+ * a user-renamed shape ("My adjustment") doesn't perturb the sequence.
+ */
+export function nextDisplayLabel(
+  shape: { type: string; points: { x: number; y: number }[] },
+  existingShapes: { label?: string | null; type: string; points: { x: number; y: number }[] }[],
+): string {
+  const displayType = effectiveDisplayType(shape);
+  // Regex matches the trailing number on a label like "Line 3" or
+  // "Polyline 12". The display type prefix must match exactly so renames
+  // don't collide with another type's sequence.
+  const pattern = new RegExp(`^${displayType.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} (\\d+)$`);
+  let max = 0;
+  for (const s of existingShapes) {
+    if (!s.label) continue;
+    // Match against the candidate's own display type — a polyline whose
+    // 2-point shape was renamed isn't a "Line" sibling.
+    if (effectiveDisplayType(s) !== displayType) continue;
+    const m = s.label.match(pattern);
+    if (!m) continue;
+    const n = parseInt(m[1], 10);
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+  return `${displayType} ${max + 1}`;
+}
+
+/**
  * Find all shapes that have a `pointRefs` entry pointing at any vertex of
  * `targetShapeId`. Used by the cascade-delete dialog to warn the user before
  * removing a landmark that other measurements snap-followed, and by the
@@ -331,11 +376,41 @@ export function resolveShapeRefs(
   return recomputeShapeDerived({ ...shape, points: newPoints });
 }
 
-/** Shape kinds whose vertices receive global P-numbered labels and are
- *  snap-targets for new measurements. Kept in sync with the SNAPPABLE_KINDS
- *  set in useDrawingTools so a vertex you can snap to is also a vertex with
- *  a visible label. */
+/** Shape kinds whose vertices receive global P-numbered labels. Pairs with
+ *  SNAPPABLE_KINDS in useDrawingTools, with one intentional exception:
+ *  `landmark` shapes ARE snap targets but show their anatomical name
+ *  ("L femoral head" etc.) in place of a P# label, so they are excluded
+ *  here to keep the P-numbering tidy. */
 const LABELED_VERTEX_KINDS = new Set(["point", "line", "polyline", "angle", "cobb_angle", "ruler"]);
+
+/** Returned by computeGlobalPointLabels for any vertex that snap-followed a
+ *  landmark. The ShapeRenderer detects this and renders no inline label —
+ *  just the endpoint dot — so the landmark's own anatomical name (which
+ *  sits next to it) remains the only label for that point. UI consumers
+ *  that DO want a user-friendly name (the layers-tab vertex chain, the
+ *  cascade-delete dialog, etc.) should run the sentinel through
+ *  `resolveLandmarkLabelForDisplay` to swap it for the landmark's own
+ *  displayName ("Iliac crest 1" etc.). */
+export const LANDMARK_LABEL_SENTINEL = "__landmark__";
+
+/**
+ * Replace a LANDMARK_LABEL_SENTINEL with the user-facing landmark name by
+ * walking the shape's pointRefs. Returns the input unchanged for any other
+ * label, and `undefined` when the ref cannot be resolved (caller falls back
+ * to whatever default makes sense in their UI).
+ */
+export function resolveLandmarkLabelForDisplay(
+  label: string | undefined,
+  pointRefs: ({ shapeId: string; vertexIndex: number } | null | undefined)[] | undefined,
+  vertexIndex: number,
+  allShapes: BaseShape[],
+): string | undefined {
+  if (label !== LANDMARK_LABEL_SENTINEL) return label;
+  const ref = pointRefs?.[vertexIndex];
+  if (!ref) return undefined;
+  const src = allShapes.find((s) => s.id === ref.shapeId);
+  return src?.label ?? src?.landmarkName ?? undefined;
+}
 
 /**
  * Compute a global P-numbering for every vertex on every dot-bearing shape
@@ -382,13 +457,18 @@ export function computeGlobalPointLabels<
 
   // Pass 2: resolve ref'd vertices to the source's label. Recurses through
   // chains of refs (ref-of-ref) with a depth guard against accidental cycles.
+  // Special case: a ref pointing to a `landmark` shape returns the sentinel
+  // LANDMARK_LABEL_SENTINEL — the renderer translates that to "no label,
+  // just the endpoint dot," because landmarks identify themselves with
+  // their anatomical name rather than a P# number.
   function resolve(shapeId: string, vertexIndex: number, depth = 0): string {
     if (depth > 16) return `P?`;
     const labels = out.get(shapeId);
-    if (!labels) return `P?`;
-    const cached = labels[vertexIndex];
+    const cached = labels?.[vertexIndex];
     if (cached) return cached;
     const shape = shapeById.get(shapeId);
+    if (shape?.type === "landmark") return LANDMARK_LABEL_SENTINEL;
+    if (!labels) return `P?`;
     const ref = shape?.pointRefs?.[vertexIndex];
     if (!ref) return `P?`;
     const resolved = resolve(ref.shapeId, ref.vertexIndex, depth + 1);

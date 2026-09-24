@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import type {
   BaseShape,
   AnnotationCanvasState,
@@ -23,11 +24,13 @@ import { useImageAdjustments } from "@/hooks/useImageAdjustments";
 import { useDrawingTools } from "@/hooks/useDrawingTools";
 import {
   nextMeasurementId,
+  nextDisplayLabel,
   computeGlobalPointLabels,
   resolveShapeRefs,
   recomputeShapeDerived,
   findDependentsOfShape,
   buildDependentCounts,
+  resolveLandmarkLabelForDisplay,
 } from "@/lib/measurements";
 import { AnnotationHeader } from "./AnnotationHeader";
 import { AnnotationToolbar } from "./AnnotationToolbar";
@@ -40,6 +43,7 @@ import { TextInput } from "./TextInput";
 import { ViewModeSwitcher } from "./ViewModeSwitcher";
 import { PatientImageSidebar } from "./PatientImageSidebar";
 import { MultiViewGrid, ViewportCell, type ViewportState } from "./MultiViewGrid";
+import { SlotPickerDialog } from "./SlotPickerDialog";
 import { KeyboardShortcutsPanel } from "./KeyboardShortcutsPanel";
 import { DrawingConfirmation } from "./DrawingConfirmation";
 import { RecentCommitUndo } from "./RecentCommitUndo";
@@ -109,6 +113,13 @@ export function AnnotationCanvas({
     [],
   );
   const [imageLoaded, setImageLoaded] = useState(false);
+  // When the browser has the image cached, the `<img>`'s onLoad event can
+  // fire BEFORE React attaches the handler — we'd be stuck with imageLoaded
+  // = false forever, which disables Detect Landmarks (and anything else
+  // gated on it) until the user navigates away and back. We reconcile with
+  // the DOM via this ref: after every render, if the <img> already reports
+  // complete + has dimensions, flip the flag manually. Effect below.
+  const singleImgRef = useRef<HTMLImageElement | null>(null);
   // Prevents flash of full-size image before fitToViewport runs
   const [viewportReady, setViewportReady] = useState(false);
   const [currentStyle, setCurrentStyle] = useState<ShapeStyle>({
@@ -142,6 +153,9 @@ export function AnnotationCanvas({
   // Keyboard shortcuts panel
   const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
 
+  // AI Landmark Detection (trial feature)
+  const [detectingLandmarks, setDetectingLandmarks] = useState(false);
+
   // Image cycling between X-rays in this patient is exposed via J/K (and
   // arrow up/down) in PatientImageSidebar. The wheel is reserved for
   // pan/zoom inside the active image.
@@ -161,6 +175,17 @@ export function AnnotationCanvas({
     { xrayId: xrayId, imageUrl: imageUrl, imageWidth, imageHeight, title: xrayTitle },
   ]);
   const [activeSlotIndex, setActiveSlotIndex] = useState(0);
+  // Slot picker — index of the slot the user clicked + is filling in. -1
+  // when the picker is closed.
+  const [pickerSlotIndex, setPickerSlotIndex] = useState<number>(-1);
+  // Pending calibration carry-over: when the user picks an X-ray into a
+  // slot and the previously-active slot had calibration, we offer to copy
+  // it to the new slot once its annotation finishes loading.
+  const [pendingCalibrationCarry, setPendingCalibrationCarry] = useState<{
+    fromTitle: string;
+    pixelsPerMm: number;
+    targetXrayId: string;
+  } | null>(null);
   const defaultViewState: ViewportState = { zoom: 1, panX: 0, panY: 0 };
   const [gridViewStates, setGridViewStates] = useState<ViewportState[]>([
     defaultViewState, defaultViewState, defaultViewState, defaultViewState,
@@ -194,7 +219,17 @@ export function AnnotationCanvas({
   const clipboardRef = useRef<BaseShape[]>([]);
 
   // ─── Hooks ───
-  const viewport = useCanvasViewport({ imageWidth, imageHeight });
+  // In multi-view, the active cell may host a different X-ray than the
+  // page-level one (the user picked it for the slot). Feed the viewport
+  // hook the *active slot's* natural dimensions so fitToViewport / pan
+  // centering / 1:1 zoom all reference the image actually on screen.
+  const activeSlot = viewMode === "single" ? null : gridSlots[activeSlotIndex];
+  const activeImageWidth = activeSlot?.imageWidth ?? imageWidth;
+  const activeImageHeight = activeSlot?.imageHeight ?? imageHeight;
+  const viewport = useCanvasViewport({
+    imageWidth: activeImageWidth,
+    imageHeight: activeImageHeight,
+  });
   const imageAdj = useImageAdjustments(
     initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS }
   );
@@ -206,11 +241,10 @@ export function AnnotationCanvas({
       viewport.pan(dx, dy);
     },
     onZoom: (deltaY, point) => {
-      // Multiplicative zoom around the cursor. Using zoomBy (factor) instead
-      // of zoomAtPoint(absoluteZoom) so rapid wheel events compose against
-      // the freshest committed zoom inside setTransform — avoids the stale
-      // closure read that caused sticky / drifting zoom on trackpad pinch.
-      const factor = deltaY < 0 ? 1.1 : 0.9;
+      // Multiplicative zoom around the cursor. Smaller factor → slower zoom
+      // per wheel tick — gives the user more control on a trackpad pinch
+      // and feels less twitchy on a fine-resolution scroll wheel.
+      const factor = deltaY < 0 ? 1.04 : 0.96;
       viewport.zoomBy(factor, point.x, point.y);
     },
     onWindowLevel: (dx, dy) => {
@@ -238,11 +272,18 @@ export function AnnotationCanvas({
           if (!dragSnapshotsRef.current.has(s.id)) {
             dragSnapshotsRef.current.set(s.id, { ...s, points: [...s.points] });
           }
+          // Mirror the per-vertex handler: a multi-select drag or arrow-key
+          // nudge counts as user review, so landmarks flip ai → manual here too.
+          const sourceFlip =
+            s.type === "landmark" && s.landmarkSource === "ai"
+              ? { landmarkSource: "manual" as const }
+              : null;
           return {
             ...s,
             x: s.x + dx,
             y: s.y + dy,
             points: s.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+            ...sourceFlip,
           };
         })
       );
@@ -265,12 +306,19 @@ export function AnnotationCanvas({
           const nextPoints = s.points.map((p, i) =>
             i === vertexIndex ? { x: p.x + dx, y: p.y + dy } : p,
           );
+          // AI-detected landmark: first drag flips source ai → manual so the
+          // dashed ring becomes solid and the user can see what they've
+          // reviewed. Subsequent drags are no-ops on this field.
+          const sourceFlip =
+            s.type === "landmark" && s.landmarkSource === "ai"
+              ? { landmarkSource: "manual" as const }
+              : null;
           // Recompute bbox + measurement-derived fields (angle reading,
           // cobb perpendiculars, etc.) for the source shape itself. Dependent
           // shapes that snapped to this vertex are updated separately at
           // render time via resolveShapeRefs. Dirty marking + undo command
           // happens in the canvas:drag-end handler, matching whole-shape drag.
-          return recomputeShapeDerived({ ...s, points: nextPoints });
+          return recomputeShapeDerived({ ...s, points: nextPoints, ...sourceFlip });
         })
       );
     },
@@ -290,7 +338,20 @@ export function AnnotationCanvas({
     (shape: BaseShape) => {
       setShapes((prev) => {
         const measurementId = nextMeasurementId(shape.type, prev);
-        const stamped = measurementId ? { ...shape, measurementId } : shape;
+        // Bake a stable display label at creation time using max-existing +
+        // 1, so a new line drawn after deleting Line 1 still gets "Line 2"
+        // (strictly monotonic — never reuses an earlier number). Skips
+        // landmarks (their label is the anatomical displayName) and any
+        // shape the user already gave a custom label.
+        const displayLabel =
+          !shape.label && shape.type !== "landmark"
+            ? nextDisplayLabel(shape, prev)
+            : null;
+        const stamped: BaseShape = {
+          ...shape,
+          ...(measurementId ? { measurementId } : {}),
+          ...(displayLabel ? { label: displayLabel } : {}),
+        };
         // Re-push the command with the stamped shape so undo restores the ID
         // label. Stamp the active tool too so tool-scoped Cmd+Z can identify
         // which tool authored each undo entry.
@@ -302,6 +363,95 @@ export function AnnotationCanvas({
     },
     [undoRedo, autoSave, interaction]
   );
+
+  // AI Landmark Detection — POST { xrayId } to the privacy-isolated route,
+  // receive landmark coords, and add them all in a single undo batch so one
+  // Cmd+Z removes the whole AI overlay. Failure paths surface as toasts and
+  // never block the rest of the annotation flow.
+  //
+  // We deliberately do NOT send a viewport crop here even when the user is
+  // zoomed in. The prompt leans heavily on relative-position cues ("the
+  // iliac crest is the highest visible bone", "the ischial tuberosity sits
+  // below the obturator foramen") that depend on Claude seeing the WHOLE
+  // pelvic anatomy plus surrounding context. Cropping loses that context
+  // and empirically degrades accuracy. The server still supports a cropBox
+  // parameter for future use (e.g., a second-pass refinement around
+  // already-placed landmarks).
+  const handleDetectLandmarks = useCallback(async () => {
+    if (detectingLandmarks) return;
+    setDetectingLandmarks(true);
+    try {
+      const res = await fetch("/api/viewer/detect-landmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ xrayId }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string; message?: string } | null;
+        toast.error(body?.message ?? `Landmark detection failed (${res.status})`);
+        return;
+      }
+      const data = (await res.json()) as {
+        landmarks: Array<{
+          name: string;
+          displayName: string;
+          x: number;
+          y: number;
+        }>;
+      };
+      if (!data.landmarks || data.landmarks.length === 0) {
+        toast.warning(
+          "No landmarks returned — the AI is pelvic-only and may not have found the pelvis in this image.",
+        );
+        return;
+      }
+
+      // Build LandmarkShape entries; one undo batch so Cmd+Z removes them all.
+      const baseZ = shapes.length === 0 ? 1 : Math.max(...shapes.map((s) => s.zIndex)) + 1;
+      const landmarkShapes: BaseShape[] = data.landmarks.map((lm, i) => ({
+        id: `landmark-${Date.now()}-${i}`,
+        type: "landmark",
+        label: lm.displayName,
+        zIndex: baseZ + i,
+        visible: true,
+        locked: false,
+        style: { ...DEFAULT_SHAPE_STYLE, strokeColor: "#22D3EE" },
+        x: lm.x,
+        y: lm.y,
+        width: 0,
+        height: 0,
+        rotation: 0,
+        points: [{ x: lm.x, y: lm.y }],
+        text: null,
+        fontSize: null,
+        measurement: null,
+        landmarkName: lm.name,
+        landmarkSource: "ai",
+        landmarkOriginalX: lm.x,
+        landmarkOriginalY: lm.y,
+      }));
+
+      setShapes((prev) => [...prev, ...landmarkShapes]);
+      undoRedo.pushBatch(
+        landmarkShapes.map((s) => ({
+          type: "ADD_SHAPE" as const,
+          shapeBefore: null,
+          shapeAfter: s,
+          shapeId: s.id,
+        }))
+      );
+      autoSave.markDirty();
+      interaction.setSelectedShapeIds(landmarkShapes.map((s) => s.id));
+      toast.success(
+        `Placed ${landmarkShapes.length} landmark${landmarkShapes.length === 1 ? "" : "s"}. Drag to adjust.`,
+      );
+    } catch (err) {
+      console.error("detect-landmarks error:", err);
+      toast.error("Could not reach landmark detection service.");
+    } finally {
+      setDetectingLandmarks(false);
+    }
+  }, [detectingLandmarks, xrayId, shapes, undoRedo, autoSave, interaction]);
 
   const handleDeleteShapes = useCallback(
     (ids: string[]) => {
@@ -595,17 +745,50 @@ export function AnnotationCanvas({
         window.location.href = `/dashboard/xrays/${patientId}/${xray.id}/annotate`;
         return;
       }
-      // Save current shapes + viewport state before switching
-      const currentSlot = gridSlots[activeSlotIndex];
-      if (currentSlot?.xrayId) {
-        shapesPerXrayRef.current.set(currentSlot.xrayId, {
-          shapes: [...shapes],
-          annotationId: autoSave.currentAnnotationId,
-          viewportState: { ...viewport.transform },
-        });
+
+      const gridSize = viewMode === "side-by-side" ? 2 : 4;
+
+      // Already loaded in some slot — just activate it, no replacement.
+      const existingIndex = gridSlots.findIndex(
+        (s, i) => i < gridSize && s?.xrayId === xray.id,
+      );
+      if (existingIndex >= 0) {
+        if (existingIndex !== activeSlotIndex) setActiveSlotIndex(existingIndex);
+        return;
       }
 
-      // In grid mode, place into the active slot
+      // Pick the target slot: prefer the active slot if it's empty (matches
+      // the user's focus), else the first empty slot in the grid, else fall
+      // back to overwriting the active slot.
+      let targetIndex = -1;
+      if (!gridSlots[activeSlotIndex]?.xrayId) {
+        targetIndex = activeSlotIndex;
+      } else {
+        for (let i = 0; i < gridSize; i++) {
+          if (!gridSlots[i]?.xrayId) {
+            targetIndex = i;
+            break;
+          }
+        }
+      }
+      if (targetIndex === -1) targetIndex = activeSlotIndex;
+
+      // If we're about to overwrite the active slot's X-ray, snapshot its
+      // shapes + viewport first. When targeting a different slot the
+      // active-slot effect at the top of this component does the same
+      // snapshot when activeSlotIndex changes — so don't double-save here.
+      if (targetIndex === activeSlotIndex) {
+        const currentSlot = gridSlots[activeSlotIndex];
+        if (currentSlot?.xrayId) {
+          shapesPerXrayRef.current.set(currentSlot.xrayId, {
+            shapes: [...shapes],
+            annotationId: autoSave.currentAnnotationId,
+            viewportState: { ...viewport.transform },
+          });
+        }
+      }
+
+      // Place into the chosen slot.
       setGridSlots((prev) => {
         const newSlots = [...prev];
         const slot: ViewportSlot = {
@@ -615,15 +798,21 @@ export function AnnotationCanvas({
           imageHeight: xray.height ?? 768,
           title: xray.title ?? "Untitled",
         };
-        // Expand array if needed
-        while (newSlots.length <= activeSlotIndex) {
+        while (newSlots.length <= targetIndex) {
           newSlots.push({ xrayId: null, imageUrl: null, imageWidth: 1024, imageHeight: 768, title: "" });
         }
-        newSlots[activeSlotIndex] = slot;
+        newSlots[targetIndex] = slot;
         return newSlots;
       });
 
-      // Load the new xray's shapes + viewport state
+      // Different slot → let the activeSlotIndex effect handle the shape +
+      // viewport swap so we don't duplicate logic here.
+      if (targetIndex !== activeSlotIndex) {
+        setActiveSlotIndex(targetIndex);
+        return;
+      }
+
+      // Same slot overwrite → swap shapes inline.
       const cached = shapesPerXrayRef.current.get(xray.id);
       if (cached) {
         setShapes(cached.shapes);
@@ -631,9 +820,7 @@ export function AnnotationCanvas({
         activeXrayIdRef.current = xray.id;
         if (cached.viewportState) {
           viewport.setTransform(cached.viewportState);
-          // Cached viewport — no flash, stay visible
         } else {
-          // No cached viewport — hide until image loads and fitToViewport runs
           setViewportReady(false);
           setImageLoaded(false);
         }
@@ -641,7 +828,6 @@ export function AnnotationCanvas({
         setShapes([]);
         autoSave.switchTarget(xray.id, null);
         activeXrayIdRef.current = xray.id;
-        // Hide until image loads and fitToViewport runs
         setViewportReady(false);
         setImageLoaded(false);
         fetchAnnotationForXray(xray.id);
@@ -649,7 +835,7 @@ export function AnnotationCanvas({
       undoRedo.clear();
       interaction.setSelectedShapeIds([]);
     },
-    [viewMode, activeSlotIndex, gridSlots, shapes, autoSave, undoRedo, interaction, fetchAnnotationForXray, viewport]
+    [viewMode, activeSlotIndex, gridSlots, shapes, autoSave, undoRedo, interaction, fetchAnnotationForXray, viewport, patientId]
   );
 
   // ─── Shape Update (from properties panel) ───
@@ -667,6 +853,53 @@ export function AnnotationCanvas({
       autoSave.markDirty();
     },
     [undoRedo, autoSave]
+  );
+
+  // Bulk "Reset all to AI" from the Pelvic Analysis section. Single undo
+  // batch so one Cmd+Z restores every manual position the user just nuked.
+  // Skips shapes that aren't landmarks or never had an AI original recorded.
+  const handleResetLandmarksToAi = useCallback(
+    (ids: string[]) => {
+      const targetIds = new Set(ids);
+      const commands: Array<{
+        type: "MODIFY_SHAPE";
+        shapeBefore: BaseShape;
+        shapeAfter: BaseShape;
+        shapeId: string;
+      }> = [];
+      setShapes((prev) =>
+        prev.map((s) => {
+          if (!targetIds.has(s.id)) return s;
+          if (
+            s.type !== "landmark" ||
+            s.landmarkOriginalX == null ||
+            s.landmarkOriginalY == null
+          ) {
+            return s;
+          }
+          const before = { ...s, points: s.points.map((p) => ({ ...p })) };
+          const after: BaseShape = {
+            ...s,
+            points: [
+              { x: s.landmarkOriginalX, y: s.landmarkOriginalY },
+            ],
+            landmarkSource: "ai",
+          };
+          commands.push({
+            type: "MODIFY_SHAPE",
+            shapeBefore: before,
+            shapeAfter: after,
+            shapeId: s.id,
+          });
+          return after;
+        }),
+      );
+      if (commands.length > 0) {
+        undoRedo.pushBatch(commands);
+        autoSave.markDirty();
+      }
+    },
+    [undoRedo, autoSave],
   );
 
   // ─── Canvas State Helpers ───
@@ -1027,6 +1260,37 @@ export function AnnotationCanvas({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction, handleTogglePropertiesPanel]);
 
+  // Calibration carry-over offer — after the user picks an X-ray for an
+  // empty / changed slot, if the previous active slot had calibration we
+  // wait for the new annotation to land (active xray ID matches target +
+  // imageAdj has reflected its loaded value) and then offer to copy. If
+  // the new X-ray already has its own calibration, drop the offer
+  // silently.
+  useEffect(() => {
+    if (!pendingCalibrationCarry) return;
+    if (activeXrayIdRef.current !== pendingCalibrationCarry.targetXrayId) return;
+    const newPpm = imageAdj.adjustments.pixelsPerMm;
+    if (newPpm && newPpm > 0) {
+      setPendingCalibrationCarry(null);
+      return;
+    }
+    const { pixelsPerMm: ppm, fromTitle } = pendingCalibrationCarry;
+    toast.info(
+      `${fromTitle} is calibrated (1 mm = ${ppm.toFixed(2)} px). Use the same calibration here?`,
+      {
+        duration: 12_000,
+        action: {
+          label: "Apply",
+          onClick: () => imageAdj.setPixelsPerMm(ppm),
+        },
+      },
+    );
+    setPendingCalibrationCarry(null);
+    // Watching `shapes` as well — fetchAnnotationForXray sets both shapes
+    // and adjustments together, so a shape-array swap is a good proxy for
+    // "the new annotation has finished loading."
+  }, [pendingCalibrationCarry, shapes, imageAdj]);
+
   // Fit to viewport once image loads
   useEffect(() => {
     if (imageLoaded) {
@@ -1035,17 +1299,32 @@ export function AnnotationCanvas({
     }
   }, [imageLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fit when viewMode changes (container size changes)
+  // Cached-image fallback: when imageUrl changes, the browser may serve the
+  // image from cache and fire load before React attaches our onLoad handler.
+  // The DOM <img> reports complete + naturalWidth synchronously in that case,
+  // so we reconcile here. Without this, Detect Landmarks (gated on
+  // imageLoaded) stays disabled until the user navigates away and back.
   useEffect(() => {
-    // Brief opacity hide to prevent flash during layout change
+    if (!imageUrl) return;
+    const img = singleImgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setImageLoaded(true);
+    }
+  }, [imageUrl]);
+
+  // Re-fit when viewMode OR the active slot's image dimensions change. The
+  // dims-dependency catches the multi-view case where the user picked a
+  // different X-ray into the active slot — its natural dimensions differ
+  // from the page-level X-ray, so the viewport needs to re-fit against the
+  // new image, not the original.
+  useEffect(() => {
     setViewportReady(false);
-    // Small delay to let the grid CSS layout settle before measuring container
     const timer = setTimeout(() => {
       viewport.fitToViewport();
       setViewportReady(true);
     }, 50);
     return () => clearTimeout(timer);
-  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [viewMode, activeImageWidth, activeImageHeight]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // ─── Pointer Handlers (drawing tools + interaction) ───
@@ -1062,10 +1341,34 @@ export function AnnotationCanvas({
         return;
       }
 
+      // Drawing tool returned false → click landed on the dark margin
+      // outside the X-ray with no in-progress shape to commit. Treat that
+      // as "user is done; deselect" so the just-created shape's selection
+      // ring goes away. Matches the hand/select-tool empty-click semantics
+      // in useCanvasInteraction so the experience is uniform across tools.
+      // Skip when the user held a multi-select modifier — they're likely
+      // mid-build and a stray outside-click shouldn't wipe their work.
+      const screenX = e.clientX - rect.left;
+      const screenY = e.clientY - rect.top;
+      const imagePos = {
+        x: (screenX - viewport.transform.panX) / viewport.transform.zoom,
+        y: (screenY - viewport.transform.panY) / viewport.transform.zoom,
+      };
+      const outsideImage =
+        imagePos.x < 0 ||
+        imagePos.y < 0 ||
+        imagePos.x > imageWidth ||
+        imagePos.y > imageHeight;
+      const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+      if (outsideImage && !additive && interaction.selectedShapeIds.length > 0) {
+        interaction.setSelectedShapeIds([]);
+        return;
+      }
+
       // Fall through to interaction (select, pan)
       interaction.handlePointerDown(e);
     },
-    [drawing, interaction]
+    [drawing, interaction, viewport.transform, imageWidth, imageHeight]
   );
 
   const handlePointerMove = useCallback(
@@ -1101,6 +1404,7 @@ export function AnnotationCanvas({
     if (interaction.isPanning) return "grabbing";
     if (interaction.isDragging) return "move";
     if (interaction.activeTool === "hand") return "grab";
+    if (interaction.activeTool === "select") return "default";
     if (interaction.activeTool === "text") return "text";
     return "crosshair";
   };
@@ -1191,6 +1495,9 @@ export function AnnotationCanvas({
               }
               interaction.setActiveTool(tool);
             }}
+            onDetectLandmarks={handleDetectLandmarks}
+            detectingLandmarks={detectingLandmarks}
+            detectLandmarksDisabled={viewMode !== "single" || !imageLoaded}
           />
           <div style={{ flex: 1 }} />
           <div className="pb-2 flex flex-col items-center">
@@ -1245,6 +1552,7 @@ export function AnnotationCanvas({
                       fights this. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
+                    ref={singleImgRef}
                     src={imageUrl}
                     alt={xrayTitle}
                     width={imageWidth}
@@ -1278,7 +1586,15 @@ export function AnnotationCanvas({
                   >
                     {allShapesToRender
                       .filter((s) => s.visible)
-                      .sort((a, b) => a.zIndex - b.zIndex)
+                      .sort((a, b) => {
+                        // Landmark dots always render on top of any line /
+                        // ruler / polyline / arrow so a measurement that
+                        // passes through a landmark doesn't obscure it.
+                        const aLm = a.type === "landmark" ? 1 : 0;
+                        const bLm = b.type === "landmark" ? 1 : 0;
+                        if (aLm !== bLm) return aLm - bLm;
+                        return a.zIndex - b.zIndex;
+                      })
                       .map((shape) => (
                         <ShapeRenderer
                           key={shape.id}
@@ -1488,6 +1804,22 @@ export function AnnotationCanvas({
                         onPointerUp={handlePointerUp}
                         onDoubleClick={handleDoubleClick}
                       >
+                        {/* Swap this slot's X-ray. Sits above all drawing
+                            content with stopPropagation so a click on it
+                            doesn't also fire a canvas pointer-down. */}
+                        <button
+                          type="button"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPickerSlotIndex(i);
+                          }}
+                          className="absolute right-2 top-2 z-20 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white transition-colors hover:bg-black/80"
+                          style={{ opacity: 0.85 }}
+                          aria-label={`Change X-ray in slot ${i + 1}`}
+                        >
+                          Change
+                        </button>
                         <div
                           className="absolute origin-top-left"
                           style={{
@@ -1529,7 +1861,15 @@ export function AnnotationCanvas({
                           >
                             {allShapesToRender
                               .filter((s) => s.visible)
-                              .sort((a, b) => a.zIndex - b.zIndex)
+                              .sort((a, b) => {
+                        // Landmark dots always render on top of any line /
+                        // ruler / polyline / arrow so a measurement that
+                        // passes through a landmark doesn't obscure it.
+                        const aLm = a.type === "landmark" ? 1 : 0;
+                        const bLm = b.type === "landmark" ? 1 : 0;
+                        if (aLm !== bLm) return aLm - bLm;
+                        return a.zIndex - b.zIndex;
+                      })
                               .map((shape) => (
                                 <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} />
                               ))}
@@ -1589,42 +1929,83 @@ export function AnnotationCanvas({
                   }
 
                   if (!slot.imageUrl) {
-                    // ─── Empty cell ───
+                    // ─── Empty cell — click to open the slot picker ───
+                    // Deliberately does NOT change activeSlotIndex: that
+                    // would demote the user's currently-loaded X-ray to a
+                    // small non-active ViewportCell while the picker is
+                    // open, which feels like the original disappeared.
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={i}
-                        onClick={() => setActiveSlotIndex(i)}
-                        className="flex cursor-pointer items-center justify-center"
+                        onClick={() => setPickerSlotIndex(i)}
+                        className="group flex cursor-pointer items-center justify-center transition-all duration-150 hover:bg-[#252b48] hover:border-[#533afd]"
                         style={{
                           backgroundColor: "#1A1F36",
-                          border: i === activeSlotIndex ? "2px solid #533afd" : "1px solid rgba(255,255,255,0.08)",
+                          border: i === activeSlotIndex
+                            ? "2px dashed #533afd"
+                            : "2px dashed rgba(255,255,255,0.18)",
                           borderRadius: 4,
                         }}
+                        aria-label={`Add X-ray to slot ${i + 1}`}
                       >
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 9999, backgroundColor: "rgba(255,255,255,0.06)" }}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M12 5v14M5 12h14" /></svg>
+                        <div className="flex flex-col items-center gap-2 transition-transform duration-150 group-hover:-translate-y-0.5">
+                          <div
+                            className="flex h-12 w-12 items-center justify-center transition-colors group-hover:bg-[#533afd]/30"
+                            style={{ borderRadius: 9999, backgroundColor: "rgba(255,255,255,0.08)" }}
+                          >
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.75" className="transition-colors group-hover:stroke-[#a89ffd]">
+                              <path d="M12 5v14M5 12h14" />
+                            </svg>
                           </div>
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Drop X-ray here</span>
+                          <span
+                            className="transition-colors group-hover:text-white"
+                            style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}
+                          >
+                            Click to add X-ray
+                          </span>
+                          <span
+                            className="opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+                            style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}
+                          >
+                            Pick from patient or upload
+                          </span>
                         </div>
-                      </div>
+                      </button>
                     );
                   }
 
                   // ─── Non-active cell: simple viewer with read-only annotations ───
                   const cachedShapes = slot.xrayId ? shapesPerXrayRef.current.get(slot.xrayId)?.shapes : undefined;
                   return (
-                    <ViewportCell
-                      key={i}
-                      slot={slot}
-                      isActive={false}
-                      onClick={() => setActiveSlotIndex(i)}
-                      cssFilter={imageAdj.cssFilter}
-                      imageTransform={imageTransform}
-                      viewState={gridViewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
-                      onViewStateChange={(state) => handleGridViewStateChange(i, state)}
-                      shapes={cachedShapes}
-                    />
+                    <div key={i} className="relative h-full w-full">
+                      <ViewportCell
+                        slot={slot}
+                        isActive={false}
+                        onClick={() => setActiveSlotIndex(i)}
+                        cssFilter={imageAdj.cssFilter}
+                        imageTransform={imageTransform}
+                        viewState={gridViewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
+                        onViewStateChange={(state) => handleGridViewStateChange(i, state)}
+                        shapes={cachedShapes}
+                      />
+                      {/* Per-slot "swap X-ray" button — opens the picker
+                          for this slot. Stops propagation so it doesn't
+                          also trigger the cell's onClick activate. */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveSlotIndex(i);
+                          setPickerSlotIndex(i);
+                        }}
+                        className="absolute right-2 top-2 z-10 rounded-md bg-black/60 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity hover:bg-black/80 group-hover:opacity-100"
+                        style={{ opacity: 0.85 }}
+                        aria-label={`Change X-ray in slot ${i + 1}`}
+                      >
+                        Change
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -1661,6 +2042,7 @@ export function AnnotationCanvas({
           dependentCounts={buildDependentCounts(shapes)}
           onClearCalibration={() => imageAdj.setPixelsPerMm(undefined)}
           onEditCalibration={requestEditCalibration}
+          onResetLandmarksToAi={handleResetLandmarksToAi}
         />
       </div>
 
@@ -1706,7 +2088,15 @@ export function AnnotationCanvas({
               (labels && labels[0]) ||
               d.shape.type;
             const refList = d.vertexIndices
-              .map((i) => labels?.[i] ?? `vertex ${i + 1}`)
+              .map(
+                (i) =>
+                  resolveLandmarkLabelForDisplay(
+                    labels?.[i],
+                    d.shape.pointRefs,
+                    i,
+                    shapes,
+                  ) ?? `vertex ${i + 1}`,
+              )
               .join(", ");
             return {
               shape: d.shape,
@@ -1718,6 +2108,46 @@ export function AnnotationCanvas({
           onDeleteAll={cascadeDeleteAll}
         />
       )}
+
+      {/* Slot picker — opens from an empty side-by-side / 2x2 cell so the
+          user can either pick another X-ray from this patient or upload a
+          new one. */}
+      <SlotPickerDialog
+        open={pickerSlotIndex >= 0}
+        onOpenChange={(o) => { if (!o) setPickerSlotIndex(-1); }}
+        patientId={patientId}
+        excludeXrayIds={gridSlots
+          .map((s) => s.xrayId)
+          .filter((id): id is string => id !== null)}
+        onPick={(slot) => {
+          const target = pickerSlotIndex;
+          if (target < 0) return;
+          // Capture the source slot's calibration BEFORE we switch active
+          // slots. If the user had a calibrated X-ray and is now adding a
+          // sibling, we offer to copy the calibration over once the new
+          // annotation loads.
+          const sourcePpm = imageAdj.adjustments.pixelsPerMm;
+          const sourceTitle = gridSlots[activeSlotIndex]?.title ?? "the other X-ray";
+          if (sourcePpm && sourcePpm > 0 && slot.xrayId && slot.xrayId !== gridSlots[activeSlotIndex]?.xrayId) {
+            setPendingCalibrationCarry({
+              fromTitle: sourceTitle,
+              pixelsPerMm: sourcePpm,
+              targetXrayId: slot.xrayId,
+            });
+          }
+          setGridSlots((prev) => {
+            const next = [...prev];
+            // Ensure the array is long enough for the picked slot index.
+            while (next.length <= target) {
+              next.push({ xrayId: null, imageUrl: null, imageWidth: 1024, imageHeight: 768, title: "" });
+            }
+            next[target] = slot;
+            return next;
+          });
+          setActiveSlotIndex(target);
+          setPickerSlotIndex(-1);
+        }}
+      />
 
       {/* Status Bar */}
       <StatusBar

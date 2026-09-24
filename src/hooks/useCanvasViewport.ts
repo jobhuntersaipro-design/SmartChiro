@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type ViewTransform,
   type Point,
@@ -109,13 +109,18 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     });
   }, [clampZoom]);
 
-  // Fit image to viewport with padding
+  // Fit image to viewport with padding. We deliberately use a TIGHT 4px
+  // padding (well under the legacy CANVAS_PADDING=24) so the X-ray
+  // dominates the cell — chiropractors complained the image looked
+  // shrunken when there was 24px of empty space on every side, especially
+  // in 2×2 mode where cells are already squat.
   const fitToViewport = useCallback(() => {
     const container = containerRef.current;
     if (!container || !imageWidth || !imageHeight) return;
     const rect = container.getBoundingClientRect();
-    const availW = rect.width - CANVAS_PADDING * 2;
-    const availH = rect.height - CANVAS_PADDING * 2;
+    const PAD = 4;
+    const availW = rect.width - PAD * 2;
+    const availH = rect.height - PAD * 2;
     const zoom = clampZoom(Math.min(availW / imageWidth, availH / imageHeight));
     const panX = (rect.width - imageWidth * zoom) / 2;
     const panY = (rect.height - imageHeight * zoom) / 2;
@@ -176,6 +181,24 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     },
     [transform]
   );
+
+  // Auto-refit when the container box changes (e.g. user switches between
+  // single / side-by-side / 2×2, or resizes the window). Without this the
+  // viewport's zoom stays computed for the prior cell size, leaving the
+  // image off-center and at the wrong scale until the user manually hits
+  // Fit. We refit on EVERY observation — including the initial one —
+  // because that's the rect that reflects post-layout size, and skipping
+  // it can leave a transient pre-layout fit (e.g. when imageLoaded fired
+  // before the new cell height was applied) as the persisted state.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      fitToViewport();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fitToViewport]);
 
   return {
     transform,

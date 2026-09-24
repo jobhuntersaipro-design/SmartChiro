@@ -17,6 +17,7 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
     title: "Navigation",
     shortcuts: [
       { keys: ["H"], description: "Pan / Hand tool" },
+      { keys: ["V"], description: "Select tool (marquee + multi-select)" },
       { keys: ["Space"], description: "Temporary pan (hold)" },
       { keys: ["J"], description: "Next X-ray" },
       { keys: ["K"], description: "Previous X-ray" },

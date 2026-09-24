@@ -12,7 +12,8 @@ export type ShapeType =
   | "ruler"
   | "angle"
   | "cobb_angle"
-  | "calibration";
+  | "calibration"
+  | "landmark";
 
 export interface ShapeStyle {
   strokeColor: string;
@@ -126,6 +127,25 @@ export interface BaseShape {
   textAlign?: "left" | "center" | "right";
   textPadding?: number;
   textBackground?: string | null;
+
+  // Landmark (AI-detected anatomical points — kind: "landmark")
+  // The single point lives in points[0]; these fields capture the metadata
+  // needed for the review-and-adjust UX.
+  /** Canonical snake_case name — e.g. "top_of_femoral_head_1". Unique per response. */
+  landmarkName?: string;
+  /**
+   * Whether this landmark was placed by AI or by the user. AI landmarks
+   * render with a dashed ring; once dragged, source flips to "manual" and
+   * the ring becomes solid so the user can see what they've reviewed.
+   */
+  landmarkSource?: "ai" | "manual";
+  /**
+   * The original AI-suggested position, captured at detection time and
+   * preserved through user drags so we can offer a "Reset to AI" affordance.
+   * Stays unset for landmarks placed manually from scratch.
+   */
+  landmarkOriginalX?: number;
+  landmarkOriginalY?: number;
 }
 
 export interface ShapeMeasurement {
@@ -210,6 +230,7 @@ export interface UndoRedoStack {
 
 export type ToolId =
   | "hand"
+  | "select"
   | "point"
   | "line"
   | "polyline"

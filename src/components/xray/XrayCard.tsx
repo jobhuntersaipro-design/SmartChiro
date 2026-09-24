@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Calendar, ScanLine, MoreVertical, Pencil, Trash2, FileText, Archive, RotateCcw } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
@@ -38,12 +39,30 @@ export function XrayCard({
 }: XrayCardProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(xray.title ?? '')
+  // Optimistic title — show the user's new name immediately while the PATCH
+  // is in flight + parent refetch round-trips. Cleared back to server truth
+  // the moment the parent passes a fresh `xray.title` prop in.
+  //
+  // Uses React's "previous prop value as state" pattern from
+  // https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  // — comparing the incoming prop against state-stored prev-prop is the
+  // recommended way to reset derived state on prop change without a
+  // useEffect cascade or render-time ref access.
+  const [optimisticTitle, setOptimisticTitle] = useState<string | null>(null)
+  const [lastServerTitle, setLastServerTitle] = useState(xray.title)
+  if (lastServerTitle !== xray.title) {
+    setLastServerTitle(xray.title)
+    setOptimisticTitle(null)
+  }
+  const displayTitle = optimisticTitle ?? xray.title
   const archived = xray.status === 'ARCHIVED'
 
   async function commitRename() {
+    const trimmed = draft.trim()
     setEditing(false)
-    if (draft.trim() === (xray.title ?? '')) return
-    await onRename(xray.id, draft.trim())
+    if (trimmed === (xray.title ?? '')) return
+    setOptimisticTitle(trimmed || null)
+    await onRename(xray.id, trimmed)
   }
 
   function handleClick(e: React.MouseEvent) {
@@ -76,7 +95,14 @@ export function XrayCard({
       >
         <div className="h-40 bg-[#1A1F36] flex items-center justify-center overflow-hidden relative">
           {xray.thumbnailUrl ? (
-            <img src={xray.thumbnailUrl} alt={xray.title ?? 'X-ray'} className="w-full h-full object-contain" />
+            <Image
+              src={xray.thumbnailUrl}
+              alt={xray.title ?? 'X-ray'}
+              width={320}
+              height={160}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="w-full h-full object-contain"
+            />
           ) : (
             <ScanLine className="w-10 h-10 text-[#4a5568] opacity-40" />
           )}
@@ -114,7 +140,7 @@ export function XrayCard({
             onClick={() => setEditing(true)}
             className="text-left text-[14px] font-medium text-[#061b31] truncate w-full hover:underline"
           >
-            {xray.title || 'Untitled'}
+            {displayTitle || 'Untitled'}
           </button>
         )}
 

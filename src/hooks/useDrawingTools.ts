@@ -24,11 +24,39 @@ const ERASER_RADIUS = 8;
 const FREEHAND_SIMPLIFY_TOLERANCE = 1.5;
 /** Snap-to-vertex radius (device pixels). Matches the vertex dot visual radius. */
 const VERTEX_SNAP_PIXELS = 12;
-/** Shape kinds whose vertex dots act as snap targets. Angle/cobb/ruler
- *  vertices are included so any landmark a user has placed can be re-used
- *  as a snap target for new measurements. All these kinds render numbered
- *  dots via computeGlobalPointLabels. */
-const SNAPPABLE_KINDS = new Set(["polyline", "line", "point", "angle", "cobb_angle", "ruler"]);
+/** Shape kinds whose vertex dots act as snap targets for new shapes.
+ *  Includes `landmark` so AI- (or manually-) placed anatomical landmarks
+ *  behave as anchors — drawing a ruler from L-femoral-head to R-femoral-
+ *  head etc. snaps to the landmark center and captures a pointRef so the
+ *  ruler live-follows the landmark if the user later drags it.
+ *  NOTE: this is NOT identical to LABELED_VERTEX_KINDS in measurements.ts.
+ *  Landmarks are snap targets but show their anatomical name in place of
+ *  a P# label, so they intentionally do not participate in P-numbering. */
+const SNAPPABLE_KINDS = new Set(["polyline", "line", "point", "angle", "cobb_angle", "ruler", "landmark"]);
+
+/** Stroke color applied to a line / ruler / polyline whose endpoints
+ *  snap-followed an AI (or manual) landmark. Matches the green of a
+ *  reviewed landmark ring so the whole landmark-anchored measurement
+ *  reads as one connected unit. */
+const LANDMARK_ANCHORED_STROKE = "#10B981";
+
+/** True when any of the given refs points to a landmark shape. Used by
+ *  the build* helpers to override stroke color for landmark-anchored
+ *  measurements without persisting an extra flag on the shape. */
+function refsIncludeLandmark(
+  refs: (VertexRef | null)[] | undefined,
+  shapes: BaseShape[],
+): boolean {
+  if (!refs || refs.length === 0) return false;
+  // Hot-path build: small N (a polyline has at most a handful of refs), so a
+  // linear find is faster than rebuilding a Map every commit.
+  for (const ref of refs) {
+    if (!ref) continue;
+    const src = shapes.find((s) => s.id === ref.shapeId);
+    if (src?.type === "landmark") return true;
+  }
+  return false;
+}
 
 /**
  * If `point` is within the snap radius of any visible polyline/line vertex,
@@ -450,7 +478,13 @@ export function useDrawingTools({
 
   const buildPolylineShape = useCallback(
     (points: Point[], id: string, refs?: (VertexRef | null)[]): BaseShape => {
-      const shape = createBaseShape("polyline", currentStyle, getNextZIndex(shapes));
+      // Landmark-anchored polylines/lines use green to visually pair with
+      // the green reviewed-landmark ring color. Otherwise keep the user's
+      // current toolbar style.
+      const styleForShape = refsIncludeLandmark(refs, shapes)
+        ? { ...currentStyle, strokeColor: LANDMARK_ANCHORED_STROKE }
+        : currentStyle;
+      const shape = createBaseShape("polyline", styleForShape, getNextZIndex(shapes));
       shape.id = id;
       shape.points = points;
       if (refs && refs.some((r) => r != null)) {
@@ -475,7 +509,12 @@ export function useDrawingTools({
   // landmarks without re-clicking.
   const buildRulerShape = useCallback(
     (points: Point[], id: string, refs?: (VertexRef | null)[]): BaseShape => {
-      const shape = createBaseShape("ruler", MEASUREMENT_STYLE, getNextZIndex(shapes));
+      // Landmark-anchored rulers swap the default teal MEASUREMENT_STYLE
+      // for green to match the reviewed-landmark ring color.
+      const rulerStyle = refsIncludeLandmark(refs, shapes)
+        ? { ...MEASUREMENT_STYLE, strokeColor: LANDMARK_ANCHORED_STROKE }
+        : MEASUREMENT_STYLE;
+      const shape = createBaseShape("ruler", rulerStyle, getNextZIndex(shapes));
       shape.id = id;
       shape.points = points;
       if (refs && refs.some((r) => r != null)) {

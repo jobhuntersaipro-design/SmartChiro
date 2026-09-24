@@ -67,7 +67,8 @@ function distancePointToSegment(
 function distanceToShape(px: number, py: number, shape: BaseShape): number {
   const pts = shape.points;
   switch (shape.type) {
-    case "point": {
+    case "point":
+    case "landmark": {
       if (pts.length === 0) return Infinity;
       return Math.hypot(px - pts[0].x, py - pts[0].y);
     }
@@ -129,6 +130,7 @@ const VERTEX_HIT_PIXELS = 12;
  *  include them too. */
 const VERTEX_DRAG_KINDS = new Set<BaseShape["type"]>([
   "point",
+  "landmark",
   "line",
   "polyline",
   "angle",
@@ -207,9 +209,14 @@ export function useCanvasInteraction({
   // to treat a no-movement release as "clear selection" (otherwise plain
   // clicks get swallowed since pan ate the previous marquee-clear path).
   const panClearsSelectionRef = useRef(false);
-  // Set whenever pan moves the canvas at least 1px — distinguishes a
-  // click-without-drag from a real pan gesture.
+  // Set when pan moves more than the click-vs-drag threshold from origin —
+  // distinguishes a click-without-drag from a real pan gesture so the first
+  // click on empty canvas reliably clears the selection.
   const panMovedRef = useRef(false);
+  // Pointer position when pan started (screen coords). Used by pointerUp to
+  // measure total pan distance against a threshold instead of every
+  // pointermove tick (which can fire with 0–1px deltas during a still click).
+  const panOriginRef = useRef<{ x: number; y: number } | null>(null);
   const dragRef = useRef<DragEvent | null>(null);
   const spaceHeldRef = useRef(false);
   const previousToolRef = useRef<ToolId>("hand");
@@ -266,8 +273,13 @@ export function useCanvasInteraction({
         return;
       }
 
-      // Hand tool: click a shape to select (and start drag); empty-click pans.
-      if (activeTool === "hand") {
+      // Pan + Select tools share the click-on-shape selection logic. They
+      // differ only in what plain drag on empty canvas means:
+      //   - Pan tool   → drag pans the viewport (marquee via Shift+drag)
+      //   - Select tool → drag rubber-bands a marquee (replaces selection;
+      //                   Shift+drag extends, just like Photoshop / Figma)
+      // Multi-select on shapes is Shift OR Cmd/Ctrl+click on either tool.
+      if (activeTool === "hand" || activeTool === "select") {
         const imagePos = screenToImage(screenX, screenY, transform);
 
         // Vertex hit takes precedence over shape hit. If the click landed on
@@ -278,7 +290,18 @@ export function useCanvasInteraction({
           ? hitTestVertex(imagePos.x, imagePos.y, shapes, transform.zoom)
           : null;
         if (vertexHit) {
-          if (!selectedShapeIds.includes(vertexHit.shapeId)) {
+          // Vertex hit: support Shift / Cmd / Ctrl to toggle the parent
+          // shape in/out of the multi-selection (Point shapes register as
+          // vertex hits, so without this the second Shift+click on a point
+          // would replace the selection instead of extending it).
+          const additiveVertex = e.shiftKey || e.metaKey || e.ctrlKey;
+          if (additiveVertex) {
+            setSelectedShapeIds((prev) =>
+              prev.includes(vertexHit.shapeId)
+                ? prev.filter((id) => id !== vertexHit.shapeId)
+                : [...prev, vertexHit.shapeId]
+            );
+          } else if (!selectedShapeIds.includes(vertexHit.shapeId)) {
             setSelectedShapeIds([vertexHit.shapeId]);
           }
           setToolState("shape_selected");
@@ -294,8 +317,12 @@ export function useCanvasInteraction({
 
         const hit = hitTest(imagePos.x, imagePos.y);
 
+        // Multi-select modifier: Shift OR Cmd (Mac) OR Ctrl (Windows/Linux).
+        // All three toggle the clicked shape in/out of the current selection.
+        const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+
         if (hit) {
-          if (e.shiftKey) {
+          if (additive) {
             setSelectedShapeIds((prev) =>
               prev.includes(hit.id)
                 ? prev.filter((id) => id !== hit.id)
@@ -315,11 +342,21 @@ export function useCanvasInteraction({
             hasMoved: false,
           };
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-        } else if (e.shiftKey) {
-          // Shift + empty-area drag → rubber-band marquee selection
-          // (additive — extends the current selection, mirroring shift+click
-          // on a shape). If the user releases without moving, we treat it as
-          // "clear selection" instead.
+        } else if (activeTool === "select") {
+          // Select tool + empty-area drag → marquee select. Plain drag
+          // replaces the current selection; Shift / Cmd / Ctrl + drag
+          // extends it (kept consistent with the click-on-shape modifier).
+          setMarquee({
+            start: imagePos,
+            end: imagePos,
+            hasMoved: false,
+            additive,
+          });
+          dragRef.current = null;
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        } else if (additive) {
+          // Pan tool + Shift / Cmd / Ctrl + empty-area drag → additive
+          // marquee selection.
           setMarquee({
             start: imagePos,
             end: imagePos,
@@ -329,11 +366,12 @@ export function useCanvasInteraction({
           dragRef.current = null;
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         } else {
-          // Empty-area drag with the hand tool → pan, matching the toolbar
-          // tooltip ("click and drag to move around the X-ray"). On release
-          // without movement the pointerUp handler clears the selection.
+          // Pan tool + plain drag on empty canvas → pan the viewport,
+          // matching the toolbar tooltip. Click without drag clears
+          // the selection (handled in pointerUp).
           setIsPanning(true);
           panStartRef.current = { x: e.clientX, y: e.clientY };
+          panOriginRef.current = { x: e.clientX, y: e.clientY };
           panClearsSelectionRef.current = true;
           panMovedRef.current = false;
           (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -356,13 +394,23 @@ export function useCanvasInteraction({
         const dx = e.clientX - panStartRef.current.x;
         const dy = e.clientY - panStartRef.current.y;
         panStartRef.current = { x: e.clientX, y: e.clientY };
-        if (dx !== 0 || dy !== 0) panMovedRef.current = true;
+        // Only count as "moved" once the cursor has crossed a 3px threshold
+        // from the original click — avoids flagging a still click as a pan
+        // due to sub-pixel tremor (which would suppress the click-empty
+        // deselect on the first click).
+        if (panOriginRef.current && !panMovedRef.current) {
+          const totalDx = e.clientX - panOriginRef.current.x;
+          const totalDy = e.clientY - panOriginRef.current.y;
+          if (Math.abs(totalDx) > 3 || Math.abs(totalDy) > 3) {
+            panMovedRef.current = true;
+          }
+        }
         pan(dx, dy);
         return;
       }
 
-      // Rubber-band marquee selection — empty-drag on canvas
-      if (marquee && activeTool === "hand") {
+      // Rubber-band marquee selection — empty-drag on canvas (Pan or Select tool)
+      if (marquee && (activeTool === "hand" || activeTool === "select")) {
         const dx = imagePos.x - marquee.start.x;
         const dy = imagePos.y - marquee.start.y;
         const moved = Math.abs(dx) > 1 || Math.abs(dy) > 1;
@@ -374,8 +422,8 @@ export function useCanvasInteraction({
         return;
       }
 
-      // Shape / vertex dragging
-      if (dragRef.current && activeTool === "hand") {
+      // Shape / vertex dragging — works on Pan or Select tool
+      if (dragRef.current && (activeTool === "hand" || activeTool === "select")) {
         const dx = imagePos.x - dragRef.current.startImagePos.x;
         const dy = imagePos.y - dragRef.current.startImagePos.y;
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
@@ -414,6 +462,7 @@ export function useCanvasInteraction({
         }
         panClearsSelectionRef.current = false;
         panMovedRef.current = false;
+        panOriginRef.current = null;
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       }
       if (dragRef.current) {
@@ -515,9 +564,11 @@ export function useCanvasInteraction({
 
         if (!e.shiftKey) {
           switch (e.key.toLowerCase()) {
-            case "v":
             case "h":
               setActiveTool("hand");
+              return;
+            case "v":
+              setActiveTool("select");
               return;
             case "d":
               setActiveTool("point");

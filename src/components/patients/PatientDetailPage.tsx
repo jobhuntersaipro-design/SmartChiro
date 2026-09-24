@@ -95,7 +95,7 @@ function StatusBadge({ status }: { status: string }) {
   const c = config[lower] ?? { text: "#64748d", dot: "#94a3b8", label: status };
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
-      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
+      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: c.dot }} />
       {c.label}
     </span>
   );

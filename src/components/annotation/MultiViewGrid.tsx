@@ -42,35 +42,86 @@ export function ViewportCell({
   shapes?: BaseShape[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Ref + post-render check on the <img> below. When the browser serves
+  // the image from cache (e.g., the same X-ray was rendered in the
+  // active-cell role moments ago), the `load` event can fire BEFORE
+  // React attaches our onLoad handler — leaving `imageLoaded` stuck
+  // false. Reconciling against `img.complete` after every render catches
+  // that race.
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const isPanning = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
+  // Snapshot of viewState at pointerdown + accumulated pan delta. Used by
+  // the pan handler instead of reading `viewState` from closure — multiple
+  // pointermove events fire faster than React re-renders, and the closure
+  // copy of viewState is stale between them, so doing `viewState.panX + dx`
+  // each frame would lose intermediate deltas and produce visible jitter
+  // ("the image keeps moving around"). Computing against a stable
+  // snapshot + accumulator is what makes pan track the mouse 1:1.
+  const panStartViewState = useRef<ViewportState | null>(null);
+  const panAccumulated = useRef({ x: 0, y: 0 });
   const [showHint, setShowHint] = useState(true);
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fit image to viewport when loaded or container resizes
+  // Fit image to viewport. Keep this padding in sync with
+  // useCanvasViewport.ts so the active and non-active cells render the
+  // X-ray at the *same* size — otherwise the same image in two slots
+  // appears at two different scales, which clinicians read as a bug.
+  // No upscale cap: small natural-res X-rays should still fill the cell.
   const fitToViewport = useCallback(() => {
     if (!containerRef.current || !slot.imageUrl) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const padding = 8;
-    const scaleX = (rect.width - padding * 2) / slot.imageWidth;
-    const scaleY = (rect.height - padding * 2) / slot.imageHeight;
-    const zoom = Math.min(scaleX, scaleY, 1);
+    const PAD = 4;
+    const scaleX = (rect.width - PAD * 2) / slot.imageWidth;
+    const scaleY = (rect.height - PAD * 2) / slot.imageHeight;
+    const zoom = Math.min(scaleX, scaleY);
     const panX = (rect.width - slot.imageWidth * zoom) / 2;
     const panY = (rect.height - slot.imageHeight * zoom) / 2;
     onViewStateChangeRef.current({ zoom, panX, panY });
   }, [slot.imageWidth, slot.imageHeight, slot.imageUrl]);
 
-  // Fit to viewport on first image load. If the parent has cached viewport state
-  // (zoom > 1 or non-zero pan), skip fitting — the cached state is already applied via props.
+  // Fit to viewport on first image load. We fit unconditionally here:
+  // the parent's `viewState` was computed for whatever container the slot
+  // was previously in (often the active drawing canvas, which has slightly
+  // different effective dimensions due to a 2px vs 1px border), so reusing
+  // it can leave the image off-frame in the non-active cell. Fitting from
+  // the cell's own bounding rect guarantees the X-ray is centered + scaled
+  // to this cell every time it first mounts here. User's pan/zoom inside
+  // the non-active cell is preserved across re-renders (imageLoaded only
+  // toggles once per mount), so this only re-fits on activation
+  // transitions, not on every drag.
   useEffect(() => {
     if (!imageLoaded) return;
-    const vs = viewStateRef.current;
-    const isCachedState = vs.zoom > 1 || vs.panX !== 0 || vs.panY !== 0;
-    if (!isCachedState) {
-      fitToViewport();
-    }
+    fitToViewport();
   }, [imageLoaded, fitToViewport]);
+
+  // Mirror imageLoaded into a ref for the ResizeObserver below (avoids
+  // resubscribing on every load).
+  const imageLoadedRef = useRef(imageLoaded);
+  useEffect(() => {
+    imageLoadedRef.current = imageLoaded;
+  }, [imageLoaded]);
+
+  // Re-fit when the cell's own bounding rect changes (viewMode swap from
+  // side-by-side → 2×2 halves the cell height, window resizes, etc).
+  // Without this a cell that loaded its image while it was a different
+  // size stays at the old zoom and renders off-center.
+  //
+  // Subtle: we DO refit on the first observation too. ResizeObserver fires
+  // initially with the post-layout rect — that's the rect we actually want
+  // to fit to, not skip. The previous "firstFire skip" implementation hid
+  // cases where the imageLoaded effect ran fit with a transient rect (e.g.
+  // 121px tall during a viewMode transition) and never got corrected.
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const ro = new ResizeObserver(() => {
+      if (imageLoadedRef.current) fitToViewport();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fitToViewport]);
 
   // When the X-ray loaded in this slot changes (e.g. user picks a different
   // thumbnail for the right pane in comparison mode), reset both the
@@ -85,6 +136,18 @@ export function ViewportCell({
       prevXrayIdRef.current = slot.xrayId;
     }
   }, [slot.xrayId]);
+
+  // Cached-image fallback: when imageUrl changes, the browser may serve
+  // the image from cache and fire load before React attaches our onLoad
+  // handler — leaving imageLoaded stuck false and the fit-on-load effect
+  // never running. Reading `img.complete` post-render catches that.
+  useEffect(() => {
+    if (!slot.imageUrl) return;
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setImageLoaded(true);
+    }
+  }, [slot.imageUrl]);
 
   // Auto-hide hint after 3 seconds
   useEffect(() => {
@@ -139,6 +202,13 @@ export function ViewportCell({
     dismissHint();
     isPanning.current = true;
     lastPointer.current = { x: e.clientX, y: e.clientY };
+    // Snapshot the current viewState so every pointermove computes its
+    // new pan as (snapshot + accumulated delta) rather than (closure
+    // viewState + this-frame delta). The closure approach is racy under
+    // fast pointer movement — multiple events fire per frame and only
+    // the last one's setState wins, dropping the intermediate deltas.
+    panStartViewState.current = viewStateRef.current;
+    panAccumulated.current = { x: 0, y: 0 };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, [dismissHint]);
 
@@ -147,22 +217,28 @@ export function ViewportCell({
     const dx = e.clientX - lastPointer.current.x;
     const dy = e.clientY - lastPointer.current.y;
     lastPointer.current = { x: e.clientX, y: e.clientY };
-    onViewStateChange({
-      ...viewState,
-      panX: viewState.panX + dx,
-      panY: viewState.panY + dy,
+    panAccumulated.current.x += dx;
+    panAccumulated.current.y += dy;
+    const base = panStartViewState.current;
+    if (!base) return;
+    onViewStateChangeRef.current({
+      ...base,
+      panX: base.panX + panAccumulated.current.x,
+      panY: base.panY + panAccumulated.current.y,
     });
-  }, [viewState, onViewStateChange]);
+  }, []);
 
   const handlePointerUp = useCallback(() => {
     isPanning.current = false;
+    panStartViewState.current = null;
+    panAccumulated.current = { x: 0, y: 0 };
   }, []);
 
   if (!slot.imageUrl) {
     return (
       <div
         onClick={onClick}
-        className="flex cursor-pointer items-center justify-center"
+        className="flex h-full w-full cursor-pointer items-center justify-center"
         style={{
           backgroundColor: "#1A1F36",
           border: isActive
@@ -195,7 +271,7 @@ export function ViewportCell({
     <div
       ref={containerRef}
       onClick={onClick}
-      className="relative overflow-hidden"
+      className="relative h-full w-full overflow-hidden"
       style={{
         backgroundColor: "#1A1F36",
         border: isActive
@@ -220,6 +296,7 @@ export function ViewportCell({
             as AnnotationCanvas; Next/Image fights it. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={imgRef}
           src={slot.imageUrl}
           alt={slot.title}
           width={slot.imageWidth}
