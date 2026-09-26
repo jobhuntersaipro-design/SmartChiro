@@ -38,19 +38,16 @@ export function ZoomBar({
 
   return (
     <div
-      className="flex items-center justify-center gap-1"
+      className="flex h-12 items-center justify-center gap-1 md:h-8"
       style={{
-        height: 32,
         backgroundColor: "rgba(255, 255, 255, 0.08)",
         backdropFilter: "blur(8px)",
       }}
     >
       <button
         onClick={onZoomOut}
-        className="flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80"
+        className="flex h-11 w-11 items-center justify-center text-base font-medium transition-opacity hover:opacity-80 md:h-6 md:w-7 md:text-xs"
         style={{
-          width: 28,
-          height: 24,
           borderRadius: 4,
           color: "rgba(255, 255, 255, 0.7)",
         }}
@@ -82,7 +79,7 @@ export function ZoomBar({
       ) : (
         <button
           onClick={handleZoomClick}
-          className="text-xs tabular-nums transition-opacity hover:opacity-80"
+          className="min-h-11 min-w-12 px-2 text-sm tabular-nums transition-opacity hover:opacity-80 md:min-h-0 md:text-xs"
           style={{
             color: "rgba(255, 255, 255, 0.8)",
             minWidth: 48,
@@ -96,10 +93,8 @@ export function ZoomBar({
 
       <button
         onClick={onZoomIn}
-        className="flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80"
+        className="flex h-11 w-11 items-center justify-center text-base font-medium transition-opacity hover:opacity-80 md:h-6 md:w-7 md:text-xs"
         style={{
-          width: 28,
-          height: 24,
           borderRadius: 4,
           color: "rgba(255, 255, 255, 0.7)",
         }}
@@ -115,9 +110,8 @@ export function ZoomBar({
 
       <button
         onClick={onFit}
-        className="flex items-center gap-1 px-2 text-xs transition-opacity hover:opacity-80"
+        className="flex h-11 items-center gap-1 px-3 text-sm transition-opacity hover:opacity-80 md:h-6 md:text-xs"
         style={{
-          height: 24,
           borderRadius: 4,
           color: "rgba(255, 255, 255, 0.7)",
         }}
@@ -129,9 +123,8 @@ export function ZoomBar({
 
       <button
         onClick={onActual}
-        className="px-2 text-xs transition-opacity hover:opacity-80"
+        className="h-11 px-3 text-sm transition-opacity hover:opacity-80 md:h-6 md:text-xs"
         style={{
-          height: 24,
           borderRadius: 4,
           color: "rgba(255, 255, 255, 0.7)",
         }}

@@ -80,7 +80,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-3 fade-in duration-300">
+    <div className="fixed bottom-24 right-4 z-50 animate-in slide-in-from-bottom-3 fade-in duration-300 md:bottom-6 md:right-6">
       <div className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-2.5 text-[14px] text-[#061b31]"
         style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}>
         {message}
@@ -97,6 +97,12 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   const [statusFilter, setStatusFilter] = useState("all");
   const [doctorFilter, setDoctorFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setViewMode("grid");
+    }
+  }, []);
   const [sortKey, setSortKey] = useState<SortKey>("upcomingAppointment");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [addOpen, setAddOpen] = useState(false);
@@ -243,19 +249,19 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
     setToast("Patient deleted");
   }
 
-  const selectClass = "h-8 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none";
+  const selectClass = "h-11 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none sm:h-8 sm:w-auto";
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[22px] font-light tracking-[-0.22px] text-[#061b31]">Patients</h1>
           <p className="text-[14px] text-[#64748d] mt-0.5">Manage your clinic&apos;s patient records</p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="gap-1.5 h-8 px-3 text-[15px] font-medium rounded-md"
+          className="h-11 w-full gap-1.5 rounded-md px-3 text-[15px] font-medium sm:h-8 sm:w-auto"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Add Patient
@@ -272,8 +278,8 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       />
 
       {/* Filter bar — sticky to top of viewport while scrolling */}
-      <div className="sticky top-13 z-20 -mx-2 px-2 py-2 bg-[#f6f9fc]/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-[#f6f9fc]/80">
-        <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-20 -mx-2 mb-3 border-b border-transparent bg-[#f6f9fc]/95 px-2 py-2 backdrop-blur-sm supports-[backdrop-filter]:bg-[#f6f9fc]/80 md:top-13">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <div className="flex-1 relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748d] pointer-events-none" strokeWidth={1.75} />
             <input
@@ -282,7 +288,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search patients by name, IC, phone, email…"
-              className="w-full h-8 rounded-md border border-[#e5edf5] bg-white pl-8 pr-12 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] transition-colors"
+              className="h-11 w-full rounded-md border border-[#e5edf5] bg-white pl-8 pr-12 text-[16px] text-[#061b31] placeholder:text-[#94a3b8] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd] sm:h-8 sm:text-[14px]"
             />
             <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-4.5 px-1 rounded border border-[#e5edf5] bg-[#f6f9fc] text-[10px] font-medium text-[#94a3b8] pointer-events-none">/</kbd>
           </div>
@@ -317,14 +323,14 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
           <div className="flex items-center rounded-md border border-[#e5edf5] bg-[#f6f9fc] overflow-hidden">
             <button
               onClick={() => setViewMode("list")}
-              className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "list" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
+              className={`flex h-11 w-11 items-center justify-center transition-colors sm:h-8 sm:w-8 ${viewMode === "list" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
               title="List view"
             >
               <List className="h-4 w-4" strokeWidth={1.5} />
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "grid" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
+              className={`flex h-11 w-11 items-center justify-center transition-colors sm:h-8 sm:w-8 ${viewMode === "grid" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
               title="Grid view"
             >
               <LayoutGrid className="h-4 w-4" strokeWidth={1.5} />

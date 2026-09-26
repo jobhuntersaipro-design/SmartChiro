@@ -68,7 +68,7 @@ export function LoginForm({
   }
 
   return (
-    <div className="w-full max-w-105">
+    <div className="animate-page-in w-full max-w-105">
       {/* Logo / Branding */}
       <div className="mb-8 text-center flex flex-col items-center">
         <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
@@ -108,7 +108,7 @@ export function LoginForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-11 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[16px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
             />
           </div>
 
@@ -122,7 +122,7 @@ export function LoginForm({
               </label>
               <Link
                 href="/forgot-password"
-                className="text-[13px] text-[#533afd] hover:underline transition-colors"
+                className="inline-flex min-h-11 items-center text-[13px] text-[#533afd] transition-colors hover:underline"
               >
                 Forgot password?
               </Link>
@@ -135,12 +135,12 @@ export function LoginForm({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-11 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-12 text-[16px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] cursor-pointer"
+                className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-[#64748d] hover:text-[#061b31] cursor-pointer"
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -176,7 +176,7 @@ export function LoginForm({
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
+            className="flex h-11 w-full items-center justify-center rounded-md bg-[#533afd] text-[16px] font-medium text-white transition-all hover:bg-[#4434d4] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />

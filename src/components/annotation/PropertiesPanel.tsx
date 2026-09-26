@@ -344,7 +344,7 @@ export function PropertiesPanel({
   if (!isOpen) {
     return (
       <div
-        className="flex flex-col items-center"
+        className="hidden flex-col items-center md:flex"
         style={{
           width: 32,
           backgroundColor: "#FFFFFF",
@@ -391,7 +391,7 @@ export function PropertiesPanel({
 
   return (
     <div
-      className="flex flex-col overflow-hidden"
+      className="properties-panel-open flex flex-col overflow-hidden"
       style={{
         width: 280,
         backgroundColor: "#FFFFFF",
@@ -449,10 +449,8 @@ export function PropertiesPanel({
           onClick={onTogglePanel}
           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748d"; }}
-          className="flex items-center justify-center transition-colors"
+          className="flex h-11 w-11 items-center justify-center transition-colors md:h-8 md:w-8"
           style={{
-            width: 32,
-            height: 32,
             color: "#64748d",
             borderLeft: "1px solid #e5edf5",
           }}

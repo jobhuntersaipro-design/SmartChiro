@@ -213,6 +213,68 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-overlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-page-in {
+  animation: page-in 180ms ease-out both;
+}
+
+.animate-sheet-up {
+  animation: sheet-up 180ms ease-out both;
+}
+
+.animate-fade-overlay {
+  animation: fade-overlay 150ms ease-out both;
+}
+
+@media (max-width: 767px) {
+  .properties-panel-open {
+    position: fixed;
+    z-index: 40;
+    top: 3.25rem;
+    right: 0;
+    bottom: calc(3.75rem + env(safe-area-inset-bottom));
+    left: 0;
+    width: auto !important;
+    box-shadow: rgba(3, 3, 39, 0.25) 0px 14px 21px -14px;
+    animation: sheet-up 180ms ease-out both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-sheet-up,
+  .animate-fade-overlay,
+  .properties-panel-open {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

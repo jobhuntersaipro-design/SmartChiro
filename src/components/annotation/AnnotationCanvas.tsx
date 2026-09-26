@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { PanelRight } from "lucide-react";
 import type {
   BaseShape,
   AnnotationCanvasState,
@@ -98,6 +99,10 @@ export function AnnotationCanvas({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem("smartchiro:propertiesPanelOpen");
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setPropertiesPanelOpenState(false);
+      return;
+    }
     if (stored === "false") setPropertiesPanelOpenState(false);
   }, []);
   const setPropertiesPanelOpen = useCallback(
@@ -1436,8 +1441,17 @@ export function AnnotationCanvas({
       }
     : null;
 
+  const handleToolChange = (tool: ToolId) => {
+    if (drawing.pendingShape) drawing.acceptPending();
+    if (drawing.isDrawing) {
+      drawing.cancelDrawing();
+      setRenderTick((n) => n + 1);
+    }
+    interaction.setActiveTool(tool);
+  };
+
   return (
-    <div className="flex h-screen w-screen flex-col" style={{ backgroundColor: "#1A1F36" }}>
+    <div className="flex h-dvh w-full max-w-[100vw] flex-col overflow-hidden" style={{ backgroundColor: "#1A1F36" }}>
       {/* Notes Drawer (portal-style sheet, rendered outside canvas) */}
       <NotesDrawer
         xrayId={xrayId}
@@ -1479,22 +1493,11 @@ export function AnnotationCanvas({
         {/* Vertical Left Rail Toolbar */}
         <aside
           style={{ width: 44, backgroundColor: "#0a1220", borderRight: "1px solid #1c2738", flexShrink: 0 }}
-          className="flex flex-col"
+          className="hidden flex-col md:flex"
         >
           <AnnotationToolbar
             activeTool={interaction.activeTool}
-            onToolChange={(tool) => {
-              // Switching tools mid-draw: discard any in-progress click-tool
-              // sequence so we don't leave a degenerate stub (e.g. a line
-              // committed from click 1 to a stale ghost). Pending shapes
-              // still auto-accept since they're already a valid commit.
-              if (drawing.pendingShape) drawing.acceptPending();
-              if (drawing.isDrawing) {
-                drawing.cancelDrawing();
-                setRenderTick((n) => n + 1);
-              }
-              interaction.setActiveTool(tool);
-            }}
+            onToolChange={handleToolChange}
             onDetectLandmarks={handleDetectLandmarks}
             detectingLandmarks={detectingLandmarks}
             detectLandmarksDisabled={viewMode !== "single" || !imageLoaded}
@@ -2044,6 +2047,44 @@ export function AnnotationCanvas({
           onEditCalibration={requestEditCalibration}
           onResetLandmarksToAi={handleResetLandmarksToAi}
         />
+      </div>
+
+      <div
+        className="flex shrink-0 items-center gap-1 md:hidden"
+        style={{
+          backgroundColor: "#0a1220",
+          borderTop: "1px solid #1c2738",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <div className="pl-1">
+          <ViewModeSwitcher
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            buttonSize={44}
+          />
+        </div>
+        <AnnotationToolbar
+          orientation="horizontal"
+          activeTool={interaction.activeTool}
+          onToolChange={handleToolChange}
+          onDetectLandmarks={handleDetectLandmarks}
+          detectingLandmarks={detectingLandmarks}
+          detectLandmarksDisabled={viewMode !== "single" || !imageLoaded}
+        />
+        <button
+          type="button"
+          onClick={handleTogglePropertiesPanel}
+          aria-label={propertiesPanelOpen ? "Hide layers" : "Show layers"}
+          aria-pressed={propertiesPanelOpen}
+          className="mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded transition-transform active:scale-95"
+          style={{
+            backgroundColor: propertiesPanelOpen ? "#533afd" : "rgba(255,255,255,.06)",
+            color: propertiesPanelOpen ? "#FFFFFF" : "#cdd5e2",
+          }}
+        >
+          <PanelRight size={18} strokeWidth={1.5} />
+        </button>
       </div>
 
       {/* Keyboard Shortcuts Panel */}
