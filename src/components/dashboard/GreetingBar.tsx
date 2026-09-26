@@ -80,9 +80,9 @@ export function GreetingBar({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[23px] font-light tracking-[-0.23px] text-[#061b31]" suppressHydrationWarning>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-[20px] font-light tracking-[-0.23px] text-[#061b31] sm:text-[23px]" suppressHydrationWarning>
             {greeting},{" "}
             <span className="font-medium">{displayName}</span>
           </h1>
@@ -118,7 +118,7 @@ export function GreetingBar({
         </p>
         <button
           onClick={refreshQuote}
-          className="absolute bottom-3 right-3 flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#533afd] active:scale-90 cursor-pointer"
+          className="absolute bottom-2 right-2 flex h-11 w-11 items-center justify-center rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#533afd] active:scale-90 cursor-pointer"
           title="New quote"
         >
           <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.5} />

@@ -186,12 +186,12 @@ export function CreateAppointmentDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="animate-fade-overlay fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#e5edf5] bg-white p-6"
+        className="animate-sheet-up max-h-[90vh] w-full max-w-120 overflow-y-auto rounded-t-2xl border border-[#e5edf5] bg-white p-4 sm:rounded-2xl sm:p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <h2 className="text-[18px] font-medium text-[#0A2540] mb-4">Schedule appointment</h2>
@@ -219,7 +219,7 @@ export function CreateAppointmentDialog({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-11 w-full rounded-md border border-[#e5edf5] bg-white px-2 text-[16px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] sm:h-9 sm:text-[14px]"
             />
           </div>
           <div>
@@ -228,7 +228,7 @@ export function CreateAppointmentDialog({
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-11 w-full rounded-md border border-[#e5edf5] bg-white px-2 text-[16px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] sm:h-9 sm:text-[14px]"
             />
           </div>
         </div>
@@ -244,7 +244,7 @@ export function CreateAppointmentDialog({
             step={15}
             value={duration}
             onChange={(e) => setDuration(parseInt(e.target.value || "30", 10))}
-            className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            className="h-11 w-full rounded-md border border-[#e5edf5] bg-white px-2 text-[16px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] sm:h-9 sm:text-[14px]"
           />
         </div>
 
@@ -255,7 +255,7 @@ export function CreateAppointmentDialog({
           <select
             value={treatmentType}
             onChange={(e) => setTreatmentType(e.target.value as TreatmentType | "")}
-            className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            className="h-11 w-full rounded-md border border-[#e5edf5] bg-white px-2 text-[16px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] sm:h-9 sm:text-[14px]"
           >
             <option value="">— Select —</option>
             {TREATMENT_OPTIONS.map((t) => (
@@ -274,7 +274,7 @@ export function CreateAppointmentDialog({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-1.5 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-2 text-[16px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] sm:text-[14px]"
           />
         </div>
 
@@ -311,11 +311,11 @@ export function CreateAppointmentDialog({
 
         <p className="text-[11px] text-[#94a3b8] mb-3">Your local time · {tz}</p>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={onClose} disabled={submitting} className="h-11 w-full rounded-md text-[15px] sm:h-8 sm:w-auto sm:text-[14px]">
             Cancel
           </Button>
-          <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
+          <Button onClick={() => submit()} disabled={!canSave} className="h-11 w-full rounded-md text-[15px] gap-1.5 sm:h-8 sm:w-auto sm:text-[14px]">
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {submitting ? "Scheduling…" : "Schedule"}
           </Button>
@@ -330,7 +330,7 @@ export function CreateAppointmentDialog({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-105 rounded-2xl border border-[#e5edf5] bg-white p-6"
+            className="w-full max-w-105 rounded-2xl border border-[#e5edf5] bg-white p-6"
             style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -349,7 +349,7 @@ export function CreateAppointmentDialog({
                 variant="outline"
                 onClick={() => setBreakConfirm(null)}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px]"
+                className="h-11 rounded-md text-[15px] sm:h-8 sm:text-[13px]"
               >
                 Pick another time
               </Button>
@@ -359,7 +359,7 @@ export function CreateAppointmentDialog({
                   submit({ forceBookOnBreak: true });
                 }}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5"
+                className="h-11 rounded-md text-[15px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5 sm:h-8 sm:text-[13px]"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 Book on break
