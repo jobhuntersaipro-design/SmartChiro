@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
+import { hasSessionUser } from '@/lib/has-session-user'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 
 export const metadata = {
@@ -8,7 +9,7 @@ export const metadata = {
 
 export default async function RegisterPage() {
   const session = await auth()
-  if (session) redirect('/dashboard')
+  if (hasSessionUser(session)) redirect('/dashboard')
 
   const googleEnabled = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
 
