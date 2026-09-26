@@ -15,6 +15,7 @@ import {
   ChevronsUpDown,
   Building2,
   Stethoscope,
+  Bone,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
@@ -35,6 +36,7 @@ const navItems = [
   { label: "Branches", href: "/dashboard/branches", icon: Building2 },
   { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope },
   { label: "Appointments", href: "/dashboard/appointments", icon: Calendar },
+  { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone },
   { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
 ];
 

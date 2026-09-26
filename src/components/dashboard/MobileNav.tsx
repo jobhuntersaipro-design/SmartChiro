@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
+  Bone,
   Menu,
   Building2,
   Stethoscope,
@@ -21,6 +22,7 @@ const tabs = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { label: "Patients", href: "/dashboard/patients", icon: Users, exact: false },
   { label: "Schedule", href: "/dashboard/appointments", icon: Calendar, exact: false },
+  { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone, exact: false },
 ] as const;
 
 const moreLinks = [
@@ -106,7 +108,7 @@ export function MobileNav({ userId }: { userId: string }) {
         className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e5edf5] bg-white md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {tabs.map((tab) => {
             const active = tab.exact
               ? pathname === tab.href
