@@ -17,6 +17,7 @@ interface PatientListViewProps {
   userId: string;
   userName: string | null;
   branchRole: string;
+  initialPatients?: Patient[];
 }
 
 function fuzzyMatch(text: string, query: string): boolean {
@@ -89,9 +90,9 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
-export function PatientListView({ userId, userName, branchRole }: PatientListViewProps) {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
+export function PatientListView({ userId, userName, branchRole, initialPatients }: PatientListViewProps) {
+  const [patients, setPatients] = useState<Patient[]>(initialPatients ?? []);
+  const [loading, setLoading] = useState(!initialPatients);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -175,9 +176,9 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   }, [isAdmin]);
 
   useEffect(() => {
-    fetchPatients();
+    if (!initialPatients) fetchPatients();
     fetchDoctors();
-  }, [fetchPatients, fetchDoctors]);
+  }, [fetchPatients, fetchDoctors, initialPatients]);
 
   // Client-side filtering
   const filtered = useMemo(() => {

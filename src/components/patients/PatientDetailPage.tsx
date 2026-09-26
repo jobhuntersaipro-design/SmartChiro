@@ -42,6 +42,7 @@ interface PatientDetailPageProps {
   patientId: string;
   branchRole: BranchRole | null;
   currentUserId: string;
+  initialPatient?: PatientDetail | null;
 }
 
 interface PatientDetail extends Patient {
@@ -101,13 +102,13 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PatientDetailPage({ patientId, branchRole, currentUserId }: PatientDetailPageProps) {
+export function PatientDetailPage({ patientId, branchRole, currentUserId, initialPatient }: PatientDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab: TabId = resolveInitialTab(searchParams.get("tab"));
 
-  const [patient, setPatient] = useState<PatientDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [patient, setPatient] = useState<PatientDetail | null>(initialPatient ?? null);
+  const [loading, setLoading] = useState(!initialPatient);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [editOpen, setEditOpen] = useState(false);
@@ -134,8 +135,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   }, [patientId]);
 
   useEffect(() => {
+    if (initialPatient) return;
     fetchPatient();
-  }, [fetchPatient]);
+  }, [fetchPatient, initialPatient]);
 
   function handleTabChange(tab: TabId) {
     setActiveTab(tab);

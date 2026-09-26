@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { BranchRole } from "@prisma/client";
 import type {
@@ -27,11 +27,19 @@ import { QuickActionsPanel } from "./owner/QuickActionsPanel";
 import { RecentPatientsCard } from "./doctor/RecentPatientsCard";
 import { RecentXraysGrid } from "./doctor/RecentXraysGrid";
 
+interface DashboardHomeSeed {
+  branches: BranchSummary[];
+  ownerStats: OwnerStats | null;
+  doctorStats: DoctorStats | null;
+  appointments: ScheduleAppointment[];
+}
+
 interface DashboardViewProps {
   userId: string;
   userName: string | null;
   branchRole: BranchRole | null;
   activeBranchId: string | null;
+  initial?: DashboardHomeSeed;
 }
 
 export function DashboardView({
@@ -39,6 +47,7 @@ export function DashboardView({
   userName,
   branchRole,
   activeBranchId,
+  initial,
 }: DashboardViewProps) {
   const isDoctor = branchRole === "DOCTOR";
   const isOwner = branchRole === "OWNER";
@@ -58,18 +67,21 @@ export function DashboardView({
   }, [router]);
 
   // Data states
-  const [branches, setBranches] = useState<BranchSummary[]>([]);
-  const [ownerStats, setOwnerStats] = useState<OwnerStats | null>(null);
-  const [doctorStats, setDoctorStats] = useState<DoctorStats | null>(null);
-  const [appointments, setAppointments] = useState<ScheduleAppointment[]>([]);
+  const [branches, setBranches] = useState<BranchSummary[]>(initial?.branches ?? []);
+  const [ownerStats, setOwnerStats] = useState<OwnerStats | null>(initial?.ownerStats ?? null);
+  const [doctorStats, setDoctorStats] = useState<DoctorStats | null>(initial?.doctorStats ?? null);
+  const [appointments, setAppointments] = useState<ScheduleAppointment[]>(initial?.appointments ?? []);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
   const [recentXrays, setRecentXrays] = useState<RecentXray[]>([]);
 
   // Loading
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [scheduleLoading, setScheduleLoading] = useState(true);
-  const [hasBranch, setHasBranch] = useState<boolean | null>(null);
+  const [statsLoading, setStatsLoading] = useState(!initial);
+  const [scheduleLoading, setScheduleLoading] = useState(!initial);
+  const [hasBranch, setHasBranch] = useState<boolean | null>(
+    initial ? initial.branches.length > 0 : null,
+  );
+  const skipSeededReads = useRef(Boolean(initial));
 
   const branchParam = selectedBranchId ?? "all";
 
@@ -153,35 +165,25 @@ export function DashboardView({
     }
   }, [isDoctor]);
 
-  // Initial load
   useEffect(() => {
+    if (skipSeededReads.current && (selectedBranchId ?? "all") === "all") {
+      skipSeededReads.current = false;
+      fetchActivity();
+      fetchDoctorData();
+      return;
+    }
+    skipSeededReads.current = false;
     fetchBranches();
-  }, [fetchBranches]);
-
-  useEffect(() => {
-    if (hasBranch === null) return;
-    if (!hasBranch) return;
     fetchStats();
     fetchSchedule();
     fetchActivity();
     fetchDoctorData();
-  }, [hasBranch, fetchStats, fetchSchedule, fetchActivity, fetchDoctorData]);
+  }, [branchParam, fetchBranches, fetchStats, fetchSchedule, fetchActivity, fetchDoctorData, selectedBranchId]);
 
   // No branch — onboarding (redirect to branches page)
   if (hasBranch === false) {
     return (
       <OnboardingPrompt onCreateBranch={() => router.push("/dashboard/branches")} />
-    );
-  }
-
-  // Loading initial state
-  if (hasBranch === null) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-[#e5edf5] animate-pulse" />
-        <SkeletonStatCards />
-        <SkeletonTable rows={5} />
-      </div>
     );
   }
 

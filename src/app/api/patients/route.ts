@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { listPatients } from '@/lib/patient-list'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -115,104 +116,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = session.user.id
     const { searchParams } = new URL(request.url)
-    const search = searchParams.get('search')?.trim() || null
-    const branchIdFilter = searchParams.get('branchId') || null
-    const statusFilter = searchParams.get('status') || null
-    const doctorIdFilter = searchParams.get('doctorId') || null
-
-    // Determine user's role in their active branch
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        activeBranchId: true,
-        branchMemberships: {
-          select: { branchId: true, role: true },
-        },
-      },
+    const result = await listPatients(session.user.id, {
+      search: searchParams.get('search'),
+      branchId: searchParams.get('branchId'),
+      status: searchParams.get('status'),
+      doctorId: searchParams.get('doctorId'),
     })
-
-    const activeBranchId = branchIdFilter || user?.activeBranchId || user?.branchMemberships[0]?.branchId
-    const membershipInBranch = user?.branchMemberships.find(
-      (m) => m.branchId === activeBranchId
-    )
-    const isOwnerOrAdmin = membershipInBranch?.role === 'OWNER' || membershipInBranch?.role === 'ADMIN'
-
-    // Build where clause
-    const where: Record<string, unknown> = {}
-
-    if (isOwnerOrAdmin && activeBranchId) {
-      // OWNER/ADMIN: see all patients in the branch
-      where.branchId = activeBranchId
-      // OWNER/ADMIN can filter by doctorId
-      if (doctorIdFilter && doctorIdFilter !== 'all') {
-        where.doctorId = doctorIdFilter
-      }
-    } else {
-      // DOCTOR: see only own patients, AND only within branches they are
-      // actually a member of (so an orphaned doctorId reference on a patient
-      // in another branch can't leak that patient).
-      const memberBranchIds = user?.branchMemberships.map((m) => m.branchId) ?? []
-      const targetBranchIds = branchIdFilter
-        ? memberBranchIds.includes(branchIdFilter) ? [branchIdFilter] : []
-        : memberBranchIds
-      where.doctorId = userId
-      where.branchId = { in: targetBranchIds }
-    }
-
-    // Status filter
-    if (statusFilter && statusFilter !== 'all') {
-      where.status = statusFilter
-    }
-
-    // Search filter — now includes IC number
-    if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { icNumber: { contains: search, mode: 'insensitive' } },
-      ]
-    }
-
-    const now = new Date()
-    const patients = await prisma.patient.findMany({
-      where,
-      include: {
-        doctor: { select: { id: true, name: true } },
-        _count: { select: { visits: true, xrays: true } },
-        xrays: {
-          where: { status: 'READY' },
-          select: {
-            id: true,
-            title: true,
-            bodyRegion: true,
-            viewType: true,
-            status: true,
-            thumbnailUrl: true,
-            createdAt: true,
-            _count: { select: { annotations: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
-        visits: {
-          select: { visitDate: true },
-          orderBy: { visitDate: 'desc' },
-          take: 1,
-        },
-        appointments: {
-          where: { status: { in: ['SCHEDULED', 'CHECKED_IN'] }, dateTime: { gte: now } },
-          orderBy: { dateTime: 'asc' },
-          take: 1,
-          select: { id: true, dateTime: true, status: true, doctorId: true, duration: true, notes: true },
-        },
-      },
-      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
-    })
-
-    const result = patients.map(mapPatientToResponse)
 
     return NextResponse.json(result)
   } catch (error) {

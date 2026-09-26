@@ -59,8 +59,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             activeBranchId = firstMembership.branchId
           }
 
-          // Set active branch if user has a membership
-          if (activeBranchId) {
+          if (activeBranchId && user.activeBranchId !== activeBranchId) {
             await prisma.user.update({
               where: { id: user.id },
               data: { activeBranchId },
