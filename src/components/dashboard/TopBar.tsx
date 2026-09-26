@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 
 export function TopBar() {
   return (
-    <header className="flex h-13 shrink-0 items-center justify-center border-b border-border bg-white px-5">
+    <header className="hidden h-13 shrink-0 items-center justify-center border-b border-border bg-white px-5 md:flex">
       <div className="relative w-full max-w-120">
         <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748d]" strokeWidth={2} />
         <input

@@ -28,7 +28,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
     <button
       type="button"
       onClick={onClick}
-      className="rounded-full border px-2.5 py-1 text-[12px] transition-colors"
+      className="min-h-11 rounded-full border px-3 text-[13px] transition-colors sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[12px]"
       style={{
         borderColor: active ? '#533afd' : '#e5edf5',
         backgroundColor: active ? '#ededfc' : '#FFFFFF',
@@ -67,11 +67,11 @@ export function XrayFilterBar({ state, onChange, count }: XrayFilterBarProps) {
       <Chip active={state.date === '7d'} onClick={() => onChange({ ...state, date: state.date === '7d' ? 'all' : '7d' })}>last 7d</Chip>
       <Chip active={state.date === '30d'} onClick={() => onChange({ ...state, date: state.date === '30d' ? 'all' : '30d' })}>last 30d</Chip>
       <Chip active={state.showArchived} onClick={() => onChange({ ...state, showArchived: !state.showArchived })}>archived</Chip>
-      <div className="ml-auto flex items-center gap-2">
+      <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
         <select
           value={state.sort}
           onChange={(e) => onChange({ ...state, sort: e.target.value as SortBy })}
-          className="rounded-md border border-[#e5edf5] bg-white px-2 py-1 text-[12px] text-[#425466]"
+          className="h-11 w-full rounded-md border border-[#e5edf5] bg-white px-2 text-[16px] text-[#425466] sm:h-auto sm:w-auto sm:py-1 sm:text-[12px]"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>

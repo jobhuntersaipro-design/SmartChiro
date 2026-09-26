@@ -31,7 +31,15 @@ export function PatientCard({ patient }: PatientCardProps) {
   return (
     <div
       onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
-      className="rounded-[6px] border border-[#e5edf5] bg-white p-4 cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:border-[#c1c9d2]"
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(`/dashboard/patients/${patient.id}/details`);
+        }
+      }}
+      className="cursor-pointer rounded-[6px] border border-[#e5edf5] bg-white p-4 transition-all duration-200 hover:translate-y-[-1px] hover:border-[#c1c9d2] active:scale-[0.99]"
       style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
     >
       {/* Header */}

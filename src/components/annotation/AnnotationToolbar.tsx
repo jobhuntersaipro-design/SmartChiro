@@ -52,6 +52,7 @@ interface AnnotationToolbarProps {
   detectingLandmarks?: boolean;
   /** Disabled when no image is active or in multi-view mode. */
   detectLandmarksDisabled?: boolean;
+  orientation?: "vertical" | "horizontal";
 }
 
 function ToolTooltip({
@@ -97,7 +98,10 @@ export function AnnotationToolbar({
   onDetectLandmarks,
   detectingLandmarks = false,
   detectLandmarksDisabled = false,
+  orientation = "vertical",
 }: AnnotationToolbarProps) {
+  const horizontal = orientation === "horizontal";
+  const buttonSize = horizontal ? 44 : 36;
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,16 +141,27 @@ export function AnnotationToolbar({
     : null;
 
   return (
-    <div className="flex flex-col items-center gap-1 py-2">
+    <div
+      className={
+        horizontal
+          ? "flex min-w-0 flex-1 flex-row items-center gap-1 overflow-x-auto px-1 py-1"
+          : "flex flex-col items-center gap-1 py-2"
+      }
+    >
       {tools.map((tool, i) => {
         const isActive = activeTool === tool.id;
         const isHovered = hoveredTool === tool.id;
         const prevTool = i > 0 ? tools[i - 1] : null;
         return (
-          <div key={tool.id} className="flex flex-col items-center">
+          <div key={tool.id} className={horizontal ? "flex shrink-0 items-center" : "flex flex-col items-center"}>
             {prevTool?.separator && (
               <div
-                style={{ width: 24, height: 1, backgroundColor: "#1c2738", margin: "4px 0" }}
+                className="shrink-0"
+                style={
+                  horizontal
+                    ? { width: 1, height: 24, backgroundColor: "#1c2738", margin: "0 4px" }
+                    : { width: 24, height: 1, backgroundColor: "#1c2738", margin: "4px 0" }
+                }
               />
             )}
             <button
@@ -154,13 +169,14 @@ export function AnnotationToolbar({
                 if (el) buttonRefsMap.current.set(tool.id, el);
               }}
               onClick={() => onToolChange(tool.id)}
-              onMouseEnter={() => handleMouseEnter(tool.id)}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={horizontal ? undefined : () => handleMouseEnter(tool.id)}
+              onMouseLeave={horizontal ? undefined : handleMouseLeave}
               aria-label={`${tool.label} (${tool.shortcut})`}
-              className="flex items-center justify-center transition-colors"
+              aria-pressed={isActive}
+              className="flex shrink-0 items-center justify-center transition-transform active:scale-95"
               style={{
-                width: 36,
-                height: 36,
+                width: buttonSize,
+                height: buttonSize,
                 borderRadius: 4,
                 backgroundColor: isActive
                   ? "#533afd"
@@ -176,7 +192,7 @@ export function AnnotationToolbar({
         );
       })}
 
-      {hoveredToolData && tooltipRect && (
+      {hoveredToolData && tooltipRect && !horizontal && (
         <ToolTooltip tool={hoveredToolData} anchorRect={tooltipRect} />
       )}
 
@@ -186,7 +202,12 @@ export function AnnotationToolbar({
       {onDetectLandmarks && (
         <>
           <div
-            style={{ width: 24, height: 1, backgroundColor: "#1c2738", margin: "8px 0 4px" }}
+            className="shrink-0"
+            style={
+              horizontal
+                ? { width: 1, height: 24, backgroundColor: "#1c2738", margin: "0 4px" }
+                : { width: 24, height: 1, backgroundColor: "#1c2738", margin: "8px 0 4px" }
+            }
           />
           <button
             onClick={onDetectLandmarks}
@@ -197,10 +218,10 @@ export function AnnotationToolbar({
                 ? "Available in single-view mode with an active X-ray"
                 : "Detect anatomical landmarks — image bytes are sent to Anthropic. No patient information is included. AI placement is approximate; verify and adjust."
             }
-            className="flex items-center justify-center transition-colors"
+            className="flex shrink-0 items-center justify-center transition-transform active:scale-95"
             style={{
-              width: 36,
-              height: 36,
+              width: buttonSize,
+              height: buttonSize,
               borderRadius: 4,
               backgroundColor: detectingLandmarks
                 ? "rgba(34, 211, 238, 0.18)"
