@@ -1,13 +1,13 @@
 import NextAuth from 'next-auth'
 import authConfig from '@/lib/auth.config'
+import { hasSessionUser } from '@/lib/has-session-user'
 
 const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
-  const isLoggedIn = !!req.auth
+  const isLoggedIn = hasSessionUser(req.auth)
 
-  // Legacy /dashboard/calendar → /dashboard/appointments (sidebar relabel 2026-05-05)
   if (pathname === '/dashboard/calendar' || pathname.startsWith('/dashboard/calendar/')) {
     const url = new URL(req.url)
     url.pathname = pathname.replace('/dashboard/calendar', '/dashboard/appointments')

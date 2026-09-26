@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
+import { hasSessionUser } from '@/lib/has-session-user'
 import { LoginForm } from '@/components/auth/LoginForm'
 
 export const metadata = {
@@ -12,7 +13,7 @@ export default async function LoginPage({
   searchParams: Promise<{ reset?: string }>
 }) {
   const session = await auth()
-  if (session) redirect('/dashboard')
+  if (hasSessionUser(session)) redirect('/dashboard')
 
   const googleEnabled = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
   const { reset } = await searchParams

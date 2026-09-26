@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
+import { hasSessionUser } from '@/lib/has-session-user'
 import { ForgotPasswordForm } from './ForgotPasswordForm'
 
 export const metadata = {
@@ -8,7 +9,7 @@ export const metadata = {
 
 export default async function ForgotPasswordPage() {
   const session = await auth()
-  if (session) redirect('/dashboard')
+  if (hasSessionUser(session)) redirect('/dashboard')
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
