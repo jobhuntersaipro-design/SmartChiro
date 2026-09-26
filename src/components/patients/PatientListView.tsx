@@ -350,7 +350,18 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       )}
 
       {/* Loading state */}
-      {loading && <PatientTableSkeleton rows={6} />}
+      {loading && (
+        <>
+          <div className="space-y-3 md:hidden">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-24 animate-pulse rounded-[6px] bg-[#e5edf5]" />
+            ))}
+          </div>
+          <div className="hidden md:block">
+            <PatientTableSkeleton rows={6} />
+          </div>
+        </>
+      )}
 
       {/* Error state */}
       {error && !loading && (
@@ -374,14 +385,23 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       )}
 
       {!loading && !error && filtered.length > 0 && viewMode === "list" && (
-        <PatientTable
-          patients={filtered}
-          onEdit={(p) => setEditPatient(p)}
-          onDelete={(p) => setDeletePatient(p)}
-          sortKey={sortKey}
-          sortDir={sortDir}
-          onSortChange={handleSortChange}
-        />
+        <>
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {filtered.map((patient) => (
+              <PatientCard key={patient.id} patient={patient} />
+            ))}
+          </div>
+          <div className="hidden max-w-full md:block">
+            <PatientTable
+              patients={filtered}
+              onEdit={(p) => setEditPatient(p)}
+              onDelete={(p) => setDeletePatient(p)}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSortChange={handleSortChange}
+            />
+          </div>
+        </>
       )}
 
       {!loading && !error && filtered.length > 0 && viewMode === "grid" && (

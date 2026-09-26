@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Calendar } from "lucide-react";
 import { EmptyState } from "./EmptyState";
 import { formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
@@ -71,7 +72,28 @@ export function ScheduleTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <>
+    <div className="md:hidden">
+      {appointments.slice(0, 10).map((appt) => {
+        const dateText = formatAppointmentDateTime(appt.dateTime);
+        return (
+          <Link
+            key={appt.id}
+            href={`/dashboard/patients/${appt.patient.id}/details`}
+            className="flex min-h-14 items-center gap-3 border-b border-[#e5edf5] px-4 py-3 transition-colors last:border-b-0 active:bg-[#f6f9fc]"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[15px] font-medium text-[#061b31]">
+                {appt.patient.firstName} {appt.patient.lastName}
+              </div>
+              <div className="truncate text-[13px] text-[#64748d]">{dateText}</div>
+            </div>
+            <StatusIndicator status={appt.status} />
+          </Link>
+        );
+      })}
+    </div>
+    <div className="hidden max-w-full overflow-x-auto md:block">
       <table className="w-full">
         <thead>
           <tr className="border-b border-[#e5edf5]">
@@ -128,5 +150,6 @@ export function ScheduleTable({
         </tbody>
       </table>
     </div>
+    </>
   );
 }

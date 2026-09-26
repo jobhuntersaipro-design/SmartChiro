@@ -171,12 +171,12 @@ function FilterSelect({
 }) {
   if (options.length <= 1) return null;
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-md h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd]/30 focus:border-[#533afd] transition-colors"
+        className="h-11 w-full cursor-pointer appearance-none rounded-md border border-[#e5edf5] bg-white pl-2.5 pr-7 text-[13px] text-[#273951] transition-colors hover:border-[#cbd5e1] focus:border-[#533afd] focus:outline-none focus:ring-2 focus:ring-[#533afd]/30 sm:h-7 sm:w-auto"
       >
         <option value={ALL}>All {label.toLowerCase()}s</option>
         {options.map((o) => (
@@ -349,7 +349,7 @@ export function UpcomingAppointmentsSection({
       style={{ boxShadow: SHADOW_CARD }}
     >
       {/* Row 1 — title + range tabs */}
-      <div className="flex items-center justify-between gap-3 px-4 h-12 border-b border-[#e5edf5]">
+      <div className="flex flex-col gap-2 border-b border-[#e5edf5] px-4 py-2 sm:h-12 sm:flex-row sm:items-center sm:justify-between sm:py-0">
         <button
           type="button"
           onClick={toggleCollapsed}
@@ -374,7 +374,7 @@ export function UpcomingAppointmentsSection({
 
         {!collapsed && (
           <nav
-            className="flex items-center gap-3 flex-shrink-0 text-[13px]"
+            className="flex min-h-11 items-center gap-3 text-[13px] sm:min-h-0"
             aria-label="Appointment range"
           >
             {(["today", "week", "month"] as const).map((r, i) => (
@@ -399,7 +399,7 @@ export function UpcomingAppointmentsSection({
 
       {/* Row 2 — filters (only when expanded and there's something to filter) */}
       {!collapsed && (branchOptions.length > 1 || doctorOptions.length > 1) && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-[#e5edf5] bg-[#fafbfd]">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#e5edf5] bg-[#fafbfd] px-4 py-2">
           <span className="text-[12px] text-[#94a3b8] uppercase tracking-[0.06em] font-medium mr-1">
             Filter
           </span>
