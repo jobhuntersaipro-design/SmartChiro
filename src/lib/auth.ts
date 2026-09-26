@@ -25,10 +25,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          const email = credentials.email as string
+          const rawEmail = credentials.email as string
           const password = credentials.password as string
 
-          if (!email || !password) return null
+          if (!rawEmail || !password) return null
+          // Registration stores emails in lowercase. Match that here so
+          // Jobhunters... and jobhunters... are the same account.
+          const email = rawEmail.toLowerCase()
 
           const user = await prisma.user.findUnique({
             where: { email },
