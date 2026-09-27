@@ -48,7 +48,7 @@ export function MuscleViewport() {
   }, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col bg-[#f7f7f8]">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-white">
       <div
         ref={hostRef}
         className="relative min-h-0 flex-1"

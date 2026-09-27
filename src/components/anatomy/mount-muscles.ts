@@ -7,9 +7,76 @@ import { englishPartName } from "@/lib/anatomy/muscle-name";
 import { bindStagePointer, calloutFrom } from "./stage-pointer";
 
 const BLUE = new THREE.Color("#2f6fed");
-const STAGE = 0xf7f7f8;
-const MUSCLE = new THREE.Color("#c15c58");
-const IVORY = new THREE.Color("#efe6d6");
+const STAGE = 0xffffff;
+const MUSCLE = new THREE.Color("#d48978");
+const IVORY = new THREE.Color("#efece7");
+
+let fiberColor: THREE.CanvasTexture | null = null;
+let fiberBump: THREE.CanvasTexture | null = null;
+
+function fiberTextures() {
+  if (fiberColor && fiberBump) return { color: fiberColor, bump: fiberBump };
+  const width = 64;
+  const height = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const g = canvas.getContext("2d");
+  if (g) {
+    const image = g.createImageData(width, height);
+    for (let y = 0; y < height; y += 1) {
+      const shift = Math.round(Math.sin(y / 22) * 1.4);
+      for (let x = 0; x < width; x += 1) {
+        const src = (x + shift + width) % width;
+        const band = src % 16;
+        const shade = band < 3 ? 118 : band < 5 ? 188 : 255;
+        const i = (y * width + x) * 4;
+        image.data[i] = shade;
+        image.data[i + 1] = shade;
+        image.data[i + 2] = shade;
+        image.data[i + 3] = 255;
+      }
+    }
+    g.putImageData(image, 0, 0);
+  }
+  fiberColor = new THREE.CanvasTexture(canvas);
+  fiberColor.colorSpace = THREE.SRGBColorSpace;
+  fiberColor.wrapS = THREE.RepeatWrapping;
+  fiberColor.wrapT = THREE.RepeatWrapping;
+  const bumpCanvas = document.createElement("canvas");
+  bumpCanvas.width = width;
+  bumpCanvas.height = height;
+  bumpCanvas.getContext("2d")?.drawImage(canvas, 0, 0);
+  fiberBump = new THREE.CanvasTexture(bumpCanvas);
+  fiberBump.colorSpace = THREE.NoColorSpace;
+  fiberBump.wrapS = THREE.RepeatWrapping;
+  fiberBump.wrapT = THREE.RepeatWrapping;
+  return { color: fiberColor, bump: fiberBump };
+}
+
+function stampFibers(geom: THREE.BufferGeometry) {
+  const pos = geom.getAttribute("position");
+  if (!pos) return;
+  geom.computeBoundingBox();
+  const box = geom.boundingBox;
+  if (!box) return;
+  const span = [box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z];
+  const min = [box.min.x, box.min.y, box.min.z];
+  let long = 0;
+  if (span[1] > span[long]) long = 1;
+  if (span[2] > span[long]) long = 2;
+  const cross = [0, 1, 2].filter((axis) => axis !== long).sort((a, b) => span[b] - span[a])[0];
+  const spanLong = Math.max(span[long], 1e-5);
+  const spanCross = Math.max(span[cross], 1e-5);
+  const across = THREE.MathUtils.clamp(spanCross / 0.09, 1, 1.35);
+  const uv = new Float32Array(pos.count * 2);
+  for (let i = 0; i < pos.count; i += 1) {
+    const point = [pos.getX(i), pos.getY(i), pos.getZ(i)];
+    uv[i * 2] = ((point[cross] - min[cross]) / spanCross) * across;
+    uv[i * 2 + 1] = (point[long] - min[long]) / spanLong;
+  }
+  geom.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+}
 
 export type AtlasView = "front" | "back" | "left" | "right";
 
@@ -42,19 +109,23 @@ function hashName(value: string): number {
 function muscleMaterial(name: string): THREE.MeshStandardMaterial {
   const color = MUSCLE.clone();
   const n = hashName(name);
-  color.offsetHSL(((n % 9) - 4) * 0.008, 0.02, ((n % 7) - 3) * 0.02);
+  color.offsetHSL(((n % 5) - 2) * 0.004, -0.04, ((n % 5) - 2) * 0.012);
+  const fibers = fiberTextures();
   return new THREE.MeshStandardMaterial({
     color,
-    roughness: 0.58,
-    metalness: 0.02,
+    map: fibers.color,
+    bumpMap: fibers.bump,
+    bumpScale: 0.004,
+    roughness: 0.78,
+    metalness: 0,
   });
 }
 
 function boneMaterial(): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: IVORY,
-    roughness: 0.46,
-    metalness: 0.02,
+    roughness: 0.62,
+    metalness: 0,
   });
 }
 
@@ -65,7 +136,7 @@ function shadowTexture(): THREE.CanvasTexture {
   const g = canvas.getContext("2d");
   if (g) {
     const grad = g.createRadialGradient(64, 64, 8, 64, 64, 64);
-    grad.addColorStop(0, "rgba(40, 44, 52, 0.28)");
+    grad.addColorStop(0, "rgba(40, 44, 52, 0.12)");
     grad.addColorStop(1, "rgba(40, 44, 52, 0)");
     g.fillStyle = grad;
     g.fillRect(0, 0, 128, 128);
@@ -88,6 +159,7 @@ function bakeMesh(source: THREE.Mesh, kind: "muscle" | "bone"): THREE.Mesh {
   const geom = source.geometry.clone();
   source.updateWorldMatrix(true, false);
   geom.applyMatrix4(source.matrixWorld);
+  if (kind === "muscle") stampFibers(geom);
   geom.computeVertexNormals();
   const mat = kind === "bone" ? boneMaterial() : muscleMaterial(name);
   const mesh = new THREE.Mesh(geom, mat);
@@ -141,13 +213,16 @@ export function mountMuscles(
   controls.rotateSpeed = 0.85;
   controls.zoomSpeed = 0.7;
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xe7e2dc, 1.15));
-  const key = new THREE.DirectionalLight(0xffffff, 1.35);
-  key.position.set(0.6, 1.6, 1.2);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xf4e8e2, 1.55));
+  const key = new THREE.DirectionalLight(0xfff9f6, 0.95);
+  key.position.set(0.35, 2.1, 1.35);
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xfff4ee, 0.45);
-  fill.position.set(-1.2, 0.6, 0.4);
+  const fill = new THREE.DirectionalLight(0xfff1e8, 0.78);
+  fill.position.set(-1.15, 0.55, 0.95);
   scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xfff6f1, 0.95);
+  rim.position.set(-0.15, 1.15, -1.55);
+  scene.add(rim);
 
   const figure = new THREE.Group();
   scene.add(figure);
@@ -164,9 +239,18 @@ export function mountMuscles(
     for (const entry of entries) {
       const on = entry.kind === "muscle" && selected.has(entry.name);
       const hot = entry.name === hovered && !on;
+      if (entry.kind === "muscle") {
+        const nextMap = on ? null : fiberColor;
+        if (entry.mat.map !== nextMap) {
+          entry.mat.map = nextMap;
+          entry.mat.bumpMap = on ? null : fiberBump;
+          entry.mat.needsUpdate = true;
+        }
+        entry.mat.roughness = on ? 0.4 : 0.78;
+      }
       entry.mat.color.copy(on ? BLUE : entry.base);
-      entry.mat.emissive.set(on ? "#2f6fed" : hot ? "#6a3030" : "#000000");
-      entry.mat.emissiveIntensity = on ? 0.85 : hot ? 0.16 : 0;
+      entry.mat.emissive.set(on ? "#2458c9" : hot ? "#8a5a48" : "#000000");
+      entry.mat.emissiveIntensity = on ? 0.42 : hot ? 0.1 : 0;
     }
   }
 
@@ -356,12 +440,12 @@ export function mountMuscles(
         if (!mesh.isMesh) return;
         mesh.geometry.dispose();
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        for (const mat of mats) {
-          const textured = mat as THREE.MeshStandardMaterial;
-          textured.map?.dispose();
-          mat.dispose();
-        }
+        for (const mat of mats) mat.dispose();
       });
+      fiberColor?.dispose();
+      fiberBump?.dispose();
+      fiberColor = null;
+      fiberBump = null;
       renderer.dispose();
     },
   };
