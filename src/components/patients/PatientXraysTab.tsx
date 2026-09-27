@@ -112,11 +112,11 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <XrayFilterBar state={filters} onChange={handleFiltersChange} count={filtered.length} />
         <Button
           onClick={() => setShowUpload((v) => !v)}
-          className="ml-3 h-8 rounded-md bg-[#533afd] text-white text-[13px] font-medium hover:bg-[#4434d4] px-3"
+          className="h-11 w-full shrink-0 rounded-md bg-[#533afd] px-3 text-[15px] font-medium text-white hover:bg-[#4434d4] sm:h-8 sm:w-auto sm:text-[13px]"
         >
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload X-Ray
         </Button>

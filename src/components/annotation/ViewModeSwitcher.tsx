@@ -15,7 +15,11 @@ const modes: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
   { id: "2x2", label: "2×2 Grid", icon: <Grid2x2 size={18} strokeWidth={1.5} /> },
 ];
 
-export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitcherProps) {
+export function ViewModeSwitcher({
+  viewMode,
+  onViewModeChange,
+  buttonSize = 36,
+}: ViewModeSwitcherProps & { buttonSize?: number }) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -40,10 +44,10 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
         onMouseLeave={() => setHovered(false)}
         title={`View: ${current.label}`}
         aria-label={`Change view mode (current: ${current.label})`}
-        className="flex items-center justify-center transition-colors"
+        className="flex shrink-0 items-center justify-center transition-transform active:scale-95"
         style={{
-          width: 36,
-          height: 36,
+          width: buttonSize,
+          height: buttonSize,
           borderRadius: 4,
           backgroundColor: open
             ? "#533afd"
@@ -80,7 +84,7 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
                   onViewModeChange(mode.id);
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 transition-colors"
+                className="flex min-h-11 w-full items-center gap-2 transition-colors"
                 style={{
                   padding: "8px 12px",
                   backgroundColor: isActive ? "#ededfc" : "transparent",

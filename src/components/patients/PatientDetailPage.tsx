@@ -251,7 +251,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       {/* Back link */}
       <Link
         href="/dashboard/patients"
-        className="inline-flex items-center gap-1.5 text-[14px] text-[#64748d] hover:text-[#061b31] transition-colors"
+        className="inline-flex min-h-11 items-center gap-1.5 text-[14px] text-[#64748d] transition-colors hover:text-[#061b31]"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
         Back to Patients
@@ -259,19 +259,19 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
 
       {/* Header card */}
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white px-6 py-5"
+        className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-4 sm:px-6 sm:py-5"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
             <Avatar className="h-14 w-14 shrink-0">
               <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[16px] font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-[23px] font-light text-[#061b31]">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-[20px] font-light text-[#061b31] sm:text-[23px]">
                   {fullName}
                 </h1>
                 <StatusBadge status={patient.status} />
@@ -330,10 +330,10 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-11 rounded-md border-[#e5edf5] text-[14px] gap-1.5 sm:h-9"
               onClick={handleToggleStatus}
             >
               {isActive ? (
@@ -345,7 +345,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-11 rounded-md border-[#e5edf5] text-[14px] gap-1.5 sm:h-9"
               onClick={() => setCreateAppointmentOpen(true)}
             >
               <CalendarCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -353,7 +353,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-11 rounded-md border-[#e5edf5] text-[14px] gap-1.5 sm:h-9"
               onClick={() => setEditOpen(true)}
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -361,7 +361,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
+              className="h-11 rounded-md border-[#e5edf5] text-[14px] gap-1.5 text-[#DF1B41] hover:bg-red-50 hover:text-[#DF1B41] sm:h-9"
               onClick={() => setDeleteOpen(true)}
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -380,10 +380,10 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
           >
             <div className="flex items-center gap-2 mb-1">
               <s.icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.5} />
-              <span className="text-[13px] text-[#64748d]">{s.label}</span>
+              <span className="min-w-0 text-[13px] text-[#64748d]">{s.label}</span>
             </div>
             <div
-              className="text-[22px] font-light text-[#061b31]"
+              className="break-words text-[18px] font-light text-[#061b31] sm:text-[22px]"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
               {s.value}
@@ -394,12 +394,12 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
 
       {/* Tab navigation */}
       <div className="border-b border-[#e5edf5]">
-        <div className="flex gap-0">
+        <div className="flex gap-0 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors ${
+              className={`min-h-11 shrink-0 px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? "border-[#533afd] text-[#533afd]"
                   : "border-transparent text-[#64748d] hover:text-[#061b31]"

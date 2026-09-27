@@ -60,6 +60,10 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
   useEffect(() => {
     setHydrated(true);
     if (!initialUrlViewMode && typeof window !== "undefined") {
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        setViewMode("list");
+        return;
+      }
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "list" || stored === "calendar") setViewMode(stored);
     }
@@ -117,9 +121,9 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
   }, [viewMode, branchId, doctorIds, selectedDate, activeTab, selectedAppointmentId]);
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-110px)]">
+    <div className="flex flex-col gap-4 md:h-[calc(100vh-110px)]">
       {/* Top bar */}
-      <div className="flex items-baseline justify-between gap-3 px-6 pt-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pt-4">
         <div>
           <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">
             Appointments
@@ -128,7 +132,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
             Schedule, reschedule, and manage all bookings.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* View toggle */}
           <div
             role="tablist"
@@ -140,7 +144,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
               type="button"
               aria-selected={viewMode === "list"}
               onClick={() => setViewMode("list")}
-              className={`inline-flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium transition-colors ${
+              className={`inline-flex min-h-11 items-center gap-1.5 px-3 text-[13px] font-medium transition-colors sm:h-9 ${
                 viewMode === "list"
                   ? "bg-[#635BFF] text-white"
                   : "bg-white text-[#425466] hover:text-[#0A2540]"
@@ -154,7 +158,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
               type="button"
               aria-selected={viewMode === "calendar"}
               onClick={() => setViewMode("calendar")}
-              className={`inline-flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium border-l border-[#e5edf5] transition-colors ${
+              className={`inline-flex min-h-11 items-center gap-1.5 border-l border-[#e5edf5] px-3 text-[13px] font-medium transition-colors sm:h-9 ${
                 viewMode === "calendar"
                   ? "bg-[#635BFF] text-white"
                   : "bg-white text-[#425466] hover:text-[#0A2540]"
@@ -166,7 +170,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
+            className="h-11 w-full rounded-md bg-[#635BFF] text-[14px] text-white hover:bg-[#5851EB] gap-1.5 sm:h-9 sm:w-auto"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             New Appointment

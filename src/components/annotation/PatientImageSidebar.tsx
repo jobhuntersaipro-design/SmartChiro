@@ -632,11 +632,8 @@ export function PatientImageSidebar({
         onClick={onToggle}
         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; e.currentTarget.style.color = "#64748d"; }}
-        className="absolute top-3 flex items-center justify-center transition-colors"
+        className="absolute top-3 -right-4 flex h-11 w-11 items-center justify-center transition-colors md:h-8 md:w-4"
         style={{
-          right: -16,
-          width: 16,
-          height: 32,
           backgroundColor: "#FFFFFF",
           borderRadius: "0 4px 4px 0",
           borderTop: "1px solid #e5edf5",
@@ -646,6 +643,7 @@ export function PatientImageSidebar({
           zIndex: 10,
         }}
         title={isOpen ? "Hide patient images" : "Show patient images"}
+        aria-label={isOpen ? "Hide patient images" : "Show patient images"}
       >
         {isOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
       </button>

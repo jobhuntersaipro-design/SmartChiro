@@ -177,11 +177,11 @@ function InlineEditableTitle({
         setEditValue(currentTitle);
         setIsEditing(true);
       }}
-      className="group flex items-center gap-1.5 text-sm font-medium"
+      className="group flex min-h-11 min-w-0 items-center gap-1.5 text-sm font-medium"
       style={{ color: "#061b31", position: "relative" }}
     >
       <span
-        className={isUntitled ? "animate-title-hint" : ""}
+        className={`max-w-[120px] truncate sm:max-w-[220px] ${isUntitled ? "animate-title-hint" : ""}`}
         style={{
           borderBottom: "1px dashed transparent",
           transition: "border-color 150ms ease",
@@ -459,7 +459,7 @@ function SaveButton({
       disabled={isSaving}
       onMouseEnter={(e) => { if (!isSaving && !showSaved) e.currentTarget.style.backgroundColor = hoverBg; }}
       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = bg; }}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors"
+      className="flex min-h-11 items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors"
       style={{
         borderRadius: 4,
         backgroundColor: bg,
@@ -511,18 +511,17 @@ export function AnnotationHeader({
 
   return (
     <div
-      className="flex items-center justify-between px-4"
+      className="flex min-h-12 flex-wrap items-center justify-between gap-2 px-3 py-1"
       style={{
-        height: 48,
         backgroundColor: "#FFFFFF",
         borderBottom: "1px solid #e5edf5",
       }}
     >
       {/* Left: Breadcrumb */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
         <Link
           href={`/dashboard/patients/${patientId}/details`}
-          className="text-sm transition-colors hover:underline"
+          className="inline-flex min-h-11 max-w-[40%] items-center truncate text-sm transition-colors hover:underline"
           style={{ color: "#64748d" }}
         >
           {patientName}
@@ -538,7 +537,7 @@ export function AnnotationHeader({
             onClick={() => setAdjustOpen((prev) => !prev)}
             onMouseEnter={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
             onMouseLeave={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
+            className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{
               borderRadius: 4,
               border: "1px solid #e5edf5",
@@ -549,7 +548,7 @@ export function AnnotationHeader({
             aria-label="Image adjustments"
           >
             <Sun size={14} strokeWidth={1.5} />
-            Adjust
+            <span className="hidden sm:inline">Adjust</span>
             {adjustModified && !adjustOpen && (
               <span
                 className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full"
@@ -582,11 +581,12 @@ export function AnnotationHeader({
             onClick={onOpenNotes}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f6f9fc")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
+            className="flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
+            aria-label="Notes"
           >
             <FileText size={14} strokeWidth={1.5} />
-            Notes{notesCount > 0 ? ` · ${notesCount}` : ""}
+            <span className="hidden sm:inline">Notes{notesCount > 0 ? ` · ${notesCount}` : ""}</span>
           </button>
         )}
         <SaveButton
@@ -598,10 +598,8 @@ export function AnnotationHeader({
           onClick={onClose}
           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748d"; }}
-          className="flex items-center justify-center transition-colors"
+          className="flex h-11 w-11 items-center justify-center transition-colors"
           style={{
-            width: 32,
-            height: 32,
             borderRadius: 4,
             color: "#64748d",
           }}

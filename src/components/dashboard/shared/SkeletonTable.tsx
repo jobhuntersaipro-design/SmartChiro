@@ -1,6 +1,6 @@
 export function SkeletonTable({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="animate-pulse">
+    <div className="max-w-full animate-pulse overflow-hidden">
       {/* Header */}
       <div className="flex gap-4 px-4 py-3 border-b border-[#e5edf5]">
         <div className="h-3.5 w-20 rounded bg-[#e5edf5]" />

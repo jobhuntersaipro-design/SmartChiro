@@ -225,9 +225,9 @@ export function DashboardView({
       )}
 
       {/* Schedule + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="min-w-0 overflow-hidden rounded-[6px] border border-[#e5edf5] bg-white"
           style={{
             boxShadow:
               "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
@@ -250,7 +250,7 @@ export function DashboardView({
         </div>
 
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="min-w-0 overflow-hidden rounded-[6px] border border-[#e5edf5] bg-white"
           style={{
             boxShadow:
               "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
