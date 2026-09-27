@@ -108,13 +108,14 @@ function partSide(name: string): "r" | "l" | "" {
   return "";
 }
 
-function mirrorMesh(source: THREE.Mesh): THREE.Mesh {
+function mirrorMesh(source: THREE.Mesh, to: "l" | "r"): THREE.Mesh {
   const geom = source.geometry.clone();
   geom.scale(-1, 1, 1);
   geom.computeVertexNormals();
   const mat = (source.material as THREE.MeshStandardMaterial).clone();
   const mesh = new THREE.Mesh(geom, mat);
-  mesh.name = source.name.replace(/(?:\.r|_r)(?=(_\d+)?$)/i, "_l");
+  const token = to === "l" ? "_l" : "_r";
+  mesh.name = source.name.replace(/(?:\.r|_r|\.l|_l)(?=(_\d+)?$)/i, token);
   mesh.castShadow = false;
   mesh.receiveShadow = false;
   return mesh;
@@ -215,15 +216,18 @@ export function mountMuscles(
       if (!mesh.isMesh || !mesh.name) return;
       baked.push(bakeMesh(mesh, kind));
     });
-    const leftStems = new Set(
-      baked.filter((mesh) => partSide(mesh.name) === "l").map((mesh) => partStem(mesh.name)),
-    );
+    const stems = {
+      l: new Set(baked.filter((mesh) => partSide(mesh.name) === "l").map((mesh) => partStem(mesh.name))),
+      r: new Set(baked.filter((mesh) => partSide(mesh.name) === "r").map((mesh) => partStem(mesh.name))),
+    };
     for (const mesh of baked) {
       figure.add(mesh);
       const mat = mesh.material as THREE.MeshStandardMaterial;
       entries.push({ mesh, mat, base: mat.color.clone(), kind, name: mesh.name });
-      if (partSide(mesh.name) === "r" && !leftStems.has(partStem(mesh.name))) {
-        const twin = mirrorMesh(mesh);
+      const side = partSide(mesh.name);
+      const missing = side === "r" ? "l" : side === "l" ? "r" : "";
+      if (missing && !stems[missing].has(partStem(mesh.name))) {
+        const twin = mirrorMesh(mesh, missing);
         figure.add(twin);
         const twinMat = twin.material as THREE.MeshStandardMaterial;
         entries.push({

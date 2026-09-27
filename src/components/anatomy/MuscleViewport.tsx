@@ -98,7 +98,7 @@ export function MuscleViewport() {
           </div>
         </div>
         <p className="pointer-events-none absolute left-3 top-3 text-[11px] text-[#8a94a6]">
-          Z-Anatomy, CC BY-SA 4.0
+          Z-Anatomy and BodyParts3D, CC BY-SA 4.0
         </p>
       </div>
     </div>

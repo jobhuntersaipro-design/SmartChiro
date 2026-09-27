@@ -29,6 +29,8 @@ describe("anatomy catalog", () => {
       "Right Clavicular head of pectoralis major",
     );
     expect(englishPartName("Latissimus dorsi muscle.l")).toBe("Left Latissimus dorsi");
+    expect(englishPartName("Latissimus_dorsi_l")).toBe("Left Latissimus dorsi");
+    expect(englishPartName("Vertebra_L2")).toBe("Vertebra L2");
     expect(englishPartName("Frontal bone")).toBe("Frontal bone");
   });
 });
