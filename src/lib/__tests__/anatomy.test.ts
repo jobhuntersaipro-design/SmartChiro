@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { englishBoneName } from "@/lib/anatomy/bone-name";
+import { englishPartName } from "@/lib/anatomy/muscle-name";
 import { MUSCLE_COUNT, muscleParts } from "@/lib/anatomy/muscle-parts";
 
 describe("anatomy catalog", () => {
@@ -21,5 +22,13 @@ describe("anatomy catalog", () => {
     );
     expect(englishBoneName("Atlas (C1)")).toBe("Atlas (C1)");
     expect(englishBoneName("Bones")).toBe("");
+  });
+
+  it("names an atlas muscle in English", () => {
+    expect(englishPartName("Clavicular head of pectoralis major muscle.r")).toBe(
+      "Right Clavicular head of pectoralis major",
+    );
+    expect(englishPartName("Latissimus dorsi muscle.l")).toBe("Left Latissimus dorsi");
+    expect(englishPartName("Frontal bone")).toBe("Frontal bone");
   });
 });
