@@ -63,3 +63,77 @@ export function clinicDayBounds(isoDate: string, timeZone: string = CLINIC_TIME_
   const offset = zoneOffsetMs(noonUtc, timeZone);
   return { start: new Date(Date.UTC(y, mo - 1, d) - offset), end: new Date(Date.UTC(y, mo - 1, d + 1) - offset) };
 }
+
+/** Wall-clock fields of an instant in the clinic zone. `month` is 1–12, `weekday` 0 = Sunday. */
+export interface ClinicParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  weekday: number;
+}
+
+export function clinicParts(instant: Date, timeZone: string = CLINIC_TIME_ZONE): ClinicParts {
+  const local = new Date(instant.getTime() + zoneOffsetMs(instant, timeZone));
+  return {
+    year: local.getUTCFullYear(),
+    month: local.getUTCMonth() + 1,
+    day: local.getUTCDate(),
+    hour: local.getUTCHours(),
+    minute: local.getUTCMinutes(),
+    weekday: local.getUTCDay(),
+  };
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** "YYYY-MM-DD" of the clinic day containing `instant`. */
+export function clinicDateKey(instant: Date = new Date(), timeZone: string = CLINIC_TIME_ZONE): string {
+  const p = clinicParts(instant, timeZone);
+  return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
+}
+
+/** The instant of a clinic wall-clock time (month 1–12). Device time zone plays no part. */
+export function clinicInstant(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+  timeZone: string = CLINIC_TIME_ZONE,
+): Date {
+  const asUtc = Date.UTC(year, month - 1, day, hour, minute);
+  return new Date(asUtc - zoneOffsetMs(new Date(asUtc), timeZone));
+}
+
+/** Instant for a "YYYY-MM-DD" date and optional "HH:MM" time in the clinic zone. */
+export function clinicInstantFromInputs(isoDate: string, time = "00:00", timeZone: string = CLINIC_TIME_ZONE): Date {
+  const [y, mo, d] = isoDate.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  return clinicInstant(y, mo, d, hh || 0, mm || 0, timeZone);
+}
+
+/** "HH:MM" (24h) of an instant in the clinic zone — for <input type="time">. */
+export function clinicTimeInput(instant: Date, timeZone: string = CLINIC_TIME_ZONE): string {
+  const p = clinicParts(instant, timeZone);
+  return `${pad2(p.hour)}:${pad2(p.minute)}`;
+}
+
+/** Intl formatting pinned to the clinic zone, so server and browser render identically. */
+export function formatInClinic(
+  instant: Date,
+  options: Intl.DateTimeFormatOptions,
+  locale = "en-MY",
+  timeZone: string = CLINIC_TIME_ZONE,
+): string {
+  return new Intl.DateTimeFormat(locale, { ...options, timeZone }).format(instant);
+}
+
+/** "+08:00"-style label for the clinic zone (stable for zones without DST). */
+export function clinicUtcOffsetLabel(instant: Date = new Date(), timeZone: string = CLINIC_TIME_ZONE): string {
+  const mins = Math.round(zoneOffsetMs(instant, timeZone) / 60000);
+  const sign = mins < 0 ? "-" : "+";
+  const abs = Math.abs(mins);
+  return `${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`;
+}
