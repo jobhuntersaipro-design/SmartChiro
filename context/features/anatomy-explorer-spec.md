@@ -24,6 +24,21 @@ by the "tap a body region and it zooms in" anatomy reels. Two layers:
   codes, e.g. `L5`), collapsible anatomical groups with per-group hide/show.
 - Selections are kept separately for each layer while switching tabs.
 
+### Clinical muscle groups (Muscles tab)
+
+- A click in 3D selects the whole **clinical group on that side**, e.g. right
+  Quadriceps, Hamstrings, Rotator cuff, Erector spinae or Calf. There are 47
+  groups, defined in `scripts/anatomy-muscle-groups.mjs` and matched by
+  muscle name within the muscle's body region. Hovering highlights the whole
+  group, and the tooltip names the group and the muscle under the cursor.
+- Alt+click selects a single muscle. Shift/Cmd/Ctrl+click adds to or removes
+  from the selection.
+- Side panel: region → clinical group → muscles. A group's name selects both
+  sides; its R / L buttons select one side. The selection card collapses a
+  fully selected group into one entry listing its members.
+- Focus views a group from its own outward direction (its explode vector),
+  e.g. quadriceps from the front.
+
 ### Seeing deeper muscles (Muscles tab)
 
 - **Peel to**: Superficial / Intermediate / Deep. Each muscle has a depth
@@ -33,9 +48,13 @@ by the "tap a body region and it zooms in" anatomy reels. Two layers:
   are removed and the test repeats. Two overrides cover BodyParts3D quirks
   (the rectus sheath is modelled on the external oblique, and the deep calf
   flexors surface only as tendons).
-- **Expand** slider (exploded view, 0–100%): muscles ease outward from their
-  limb's axis (trunk: the body axis; hands and feet: their own centroid).
-  Superficial muscles travel furthest, which opens gaps onto deeper ones.
+- **Expand** slider (exploded view, 0–100%) works in two levels. First each
+  clinical group moves away from its anchor: the body axis for the trunk, the
+  limb's axis for limbs, and its own centroid for the hands and feet. Then the
+  muscles within each group spread around the group's centre. At full
+  expansion that is roughly 10–25 cm. Superficial muscles get extra lift, and
+  movement of limb groups toward the midline is damped so the two legs'
+  adductors don't collide.
 - The per-group **Expand** button in the side panel limits expansion to the
   chosen groups. With no group picked it applies to the whole body.
 - Rows show a muscle's layer. Rows for muscles that are peeled away are dimmed,

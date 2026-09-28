@@ -28,6 +28,7 @@ import { EXTMeshoptCompression, KHRMeshQuantization } from "@gltf-transform/exte
 import { meshopt } from "@gltf-transform/functions";
 import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
 import { computeExplodeVectors, computeMuscleLayers } from "./anatomy-layers.mjs";
+import { MUSCLE_GROUPS, muscleGroupOf } from "./anatomy-muscle-groups.mjs";
 
 const SRC = process.argv[2];
 if (!SRC) {
@@ -112,7 +113,7 @@ const BONE_RULES = [
 const MUSCLE_RULES = [
   ["head", (n, a) => a.has("musculature of head")],
   ["neck", (n, a) => a.has("musculature of neck") || /longus colli|scalen|sternocleidomastoid|platysma/.test(n)],
-  ["shoulder", (n) => /deltoid|supraspinatus|infraspinatus|subscapularis|teres/.test(n)],
+  ["shoulder", (n) => /deltoid|supraspinatus|infraspinatus|subscapularis|teres (major|minor)/.test(n)],
   ["arm", (n) => /biceps brachii|triceps brachii|\bbrachialis|coracobrachialis|anconeus/.test(n)],
   ["back", (n, a) => a.has("musculature of back")],
   ["chest", (n, a) => a.has("musculature of thorax")],
@@ -345,6 +346,13 @@ async function main() {
     }
   }
 
+  const ungrouped = [];
+  for (const p of parts.muscles) {
+    p.fg = muscleGroupOf(p.name, p.group)?.key;
+    if (!p.fg) ungrouped.push(`${p.name} [${p.group}]`);
+  }
+  if (ungrouped.length) throw new Error(`muscles without a clinical group: ${ungrouped.join("; ")}`);
+
   console.log("computing muscle depth layers…");
   const layers = computeMuscleLayers(
     parts.muscles,
@@ -361,6 +369,7 @@ async function main() {
   const manifest = {
     source: "BodyParts3D, © The Database Center for Life Science, licensed under CC BY-SA 2.1 JP",
     height: max[1] - min[1],
+    muscleGroups: MUSCLE_GROUPS.map(({ key, label, region }) => ({ key, label, region })),
     skeleton: [],
     muscles: [],
   };
@@ -394,6 +403,7 @@ async function main() {
 
       const entry = { id: p.id, label: p.label, group: p.group, side: p.side };
       if (p.short) entry.short = p.short;
+      if (p.fg) entry.fg = p.fg;
       if (p.layer) entry.layer = p.layer;
       if (p.explode) entry.explode = p.explode;
       manifest[kind].push(entry);

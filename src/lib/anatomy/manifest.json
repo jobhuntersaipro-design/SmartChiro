@@ -1,6 +1,243 @@
 {
  "source": "BodyParts3D, © The Database Center for Life Science, licensed under CC BY-SA 2.1 JP",
  "height": 1.6469956310465932,
+ "muscleGroups": [
+  {
+   "key": "mastication",
+   "label": "Jaw (mastication)",
+   "region": "head"
+  },
+  {
+   "key": "facial",
+   "label": "Facial expression",
+   "region": "head"
+  },
+  {
+   "key": "suboccipitals",
+   "label": "Suboccipitals",
+   "region": "neck"
+  },
+  {
+   "key": "scalenes",
+   "label": "Scalenes",
+   "region": "neck"
+  },
+  {
+   "key": "scm",
+   "label": "Sternocleidomastoid",
+   "region": "neck"
+  },
+  {
+   "key": "deep-neck-flexors",
+   "label": "Deep neck flexors",
+   "region": "neck"
+  },
+  {
+   "key": "hyoid",
+   "label": "Hyoid muscles",
+   "region": "neck"
+  },
+  {
+   "key": "platysma",
+   "label": "Platysma",
+   "region": "neck"
+  },
+  {
+   "key": "trapezius",
+   "label": "Trapezius",
+   "region": "back"
+  },
+  {
+   "key": "latissimus",
+   "label": "Latissimus dorsi",
+   "region": "back"
+  },
+  {
+   "key": "rhomboids",
+   "label": "Rhomboids & levator scapulae",
+   "region": "back"
+  },
+  {
+   "key": "erector-spinae",
+   "label": "Erector spinae",
+   "region": "back"
+  },
+  {
+   "key": "splenius",
+   "label": "Splenius",
+   "region": "back"
+  },
+  {
+   "key": "transversospinalis",
+   "label": "Multifidus, rotatores & semispinalis",
+   "region": "back"
+  },
+  {
+   "key": "segmental",
+   "label": "Interspinales & intertransversarii",
+   "region": "back"
+  },
+  {
+   "key": "serratus-posterior",
+   "label": "Serratus posterior",
+   "region": "back"
+  },
+  {
+   "key": "pec-major",
+   "label": "Pectoralis major",
+   "region": "chest"
+  },
+  {
+   "key": "pec-minor",
+   "label": "Pectoralis minor & subclavius",
+   "region": "chest"
+  },
+  {
+   "key": "serratus-anterior",
+   "label": "Serratus anterior",
+   "region": "chest"
+  },
+  {
+   "key": "intercostals",
+   "label": "Intercostals",
+   "region": "chest"
+  },
+  {
+   "key": "diaphragm",
+   "label": "Diaphragm",
+   "region": "chest"
+  },
+  {
+   "key": "quadratus-lumborum",
+   "label": "Quadratus lumborum",
+   "region": "abdomen"
+  },
+  {
+   "key": "pelvic-floor",
+   "label": "Pelvic floor",
+   "region": "abdomen"
+  },
+  {
+   "key": "abdominal-wall",
+   "label": "Abdominal wall",
+   "region": "abdomen"
+  },
+  {
+   "key": "deltoid",
+   "label": "Deltoid",
+   "region": "shoulder"
+  },
+  {
+   "key": "rotator-cuff",
+   "label": "Rotator cuff",
+   "region": "shoulder"
+  },
+  {
+   "key": "teres-major",
+   "label": "Teres major",
+   "region": "shoulder"
+  },
+  {
+   "key": "arm-flexors",
+   "label": "Biceps, brachialis & coracobrachialis",
+   "region": "arm"
+  },
+  {
+   "key": "triceps",
+   "label": "Triceps & anconeus",
+   "region": "arm"
+  },
+  {
+   "key": "hypothenar",
+   "label": "Hypothenar",
+   "region": "forearm"
+  },
+  {
+   "key": "thenar",
+   "label": "Thenar (thumb)",
+   "region": "forearm"
+  },
+  {
+   "key": "hand-intrinsics",
+   "label": "Lumbricals & interossei (hand)",
+   "region": "forearm"
+  },
+  {
+   "key": "forearm-extensors",
+   "label": "Forearm extensors & supinator",
+   "region": "forearm"
+  },
+  {
+   "key": "forearm-flexors",
+   "label": "Forearm flexors & pronators",
+   "region": "forearm"
+  },
+  {
+   "key": "gluteals",
+   "label": "Gluteals",
+   "region": "hip"
+  },
+  {
+   "key": "iliopsoas",
+   "label": "Iliopsoas",
+   "region": "hip"
+  },
+  {
+   "key": "deep-hip-rotators",
+   "label": "Deep hip rotators",
+   "region": "hip"
+  },
+  {
+   "key": "tfl-it-band",
+   "label": "TFL & IT band",
+   "region": "hip"
+  },
+  {
+   "key": "quadriceps",
+   "label": "Quadriceps",
+   "region": "thigh"
+  },
+  {
+   "key": "hamstrings",
+   "label": "Hamstrings",
+   "region": "thigh"
+  },
+  {
+   "key": "adductors",
+   "label": "Adductors",
+   "region": "thigh"
+  },
+  {
+   "key": "sartorius",
+   "label": "Sartorius",
+   "region": "thigh"
+  },
+  {
+   "key": "foot-intrinsics",
+   "label": "Foot intrinsics",
+   "region": "leg"
+  },
+  {
+   "key": "calf",
+   "label": "Calf (gastrocnemius & soleus)",
+   "region": "leg"
+  },
+  {
+   "key": "anterior-leg",
+   "label": "Shin (anterior compartment)",
+   "region": "leg"
+  },
+  {
+   "key": "fibularis",
+   "label": "Fibularis (peroneals)",
+   "region": "leg"
+  },
+  {
+   "key": "deep-posterior-leg",
+   "label": "Deep posterior leg",
+   "region": "leg"
+  }
+ ],
  "skeleton": [
   {
    "id": "FMA12519",
@@ -1514,11 +1751,12 @@
    "label": "Abdominal part of left pectoralis major",
    "group": "chest",
    "side": "left",
+   "fg": "pec-major",
    "layer": 1,
    "explode": [
-    0.1288,
+    0.2909,
     0,
-    0.0759
+    0.174
    ]
   },
   {
@@ -1526,11 +1764,12 @@
    "label": "Abdominal part of right pectoralis major",
    "group": "chest",
    "side": "right",
+   "fg": "pec-major",
    "layer": 1,
    "explode": [
-    -0.1297,
+    -0.2933,
     0,
-    0.0751
+    0.1724
    ]
   },
   {
@@ -1538,11 +1777,12 @@
    "label": "Abductor digiti minimi of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0212,
-    -0.0232,
-    -0.0906
+    0.0192,
+    -0.0148,
+    -0.0839
    ]
   },
   {
@@ -1550,11 +1790,12 @@
    "label": "Abductor digiti minimi of left hand",
    "group": "forearm",
    "side": "left",
+   "fg": "hypothenar",
    "layer": 1,
    "explode": [
-    -0.0857,
-    0.0055,
-    0.0141
+    -0.0433,
+    -0.0355,
+    0.0252
    ]
   },
   {
@@ -1562,11 +1803,12 @@
    "label": "Abductor digiti minimi of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0211,
-    -0.0296,
-    -0.0891
+    -0.0179,
+    -0.0149,
+    -0.0858
    ]
   },
   {
@@ -1574,11 +1816,12 @@
    "label": "Abductor digiti minimi of right hand",
    "group": "forearm",
    "side": "right",
+   "fg": "hypothenar",
    "layer": 1,
    "explode": [
-    0.086,
-    0.0013,
-    0.0153
+    0.043,
+    -0.0437,
+    0.0274
    ]
   },
   {
@@ -1586,11 +1829,12 @@
    "label": "Acromial part of left deltoid",
    "group": "shoulder",
    "side": "left",
+   "fg": "deltoid",
    "layer": 1,
    "explode": [
-    0.0851,
+    0.2219,
     0,
-    0.0283
+    0.1067
    ]
   },
   {
@@ -1598,11 +1842,12 @@
    "label": "Acromial part of right deltoid",
    "group": "shoulder",
    "side": "right",
+   "fg": "deltoid",
    "layer": 1,
    "explode": [
-    -0.0851,
+    -0.2225,
     0,
-    0.0291
+    0.1067
    ]
   },
   {
@@ -1610,11 +1855,12 @@
    "label": "Anterior belly of left digastric",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0119,
+    0.0739,
     0,
-    0.0673
+    0.1884
    ]
   },
   {
@@ -1622,11 +1868,12 @@
    "label": "Anterior belly of right digastric",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.0119,
+    -0.0742,
     0,
-    0.0672
+    0.1881
    ]
   },
   {
@@ -1634,11 +1881,12 @@
    "label": "Aponeurosis of epicranius",
    "group": "head",
    "side": "midline",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0001,
+    0.0003,
     0,
-    -0.0902
+    0.0823
    ]
   },
   {
@@ -1646,11 +1894,12 @@
    "label": "Ascending part of left trapezius",
    "group": "back",
    "side": "left",
+   "fg": "trapezius",
    "layer": 1,
    "explode": [
-    0.049,
+    0.12,
     0,
-    -0.1251
+    -0.2858
    ]
   },
   {
@@ -1658,11 +1907,12 @@
    "label": "Ascending part of right trapezius",
    "group": "back",
    "side": "right",
+   "fg": "trapezius",
    "layer": 1,
    "explode": [
-    -0.0483,
+    -0.1181,
     0,
-    -0.1253
+    -0.2872
    ]
   },
   {
@@ -1670,11 +1920,12 @@
    "label": "Clavicular part of left deltoid",
    "group": "shoulder",
    "side": "left",
+   "fg": "deltoid",
    "layer": 1,
    "explode": [
-    -0.0306,
+    0.1241,
     0,
-    0.0892
+    0.1623
    ]
   },
   {
@@ -1682,11 +1933,12 @@
    "label": "Clavicular part of left pectoralis major",
    "group": "chest",
    "side": "left",
+   "fg": "pec-major",
    "layer": 1,
    "explode": [
-    0.1416,
+    0.3008,
     0,
-    0.0253
+    0.0691
    ]
   },
   {
@@ -1694,11 +1946,12 @@
    "label": "Clavicular part of right deltoid",
    "group": "shoulder",
    "side": "right",
+   "fg": "deltoid",
    "layer": 1,
    "explode": [
-    0.0282,
+    -0.1261,
     0,
-    0.0896
+    0.1612
    ]
   },
   {
@@ -1706,11 +1959,12 @@
    "label": "Clavicular part of right pectoralis major",
    "group": "chest",
    "side": "right",
+   "fg": "pec-major",
    "layer": 1,
    "explode": [
-    -0.1414,
+    -0.3,
     0,
-    0.0253
+    0.0686
    ]
   },
   {
@@ -1718,11 +1972,12 @@
    "label": "Deep head of left flexor pollicis brevis",
    "group": "forearm",
    "side": "left",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    0.0652,
-    0,
-    0.0698
+    0.1232,
+    0.1457,
+    -0.0091
    ]
   },
   {
@@ -1730,11 +1985,12 @@
    "label": "Deep head of right flexor pollicis brevis",
    "group": "forearm",
    "side": "right",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    -0.0652,
-    0,
-    0.0698
+    -0.1208,
+    0.1469,
+    -0.0094
    ]
   },
   {
@@ -1742,11 +1998,12 @@
    "label": "Deep part of left masseter",
    "group": "head",
    "side": "left",
+   "fg": "mastication",
    "layer": 1,
    "explode": [
-    0.0833,
+    0.2043,
     0,
-    0.0666
+    0.1523
    ]
   },
   {
@@ -1754,11 +2011,12 @@
    "label": "Deep part of right masseter",
    "group": "head",
    "side": "right",
+   "fg": "mastication",
    "layer": 1,
    "explode": [
-    -0.0832,
+    -0.2043,
     0,
-    0.0669
+    0.1532
    ]
   },
   {
@@ -1766,11 +2024,12 @@
    "label": "Descending part of left trapezius",
    "group": "back",
    "side": "left",
+   "fg": "trapezius",
    "layer": 1,
    "explode": [
-    0.0646,
+    0.1184,
     0,
-    -0.0871
+    -0.1739
    ]
   },
   {
@@ -1778,11 +2037,12 @@
    "label": "Descending part of right trapezius",
    "group": "back",
    "side": "right",
+   "fg": "trapezius",
    "layer": 1,
    "explode": [
-    -0.0581,
+    -0.1078,
     0,
-    -0.0903
+    -0.177
    ]
   },
   {
@@ -1790,11 +2050,12 @@
    "label": "Diaphragm",
    "group": "chest",
    "side": "midline",
+   "fg": "diaphragm",
    "layer": 3,
    "explode": [
-    -0.0096,
+    -0.0885,
     0,
-    0.0055
+    0.0509
    ]
   },
   {
@@ -1802,11 +2063,12 @@
    "label": "External anal sphincter",
    "group": "abdomen",
    "side": "midline",
+   "fg": "pelvic-floor",
    "layer": 1,
    "explode": [
-    -0.0001,
+    -0.0072,
     0,
-    -0.1016
+    -0.2494
    ]
   },
   {
@@ -1814,11 +2076,12 @@
    "label": "External intercostal muscle",
    "group": "chest",
    "side": "midline",
+   "fg": "intercostals",
    "layer": 2,
    "explode": [
-    -0.0011,
+    -0.0122,
     0,
-    -0.0479
+    -0.1697
    ]
   },
   {
@@ -1826,11 +2089,12 @@
    "label": "First lumbrical of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0648,
-    -0.0281,
-    0.0416
+    -0.0081,
+    -0.0106,
+    0.0207
    ]
   },
   {
@@ -1838,11 +2102,12 @@
    "label": "First lumbrical of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.061,
-    -0.0383,
-    0.0398
+    0.0083,
+    -0.0101,
+    0.0161
    ]
   },
   {
@@ -1850,11 +2115,12 @@
    "label": "First plantar interosseous of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.0038,
-    0.0052,
-    0.0483
+    0.0053,
+    0.013,
+    0.0499
    ]
   },
   {
@@ -1862,11 +2128,12 @@
    "label": "First plantar interosseous of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0052,
-    -0.0006,
-    0.0493
+    -0.0054,
+    0.0133,
+    0.0496
    ]
   },
   {
@@ -1874,11 +2141,12 @@
    "label": "Flexor digiti minimi brevis of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0766,
-    -0.0403,
-    -0.0016
+    0.0557,
+    -0.0225,
+    -0.0063
    ]
   },
   {
@@ -1886,11 +2154,12 @@
    "label": "Flexor digiti minimi brevis of left hand",
    "group": "forearm",
    "side": "left",
+   "fg": "hypothenar",
    "layer": 1,
    "explode": [
-    -0.0826,
-    0.0034,
-    0.0151
+    -0.0368,
+    -0.0459,
+    0.0271
    ]
   },
   {
@@ -1898,11 +2167,12 @@
    "label": "Flexor digiti minimi brevis of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0744,
-    -0.0465,
-    0.0016
+    -0.0555,
+    -0.0223,
+    -0.0075
    ]
   },
   {
@@ -1910,11 +2180,12 @@
    "label": "Flexor digiti minimi brevis of right hand",
    "group": "forearm",
    "side": "right",
+   "fg": "hypothenar",
    "layer": 1,
    "explode": [
-    0.0828,
-    0.0006,
-    0.0161
+    0.0366,
+    -0.0502,
+    0.0295
    ]
   },
   {
@@ -1922,11 +2193,12 @@
    "label": "Flexor retinaculum of left wrist",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0166,
+    -0.0142,
     0,
-    0.0875
+    0.1942
    ]
   },
   {
@@ -1934,11 +2206,12 @@
    "label": "Flexor retinaculum of right wrist",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0166,
+    0.0139,
     0,
-    0.0875
+    0.1953
    ]
   },
   {
@@ -1946,11 +2219,12 @@
    "label": "Fourth lumbrical of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.0343,
-    -0.0282,
-    0.0131
+    0.0382,
+    -0.0231,
+    0.0082
    ]
   },
   {
@@ -1958,11 +2232,12 @@
    "label": "Fourth lumbrical of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0328,
-    -0.0315,
-    0.0176
+    -0.0392,
+    -0.0237,
+    0.0114
    ]
   },
   {
@@ -1970,11 +2245,12 @@
    "label": "Humeral head of left extensor carpi ulnaris",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0498,
+    0.0628,
     0,
-    -0.0724
+    -0.1606
    ]
   },
   {
@@ -1982,23 +2258,25 @@
    "label": "Humeral head of left flexor carpi ulnaris",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0936,
+    -0.0347,
     0,
-    -0.0247
+    0.105
    ]
   },
   {
    "id": "FMA38561",
    "label": "Humeral head of left pronator teres",
-   "group": "shoulder",
+   "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.1024,
+    -0.0233,
     0,
-    0.0488
+    0.0898
    ]
   },
   {
@@ -2006,11 +2284,12 @@
    "label": "Humeral head of right extensor carpi ulnaris",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0498,
+    -0.0613,
     0,
-    -0.0725
+    -0.1618
    ]
   },
   {
@@ -2018,23 +2297,25 @@
    "label": "Humeral head of right flexor carpi ulnaris",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0934,
+    0.0342,
     0,
-    -0.0238
+    0.1068
    ]
   },
   {
    "id": "FMA38560",
    "label": "Humeral head of right pronator teres",
-   "group": "shoulder",
+   "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.1025,
+    0.0226,
     0,
-    0.0486
+    0.0909
    ]
   },
   {
@@ -2042,11 +2323,12 @@
    "label": "Humeroulnar head of left flexor digitorum superficialis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0547,
+    -0.0226,
     0,
-    0.0611
+    0.1726
    ]
   },
   {
@@ -2054,11 +2336,12 @@
    "label": "Humeroulnar head of right flexor digitorum superficialis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0527,
+    0.0221,
     0,
-    0.0631
+    0.1748
    ]
   },
   {
@@ -2066,11 +2349,12 @@
    "label": "Inferior oblique part of left longus colli",
    "group": "neck",
    "side": "left",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    0.0322,
+    0.1212,
     0,
-    -0.0323
+    -0.0632
    ]
   },
   {
@@ -2078,11 +2362,12 @@
    "label": "Inferior oblique part of right longus colli",
    "group": "neck",
    "side": "right",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    -0.0321,
+    -0.1217,
     0,
-    -0.0324
+    -0.0629
    ]
   },
   {
@@ -2090,11 +2375,12 @@
    "label": "Innermost intercostal muscle",
    "group": "chest",
    "side": "midline",
+   "fg": "intercostals",
    "layer": 3,
    "explode": [
-    -0.0004,
+    -0.0066,
     0,
-    -0.0039
+    -0.0674
    ]
   },
   {
@@ -2102,11 +2388,12 @@
    "label": "Internal intercostal muscle",
    "group": "chest",
    "side": "midline",
+   "fg": "intercostals",
    "layer": 2,
    "explode": [
-    -0.004,
+    -0.0131,
     0,
-    0.0397
+    -0.0852
    ]
   },
   {
@@ -2114,11 +2401,12 @@
    "label": "Lateral head of left flexor hallucis brevis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0767,
-    -0.0081,
-    0.0365
+    -0.0105,
+    0.001,
+    0.0202
    ]
   },
   {
@@ -2126,11 +2414,12 @@
    "label": "Lateral head of left gastrocnemius",
    "group": "leg",
    "side": "left",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    0.0409,
     0,
-    -0.0839
+    0,
+    -0.2047
    ]
   },
   {
@@ -2138,11 +2427,12 @@
    "label": "Lateral head of left triceps brachii",
    "group": "arm",
    "side": "left",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    0.0428,
+    0.0832,
     0,
-    -0.0745
+    -0.1919
    ]
   },
   {
@@ -2150,11 +2440,12 @@
    "label": "Lateral head of right flexor hallucis brevis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0729,
-    -0.0172,
-    0.0415
+    0.0105,
+    0.0012,
+    0.0204
    ]
   },
   {
@@ -2162,11 +2453,12 @@
    "label": "Lateral head of right gastrocnemius",
    "group": "leg",
    "side": "right",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    -0.0422,
+    -0.0024,
     0,
-    -0.0824
+    -0.206
    ]
   },
   {
@@ -2174,11 +2466,12 @@
    "label": "Lateral head of right triceps brachii",
    "group": "arm",
    "side": "right",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    -0.0426,
+    -0.0836,
     0,
-    -0.0745
+    -0.1919
    ]
   },
   {
@@ -2186,11 +2479,12 @@
    "label": "Left abductor hallucis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0808,
-    -0.0035,
-    -0.0453
+    -0.0132,
+    0.0029,
+    -0.0418
    ]
   },
   {
@@ -2198,11 +2492,12 @@
    "label": "Left abductor pollicis brevis",
    "group": "forearm",
    "side": "left",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    0.0663,
-    0,
-    0.0738
+    0.1406,
+    0.1644,
+    0.0151
    ]
   },
   {
@@ -2210,11 +2505,12 @@
    "label": "Left abductor pollicis longus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0235,
+    0.132,
     0,
-    -0.0756
+    -0.1396
    ]
   },
   {
@@ -2222,11 +2518,12 @@
    "label": "Left adductor brevis",
    "group": "thigh",
    "side": "left",
+   "fg": "adductors",
    "layer": 2,
    "explode": [
-    -0.0123,
+    -0.0161,
     0,
-    0.0417
+    0.0901
    ]
   },
   {
@@ -2234,11 +2531,12 @@
    "label": "Left adductor longus",
    "group": "thigh",
    "side": "left",
+   "fg": "adductors",
    "layer": 1,
    "explode": [
-    -0.0504,
+    -0.0309,
     0,
-    0.0718
+    0.1438
    ]
   },
   {
@@ -2246,11 +2544,12 @@
    "label": "Left adductor magnus",
    "group": "thigh",
    "side": "left",
+   "fg": "adductors",
    "layer": 2,
    "explode": [
-    -0.032,
+    -0.0217,
     0,
-    -0.0318
+    0.0274
    ]
   },
   {
@@ -2258,11 +2557,12 @@
    "label": "Left adductor minimus",
    "group": "thigh",
    "side": "left",
+   "fg": "adductors",
    "layer": 2,
    "explode": [
-    -0.0067,
+    -0.0153,
     0,
-    0.0382
+    0.0684
    ]
   },
   {
@@ -2270,11 +2570,12 @@
    "label": "Left anconeus",
    "group": "arm",
    "side": "left",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    0.0771,
+    0.1089,
     0,
-    -0.0462
+    -0.1714
    ]
   },
   {
@@ -2282,11 +2583,12 @@
    "label": "Left brachialis",
    "group": "arm",
    "side": "left",
+   "fg": "arm-flexors",
    "layer": 1,
    "explode": [
-    0.0717,
+    -0.0002,
     0,
-    0.0399
+    0.1547
    ]
   },
   {
@@ -2294,11 +2596,12 @@
    "label": "Left brachioradialis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0186,
+    0.1267,
     0,
-    -0.0774
+    -0.15
    ]
   },
   {
@@ -2306,11 +2609,12 @@
    "label": "Left buccinator",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 2,
    "explode": [
-    0.0344,
+    0.1009,
     0,
-    0.0661
+    0.1696
    ]
   },
   {
@@ -2318,11 +2622,12 @@
    "label": "Left calcaneal tendon",
    "group": "leg",
    "side": "left",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    -0.026,
+    -0.0134,
     0,
-    -0.0892
+    -0.2207
    ]
   },
   {
@@ -2330,11 +2635,12 @@
    "label": "Left cervical rotator",
    "group": "back",
    "side": "left",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    0.0089,
+    0.0422,
     0,
-    -0.0186
+    -0.0878
    ]
   },
   {
@@ -2342,11 +2648,12 @@
    "label": "Left coccygeus",
    "group": "abdomen",
    "side": "left",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    0.0244,
+    0.0843,
     0,
-    -0.0711
+    -0.2094
    ]
   },
   {
@@ -2354,11 +2661,12 @@
    "label": "Left coracobrachialis",
    "group": "arm",
    "side": "left",
+   "fg": "arm-flexors",
    "layer": 2,
    "explode": [
-    -0.0511,
+    -0.0209,
     0,
-    0.0268
+    0.1346
    ]
   },
   {
@@ -2366,11 +2674,12 @@
    "label": "Left corrugator supercilii",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0279,
+    0.0766,
     0,
-    0.1166
+    0.2697
    ]
   },
   {
@@ -2378,11 +2687,12 @@
    "label": "Left depressor anguli oris",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0416,
+    0.0951,
     0,
-    0.1037
+    0.2461
    ]
   },
   {
@@ -2390,11 +2700,12 @@
    "label": "Left depressor labii inferioris",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0276,
+    0.0716,
     0,
-    0.1129
+    0.2593
    ]
   },
   {
@@ -2402,11 +2713,12 @@
    "label": "Left depressor septi nasi",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0087,
+    0.0507,
     0,
-    0.1218
+    0.2751
    ]
   },
   {
@@ -2414,11 +2726,12 @@
    "label": "Left extensor carpi radialis brevis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0187,
+    0.1208,
     0,
-    -0.0856
+    -0.1762
    ]
   },
   {
@@ -2426,11 +2739,12 @@
    "label": "Left extensor carpi radialis longus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0308,
+    0.1316,
     0,
-    -0.0812
+    -0.17
    ]
   },
   {
@@ -2438,11 +2752,12 @@
    "label": "Left extensor digiti minimi",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0418,
+    0.0711,
     0,
-    -0.0703
+    -0.144
    ]
   },
   {
@@ -2450,11 +2765,12 @@
    "label": "Left extensor digitorum",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0432,
+    0.1216,
     0,
-    -0.0616
+    -0.1067
    ]
   },
   {
@@ -2462,11 +2778,12 @@
    "label": "Left extensor digitorum brevis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.033,
-    0.0746,
-    -0.0107
+    0.0201,
+    0.0502,
+    -0.0116
    ]
   },
   {
@@ -2474,11 +2791,12 @@
    "label": "Left extensor digitorum longus",
    "group": "leg",
    "side": "left",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    0.0357,
+    0.0826,
     0,
-    0.0987
+    0.2416
    ]
   },
   {
@@ -2486,11 +2804,12 @@
    "label": "Left extensor hallucis brevis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0345,
-    0.0787,
-    -0.0132
+    -0.0047,
+    0.0609,
+    -0.014
    ]
   },
   {
@@ -2498,11 +2817,12 @@
    "label": "Left extensor hallucis longus",
    "group": "leg",
    "side": "left",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    0.0136,
+    0.0385,
     0,
-    0.083
+    0.1604
    ]
   },
   {
@@ -2510,11 +2830,12 @@
    "label": "Left extensor indicis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0631,
+    0.1328,
     0,
-    0.0485
+    -0.0813
    ]
   },
   {
@@ -2522,11 +2843,12 @@
    "label": "Left extensor pollicis brevis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0805,
+    0.1465,
     0,
-    0.0026
+    -0.0996
    ]
   },
   {
@@ -2534,11 +2856,12 @@
    "label": "Left extensor pollicis longus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0756,
+    0.1352,
     0,
-    0.0182
+    -0.0926
    ]
   },
   {
@@ -2546,11 +2869,12 @@
    "label": "Left external oblique",
    "group": "abdomen",
    "side": "left",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    0.0882,
+    0.2046,
     0,
-    0.0938
+    0.2181
    ]
   },
   {
@@ -2558,11 +2882,12 @@
    "label": "Left fibularis brevis",
    "group": "leg",
    "side": "left",
+   "fg": "fibularis",
    "layer": 1,
    "explode": [
-    0.0707,
+    0.1616,
     0,
-    -0.0381
+    -0.0731
    ]
   },
   {
@@ -2570,11 +2895,12 @@
    "label": "Left fibularis longus",
    "group": "leg",
    "side": "left",
+   "fg": "fibularis",
    "layer": 1,
    "explode": [
-    0.0818,
+    0.1871,
     0,
-    0.0074
+    -0.0223
    ]
   },
   {
@@ -2582,11 +2908,12 @@
    "label": "Left fibularis tertius",
    "group": "leg",
    "side": "left",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    0.0107,
-    0.0886,
-    -0.0707
+    0.0727,
+    0,
+    0.1533
    ]
   },
   {
@@ -2594,11 +2921,12 @@
    "label": "Left flexor accessorius",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.013,
-    -0.0056,
-    -0.0639
+    -0.0036,
+    -0.0028,
+    -0.0973
    ]
   },
   {
@@ -2606,11 +2934,12 @@
    "label": "Left flexor carpi radialis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.083,
+    -0.0292,
     0,
-    0.0163
+    0.1401
    ]
   },
   {
@@ -2618,11 +2947,12 @@
    "label": "Left flexor digitorum brevis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0086,
-    -0.0761,
-    0.0207
+    0.0063,
+    -0.0375,
+    0.0056
    ]
   },
   {
@@ -2630,11 +2960,12 @@
    "label": "Left flexor digitorum longus",
    "group": "leg",
    "side": "left",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    -0.0148,
+    -0.0184,
     0,
-    0.0507
+    0.149
    ]
   },
   {
@@ -2642,11 +2973,12 @@
    "label": "Left flexor digitorum profundus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 2,
    "explode": [
-    -0.0013,
+    -0.0109,
     0,
-    0.0463
+    0.1438
    ]
   },
   {
@@ -2654,11 +2986,12 @@
    "label": "Left flexor hallucis longus",
    "group": "leg",
    "side": "left",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    -0.0161,
+    -0.013,
     0,
-    0.0386
+    0.1073
    ]
   },
   {
@@ -2666,11 +2999,12 @@
    "label": "Left flexor pollicis longus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.071,
+    -0.0097,
     0,
-    0.0373
+    0.1458
    ]
   },
   {
@@ -2678,11 +3012,12 @@
    "label": "Left frontalis",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0453,
+    0.1073,
     0,
-    0.1086
+    0.2577
    ]
   },
   {
@@ -2690,11 +3025,12 @@
    "label": "Left gemellus inferior",
    "group": "hip",
    "side": "left",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    -0.0122,
+    -0.0182,
     0,
-    -0.0478
+    -0.116
    ]
   },
   {
@@ -2702,11 +3038,12 @@
    "label": "Left gemellus superior",
    "group": "hip",
    "side": "left",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    -0.0265,
+    -0.0201,
     0,
-    -0.0391
+    -0.1074
    ]
   },
   {
@@ -2714,11 +3051,12 @@
    "label": "Left geniohyoid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 3,
    "explode": [
-    0.0029,
+    0.0364,
     0,
-    0.0267
+    0.1377
    ]
   },
   {
@@ -2726,11 +3064,12 @@
    "label": "Left gluteus maximus",
    "group": "hip",
    "side": "left",
+   "fg": "gluteals",
    "layer": 1,
    "explode": [
-    -0.0176,
+    0.0835,
     0,
-    -0.0964
+    -0.1926
    ]
   },
   {
@@ -2738,11 +3077,12 @@
    "label": "Left gluteus medius",
    "group": "hip",
    "side": "left",
+   "fg": "gluteals",
    "layer": 1,
    "explode": [
-    0.0821,
+    0.1645,
     0,
-    -0.0276
+    -0.1104
    ]
   },
   {
@@ -2750,11 +3090,12 @@
    "label": "Left gluteus minimus",
    "group": "hip",
    "side": "left",
+   "fg": "gluteals",
    "layer": 2,
    "explode": [
-    0.0517,
+    0.1347,
     0,
-    0.0129
+    -0.0517
    ]
   },
   {
@@ -2762,11 +3103,12 @@
    "label": "Left gracilis",
    "group": "thigh",
    "side": "left",
+   "fg": "adductors",
    "layer": 1,
    "explode": [
-    -0.0981,
+    -0.0432,
     0,
-    -0.0011
+    0.08
    ]
   },
   {
@@ -2774,11 +3116,12 @@
    "label": "Left iliacus",
    "group": "hip",
    "side": "left",
+   "fg": "iliopsoas",
    "layer": 2,
    "explode": [
-    -0.0053,
+    -0.012,
     0,
-    0.0556
+    0.1419
    ]
   },
   {
@@ -2786,11 +3129,12 @@
    "label": "Left iliococcygeus",
    "group": "abdomen",
    "side": "left",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    0.0359,
+    0.1101,
     0,
-    -0.0535
+    -0.1626
    ]
   },
   {
@@ -2798,11 +3142,12 @@
    "label": "Left iliocostalis cervicis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 3,
    "explode": [
-    0.0316,
+    0.1241,
     0,
-    -0.0333
+    -0.1297
    ]
   },
   {
@@ -2810,11 +3155,12 @@
    "label": "Left iliocostalis lumborum",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0533,
+    0.1432,
     0,
-    -0.0702
+    -0.2011
    ]
   },
   {
@@ -2822,11 +3168,12 @@
    "label": "Left iliocostalis thoracis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0637,
+    0.1643,
     0,
-    -0.0734
+    -0.2137
    ]
   },
   {
@@ -2834,11 +3181,12 @@
    "label": "Left iliotibial tract",
    "group": "hip",
    "side": "left",
+   "fg": "tfl-it-band",
    "layer": 1,
    "explode": [
-    0.0974,
+    0.1953,
     0,
-    0.0197
+    0.0737
    ]
   },
   {
@@ -2846,11 +3194,12 @@
    "label": "Left infraspinatus muscle",
    "group": "shoulder",
    "side": "left",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    -0.0493,
+    -0.0282,
     0,
-    -0.0445
+    -0.1131
    ]
   },
   {
@@ -2858,11 +3207,12 @@
    "label": "Left inguinal ligament",
    "group": "abdomen",
    "side": "left",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    0.1013,
+    0.2141,
     0,
-    0.0734
+    0.1736
    ]
   },
   {
@@ -2870,11 +3220,12 @@
    "label": "Left internal oblique",
    "group": "abdomen",
    "side": "left",
+   "fg": "abdominal-wall",
    "layer": 2,
    "explode": [
-    0.054,
+    0.144,
     0,
-    0.0728
+    0.2042
    ]
   },
   {
@@ -2882,11 +3233,12 @@
    "label": "Left latissimus dorsi",
    "group": "back",
    "side": "left",
+   "fg": "latissimus",
    "layer": 1,
    "explode": [
-    0.1062,
+    0.2281,
     0,
-    -0.0831
+    -0.1786
    ]
   },
   {
@@ -2894,11 +3246,12 @@
    "label": "Left levator anguli oris",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0316,
+    0.0797,
     0,
-    0.1128
+    0.2621
    ]
   },
   {
@@ -2906,11 +3259,12 @@
    "label": "Left levator labii superioris",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0324,
+    0.0818,
     0,
-    0.1133
+    0.2638
    ]
   },
   {
@@ -2918,11 +3272,12 @@
    "label": "Left levator labii superioris alaeque nasi",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0195,
+    0.0632,
     0,
-    0.1177
+    0.268
    ]
   },
   {
@@ -2930,11 +3285,12 @@
    "label": "Left levator scapulae",
    "group": "back",
    "side": "left",
+   "fg": "rhomboids",
    "layer": 2,
    "explode": [
-    0.0541,
+    0.1203,
     0,
-    -0.0512
+    -0.1363
    ]
   },
   {
@@ -2942,11 +3298,12 @@
    "label": "Left longissimus capitis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.045,
+    0.0922,
     0,
-    -0.041
+    -0.1123
    ]
   },
   {
@@ -2954,11 +3311,12 @@
    "label": "Left longissimus cervicis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 3,
    "explode": [
-    0.0192,
+    0.0752,
     0,
-    -0.0286
+    -0.1044
    ]
   },
   {
@@ -2966,11 +3324,12 @@
    "label": "Left longissimus thoracis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0338,
+    0.0948,
     0,
-    -0.0741
+    -0.2142
    ]
   },
   {
@@ -2978,11 +3337,12 @@
    "label": "Left longus capitis",
    "group": "neck",
    "side": "left",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    0.0449,
+    0.1372,
     0,
-    0.005
+    -0.0039
    ]
   },
   {
@@ -2990,11 +3350,12 @@
    "label": "Left lumbar rotator",
    "group": "back",
    "side": "left",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    0.0123,
+    0.0664,
     0,
-    -0.0245
+    -0.1054
    ]
   },
   {
@@ -3002,11 +3363,12 @@
    "label": "Left medial pterygoid",
    "group": "head",
    "side": "left",
+   "fg": "mastication",
    "layer": 2,
    "explode": [
-    0.0417,
+    0.1111,
     0,
-    0.0408
+    0.0994
    ]
   },
   {
@@ -3014,11 +3376,12 @@
    "label": "Left mentalis",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0098,
+    0.049,
     0,
-    0.1174
+    0.2622
    ]
   },
   {
@@ -3026,11 +3389,12 @@
    "label": "Left multifidus",
    "group": "back",
    "side": "left",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    0.0085,
+    0.0418,
     0,
-    -0.0377
+    -0.1745
    ]
   },
   {
@@ -3038,11 +3402,12 @@
    "label": "Left mylohyoid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0124,
+    0.0722,
     0,
-    0.0639
+    0.1796
    ]
   },
   {
@@ -3050,11 +3415,12 @@
    "label": "Left nasalis",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0111,
+    0.0547,
     0,
-    0.1229
+    0.279
    ]
   },
   {
@@ -3062,11 +3428,12 @@
    "label": "Left obliquus capitis inferior",
    "group": "neck",
    "side": "left",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    0.0346,
+    0.0845,
     0,
-    -0.0452
+    -0.117
    ]
   },
   {
@@ -3074,11 +3441,12 @@
    "label": "Left obliquus capitis superior",
    "group": "neck",
    "side": "left",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    0.0468,
+    0.1239,
     0,
-    -0.0458
+    -0.1402
    ]
   },
   {
@@ -3086,11 +3454,12 @@
    "label": "Left obturator externus",
    "group": "hip",
    "side": "left",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    -0.0437,
+    -0.0253,
     0,
-    0.0184
+    -0.0336
    ]
   },
   {
@@ -3098,11 +3467,12 @@
    "label": "Left obturator internus",
    "group": "hip",
    "side": "left",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    -0.0577,
+    -0.0337,
     0,
-    0.0024
+    -0.0534
    ]
   },
   {
@@ -3110,11 +3480,12 @@
    "label": "Left occipitalis",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0541,
+    0.1142,
     0,
-    -0.1111
+    -0.0111
    ]
   },
   {
@@ -3122,11 +3493,12 @@
    "label": "Left omohyoid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0686,
+    0.1659,
     0,
-    -0.005
+    0.0684
    ]
   },
   {
@@ -3134,11 +3506,12 @@
    "label": "Left opponens pollicis",
    "group": "forearm",
    "side": "left",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    0.0694,
-    0,
-    0.071
+    0.1473,
+    0.1583,
+    0.012
    ]
   },
   {
@@ -3146,11 +3519,12 @@
    "label": "Left palmaris longus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0509,
+    -0.023,
     0,
-    0.0671
+    0.1785
    ]
   },
   {
@@ -3158,11 +3532,12 @@
    "label": "Left pectineus",
    "group": "thigh",
    "side": "left",
+   "fg": "adductors",
    "layer": 1,
    "explode": [
-    -0.034,
+    -0.0289,
     0,
-    0.0849
+    0.1572
    ]
   },
   {
@@ -3170,11 +3545,12 @@
    "label": "Left pectoralis minor",
    "group": "chest",
    "side": "left",
+   "fg": "pec-minor",
    "layer": 2,
    "explode": [
-    0.0983,
+    0.2692,
     0,
-    0.0327
+    0.0907
    ]
   },
   {
@@ -3182,11 +3558,12 @@
    "label": "Left piriformis",
    "group": "hip",
    "side": "left",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    -0.0328,
+    -0.025,
     0,
-    -0.0403
+    -0.1176
    ]
   },
   {
@@ -3194,11 +3571,12 @@
    "label": "Left plantaris",
    "group": "leg",
    "side": "left",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    -0.0417,
+    -0.0162,
     0,
-    -0.0757
+    -0.1711
    ]
   },
   {
@@ -3206,11 +3584,12 @@
    "label": "Left platysma",
    "group": "neck",
    "side": "left",
+   "fg": "platysma",
    "layer": 1,
    "explode": [
-    0.0834,
+    0.1836,
     0,
-    0.0532
+    0.1171
    ]
   },
   {
@@ -3218,11 +3597,12 @@
    "label": "Left popliteus",
    "group": "leg",
    "side": "left",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    -0.0088,
+    -0.0154,
     0,
-    -0.0407
+    0.0503
    ]
   },
   {
@@ -3230,11 +3610,12 @@
    "label": "Left procerus",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0113,
+    0.0541,
     0,
-    0.1215
+    0.2752
    ]
   },
   {
@@ -3242,11 +3623,12 @@
    "label": "Left pronator quadratus",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0098,
+    -0.015,
     0,
-    0.075
+    0.1546
    ]
   },
   {
@@ -3254,11 +3636,12 @@
    "label": "Left psoas major",
    "group": "hip",
    "side": "left",
+   "fg": "iliopsoas",
    "layer": 3,
    "explode": [
-    -0.0257,
+    -0.0258,
     0,
-    0.0101
+    0.069
    ]
   },
   {
@@ -3266,11 +3649,12 @@
    "label": "Left pubococcygeus",
    "group": "abdomen",
    "side": "left",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    0.0271,
+    0.067,
     0,
-    -0.0475
+    -0.1187
    ]
   },
   {
@@ -3278,11 +3662,12 @@
    "label": "Left puborectalis",
    "group": "abdomen",
    "side": "left",
+   "fg": "pelvic-floor",
    "layer": 1,
    "explode": [
-    0.054,
+    0.089,
     0,
-    -0.066
+    -0.1397
    ]
   },
   {
@@ -3290,11 +3675,12 @@
    "label": "Left pyramidalis",
    "group": "abdomen",
    "side": "left",
+   "fg": "abdominal-wall",
    "layer": 2,
    "explode": [
-    0.0156,
+    0.0605,
     0,
-    0.0716
+    0.1642
    ]
   },
   {
@@ -3302,11 +3688,12 @@
    "label": "Left quadratus femoris",
    "group": "hip",
    "side": "left",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    0.0023,
+    -0.0146,
     0,
-    -0.0416
+    -0.0825
    ]
   },
   {
@@ -3314,11 +3701,12 @@
    "label": "Left quadratus lumborum",
    "group": "abdomen",
    "side": "left",
+   "fg": "quadratus-lumborum",
    "layer": 3,
    "explode": [
-    0.0226,
+    0.094,
     0,
-    -0.0294
+    -0.1223
    ]
   },
   {
@@ -3326,11 +3714,12 @@
    "label": "Left rectus abdominis",
    "group": "abdomen",
    "side": "left",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    0.0506,
+    0.1363,
     0,
-    0.1224
+    0.2656
    ]
   },
   {
@@ -3338,11 +3727,12 @@
    "label": "Left rectus capitis anterior",
    "group": "neck",
    "side": "left",
+   "fg": "deep-neck-flexors",
    "layer": 3,
    "explode": [
-    0.0085,
+    0.0836,
     0,
-    0.0002
+    0.0003
    ]
   },
   {
@@ -3350,11 +3740,12 @@
    "label": "Left rectus capitis lateralis",
    "group": "neck",
    "side": "left",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    0.0541,
+    0.1825,
     0,
-    -0.019
+    -0.0535
    ]
   },
   {
@@ -3362,11 +3753,12 @@
    "label": "Left rectus capitis posterior major",
    "group": "neck",
    "side": "left",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    0.0263,
+    0.0731,
     0,
-    -0.059
+    -0.1796
    ]
   },
   {
@@ -3374,11 +3766,12 @@
    "label": "Left rectus capitis posterior minor",
    "group": "neck",
    "side": "left",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    0.0115,
+    0.0495,
     0,
-    -0.0659
+    -0.1854
    ]
   },
   {
@@ -3386,11 +3779,12 @@
    "label": "Left rectus femoris",
    "group": "thigh",
    "side": "left",
+   "fg": "quadriceps",
    "layer": 1,
    "explode": [
-    0.0674,
+    0.1695,
     0,
-    0.0644
+    0.1465
    ]
   },
   {
@@ -3398,11 +3792,12 @@
    "label": "Left rhomboid major",
    "group": "back",
    "side": "left",
+   "fg": "rhomboids",
    "layer": 2,
    "explode": [
-    0.0271,
+    0.077,
     0,
-    -0.0901
+    -0.2473
    ]
   },
   {
@@ -3410,11 +3805,12 @@
    "label": "Left rhomboid minor",
    "group": "back",
    "side": "left",
+   "fg": "rhomboids",
    "layer": 2,
    "explode": [
-    0.0271,
+    0.0679,
     0,
-    -0.0831
+    -0.2265
    ]
   },
   {
@@ -3422,11 +3818,12 @@
    "label": "Left risorius",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0631,
+    0.1289,
     0,
-    0.0903
+    0.2024
    ]
   },
   {
@@ -3434,11 +3831,12 @@
    "label": "Left sartorius",
    "group": "thigh",
    "side": "left",
+   "fg": "sartorius",
    "layer": 1,
    "explode": [
-    -0.0444,
+    -0.0199,
     0,
-    0.0714
+    0.1599
    ]
   },
   {
@@ -3446,11 +3844,12 @@
    "label": "Left scalenus anterior",
    "group": "neck",
    "side": "left",
+   "fg": "scalenes",
    "layer": 2,
    "explode": [
-    0.0549,
+    0.1478,
     0,
-    0.0037
+    -0.0031
    ]
   },
   {
@@ -3458,11 +3857,12 @@
    "label": "Left scalenus medius",
    "group": "neck",
    "side": "left",
+   "fg": "scalenes",
    "layer": 2,
    "explode": [
-    0.055,
+    0.1382,
     0,
-    -0.0131
+    -0.0333
    ]
   },
   {
@@ -3470,11 +3870,12 @@
    "label": "Left scalenus posterior",
    "group": "neck",
    "side": "left",
+   "fg": "scalenes",
    "layer": 2,
    "explode": [
-    0.059,
+    0.184,
     0,
-    -0.027
+    -0.073
    ]
   },
   {
@@ -3482,11 +3883,12 @@
    "label": "Left semimembranosus",
    "group": "thigh",
    "side": "left",
+   "fg": "hamstrings",
    "layer": 1,
    "explode": [
-    -0.0552,
+    -0.0113,
     0,
-    -0.0807
+    -0.2044
    ]
   },
   {
@@ -3494,11 +3896,12 @@
    "label": "Left semispinalis capitis",
    "group": "back",
    "side": "left",
+   "fg": "transversospinalis",
    "layer": 2,
    "explode": [
-    0.0299,
+    0.0934,
     0,
-    -0.0572
+    -0.1592
    ]
   },
   {
@@ -3506,11 +3909,12 @@
    "label": "Left semispinalis cervicis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0209,
+    0.0528,
     0,
-    -0.0658
+    -0.1592
    ]
   },
   {
@@ -3518,11 +3922,12 @@
    "label": "Left semispinalis thoracis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0146,
+    0.0522,
     0,
-    -0.0836
+    -0.2265
    ]
   },
   {
@@ -3530,11 +3935,12 @@
    "label": "Left semitendinosus",
    "group": "thigh",
    "side": "left",
+   "fg": "hamstrings",
    "layer": 1,
    "explode": [
-    -0.0436,
+    -0.01,
     0,
-    -0.0916
+    -0.2253
    ]
   },
   {
@@ -3542,11 +3948,12 @@
    "label": "Left serratus anterior",
    "group": "chest",
    "side": "left",
+   "fg": "serratus-anterior",
    "layer": 2,
    "explode": [
-    0.1013,
+    0.251,
     0,
-    -0.0256
+    -0.0634
    ]
   },
   {
@@ -3554,11 +3961,12 @@
    "label": "Left serratus posterior inferior",
    "group": "back",
    "side": "left",
+   "fg": "serratus-posterior",
    "layer": 2,
    "explode": [
-    0.0443,
+    0.1072,
     0,
-    -0.0735
+    -0.207
    ]
   },
   {
@@ -3566,11 +3974,12 @@
    "label": "Left serratus posterior superior",
    "group": "back",
    "side": "left",
+   "fg": "serratus-posterior",
    "layer": 2,
    "explode": [
-    0.0464,
+    0.1274,
     0,
-    -0.0709
+    -0.1665
    ]
   },
   {
@@ -3578,11 +3987,12 @@
    "label": "Left soleus",
    "group": "leg",
    "side": "left",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    -0.0184,
+    -0.0088,
     0,
-    -0.08
+    -0.1576
    ]
   },
   {
@@ -3590,11 +4000,12 @@
    "label": "Left spinalis cervicis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0052,
+    0.0307,
     0,
-    -0.07
+    -0.1733
    ]
   },
   {
@@ -3602,11 +4013,12 @@
    "label": "Left spinalis thoracis",
    "group": "back",
    "side": "left",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    0.0055,
+    0.0359,
     0,
-    -0.0838
+    -0.2227
    ]
   },
   {
@@ -3614,11 +4026,12 @@
    "label": "Left splenius capitis",
    "group": "back",
    "side": "left",
+   "fg": "splenius",
    "layer": 1,
    "explode": [
-    0.0392,
+    0.0771,
     0,
-    -0.0966
+    -0.1927
    ]
   },
   {
@@ -3626,11 +4039,12 @@
    "label": "Left splenius cervicis",
    "group": "back",
    "side": "left",
+   "fg": "splenius",
    "layer": 2,
    "explode": [
-    0.0204,
+    0.0576,
     0,
-    -0.0782
+    -0.2259
    ]
   },
   {
@@ -3638,11 +4052,12 @@
    "label": "Left sternocleidomastoid",
    "group": "neck",
    "side": "left",
+   "fg": "scm",
    "layer": 1,
    "explode": [
-    0.0824,
+    0.1824,
     0,
-    0.0439
+    0.0973
    ]
   },
   {
@@ -3650,11 +4065,12 @@
    "label": "Left sternohyoid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0223,
+    0.0661,
     0,
-    0.0486
+    0.1331
    ]
   },
   {
@@ -3662,11 +4078,12 @@
    "label": "Left sternothyroid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0263,
+    0.0697,
     0,
-    0.044
+    0.1133
    ]
   },
   {
@@ -3674,11 +4091,12 @@
    "label": "Left stylohyoid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0417,
+    0.1142,
     0,
-    0.0344
+    0.1011
    ]
   },
   {
@@ -3686,11 +4104,12 @@
    "label": "Left subclavius",
    "group": "chest",
    "side": "left",
+   "fg": "pec-minor",
    "layer": 2,
    "explode": [
-    0.0666,
+    0.1551,
     0,
-    0.0335
+    0.0757
    ]
   },
   {
@@ -3698,11 +4117,12 @@
    "label": "Left subscapularis",
    "group": "shoulder",
    "side": "left",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    -0.0638,
+    -0.0328,
     0,
-    -0.0036
+    -0.0325
    ]
   },
   {
@@ -3710,11 +4130,12 @@
    "label": "Left supinator",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 2,
    "explode": [
-    -0.0118,
+    0.061,
     0,
-    -0.0531
+    -0.148
    ]
   },
   {
@@ -3722,11 +4143,12 @@
    "label": "Left supraspinatus",
    "group": "shoulder",
    "side": "left",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    -0.0493,
+    -0.0204,
     0,
-    -0.0083
+    -0.0311
    ]
   },
   {
@@ -3734,11 +4156,12 @@
    "label": "Left temporalis",
    "group": "head",
    "side": "left",
+   "fg": "mastication",
    "layer": 1,
    "explode": [
-    0.1018,
+    0.2288,
     0,
-    0.0315
+    0.0966
    ]
   },
   {
@@ -3746,11 +4169,12 @@
    "label": "Left temporoparietalis",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.1069,
+    0.1595,
     0,
-    -0.0248
+    0.089
    ]
   },
   {
@@ -3758,11 +4182,12 @@
    "label": "Left tensor fasciae latae",
    "group": "hip",
    "side": "left",
+   "fg": "tfl-it-band",
    "layer": 1,
    "explode": [
-    0.0706,
+    0.1803,
     0,
-    0.083
+    0.1728
    ]
   },
   {
@@ -3770,11 +4195,12 @@
    "label": "Left teres major",
    "group": "shoulder",
    "side": "left",
+   "fg": "teres-major",
    "layer": 1,
    "explode": [
-    -0.0765,
+    -0.0266,
     0,
-    -0.0514
+    -0.1253
    ]
   },
   {
@@ -3782,11 +4208,12 @@
    "label": "Left teres minor",
    "group": "shoulder",
    "side": "left",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    -0.0348,
+    -0.0173,
     0,
-    -0.0387
+    -0.0803
    ]
   },
   {
@@ -3794,11 +4221,12 @@
    "label": "Left thyrohyoid",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    0.0271,
+    0.0713,
     0,
-    0.0428
+    0.1088
    ]
   },
   {
@@ -3806,11 +4234,12 @@
    "label": "Left tibialis anterior",
    "group": "leg",
    "side": "left",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    0.018,
+    0.039,
     0,
-    0.0849
+    0.1688
    ]
   },
   {
@@ -3818,11 +4247,12 @@
    "label": "Left tibialis posterior",
    "group": "leg",
    "side": "left",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    -0.0299,
+    -0.0224,
     0,
-    0.0327
+    0.1107
    ]
   },
   {
@@ -3830,11 +4260,12 @@
    "label": "Left transversus abdominis",
    "group": "abdomen",
    "side": "left",
+   "fg": "abdominal-wall",
    "layer": 3,
    "explode": [
-    0.0471,
+    0.1654,
     0,
-    0.0232
+    0.0846
    ]
   },
   {
@@ -3842,11 +4273,12 @@
    "label": "Left transversus thoracis",
    "group": "chest",
    "side": "left",
+   "fg": "intercostals",
    "layer": 2,
    "explode": [
-    0.031,
+    0.1429,
     0,
-    0.0857
+    0.1072
    ]
   },
   {
@@ -3854,11 +4286,12 @@
    "label": "Left vastus intermedius",
    "group": "thigh",
    "side": "left",
+   "fg": "quadriceps",
    "layer": 2,
    "explode": [
-    0.0465,
+    0.1508,
     0,
-    0.0291
+    0.0829
    ]
   },
   {
@@ -3866,11 +4299,12 @@
    "label": "Left vastus lateralis",
    "group": "thigh",
    "side": "left",
+   "fg": "quadriceps",
    "layer": 1,
    "explode": [
-    0.0993,
+    0.2179,
     0,
-    0.0188
+    0.0948
    ]
   },
   {
@@ -3878,11 +4312,12 @@
    "label": "Left vastus medialis",
    "group": "thigh",
    "side": "left",
+   "fg": "quadriceps",
    "layer": 1,
    "explode": [
-    -0.0131,
+    0.098,
     0,
-    0.0809
+    0.1175
    ]
   },
   {
@@ -3890,11 +4325,12 @@
    "label": "Left zygomaticus major",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0605,
+    0.1325,
     0,
-    0.0978
+    0.2283
    ]
   },
   {
@@ -3902,11 +4338,12 @@
    "label": "Left zygomaticus minor",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0443,
+    0.1055,
     0,
-    0.1093
+    0.2591
    ]
   },
   {
@@ -3914,11 +4351,12 @@
    "label": "Linea alba",
    "group": "abdomen",
    "side": "midline",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    0.0002,
+    0.0003,
     0,
-    0.1222
+    0.2645
    ]
   },
   {
@@ -3926,11 +4364,12 @@
    "label": "Long head of left biceps brachii",
    "group": "arm",
    "side": "left",
+   "fg": "arm-flexors",
    "layer": 1,
    "explode": [
-    0.0248,
+    -0.0033,
     0,
-    0.0802
+    0.186
    ]
   },
   {
@@ -3938,11 +4377,12 @@
    "label": "Long head of left biceps femoris",
    "group": "thigh",
    "side": "left",
+   "fg": "hamstrings",
    "layer": 1,
    "explode": [
-    0.04,
+    0.0511,
     0,
-    -0.0898
+    -0.2164
    ]
   },
   {
@@ -3950,11 +4390,12 @@
    "label": "Long head of left triceps brachii",
    "group": "arm",
    "side": "left",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    -0.0481,
+    0.0034,
     0,
-    -0.0723
+    -0.1865
    ]
   },
   {
@@ -3962,11 +4403,12 @@
    "label": "Long head of right biceps brachii",
    "group": "arm",
    "side": "right",
+   "fg": "arm-flexors",
    "layer": 1,
    "explode": [
-    -0.0237,
+    0.0036,
     0,
-    0.0806
+    0.1864
    ]
   },
   {
@@ -3974,11 +4416,12 @@
    "label": "Long head of right biceps femoris",
    "group": "thigh",
    "side": "right",
+   "fg": "hamstrings",
    "layer": 1,
    "explode": [
-    -0.0407,
+    -0.0525,
     0,
-    -0.0896
+    -0.2159
    ]
   },
   {
@@ -3986,11 +4429,12 @@
    "label": "Long head of right triceps brachii",
    "group": "arm",
    "side": "right",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    0.046,
+    -0.0053,
     0,
-    -0.0735
+    -0.1871
    ]
   },
   {
@@ -3998,11 +4442,12 @@
    "label": "Lower head of left lateral pterygoid",
    "group": "head",
    "side": "left",
+   "fg": "mastication",
    "layer": 2,
    "explode": [
-    0.0479,
+    0.1187,
     0,
-    0.0334
+    0.0825
    ]
   },
   {
@@ -4010,11 +4455,12 @@
    "label": "Lower head of right lateral pterygoid",
    "group": "head",
    "side": "right",
+   "fg": "mastication",
    "layer": 2,
    "explode": [
-    -0.0476,
+    -0.118,
     0,
-    0.0336
+    0.083
    ]
   },
   {
@@ -4022,11 +4468,12 @@
    "label": "Medial head of left flexor hallucis brevis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0779,
-    -0.0039,
-    0.0482
+    -0.0126,
+    0.0027,
+    0.0347
    ]
   },
   {
@@ -4034,11 +4481,12 @@
    "label": "Medial head of left gastrocnemius",
    "group": "leg",
    "side": "left",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    -0.0706,
+    -0.0213,
     0,
-    -0.0586
+    -0.1768
    ]
   },
   {
@@ -4046,11 +4494,12 @@
    "label": "Medial head of left triceps brachii",
    "group": "arm",
    "side": "left",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    -0.0195,
+    0.0272,
     0,
-    -0.0741
+    -0.1497
    ]
   },
   {
@@ -4058,11 +4507,12 @@
    "label": "Medial head of right flexor hallucis brevis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0767,
-    -0.0097,
-    0.0487
+    0.0127,
+    0.0041,
+    0.0316
    ]
   },
   {
@@ -4070,11 +4520,12 @@
    "label": "Medial head of right gastrocnemius",
    "group": "leg",
    "side": "right",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    0.0742,
+    0.0208,
     0,
-    -0.0523
+    -0.1742
    ]
   },
   {
@@ -4082,11 +4533,12 @@
    "label": "Medial head of right triceps brachii",
    "group": "arm",
    "side": "right",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    0.0231,
+    -0.0266,
     0,
-    -0.0731
+    -0.1499
    ]
   },
   {
@@ -4094,11 +4546,12 @@
    "label": "Oblique head of left adductor hallucis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.036,
-    0.0131,
-    0.0017
+    -0.0042,
+    0.0205,
+    -0.0087
    ]
   },
   {
@@ -4106,11 +4559,12 @@
    "label": "Oblique head of left adductor pollicis",
    "group": "forearm",
    "side": "left",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    0.0579,
-    0.0617,
-    -0.0117
+    0.1185,
+    0.1125,
+    -0.0157
    ]
   },
   {
@@ -4118,11 +4572,12 @@
    "label": "Oblique head of right adductor hallucis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.031,
-    -0.0085,
-    0.0213
+    0.0045,
+    0.0198,
+    -0.0028
    ]
   },
   {
@@ -4130,11 +4585,12 @@
    "label": "Oblique head of right adductor pollicis",
    "group": "forearm",
    "side": "right",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    -0.0587,
-    0.0613,
-    -0.0106
+    -0.1187,
+    0.1124,
+    -0.0146
    ]
   },
   {
@@ -4142,11 +4598,12 @@
    "label": "Opponens digiti minimi of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0699,
-    -0.0257,
-    -0.0432
+    0.0491,
+    -0.0115,
+    -0.035
    ]
   },
   {
@@ -4154,11 +4611,12 @@
    "label": "Opponens digiti minimi of left hand",
    "group": "forearm",
    "side": "left",
+   "fg": "hypothenar",
    "layer": 1,
    "explode": [
-    -0.0799,
-    0.0232,
-    -0.0049
+    -0.0359,
+    -0.0125,
+    -0.0063
    ]
   },
   {
@@ -4166,11 +4624,12 @@
    "label": "Opponens digiti minimi of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0719,
-    -0.0351,
-    -0.0331
+    -0.0505,
+    -0.0122,
+    -0.0322
    ]
   },
   {
@@ -4178,11 +4637,12 @@
    "label": "Opponens digiti minimi of right hand",
    "group": "forearm",
    "side": "right",
+   "fg": "hypothenar",
    "layer": 1,
    "explode": [
-    0.0811,
-    0.02,
-    -0.0053
+    0.0362,
+    -0.0181,
+    -0.0062
    ]
   },
   {
@@ -4190,11 +4650,12 @@
    "label": "Orbicularis oris",
    "group": "head",
    "side": "midline",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0002,
+    0.0006,
     0,
-    0.1195
+    0.2963
    ]
   },
   {
@@ -4202,11 +4663,12 @@
    "label": "Orbital part of left orbicularis oculi",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0454,
+    0.1075,
     0,
-    0.1087
+    0.2581
    ]
   },
   {
@@ -4214,11 +4676,12 @@
    "label": "Orbital part of right orbicularis oculi",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0449,
+    -0.1066,
     0,
-    0.109
+    0.2585
    ]
   },
   {
@@ -4226,11 +4689,12 @@
    "label": "Palpebral part of left orbicularis oculi",
    "group": "head",
    "side": "left",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    0.0484,
+    0.1136,
     0,
-    0.1069
+    0.2538
    ]
   },
   {
@@ -4238,11 +4702,12 @@
    "label": "Palpebral part of right orbicularis oculi",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0488,
+    -0.1146,
     0,
-    0.1067
+    0.2532
    ]
   },
   {
@@ -4250,11 +4715,12 @@
    "label": "Posterior belly of left digastric",
    "group": "neck",
    "side": "left",
+   "fg": "hyoid",
    "layer": 1,
    "explode": [
-    0.0919,
+    0.1568,
     0,
-    0.0046
+    0.1055
    ]
   },
   {
@@ -4262,11 +4728,12 @@
    "label": "Posterior belly of right digastric",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 1,
    "explode": [
-    -0.092,
+    -0.1572,
     0,
-    0.0042
+    0.1051
    ]
   },
   {
@@ -4274,11 +4741,12 @@
    "label": "Radial head of left flexor digitorum superficialis",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0719,
+    -0.0157,
     0,
-    0.0124
+    0.1256
    ]
   },
   {
@@ -4286,11 +4754,12 @@
    "label": "Radial head of right flexor digitorum superficialis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0715,
+    0.0154,
     0,
-    0.0144
+    0.1268
    ]
   },
   {
@@ -4298,11 +4767,12 @@
    "label": "Right abductor hallucis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0821,
-    -0.0103,
-    -0.0394
+    0.0132,
+    0.0034,
+    -0.0393
    ]
   },
   {
@@ -4310,11 +4780,12 @@
    "label": "Right abductor pollicis brevis",
    "group": "forearm",
    "side": "right",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    -0.0669,
-    0,
-    0.0739
+    -0.1407,
+    0.1649,
+    0.0166
    ]
   },
   {
@@ -4322,11 +4793,12 @@
    "label": "Right abductor pollicis longus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0298,
+    -0.1328,
     0,
-    -0.0733
+    -0.136
    ]
   },
   {
@@ -4334,11 +4806,12 @@
    "label": "Right adductor brevis",
    "group": "thigh",
    "side": "right",
+   "fg": "adductors",
    "layer": 2,
    "explode": [
-    0.0135,
+    0.0162,
     0,
-    0.0416
+    0.0909
    ]
   },
   {
@@ -4346,11 +4819,12 @@
    "label": "Right adductor longus",
    "group": "thigh",
    "side": "right",
+   "fg": "adductors",
    "layer": 1,
    "explode": [
-    0.0503,
+    0.0308,
     0,
-    0.0722
+    0.145
    ]
   },
   {
@@ -4358,11 +4832,12 @@
    "label": "Right adductor magnus",
    "group": "thigh",
    "side": "right",
+   "fg": "adductors",
    "layer": 2,
    "explode": [
-    0.0321,
+    0.0217,
     0,
-    -0.0317
+    0.0277
    ]
   },
   {
@@ -4370,11 +4845,12 @@
    "label": "Right adductor minimus",
    "group": "thigh",
    "side": "right",
+   "fg": "adductors",
    "layer": 2,
    "explode": [
-    0.0094,
+    0.0154,
     0,
-    0.0378
+    0.0687
    ]
   },
   {
@@ -4382,11 +4858,12 @@
    "label": "Right anconeus",
    "group": "arm",
    "side": "right",
+   "fg": "triceps",
    "layer": 1,
    "explode": [
-    -0.0776,
+    -0.1098,
     0,
-    -0.0454
+    -0.1704
    ]
   },
   {
@@ -4394,11 +4871,12 @@
    "label": "Right brachialis",
    "group": "arm",
    "side": "right",
+   "fg": "arm-flexors",
    "layer": 1,
    "explode": [
-    -0.0713,
+    0.0004,
     0,
-    0.0405
+    0.1548
    ]
   },
   {
@@ -4406,11 +4884,12 @@
    "label": "Right brachioradialis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0177,
+    -0.1232,
     0,
-    -0.078
+    -0.1543
    ]
   },
   {
@@ -4418,11 +4897,12 @@
    "label": "Right buccinator",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 2,
    "explode": [
-    -0.0343,
+    -0.1009,
     0,
-    0.0661
+    0.1693
    ]
   },
   {
@@ -4430,11 +4910,12 @@
    "label": "Right calcaneal tendon",
    "group": "leg",
    "side": "right",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    0.0273,
+    0.0129,
     0,
-    -0.088
+    -0.2222
    ]
   },
   {
@@ -4442,11 +4923,12 @@
    "label": "Right cervical rotator",
    "group": "back",
    "side": "right",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    -0.0089,
+    -0.042,
     0,
-    -0.0187
+    -0.088
    ]
   },
   {
@@ -4454,11 +4936,12 @@
    "label": "Right coccygeus",
    "group": "abdomen",
    "side": "right",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    -0.0243,
+    -0.0845,
     0,
-    -0.0711
+    -0.2092
    ]
   },
   {
@@ -4466,11 +4949,12 @@
    "label": "Right coracobrachialis",
    "group": "arm",
    "side": "right",
+   "fg": "arm-flexors",
    "layer": 2,
    "explode": [
-    0.0505,
+    0.0206,
     0,
-    0.0262
+    0.1327
    ]
   },
   {
@@ -4478,11 +4962,12 @@
    "label": "Right corrugator supercilii",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0285,
+    -0.0777,
     0,
-    0.1164
+    0.2696
    ]
   },
   {
@@ -4490,11 +4975,12 @@
    "label": "Right depressor anguli oris",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0411,
+    -0.092,
     0,
-    0.1037
+    0.2459
    ]
   },
   {
@@ -4502,11 +4988,12 @@
    "label": "Right depressor labii inferioris",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0284,
+    -0.0725,
     0,
-    0.1124
+    0.2583
    ]
   },
   {
@@ -4514,11 +5001,12 @@
    "label": "Right depressor septi nasi",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0087,
+    -0.0509,
     0,
-    0.1217
+    0.2749
    ]
   },
   {
@@ -4526,11 +5014,12 @@
    "label": "Right extensor carpi radialis brevis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0177,
+    -0.1185,
     0,
-    -0.0859
+    -0.1776
    ]
   },
   {
@@ -4538,11 +5027,12 @@
    "label": "Right extensor carpi radialis longus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0329,
+    -0.1322,
     0,
-    -0.0804
+    -0.1701
    ]
   },
   {
@@ -4550,11 +5040,12 @@
    "label": "Right extensor digiti minimi",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0432,
+    -0.0694,
     0,
-    -0.0689
+    -0.1422
    ]
   },
   {
@@ -4562,11 +5053,12 @@
    "label": "Right extensor digitorum",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0523,
+    -0.1233,
     0,
-    -0.0543
+    -0.1073
    ]
   },
   {
@@ -4574,11 +5066,12 @@
    "label": "Right extensor digitorum brevis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0402,
-    0.0701,
-    -0.0011
+    -0.0202,
+    0.0502,
+    -0.0097
    ]
   },
   {
@@ -4586,11 +5079,12 @@
    "label": "Right extensor digitorum longus",
    "group": "leg",
    "side": "right",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    -0.0349,
+    -0.0846,
     0,
-    0.0993
+    0.2389
    ]
   },
   {
@@ -4598,11 +5092,12 @@
    "label": "Right extensor hallucis brevis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0336,
-    0.0774,
-    -0.0141
+    0.0045,
+    0.0619,
+    -0.0173
    ]
   },
   {
@@ -4610,11 +5105,12 @@
    "label": "Right extensor hallucis longus",
    "group": "leg",
    "side": "right",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    -0.0086,
+    -0.0371,
     0,
-    0.0851
+    0.1622
    ]
   },
   {
@@ -4622,11 +5118,12 @@
    "label": "Right extensor indicis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0607,
+    -0.1263,
     0,
-    0.0486
+    -0.0842
    ]
   },
   {
@@ -4634,11 +5131,12 @@
    "label": "Right extensor pollicis brevis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0805,
+    -0.1453,
     0,
-    0.0006
+    -0.1015
    ]
   },
   {
@@ -4646,11 +5144,12 @@
    "label": "Right extensor pollicis longus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0758,
+    -0.1336,
     0,
-    0.0171
+    -0.0939
    ]
   },
   {
@@ -4658,11 +5157,12 @@
    "label": "Right external oblique",
    "group": "abdomen",
    "side": "right",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    -0.0794,
+    -0.1855,
     0,
-    0.1011
+    0.2365
    ]
   },
   {
@@ -4670,11 +5170,12 @@
    "label": "Right fibularis brevis",
    "group": "leg",
    "side": "right",
+   "fg": "fibularis",
    "layer": 1,
    "explode": [
-    -0.0745,
+    -0.1685,
     0,
-    -0.0277
+    -0.0607
    ]
   },
   {
@@ -4682,11 +5183,12 @@
    "label": "Right fibularis longus",
    "group": "leg",
    "side": "right",
+   "fg": "fibularis",
    "layer": 1,
    "explode": [
-    -0.0767,
+    -0.1854,
     0,
-    0.0284
+    -0.0038
    ]
   },
   {
@@ -4694,11 +5196,12 @@
    "label": "Right fibularis tertius",
    "group": "leg",
    "side": "right",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    -0.0115,
-    0.0877,
-    -0.0699
+    -0.0737,
+    0,
+    0.151
    ]
   },
   {
@@ -4706,11 +5209,12 @@
    "label": "Right flexor accessorius",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.012,
-    -0.0096,
-    -0.0626
+    0.0036,
+    -0.003,
+    -0.0969
    ]
   },
   {
@@ -4718,11 +5222,12 @@
    "label": "Right flexor carpi radialis",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.083,
+    0.0289,
     0,
-    0.0162
+    0.1408
    ]
   },
   {
@@ -4730,11 +5235,12 @@
    "label": "Right flexor digitorum brevis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0095,
-    -0.0782,
-    0.0191
+    -0.0057,
+    -0.0378,
+    0.0014
    ]
   },
   {
@@ -4742,11 +5248,12 @@
    "label": "Right flexor digitorum longus",
    "group": "leg",
    "side": "right",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    0.0156,
-    0.0654,
-    -0.0368
+    0.0169,
+    0,
+    0.1558
    ]
   },
   {
@@ -4754,11 +5261,12 @@
    "label": "Right flexor digitorum profundus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 2,
    "explode": [
-    0.0042,
+    0.0111,
     0,
-    0.0458
+    0.144
    ]
   },
   {
@@ -4766,11 +5274,12 @@
    "label": "Right flexor hallucis longus",
    "group": "leg",
    "side": "right",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    0.016,
+    0.0143,
     0,
-    0.0419
+    0.1277
    ]
   },
   {
@@ -4778,11 +5287,12 @@
    "label": "Right flexor pollicis longus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0705,
+    0.0091,
     0,
-    0.04
+    0.1493
    ]
   },
   {
@@ -4790,11 +5300,12 @@
    "label": "Right frontalis",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0449,
+    -0.1066,
     0,
-    0.1088
+    0.2581
    ]
   },
   {
@@ -4802,11 +5313,12 @@
    "label": "Right gemellus inferior",
    "group": "hip",
    "side": "right",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    0.0104,
+    0.0175,
     0,
-    -0.0475
+    -0.1139
    ]
   },
   {
@@ -4814,11 +5326,12 @@
    "label": "Right gemellus superior",
    "group": "hip",
    "side": "right",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    0.0263,
+    0.0199,
     0,
-    -0.0391
+    -0.1076
    ]
   },
   {
@@ -4826,11 +5339,12 @@
    "label": "Right geniohyoid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 3,
    "explode": [
-    -0.0029,
+    -0.0367,
     0,
-    0.0268
+    0.1377
    ]
   },
   {
@@ -4838,11 +5352,12 @@
    "label": "Right gluteus maximus",
    "group": "hip",
    "side": "right",
+   "fg": "gluteals",
    "layer": 1,
    "explode": [
-    0.0149,
+    -0.0892,
     0,
-    -0.0963
+    -0.1881
    ]
   },
   {
@@ -4850,11 +5365,12 @@
    "label": "Right gluteus medius",
    "group": "hip",
    "side": "right",
+   "fg": "gluteals",
    "layer": 1,
    "explode": [
-    -0.0831,
+    -0.1694,
     0,
-    -0.0258
+    -0.106
    ]
   },
   {
@@ -4862,11 +5378,12 @@
    "label": "Right gluteus minimus",
    "group": "hip",
    "side": "right",
+   "fg": "gluteals",
    "layer": 2,
    "explode": [
-    -0.0516,
+    -0.137,
     0,
-    0.0131
+    -0.0486
    ]
   },
   {
@@ -4874,11 +5391,12 @@
    "label": "Right gracilis",
    "group": "thigh",
    "side": "right",
+   "fg": "adductors",
    "layer": 1,
    "explode": [
-    0.0982,
+    0.0432,
     0,
-    0.0004
+    0.0817
    ]
   },
   {
@@ -4886,11 +5404,12 @@
    "label": "Right iliacus",
    "group": "hip",
    "side": "right",
+   "fg": "iliopsoas",
    "layer": 2,
    "explode": [
-    0.0062,
+    0.0126,
     0,
-    0.0556
+    0.1399
    ]
   },
   {
@@ -4898,11 +5417,12 @@
    "label": "Right iliococcygeus",
    "group": "abdomen",
    "side": "right",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    -0.0358,
+    -0.11,
     0,
-    -0.0536
+    -0.164
    ]
   },
   {
@@ -4910,11 +5430,12 @@
    "label": "Right iliocostalis cervicis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 3,
    "explode": [
-    -0.0316,
+    -0.1243,
     0,
-    -0.0335
+    -0.1302
    ]
   },
   {
@@ -4922,11 +5443,12 @@
    "label": "Right iliocostalis lumborum",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0544,
+    -0.1455,
     0,
-    -0.0697
+    -0.1999
    ]
   },
   {
@@ -4934,11 +5456,12 @@
    "label": "Right iliocostalis thoracis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0636,
+    -0.1644,
     0,
-    -0.0734
+    -0.2136
    ]
   },
   {
@@ -4946,11 +5469,12 @@
    "label": "Right iliotibial tract",
    "group": "hip",
    "side": "right",
+   "fg": "tfl-it-band",
    "layer": 1,
    "explode": [
-    -0.0976,
+    -0.1959,
     0,
-    0.0202
+    0.0747
    ]
   },
   {
@@ -4958,11 +5482,12 @@
    "label": "Right infraspinatus muscle",
    "group": "shoulder",
    "side": "right",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    0.0502,
+    0.0286,
     0,
-    -0.0448
+    -0.1141
    ]
   },
   {
@@ -4970,11 +5495,12 @@
    "label": "Right inguinal ligament",
    "group": "abdomen",
    "side": "right",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    -0.101,
+    -0.2113,
     0,
-    0.0735
+    0.1751
    ]
   },
   {
@@ -4982,11 +5508,12 @@
    "label": "Right internal oblique",
    "group": "abdomen",
    "side": "right",
+   "fg": "abdominal-wall",
    "layer": 2,
    "explode": [
-    -0.0529,
+    -0.1419,
     0,
-    0.0738
+    0.207
    ]
   },
   {
@@ -4994,11 +5521,12 @@
    "label": "Right latissimus dorsi",
    "group": "back",
    "side": "right",
+   "fg": "latissimus",
    "layer": 1,
    "explode": [
-    -0.1054,
+    -0.2265,
     0,
-    -0.0835
+    -0.1794
    ]
   },
   {
@@ -5006,11 +5534,12 @@
    "label": "Right levator anguli oris",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0313,
+    -0.0792,
     0,
-    0.1129
+    0.2621
    ]
   },
   {
@@ -5018,11 +5547,12 @@
    "label": "Right levator labii superioris",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0318,
+    -0.0811,
     0,
-    0.1135
+    0.264
    ]
   },
   {
@@ -5030,11 +5560,12 @@
    "label": "Right levator labii superioris alaeque nasi",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0196,
+    -0.0637,
     0,
-    0.1177
+    0.2681
    ]
   },
   {
@@ -5042,11 +5573,12 @@
    "label": "Right levator scapulae",
    "group": "back",
    "side": "right",
+   "fg": "rhomboids",
    "layer": 2,
    "explode": [
-    -0.0537,
+    -0.1179,
     0,
-    -0.05
+    -0.134
    ]
   },
   {
@@ -5054,11 +5586,12 @@
    "label": "Right longissimus capitis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0452,
+    -0.0928,
     0,
-    -0.041
+    -0.1122
    ]
   },
   {
@@ -5066,11 +5599,12 @@
    "label": "Right longissimus cervicis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 3,
    "explode": [
-    -0.0193,
+    -0.0754,
     0,
-    -0.0285
+    -0.1039
    ]
   },
   {
@@ -5078,11 +5612,12 @@
    "label": "Right longissimus thoracis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0338,
+    -0.094,
     0,
-    -0.0738
+    -0.2134
    ]
   },
   {
@@ -5090,11 +5625,12 @@
    "label": "Right longus capitis",
    "group": "neck",
    "side": "right",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    -0.0447,
+    -0.136,
     0,
-    0.0053
+    -0.0031
    ]
   },
   {
@@ -5102,11 +5638,12 @@
    "label": "Right lumbar rotator",
    "group": "back",
    "side": "right",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    -0.0126,
+    -0.0665,
     0,
-    -0.0239
+    -0.1031
    ]
   },
   {
@@ -5114,11 +5651,12 @@
    "label": "Right medial pterygoid",
    "group": "head",
    "side": "right",
+   "fg": "mastication",
    "layer": 2,
    "explode": [
-    -0.0418,
+    -0.1108,
     0,
-    0.0405
+    0.0987
    ]
   },
   {
@@ -5126,11 +5664,12 @@
    "label": "Right mentalis",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0104,
+    -0.0498,
     0,
-    0.1173
+    0.2621
    ]
   },
   {
@@ -5138,11 +5677,12 @@
    "label": "Right multifidus",
    "group": "back",
    "side": "right",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    -0.0086,
+    -0.0423,
     0,
-    -0.0378
+    -0.1745
    ]
   },
   {
@@ -5150,11 +5690,12 @@
    "label": "Right mylohyoid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.0121,
+    -0.072,
     0,
-    0.0638
+    0.1788
    ]
   },
   {
@@ -5162,11 +5703,12 @@
    "label": "Right nasalis",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0111,
+    -0.0548,
     0,
-    0.1227
+    0.2785
    ]
   },
   {
@@ -5174,11 +5716,12 @@
    "label": "Right obliquus capitis inferior",
    "group": "neck",
    "side": "right",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    -0.0348,
+    -0.0847,
     0,
-    -0.045
+    -0.1168
    ]
   },
   {
@@ -5186,11 +5729,12 @@
    "label": "Right obliquus capitis superior",
    "group": "neck",
    "side": "right",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    -0.0471,
+    -0.124,
     0,
-    -0.0454
+    -0.1392
    ]
   },
   {
@@ -5198,11 +5742,12 @@
    "label": "Right obturator externus",
    "group": "hip",
    "side": "right",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    0.0441,
+    0.0253,
     0,
-    0.0166
+    -0.0354
    ]
   },
   {
@@ -5210,11 +5755,12 @@
    "label": "Right obturator internus",
    "group": "hip",
    "side": "right",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    0.058,
+    0.0338,
     0,
-    0.0016
+    -0.055
    ]
   },
   {
@@ -5222,11 +5768,12 @@
    "label": "Right occipitalis",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0537,
+    -0.1139,
     0,
-    -0.1113
+    -0.0113
    ]
   },
   {
@@ -5234,11 +5781,12 @@
    "label": "Right omohyoid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.0687,
+    -0.1664,
     0,
-    -0.0052
+    0.068
    ]
   },
   {
@@ -5246,11 +5794,12 @@
    "label": "Right opponens pollicis",
    "group": "forearm",
    "side": "right",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    -0.0696,
-    0,
-    0.0706
+    -0.1451,
+    0.1613,
+    0.0108
    ]
   },
   {
@@ -5258,11 +5807,12 @@
    "label": "Right palmaris longus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0537,
+    0.0231,
     0,
-    0.0647
+    0.1782
    ]
   },
   {
@@ -5270,11 +5820,12 @@
    "label": "Right pectineus",
    "group": "thigh",
    "side": "right",
+   "fg": "adductors",
    "layer": 1,
    "explode": [
-    0.034,
+    0.0288,
     0,
-    0.0849
+    0.1579
    ]
   },
   {
@@ -5282,11 +5833,12 @@
    "label": "Right pectoralis minor",
    "group": "chest",
    "side": "right",
+   "fg": "pec-minor",
    "layer": 2,
    "explode": [
-    -0.0978,
+    -0.268,
     0,
-    0.0334
+    0.0927
    ]
   },
   {
@@ -5294,11 +5846,12 @@
    "label": "Right piriformis",
    "group": "hip",
    "side": "right",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    0.0337,
+    0.0254,
     0,
-    -0.0401
+    -0.1181
    ]
   },
   {
@@ -5306,11 +5859,12 @@
    "label": "Right plantaris",
    "group": "leg",
    "side": "right",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    0.0453,
+    0.0163,
     0,
-    -0.0733
+    -0.1755
    ]
   },
   {
@@ -5318,11 +5872,12 @@
    "label": "Right platysma",
    "group": "neck",
    "side": "right",
+   "fg": "platysma",
    "layer": 1,
    "explode": [
-    -0.0816,
+    -0.1799,
     0,
-    0.0548
+    0.1207
    ]
   },
   {
@@ -5330,11 +5885,12 @@
    "label": "Right popliteus",
    "group": "leg",
    "side": "right",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    0.0108,
+    0.0143,
     0,
-    -0.0394
+    0.053
    ]
   },
   {
@@ -5342,11 +5898,12 @@
    "label": "Right procerus",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0117,
+    -0.0548,
     0,
-    0.1215
+    0.2753
    ]
   },
   {
@@ -5354,11 +5911,12 @@
    "label": "Right pronator quadratus",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0138,
+    0.0149,
     0,
-    0.0744
+    0.1556
    ]
   },
   {
@@ -5366,11 +5924,12 @@
    "label": "Right psoas major",
    "group": "hip",
    "side": "right",
+   "fg": "iliopsoas",
    "layer": 3,
    "explode": [
-    0.0266,
+    0.0265,
     0,
-    0.0096
+    0.0661
    ]
   },
   {
@@ -5378,11 +5937,12 @@
    "label": "Right pubococcygeus",
    "group": "abdomen",
    "side": "right",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    -0.027,
+    -0.0668,
     0,
-    -0.0474
+    -0.1186
    ]
   },
   {
@@ -5390,11 +5950,12 @@
    "label": "Right puborectalis",
    "group": "abdomen",
    "side": "right",
+   "fg": "pelvic-floor",
    "layer": 1,
    "explode": [
-    -0.0568,
+    -0.09,
     0,
-    -0.0624
+    -0.1365
    ]
   },
   {
@@ -5402,11 +5963,12 @@
    "label": "Right pyramidalis",
    "group": "abdomen",
    "side": "right",
+   "fg": "abdominal-wall",
    "layer": 2,
    "explode": [
-    -0.0156,
+    -0.0591,
     0,
-    0.0714
+    0.1643
    ]
   },
   {
@@ -5414,11 +5976,12 @@
    "label": "Right quadratus femoris",
    "group": "hip",
    "side": "right",
+   "fg": "deep-hip-rotators",
    "layer": 2,
    "explode": [
-    -0.0025,
+    0.0145,
     0,
-    -0.0416
+    -0.083
    ]
   },
   {
@@ -5426,11 +5989,12 @@
    "label": "Right quadratus lumborum",
    "group": "abdomen",
    "side": "right",
+   "fg": "quadratus-lumborum",
    "layer": 3,
    "explode": [
-    -0.0231,
+    -0.0959,
     0,
-    -0.0292
+    -0.1211
    ]
   },
   {
@@ -5438,11 +6002,12 @@
    "label": "Right rectus abdominis",
    "group": "abdomen",
    "side": "right",
+   "fg": "abdominal-wall",
    "layer": 1,
    "explode": [
-    -0.0507,
+    -0.1348,
     0,
-    0.1224
+    0.2676
    ]
   },
   {
@@ -5450,11 +6015,12 @@
    "label": "Right rectus capitis anterior",
    "group": "neck",
    "side": "right",
+   "fg": "deep-neck-flexors",
    "layer": 3,
    "explode": [
-    -0.0084,
+    -0.0833,
     0,
-    0.0003
+    0.0007
    ]
   },
   {
@@ -5462,11 +6028,12 @@
    "label": "Right rectus capitis lateralis",
    "group": "neck",
    "side": "right",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    -0.0539,
+    -0.1822,
     0,
-    -0.0188
+    -0.0525
    ]
   },
   {
@@ -5474,11 +6041,12 @@
    "label": "Right rectus capitis posterior major",
    "group": "neck",
    "side": "right",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    -0.0255,
+    -0.07,
     0,
-    -0.0593
+    -0.1787
    ]
   },
   {
@@ -5486,11 +6054,12 @@
    "label": "Right rectus capitis posterior minor",
    "group": "neck",
    "side": "right",
+   "fg": "suboccipitals",
    "layer": 2,
    "explode": [
-    -0.0119,
+    -0.0507,
     0,
-    -0.0662
+    -0.1869
    ]
   },
   {
@@ -5498,11 +6067,12 @@
    "label": "Right rectus femoris",
    "group": "thigh",
    "side": "right",
+   "fg": "quadriceps",
    "layer": 1,
    "explode": [
-    -0.0676,
+    -0.1699,
     0,
-    0.0643
+    0.1466
    ]
   },
   {
@@ -5510,11 +6080,12 @@
    "label": "Right rhomboid major",
    "group": "back",
    "side": "right",
+   "fg": "rhomboids",
    "layer": 2,
    "explode": [
-    -0.026,
+    -0.0744,
     0,
-    -0.0901
+    -0.2472
    ]
   },
   {
@@ -5522,11 +6093,12 @@
    "label": "Right rhomboid minor",
    "group": "back",
    "side": "right",
+   "fg": "rhomboids",
    "layer": 2,
    "explode": [
-    -0.0272,
+    -0.0696,
     0,
-    -0.0834
+    -0.229
    ]
   },
   {
@@ -5534,11 +6106,12 @@
    "label": "Right risorius",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0633,
+    -0.1291,
     0,
-    0.0901
+    0.2021
    ]
   },
   {
@@ -5546,11 +6119,12 @@
    "label": "Right sartorius",
    "group": "thigh",
    "side": "right",
+   "fg": "sartorius",
    "layer": 1,
    "explode": [
-    0.0433,
+    0.0194,
     0,
-    0.0717
+    0.1606
    ]
   },
   {
@@ -5558,11 +6132,12 @@
    "label": "Right scalenus anterior",
    "group": "neck",
    "side": "right",
+   "fg": "scalenes",
    "layer": 2,
    "explode": [
-    -0.0547,
+    -0.1471,
     0,
-    0.0036
+    -0.0034
    ]
   },
   {
@@ -5570,11 +6145,12 @@
    "label": "Right scalenus medius",
    "group": "neck",
    "side": "right",
+   "fg": "scalenes",
    "layer": 2,
    "explode": [
-    -0.055,
+    -0.1383,
     0,
-    -0.0132
+    -0.0335
    ]
   },
   {
@@ -5582,11 +6158,12 @@
    "label": "Right scalenus posterior",
    "group": "neck",
    "side": "right",
+   "fg": "scalenes",
    "layer": 2,
    "explode": [
-    -0.0589,
+    -0.1839,
     0,
-    -0.0268
+    -0.0727
    ]
   },
   {
@@ -5594,11 +6171,12 @@
    "label": "Right semimembranosus",
    "group": "thigh",
    "side": "right",
+   "fg": "hamstrings",
    "layer": 1,
    "explode": [
-    0.0535,
+    0.011,
     0,
-    -0.0822
+    -0.2063
    ]
   },
   {
@@ -5606,11 +6184,12 @@
    "label": "Right semispinalis capitis",
    "group": "back",
    "side": "right",
+   "fg": "transversospinalis",
    "layer": 2,
    "explode": [
-    -0.0305,
+    -0.0952,
     0,
-    -0.0571
+    -0.1603
    ]
   },
   {
@@ -5618,11 +6197,12 @@
    "label": "Right semispinalis cervicis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0213,
+    -0.0533,
     0,
-    -0.0664
+    -0.1615
    ]
   },
   {
@@ -5630,11 +6210,12 @@
    "label": "Right semispinalis thoracis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0154,
+    -0.0536,
     0,
-    -0.0833
+    -0.2256
    ]
   },
   {
@@ -5642,11 +6223,12 @@
    "label": "Right semitendinosus",
    "group": "thigh",
    "side": "right",
+   "fg": "hamstrings",
    "layer": 1,
    "explode": [
-    0.0445,
+    0.0101,
     0,
-    -0.0913
+    -0.2246
    ]
   },
   {
@@ -5654,11 +6236,12 @@
    "label": "Right serratus anterior",
    "group": "chest",
    "side": "right",
+   "fg": "serratus-anterior",
    "layer": 2,
    "explode": [
-    -0.1008,
+    -0.25,
     0,
-    -0.0259
+    -0.0643
    ]
   },
   {
@@ -5666,11 +6249,12 @@
    "label": "Right serratus posterior inferior",
    "group": "back",
    "side": "right",
+   "fg": "serratus-posterior",
    "layer": 2,
    "explode": [
-    -0.0435,
+    -0.107,
     0,
-    -0.0737
+    -0.2086
    ]
   },
   {
@@ -5678,11 +6262,12 @@
    "label": "Right serratus posterior superior",
    "group": "back",
    "side": "right",
+   "fg": "serratus-posterior",
    "layer": 2,
    "explode": [
-    -0.0452,
+    -0.1228,
     0,
-    -0.0711
+    -0.1662
    ]
   },
   {
@@ -5690,11 +6275,12 @@
    "label": "Right soleus",
    "group": "leg",
    "side": "right",
+   "fg": "calf",
    "layer": 1,
    "explode": [
-    0.0207,
+    0.0083,
     0,
-    -0.079
+    -0.1603
    ]
   },
   {
@@ -5702,11 +6288,12 @@
    "label": "Right spinalis cervicis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0058,
+    -0.0318,
     0,
-    -0.0704
+    -0.1744
    ]
   },
   {
@@ -5714,11 +6301,12 @@
    "label": "Right spinalis thoracis",
    "group": "back",
    "side": "right",
+   "fg": "erector-spinae",
    "layer": 2,
    "explode": [
-    -0.0054,
+    -0.0359,
     0,
-    -0.0839
+    -0.2225
    ]
   },
   {
@@ -5726,11 +6314,12 @@
    "label": "Right splenius capitis",
    "group": "back",
    "side": "right",
+   "fg": "splenius",
    "layer": 1,
    "explode": [
-    -0.0381,
+    -0.075,
     0,
-    -0.0968
+    -0.1932
    ]
   },
   {
@@ -5738,11 +6327,12 @@
    "label": "Right splenius cervicis",
    "group": "back",
    "side": "right",
+   "fg": "splenius",
    "layer": 2,
    "explode": [
-    -0.0197,
+    -0.0556,
     0,
-    -0.0782
+    -0.2261
    ]
   },
   {
@@ -5750,11 +6340,12 @@
    "label": "Right sternocleidomastoid",
    "group": "neck",
    "side": "right",
+   "fg": "scm",
    "layer": 1,
    "explode": [
-    -0.0823,
+    -0.1823,
     0,
-    0.044
+    0.0975
    ]
   },
   {
@@ -5762,11 +6353,12 @@
    "label": "Right sternohyoid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.0227,
+    -0.0665,
     0,
-    0.0483
+    0.1324
    ]
   },
   {
@@ -5774,11 +6366,12 @@
    "label": "Right sternothyroid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.026,
+    -0.0694,
     0,
-    0.0442
+    0.1137
    ]
   },
   {
@@ -5786,11 +6379,12 @@
    "label": "Right stylohyoid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.042,
+    -0.1149,
     0,
-    0.034
+    0.1007
    ]
   },
   {
@@ -5798,11 +6392,12 @@
    "label": "Right subclavius",
    "group": "chest",
    "side": "right",
+   "fg": "pec-minor",
    "layer": 2,
    "explode": [
-    -0.0667,
+    -0.1552,
     0,
-    0.0333
+    0.0756
    ]
   },
   {
@@ -5810,11 +6405,12 @@
    "label": "Right subscapularis",
    "group": "shoulder",
    "side": "right",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    0.0646,
+    0.0332,
     0,
-    -0.0047
+    -0.0348
    ]
   },
   {
@@ -5822,11 +6418,12 @@
    "label": "Right supinator",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 2,
    "explode": [
-    0.0119,
+    -0.0598,
     0,
-    -0.0532
+    -0.1491
    ]
   },
   {
@@ -5834,11 +6431,12 @@
    "label": "Right supraspinatus",
    "group": "shoulder",
    "side": "right",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    0.0495,
+    0.0204,
     0,
-    -0.0081
+    -0.0312
    ]
   },
   {
@@ -5846,11 +6444,12 @@
    "label": "Right temporalis",
    "group": "head",
    "side": "right",
+   "fg": "mastication",
    "layer": 1,
    "explode": [
-    -0.1016,
+    -0.2282,
     0,
-    0.0322
+    0.0977
    ]
   },
   {
@@ -5858,11 +6457,12 @@
    "label": "Right temporoparietalis",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.1067,
+    -0.1593,
     0,
-    -0.0254
+    0.0885
    ]
   },
   {
@@ -5870,11 +6470,12 @@
    "label": "Right tensor fasciae latae",
    "group": "hip",
    "side": "right",
+   "fg": "tfl-it-band",
    "layer": 1,
    "explode": [
-    -0.0699,
+    -0.1789,
     0,
-    0.0833
+    0.1734
    ]
   },
   {
@@ -5882,11 +6483,12 @@
    "label": "Right teres major",
    "group": "shoulder",
    "side": "right",
+   "fg": "teres-major",
    "layer": 1,
    "explode": [
-    0.0769,
+    0.0271,
     0,
-    -0.0498
+    -0.1209
    ]
   },
   {
@@ -5894,11 +6496,12 @@
    "label": "Right teres minor",
    "group": "shoulder",
    "side": "right",
+   "fg": "rotator-cuff",
    "layer": 2,
    "explode": [
-    0.0335,
+    0.0168,
     0,
-    -0.0393
+    -0.0796
    ]
   },
   {
@@ -5906,11 +6509,12 @@
    "label": "Right thyrohyoid",
    "group": "neck",
    "side": "right",
+   "fg": "hyoid",
    "layer": 2,
    "explode": [
-    -0.0271,
+    -0.0714,
     0,
-    0.0427
+    0.1087
    ]
   },
   {
@@ -5918,11 +6522,12 @@
    "label": "Right tibialis anterior",
    "group": "leg",
    "side": "right",
+   "fg": "anterior-leg",
    "layer": 1,
    "explode": [
-    -0.0168,
+    -0.0417,
     0,
-    0.0857
+    0.166
    ]
   },
   {
@@ -5930,11 +6535,12 @@
    "label": "Right tibialis posterior",
    "group": "leg",
    "side": "right",
+   "fg": "deep-posterior-leg",
    "layer": 2,
    "explode": [
-    0.029,
+    0.0217,
     0,
-    0.0353
+    0.1106
    ]
   },
   {
@@ -5942,11 +6548,12 @@
    "label": "Right transversus abdominis",
    "group": "abdomen",
    "side": "right",
+   "fg": "abdominal-wall",
    "layer": 3,
    "explode": [
-    -0.047,
+    -0.1644,
     0,
-    0.0232
+    0.0855
    ]
   },
   {
@@ -5954,11 +6561,12 @@
    "label": "Right transversus thoracis",
    "group": "chest",
    "side": "right",
+   "fg": "intercostals",
    "layer": 2,
    "explode": [
-    -0.0316,
+    -0.1435,
     0,
-    0.0854
+    0.1063
    ]
   },
   {
@@ -5966,11 +6574,12 @@
    "label": "Right vastus intermedius",
    "group": "thigh",
    "side": "right",
+   "fg": "quadriceps",
    "layer": 2,
    "explode": [
-    -0.0464,
+    -0.1508,
     0,
-    0.0293
+    0.0836
    ]
   },
   {
@@ -5978,11 +6587,12 @@
    "label": "Right vastus lateralis",
    "group": "thigh",
    "side": "right",
+   "fg": "quadriceps",
    "layer": 1,
    "explode": [
-    -0.0994,
+    -0.2181,
     0,
-    0.0189
+    0.0952
    ]
   },
   {
@@ -5990,11 +6600,12 @@
    "label": "Right vastus medialis",
    "group": "thigh",
    "side": "right",
+   "fg": "quadriceps",
    "layer": 1,
    "explode": [
-    0.014,
+    -0.0976,
     0,
-    0.0807
+    0.1173
    ]
   },
   {
@@ -6002,11 +6613,12 @@
    "label": "Right zygomaticus major",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0616,
+    -0.1338,
     0,
-    0.0971
+    0.2269
    ]
   },
   {
@@ -6014,11 +6626,12 @@
    "label": "Right zygomaticus minor",
    "group": "head",
    "side": "right",
+   "fg": "facial",
    "layer": 1,
    "explode": [
-    -0.0443,
+    -0.1055,
     0,
-    0.1092
+    0.2591
    ]
   },
   {
@@ -6026,11 +6639,12 @@
    "label": "Second lumbrical of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0252,
-    -0.0428,
-    0.0639
+    -0.003,
+    -0.0193,
+    0.0345
    ]
   },
   {
@@ -6038,11 +6652,12 @@
    "label": "Second lumbrical of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0189,
-    -0.049,
-    0.0639
+    0.0029,
+    -0.0192,
+    0.0352
    ]
   },
   {
@@ -6050,11 +6665,12 @@
    "label": "Second plantar interosseous of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.026,
-    -0.0016,
-    0.04
+    0.0299,
+    0.0053,
+    0.0391
    ]
   },
   {
@@ -6062,11 +6678,12 @@
    "label": "Second plantar interosseous of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0256,
-    -0.0079,
-    0.0415
+    -0.0301,
+    0.0047,
+    0.0405
    ]
   },
   {
@@ -6074,11 +6691,12 @@
    "label": "Set of anterior cervical intertransversarii",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 2,
    "explode": [
-    -0.0039,
+    -0.003,
     0,
-    -0.039
+    -0.0989
    ]
   },
   {
@@ -6086,11 +6704,12 @@
    "label": "Set of dorsal interossei of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0191,
-    0.0285,
-    0.0756
+    0.0131,
+    0.0252,
+    0.0429
    ]
   },
   {
@@ -6098,11 +6717,12 @@
    "label": "Set of dorsal interossei of left hand",
    "group": "forearm",
    "side": "left",
+   "fg": "hand-intrinsics",
    "layer": 1,
    "explode": [
-    0.0449,
-    -0.0587,
-    -0.0344
+    0.0153,
+    -0.1749,
+    -0.0444
    ]
   },
   {
@@ -6110,11 +6730,12 @@
    "label": "Set of dorsal interossei of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0208,
-    0.0154,
-    0.0799
+    -0.0132,
+    0.0243,
+    0.0443
    ]
   },
   {
@@ -6122,11 +6743,12 @@
    "label": "Set of dorsal interossei of right hand",
    "group": "forearm",
    "side": "right",
+   "fg": "hand-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0437,
-    -0.057,
-    -0.0376
+    -0.0165,
+    -0.1721,
+    -0.0484
    ]
   },
   {
@@ -6134,11 +6756,12 @@
    "label": "Set of interspinales cervicis",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 2,
    "explode": [
-    -0.0004,
+    -0.0016,
     0,
-    -0.0648
+    -0.2029
    ]
   },
   {
@@ -6146,11 +6769,12 @@
    "label": "Set of interspinales lumborum",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 3,
    "explode": [
+    -0.0008,
     0,
-    0,
-    -0.0378
+    -0.1829
    ]
   },
   {
@@ -6158,11 +6782,12 @@
    "label": "Set of interspinales thoracis",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 2,
    "explode": [
-    -0.0003,
+    -0.0023,
     0,
-    -0.0855
+    -0.2546
    ]
   },
   {
@@ -6170,11 +6795,12 @@
    "label": "Set of lateral lumbar intertransversarius muscles",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 3,
    "explode": [
-    -0.001,
+    -0.0073,
     0,
-    -0.0197
+    -0.098
    ]
   },
   {
@@ -6182,11 +6808,12 @@
    "label": "Set of left levatores costarum breves",
    "group": "chest",
    "side": "left",
+   "fg": "intercostals",
    "layer": 3,
    "explode": [
-    0.0269,
+    0.1291,
     0,
-    -0.0428
+    -0.1548
    ]
   },
   {
@@ -6194,11 +6821,12 @@
    "label": "Set of left levatores costarum longi",
    "group": "chest",
    "side": "left",
+   "fg": "intercostals",
    "layer": 3,
    "explode": [
-    0.0274,
+    0.1308,
     0,
-    -0.0438
+    -0.1573
    ]
   },
   {
@@ -6206,11 +6834,12 @@
    "label": "Set of lumbricals of left hand",
    "group": "forearm",
    "side": "left",
+   "fg": "hand-intrinsics",
    "layer": 1,
    "explode": [
-    0.0142,
-    -0.0822,
-    0.0068
+    -0.0021,
+    -0.2106,
+    -0.0038
    ]
   },
   {
@@ -6218,11 +6847,12 @@
    "label": "Set of lumbricals of right hand",
    "group": "forearm",
    "side": "right",
+   "fg": "hand-intrinsics",
    "layer": 1,
    "explode": [
-    -0.0157,
-    -0.0823,
-    0.0071
+    0.0011,
+    -0.2125,
+    -0.0066
    ]
   },
   {
@@ -6230,11 +6860,12 @@
    "label": "Set of medial lumbar intertransversarius muscles",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 3,
    "explode": [
-    -0.0003,
+    -0.0019,
     0,
-    -0.0129
+    -0.0805
    ]
   },
   {
@@ -6242,11 +6873,12 @@
    "label": "Set of palmar interossei of left hand",
    "group": "forearm",
    "side": "left",
+   "fg": "hand-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0014,
-    -0.0445,
-    -0.0039
+    -0.0064,
+    -0.1419,
+    -0.0126
    ]
   },
   {
@@ -6254,11 +6886,12 @@
    "label": "Set of palmar interossei of right hand",
    "group": "forearm",
    "side": "right",
+   "fg": "hand-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0055,
-    -0.0432,
-    -0.006
+    0.0046,
+    -0.1344,
+    -0.0155
    ]
   },
   {
@@ -6266,11 +6899,12 @@
    "label": "Set of posterior cervical intertransversarii",
    "group": "back",
    "side": "midline",
+   "fg": "segmental",
    "layer": 3,
    "explode": [
-    -0.0008,
+    -0.0036,
     0,
-    -0.0076
+    -0.0673
    ]
   },
   {
@@ -6278,11 +6912,12 @@
    "label": "Set of right levatores costarum breves",
    "group": "chest",
    "side": "right",
+   "fg": "intercostals",
    "layer": 3,
    "explode": [
-    -0.0269,
+    -0.1288,
     0,
-    -0.0426
+    -0.1546
    ]
   },
   {
@@ -6290,11 +6925,12 @@
    "label": "Set of right levatores costarum longi",
    "group": "chest",
    "side": "right",
+   "fg": "intercostals",
    "layer": 3,
    "explode": [
-    -0.0274,
+    -0.1304,
     0,
-    -0.0443
+    -0.1587
    ]
   },
   {
@@ -6302,11 +6938,12 @@
    "label": "Short head of left biceps brachii",
    "group": "arm",
    "side": "left",
+   "fg": "arm-flexors",
    "layer": 1,
    "explode": [
-    -0.0435,
+    -0.0167,
     0,
-    0.0753
+    0.1956
    ]
   },
   {
@@ -6314,11 +6951,12 @@
    "label": "Short head of left biceps femoris",
    "group": "thigh",
    "side": "left",
+   "fg": "hamstrings",
    "layer": 2,
    "explode": [
-    0.0451,
+    0.0694,
     0,
-    -0.0417
+    -0.1469
    ]
   },
   {
@@ -6326,11 +6964,12 @@
    "label": "Short head of right biceps brachii",
    "group": "arm",
    "side": "right",
+   "fg": "arm-flexors",
    "layer": 1,
    "explode": [
-    0.0458,
+    0.0173,
     0,
-    0.0746
+    0.1955
    ]
   },
   {
@@ -6338,11 +6977,12 @@
    "label": "Short head of right biceps femoris",
    "group": "thigh",
    "side": "right",
+   "fg": "hamstrings",
    "layer": 2,
    "explode": [
-    -0.0452,
+    -0.0706,
     0,
-    -0.0421
+    -0.1478
    ]
   },
   {
@@ -6350,11 +6990,12 @@
    "label": "Spinal part of left deltoid",
    "group": "shoulder",
    "side": "left",
+   "fg": "deltoid",
    "layer": 1,
    "explode": [
-    0.0246,
+    0.1663,
     0,
-    -0.0826
+    0.0298
    ]
   },
   {
@@ -6362,11 +7003,12 @@
    "label": "Spinal part of right deltoid",
    "group": "shoulder",
    "side": "right",
+   "fg": "deltoid",
    "layer": 1,
    "explode": [
-    -0.0265,
+    -0.1673,
     0,
-    -0.0821
+    0.0292
    ]
   },
   {
@@ -6374,11 +7016,12 @@
    "label": "Sternocostal part of left pectoralis major",
    "group": "chest",
    "side": "left",
+   "fg": "pec-major",
    "layer": 1,
    "explode": [
-    0.107,
+    0.2273,
     0,
-    0.0864
+    0.1741
    ]
   },
   {
@@ -6386,11 +7029,12 @@
    "label": "Sternocostal part of right pectoralis major",
    "group": "chest",
    "side": "right",
+   "fg": "pec-major",
    "layer": 1,
    "explode": [
-    -0.1073,
+    -0.2283,
     0,
-    0.0865
+    0.1744
    ]
   },
   {
@@ -6398,11 +7042,12 @@
    "label": "Superficial head of left flexor pollicis brevis",
    "group": "forearm",
    "side": "left",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    0.0589,
-    0.0631,
-    0.0234
+    0.1361,
+    0.1318,
+    0.0358
    ]
   },
   {
@@ -6410,11 +7055,12 @@
    "label": "Superficial head of right flexor pollicis brevis",
    "group": "forearm",
    "side": "right",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    -0.0562,
-    0.0659,
-    0.0227
+    -0.1313,
+    0.1368,
+    0.0354
    ]
   },
   {
@@ -6422,11 +7068,12 @@
    "label": "Superficial part of left masseter",
    "group": "head",
    "side": "left",
+   "fg": "mastication",
    "layer": 1,
    "explode": [
-    0.0893,
+    0.2133,
     0,
-    0.0496
+    0.1175
    ]
   },
   {
@@ -6434,11 +7081,12 @@
    "label": "Superficial part of right masseter",
    "group": "head",
    "side": "right",
+   "fg": "mastication",
    "layer": 1,
    "explode": [
-    -0.0889,
+    -0.2126,
     0,
-    0.0502
+    0.119
    ]
   },
   {
@@ -6446,11 +7094,12 @@
    "label": "Superior oblique part of left longus colli",
    "group": "neck",
    "side": "left",
+   "fg": "deep-neck-flexors",
    "layer": 3,
    "explode": [
-    0.0092,
+    0.0878,
     0,
-    -0.0005
+    -0.0002
    ]
   },
   {
@@ -6458,11 +7107,12 @@
    "label": "Superior oblique part of right longus colli",
    "group": "neck",
    "side": "right",
+   "fg": "deep-neck-flexors",
    "layer": 3,
    "explode": [
-    -0.0092,
+    -0.0876,
     0,
-    -0.0005
+    0.0001
    ]
   },
   {
@@ -6470,11 +7120,12 @@
    "label": "Tendinous arch of levator ani",
    "group": "abdomen",
    "side": "midline",
+   "fg": "pelvic-floor",
    "layer": 2,
    "explode": [
-    -0.0147,
+    -0.0135,
     0,
-    -0.0383
+    -0.1047
    ]
   },
   {
@@ -6482,11 +7133,12 @@
    "label": "Third lumbrical of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    0.0209,
-    -0.0551,
-    0.0522
+    0.0138,
+    -0.0242,
+    0.0243
    ]
   },
   {
@@ -6494,11 +7146,12 @@
    "label": "Third lumbrical of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 1,
    "explode": [
-    -0.02,
-    -0.06,
-    0.0501
+    -0.0134,
+    -0.0247,
+    0.0236
    ]
   },
   {
@@ -6506,11 +7159,12 @@
    "label": "Third plantar interosseous of left foot",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.0438,
-    -0.013,
-    0.0182
+    0.0509,
+    -0.0081,
+    0.0154
    ]
   },
   {
@@ -6518,11 +7172,12 @@
    "label": "Third plantar interosseous of right foot",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0424,
-    -0.0181,
-    0.0197
+    -0.0505,
+    -0.0081,
+    0.0145
    ]
   },
   {
@@ -6530,11 +7185,12 @@
    "label": "Thoracic rotator",
    "group": "back",
    "side": "midline",
+   "fg": "transversospinalis",
    "layer": 3,
    "explode": [
-    -0.0006,
+    -0.0023,
     0,
-    -0.0412
+    -0.1624
    ]
   },
   {
@@ -6542,11 +7198,12 @@
    "label": "Transverse head of left adductor hallucis",
    "group": "leg",
    "side": "left",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    0.0082,
+    0.0116,
     -0.0188,
-    0.0519
+    0.0639
    ]
   },
   {
@@ -6554,11 +7211,12 @@
    "label": "Transverse head of left adductor pollicis",
    "group": "forearm",
    "side": "left",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    0.0795,
-    0.0078,
-    -0.0194
+    0.1312,
+    0.0787,
+    -0.0095
    ]
   },
   {
@@ -6566,11 +7224,12 @@
    "label": "Transverse head of right adductor hallucis",
    "group": "leg",
    "side": "right",
+   "fg": "foot-intrinsics",
    "layer": 2,
    "explode": [
-    -0.0072,
-    -0.0226,
-    0.0526
+    -0.0092,
+    -0.0192,
+    0.0649
    ]
   },
   {
@@ -6578,11 +7237,12 @@
    "label": "Transverse head of right adductor pollicis",
    "group": "forearm",
    "side": "right",
+   "fg": "thenar",
    "layer": 1,
    "explode": [
-    -0.0795,
-    0.0085,
-    -0.019
+    -0.1299,
+    0.0802,
+    -0.0091
    ]
   },
   {
@@ -6590,11 +7250,12 @@
    "label": "Transverse part of left trapezius",
    "group": "back",
    "side": "left",
+   "fg": "trapezius",
    "layer": 1,
    "explode": [
-    0.0701,
+    0.1634,
     0,
-    -0.1074
+    -0.2454
    ]
   },
   {
@@ -6602,11 +7263,12 @@
    "label": "Transverse part of right trapezius",
    "group": "back",
    "side": "right",
+   "fg": "trapezius",
    "layer": 1,
    "explode": [
-    -0.0706,
+    -0.1628,
     0,
-    -0.107
+    -0.2443
    ]
   },
   {
@@ -6614,11 +7276,12 @@
    "label": "Ulnar head of left extensor carpi ulnaris",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    -0.0588,
+    0.0613,
     0,
-    -0.06
+    -0.1419
    ]
   },
   {
@@ -6626,23 +7289,25 @@
    "label": "Ulnar head of left flexor carpi ulnaris",
    "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    -0.0781,
+    -0.0319,
     0,
-    -0.0599
+    0.0716
    ]
   },
   {
    "id": "FMA38563",
    "label": "Ulnar head of left pronator teres",
-   "group": "shoulder",
+   "group": "forearm",
    "side": "left",
+   "fg": "forearm-flexors",
    "layer": 2,
    "explode": [
-    0.0744,
+    -0.0157,
     0,
-    0.0317
+    0.0566
    ]
   },
   {
@@ -6650,11 +7315,12 @@
    "label": "Ulnar head of right extensor carpi ulnaris",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-extensors",
    "layer": 1,
    "explode": [
-    0.0582,
+    -0.0596,
     0,
-    -0.0611
+    -0.1446
    ]
   },
   {
@@ -6662,23 +7328,25 @@
    "label": "Ulnar head of right flexor carpi ulnaris",
    "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 1,
    "explode": [
-    0.0786,
+    0.0317,
     0,
-    -0.059
+    0.0735
    ]
   },
   {
    "id": "FMA38562",
    "label": "Ulnar head of right pronator teres",
-   "group": "shoulder",
+   "group": "forearm",
    "side": "right",
+   "fg": "forearm-flexors",
    "layer": 2,
    "explode": [
-    -0.0738,
+    0.0155,
     0,
-    0.0319
+    0.0579
    ]
   },
   {
@@ -6686,11 +7354,12 @@
    "label": "Upper head of left lateral pterygoid",
    "group": "head",
    "side": "left",
+   "fg": "mastication",
    "layer": 2,
    "explode": [
-    0.048,
+    0.1187,
     0,
-    0.0336
+    0.0832
    ]
   },
   {
@@ -6698,11 +7367,12 @@
    "label": "Upper head of right lateral pterygoid",
    "group": "head",
    "side": "right",
+   "fg": "mastication",
    "layer": 2,
    "explode": [
-    -0.0479,
+    -0.1185,
     0,
-    0.0338
+    0.0838
    ]
   },
   {
@@ -6710,11 +7380,12 @@
    "label": "Vertical intermediate part of left longus colli",
    "group": "neck",
    "side": "left",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    0.039,
+    0.1031,
     0,
-    -0.0044
+    -0.0216
    ]
   },
   {
@@ -6722,11 +7393,12 @@
    "label": "Vertical intermediate part of right longus colli",
    "group": "neck",
    "side": "right",
+   "fg": "deep-neck-flexors",
    "layer": 2,
    "explode": [
-    -0.0393,
+    -0.104,
     0,
-    -0.0016
+    -0.0194
    ]
   }
  ]

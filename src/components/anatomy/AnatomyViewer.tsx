@@ -16,11 +16,14 @@ import {
   type AnatomyPart,
   type MuscleLayer,
 } from "@/lib/anatomy/parts";
+import { unitIdsOf, unitLabelOf } from "@/lib/anatomy/muscle-groups";
 import { getModelProgress, getServerModelProgress, loadModel, subscribeModelProgress } from "./model-loader";
 
 export interface FocusRequest {
   ids: string[];
   nonce: number;
+  /** Optional preferred viewing direction (world space, from the target out to the camera). */
+  direction?: [number, number, number];
 }
 
 interface AnatomyViewerProps {
@@ -37,7 +40,14 @@ interface AnatomyViewerProps {
   expansion: number;
   /** Muscle groups to expand; empty expands the whole body. */
   expandGroups: Set<string>;
-  onPartClick: (id: string, additive: boolean) => void;
+  onPartClick: (id: string, options: PartClickOptions) => void;
+}
+
+export interface PartClickOptions {
+  /** Shift / Cmd / Ctrl: add to or remove from the current selection. */
+  additive: boolean;
+  /** Alt: pick the single muscle instead of its whole clinical group. */
+  single: boolean;
 }
 
 type Tone = "bone" | "disc" | "muscle" | "underlay";
@@ -248,7 +258,7 @@ interface LayerModelProps {
   materials: MaterialSet;
   interactive: boolean;
   selected?: Set<string>;
-  hovered?: string | null;
+  hoveredIds?: Set<string>;
   hiddenGroups?: Set<string>;
   isolate?: boolean;
   peelDepth?: MuscleLayer;
@@ -266,7 +276,7 @@ function LayerModel({
   materials,
   interactive,
   selected,
-  hovered,
+  hoveredIds,
   hiddenGroups,
   isolate,
   peelDepth = 1,
@@ -290,7 +300,7 @@ function LayerModel({
         const tone: Tone = interactive ? toneFor(layer, part) : "underlay";
         let state: PartState = "base";
         if (selected?.has(id)) state = "selected";
-        else if (hovered === id) state = "hover";
+        else if (hoveredIds?.has(id)) state = "hover";
         else if (isolate && hasSelection) state = "ghost";
         const visible = !(part && (hiddenGroups?.has(part.group) || isPeeledAway(part, peelDepth)));
         return (
@@ -332,7 +342,12 @@ function CameraRig({ registry, focusRequest, resetNonce }: CameraRigProps) {
       if (mesh) box.expandByObject(mesh);
     }
     if (box.isEmpty()) return;
-    const [x, y, z, tx, ty, tz] = focusView(box, cc.camera.position, cc.getTarget(new THREE.Vector3()));
+    const [x, y, z, tx, ty, tz] = focusView(
+      box,
+      cc.camera.position,
+      cc.getTarget(new THREE.Vector3()),
+      focusRequest.direction,
+    );
     void cc.setLookAt(x, y, z, tx, ty, tz, true);
   }, [focusRequest, registry]);
 
@@ -407,11 +422,18 @@ export default function AnatomyViewer({
   const materials = useMemo(() => createMaterials(), []);
   const registry = useMemo<MeshRegistry>(() => new Map(), []);
   const [hovered, setHovered] = useState<string | null>(null);
+  const [hoverSingle, setHoverSingle] = useState(false);
   const hoveredRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const hoveredPart = hovered ? PART_LOOKUP[layer].get(hovered) : undefined;
+  const hoveredUnit = useMemo(() => (hovered ? unitIdsOf(layer, hovered) : []), [hovered, layer]);
+  const hoveredIds = useMemo(
+    () => new Set(hovered && hoverSingle ? [hovered] : hoveredUnit),
+    [hovered, hoverSingle, hoveredUnit],
+  );
+  const showGroupLabel = hoveredPart && !hoverSingle && hoveredUnit.length > 1;
 
   useEffect(() => {
     return () => {
@@ -427,6 +449,7 @@ export default function AnatomyViewer({
     const x = event.nativeEvent.clientX - rect.left + 14;
     const y = event.nativeEvent.clientY - rect.top + 14;
     tooltipRef.current.style.transform = `translate(${x}px, ${y}px)`;
+    setHoverSingle(event.nativeEvent.altKey);
   }
 
   function setCursor(pointer: boolean) {
@@ -452,7 +475,7 @@ export default function AnatomyViewer({
   function handleSelect(id: string, event: ThreeEvent<MouseEvent>) {
     if (event.delta > CLICK_DRAG_TOLERANCE_PX) return;
     const native = event.nativeEvent;
-    onPartClick(id, native.shiftKey || native.metaKey || native.ctrlKey);
+    onPartClick(id, { additive: native.shiftKey || native.metaKey || native.ctrlKey, single: native.altKey });
   }
 
   return (
@@ -481,7 +504,7 @@ export default function AnatomyViewer({
             materials={materials}
             interactive
             selected={selected}
-            hovered={hovered}
+            hoveredIds={hoveredIds}
             hiddenGroups={hiddenGroups}
             isolate={isolate}
             peelDepth={peelDepth}
@@ -502,11 +525,18 @@ export default function AnatomyViewer({
 
       <div
         ref={tooltipRef}
-        className={`pointer-events-none absolute left-0 top-0 z-10 rounded-[4px] bg-[#0A2540]/90 px-2 py-1 text-[13px] text-white shadow-md transition-opacity ${
+        className={`pointer-events-none absolute left-0 top-0 z-10 rounded-[4px] bg-[#0A2540]/90 px-2 py-1 text-[13px] text-white shadow-md ${
           hoveredPart ? "opacity-100" : "opacity-0"
         }`}
       >
-        {hoveredPart?.label}
+        {showGroupLabel ? (
+          <>
+            <div className="font-medium">{unitLabelOf(layer, hoveredPart.id)}</div>
+            <div className="text-[12px] text-white/65">{hoveredPart.label} · Alt+click for this muscle only</div>
+          </>
+        ) : (
+          hoveredPart?.label
+        )}
       </div>
 
       <LoadingOverlay layer={layer} />

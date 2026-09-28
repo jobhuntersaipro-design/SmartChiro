@@ -136,54 +136,92 @@ export function computeMuscleLayers(muscles, bones = []) {
   return layer;
 }
 
-const TRUNK_GROUPS = new Set(["head", "neck", "back", "chest", "abdomen"]);
+const TRUNK_REGIONS = new Set(["head", "neck", "back", "chest", "abdomen"]);
+// Hand and foot groups lie across the limb axis, so they spread around their own centroid.
+const DISTAL_GROUPS = new Set(["thenar", "hypothenar", "hand-intrinsics", "foot-intrinsics"]);
+
+// Full-expansion tuning (metres). Groups first move apart from each other,
+// then the muscles inside each group spread around the group's centre.
+const GROUP_SCALE = 1.2;
+const GROUP_GAP = 0.08;
+const PART_SCALE = 1.5;
+const PART_GAP = 0.02;
+const LAYER_LIFT = 0.04;
+// Limb muscles moving toward the midline would collide with the other limb
+// (e.g. left and right adductors), so their inward component is damped.
+const MEDIAL_DAMPING = 0.2;
+
+function centroid(tri) {
+  const c = [0, 0, 0];
+  for (let i = 0; i < tri.length; i += 3) {
+    c[0] += tri[i];
+    c[1] += tri[i + 1];
+    c[2] += tri[i + 2];
+  }
+  const n = tri.length / 3;
+  return c.map((v) => v / n);
+}
+
+function meanOf(points) {
+  const sum = [0, 0, 0];
+  for (const p of points) for (let k = 0; k < 3; k++) sum[k] += p[k];
+  return sum.map((v) => v / points.length);
+}
+
+function unitVector(from, to, horizontal) {
+  const d = [to[0] - from[0], horizontal ? 0 : to[1] - from[1], to[2] - from[2]];
+  const length = Math.hypot(...d);
+  return length < 1e-4 ? { dir: [0, 0, 0], length: 0 } : { dir: d.map((v) => v / length), length };
+}
 
 /**
- * Per-muscle exploded-view offset (metres at full expansion). Limb muscles
- * spread away from their own limb's long axis, trunk muscles away from the
- * body's vertical axis. Offsets grow with distance from the axis and with how
- * superficial the muscle is, so outer layers lift clear of the deep ones.
+ * Per-muscle exploded-view offset (metres at full expansion), in two levels:
+ *
+ * 1. Each clinical group (per side) moves away from its anchor — the body's
+ *    vertical axis for trunk regions, the limb's axis for limbs, or the
+ *    hand/foot centroid — so e.g. quadriceps, hamstrings and adductors part.
+ * 2. Muscles within a group spread around the group's own centre.
+ *
+ * Superficial muscles get an extra lift along the group direction so outer
+ * layers clear the deep ones.
+ *
+ * @param parts  array of { tri, group (region), side, fg (clinical group key) }
  */
 export function computeExplodeVectors(parts, layers) {
-  const centers = parts.map(({ tri }) => {
-    const c = [0, 0, 0];
-    for (let i = 0; i < tri.length; i += 3) {
-      c[0] += tri[i];
-      c[1] += tri[i + 1];
-      c[2] += tri[i + 2];
-    }
-    const n = tri.length / 3;
-    return c.map((v) => v / n);
-  });
-
-  const clusterOf = (p, i) => {
-    if (TRUNK_GROUPS.has(p.group)) return "trunk";
-    // Foot and hand muscles lie across the limb axis — give them their own.
-    const extremity =
-      (p.group === "leg" && centers[i][1] < 0.09) || (p.group === "forearm" && centers[i][1] < 0.8);
-    return `${p.group}:${p.side}:${extremity ? "distal" : "proximal"}`;
+  const centers = parts.map(({ tri }) => centroid(tri));
+  const anchorKey = (p) => {
+    if (TRUNK_REGIONS.has(p.group)) return "trunk";
+    return `${p.group}:${p.side}:${DISTAL_GROUPS.has(p.fg) ? "distal" : "proximal"}`;
   };
+  const unitKey = (p) => `${p.fg}:${p.side}`;
 
-  const clusters = new Map();
-  parts.forEach((p, i) => {
-    const key = clusterOf(p, i);
-    if (!clusters.has(key)) clusters.set(key, { sum: [0, 0, 0], n: 0 });
-    const c = clusters.get(key);
-    for (let k = 0; k < 3; k++) c.sum[k] += centers[i][k];
-    c.n++;
-  });
+  const collect = (keyOf) => {
+    const map = new Map();
+    parts.forEach((p, i) => {
+      const key = keyOf(p);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(centers[i]);
+    });
+    return new Map([...map].map(([key, points]) => [key, meanOf(points)]));
+  };
+  const anchors = collect(anchorKey);
+  const units = collect(unitKey);
 
   return parts.map((p, i) => {
-    const key = clusterOf(p, i);
-    const { sum, n } = clusters.get(key);
-    const axis = key === "trunk" ? [0, 0, sum[2] / n] : sum.map((v) => v / n);
-    const distal = key.endsWith(":distal");
-    // Horizontal spread around a vertical axis; distal clusters (hands, feet)
-    // spread in all directions around their centroid instead.
-    const dir = [centers[i][0] - axis[0], distal ? centers[i][1] - axis[1] : 0, centers[i][2] - axis[2]];
-    const r = Math.hypot(...dir);
-    if (r < 1e-4) return [0, 0, 0];
-    const magnitude = 0.6 * r + 0.035 * (LAYER_COUNT - layers[i]);
-    return dir.map((v) => Math.round((v / r) * magnitude * 1e4) / 1e4);
+    const horizontal = !DISTAL_GROUPS.has(p.fg);
+    const anchorPoint = anchors.get(anchorKey(p));
+    const anchor = anchorKey(p) === "trunk" ? [0, 0, anchorPoint[2]] : anchorPoint;
+    const unitCenter = units.get(unitKey(p));
+
+    const group = unitVector(anchor, unitCenter, horizontal);
+    const part = unitVector(unitCenter, centers[i], horizontal);
+    const groupMagnitude =
+      group.length > 0 ? GROUP_SCALE * group.length + GROUP_GAP + LAYER_LIFT * (LAYER_COUNT - layers[i]) : 0;
+    const partMagnitude = part.length > 0 ? PART_SCALE * part.length + PART_GAP : 0;
+
+    const offset = [0, 1, 2].map((k) => group.dir[k] * groupMagnitude + part.dir[k] * partMagnitude);
+    const medialSign = p.side === "right" ? 1 : p.side === "left" ? -1 : 0;
+    if (anchorKey(p) !== "trunk" && offset[0] * medialSign > 0) offset[0] *= MEDIAL_DAMPING;
+    return offset.map((v) => Math.round(v * 1e4) / 1e4);
   });
 }

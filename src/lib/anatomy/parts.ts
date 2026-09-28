@@ -12,6 +12,8 @@ export interface AnatomyPart {
   side: AnatomySide;
   /** Spinal level code, e.g. "L5" or "L5–S1" — only on vertebrae and discs. */
   short?: string;
+  /** Muscles only: clinical group key, e.g. "quadriceps" (see muscle-groups.ts). */
+  fg?: string;
   /** Muscles only: depth layer from the build-time voxel peel. */
   layer?: MuscleLayer;
   /** Muscles only: exploded-view offset in metres at full expansion. */
@@ -115,10 +117,14 @@ function stripSide(label: string): string {
   return label.replace(/\b(right|left)\s+/i, "").toLowerCase();
 }
 
+const MUSCLE_GROUP_LABELS = new Map(manifest.muscleGroups.map((g) => [g.key, g.label]));
+
+/** Matches every search term against the label, level code and clinical group. */
 export function matchesQuery(part: AnatomyPart, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  const haystack = `${part.label} ${part.short ?? ""}`.toLowerCase();
+  const group = part.fg ? MUSCLE_GROUP_LABELS.get(part.fg) : "";
+  const haystack = `${part.label} ${part.short ?? ""} ${group ?? ""}`.toLowerCase();
   return q.split(/\s+/).every((term) => haystack.includes(term));
 }
 

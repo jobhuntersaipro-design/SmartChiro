@@ -36,4 +36,10 @@ describe("focusView", () => {
     const large = focusView(boxAt(0, 1, 0.2, 0.3), HOME, TARGET);
     expect(large[2] - 0.2).toBeGreaterThan(small[2] - 0.2);
   });
+
+  it("uses a preferred direction when one is given", () => {
+    const [x, , z] = focusView(boxAt(-0.1, 0.5, 0.02), HOME, TARGET, [0, 0, 1]);
+    expect(Math.abs(x + 0.1)).toBeLessThan(1e-6);
+    expect(z).toBeGreaterThan(0.02);
+  });
 });

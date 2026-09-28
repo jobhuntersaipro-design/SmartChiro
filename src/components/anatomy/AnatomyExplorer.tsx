@@ -4,11 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Bone,
-  ChevronRight,
   Crosshair,
   Expand,
-  Eye,
-  EyeOff,
   Focus,
   Layers,
   Loader2,
@@ -21,7 +18,6 @@ import {
   ANATOMY_ATTRIBUTION,
   findPart,
   groupLabel,
-  groupParts,
   isPeeledAway,
   layerLabel,
   MUSCLE_LAYERS,
@@ -29,7 +25,9 @@ import {
   type AnatomyPart,
   type MuscleLayer,
 } from "@/lib/anatomy/parts";
-import type { FocusRequest } from "./AnatomyViewer";
+import { summarizeSelection, unitIdsOf, type SelectionItem } from "@/lib/anatomy/muscle-groups";
+import { AnatomyPartList, muscleGroupRowKey, regionRowKey } from "./AnatomyPartList";
+import type { FocusRequest, PartClickOptions } from "./AnatomyViewer";
 
 const AnatomyViewer = dynamic(() => import("./AnatomyViewer"), {
   ssr: false,
@@ -72,30 +70,47 @@ export function AnatomyExplorer() {
 
   const selectedIds = selected[layer];
   const hiddenGroups = useMemo(() => new Set(hidden[layer]), [hidden, layer]);
-  const groups = useMemo(() => groupParts(layer, query), [layer, query]);
-  const selectedParts = selectedIds
-    .map((id) => findPart(layer, id))
-    .filter((p): p is AnatomyPart => Boolean(p));
+  const selectionItems = useMemo(() => summarizeSelection(layer, selectedIds), [layer, selectedIds]);
 
   function focus(ids: string[]) {
-    if (ids.length) setFocusRequest((prev) => ({ ids, nonce: (prev?.nonce ?? 0) + 1 }));
+    if (!ids.length) return;
+    // Muscles carry an outward explode vector; their sum is a good side to view the selection from.
+    const direction: [number, number, number] = [0, 0, 0];
+    for (const id of ids) {
+      const explode = findPart(layer, id)?.explode;
+      if (explode) for (let k = 0; k < 3; k++) direction[k] += explode[k];
+    }
+    setFocusRequest((prev) => ({ ids, nonce: (prev?.nonce ?? 0) + 1, direction }));
   }
 
-  function selectPart(id: string, additive: boolean) {
+  /** Clicking in 3D picks the whole clinical group (per side) unless Alt is held. */
+  function handlePartClick(id: string, { additive, single }: PartClickOptions) {
+    selectIds(single ? [id] : unitIdsOf(layer, id), additive);
+  }
+
+  function selectIds(ids: string[], additive: boolean) {
     const current = selected[layer];
-    const isSelected = current.includes(id);
+    const allSelected = ids.every((id) => current.includes(id));
     let next: string[];
-    if (additive) next = isSelected ? current.filter((x) => x !== id) : [...current, id];
-    else next = isSelected && current.length === 1 ? [] : [id];
+    if (additive) next = allSelected ? current.filter((x) => !ids.includes(x)) : [...new Set([...current, ...ids])];
+    else next = allSelected && current.length === ids.length ? [] : ids;
 
     setSelected((prev) => ({ ...prev, [layer]: next }));
     if (!additive && next.length) focus(next);
+    if (next.length === 0 || !ids.some((id) => next.includes(id))) return;
 
-    const part = findPart(layer, id);
-    if (part && next.includes(id)) {
-      setExpanded((prev) => new Set(prev).add(`${layer}:${part.group}`));
-      // Selecting a muscle that is currently peeled away reveals its layer.
-      if (isMuscles && part.layer && isPeeledAway(part, peelDepth)) setPeelDepth(part.layer);
+    const parts = ids.map((id) => findPart(layer, id)).filter((p): p is AnatomyPart => Boolean(p));
+    setExpanded((prev) => {
+      const open = new Set(prev);
+      for (const part of parts) {
+        open.add(regionRowKey(layer, part.group));
+        if (part.fg) open.add(muscleGroupRowKey(part.fg));
+      }
+      return open;
+    });
+    // Selecting muscles that are all peeled away reveals the shallowest of their layers.
+    if (isMuscles && parts.length && parts.every((p) => isPeeledAway(p, peelDepth))) {
+      setPeelDepth(Math.min(...parts.map((p) => p.layer ?? 1)) as MuscleLayer);
     }
   }
 
@@ -126,9 +141,8 @@ export function AnatomyExplorer() {
   function toggleExpanded(key: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
-      const k = `${layer}:${key}`;
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
@@ -194,7 +208,7 @@ export function AnatomyExplorer() {
             peelDepth={isMuscles ? peelDepth : 1}
             expansion={isMuscles ? expansion : 0}
             expandGroups={expandGroups}
-            onPartClick={selectPart}
+            onPartClick={handlePartClick}
           />
 
           <div className="pointer-events-none absolute inset-x-3 top-3 flex flex-wrap items-start justify-between gap-2">
@@ -229,7 +243,8 @@ export function AnatomyExplorer() {
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-[#0A2540]/70 to-transparent px-3 pb-2.5 pt-8">
             <p className="hidden text-[12px] text-white/70 md:block">
-              Drag to rotate · Right-drag to pan · Scroll to zoom · Shift+click to multi-select · Esc to clear
+              Drag to rotate · Right-drag to pan · Scroll to zoom · Shift+click to multi-select
+              {isMuscles && " · Alt+click for a single muscle"} · Esc to clear
             </p>
             <a
               href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/"
@@ -246,8 +261,8 @@ export function AnatomyExplorer() {
         <aside className="flex max-h-150 w-full flex-col overflow-hidden rounded-[6px] border border-[#e5edf5] bg-white shadow-(--shadow-card) lg:max-h-none lg:w-85">
           <SelectionCard
             layer={layer}
-            parts={selectedParts}
-            onRemove={(id) => selectPart(id, true)}
+            items={selectionItems}
+            onRemove={(ids) => selectIds(ids, true)}
             onFocus={() => focus(selectedIds)}
             onClear={clearSelection}
           />
@@ -269,104 +284,20 @@ export function AnatomyExplorer() {
           </div>
 
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto py-1">
-            {groups.length === 0 && (
-              <p className="px-4 py-6 text-center text-[14px] text-[#64748d]">No structures match “{query}”.</p>
-            )}
-            {groups.map(({ group, parts }) => {
-              const open = query.trim() !== "" || expanded.has(`${layer}:${group.key}`);
-              const isHidden = hiddenGroups.has(group.key);
-              const selectedCount = parts.filter((p) => selectedIds.includes(p.id)).length;
-              const isExpanding = expandGroups.has(group.key) && expansion > 0;
-              return (
-                <div key={group.key}>
-                  <div className="group flex items-center gap-1 px-2 hover:bg-[#f6f9fc]">
-                    <button
-                      onClick={() => toggleExpanded(group.key)}
-                      aria-expanded={open}
-                      className={cn(
-                        "flex flex-1 items-center gap-1.5 py-1.5 text-left text-[14px] font-medium",
-                        isHidden ? "text-[#A3ACB9]" : "text-[#061b31]"
-                      )}
-                    >
-                      <ChevronRight
-                        className={cn("h-3.5 w-3.5 shrink-0 text-[#64748d] transition-transform", open && "rotate-90")}
-                        strokeWidth={1.75}
-                      />
-                      <span className="truncate">{group.label}</span>
-                      <span className="text-[12px] font-normal text-[#64748d]">{parts.length}</span>
-                      {selectedCount > 0 && (
-                        <span className="rounded-full bg-[#ededfc] px-1.5 text-[11px] font-medium text-[#533afd]">
-                          {selectedCount} selected
-                        </span>
-                      )}
-                    </button>
-                    {isMuscles && (
-                      <button
-                        onClick={() => toggleGroupExpansion(group.key)}
-                        aria-pressed={isExpanding}
-                        aria-label={`${isExpanding ? "Collapse" : "Expand"} ${group.label} in 3D view`}
-                        title={isExpanding ? "Collapse this group" : "Expand this group to see deeper muscles"}
-                        className={cn(
-                          "rounded-[4px] p-1",
-                          isExpanding
-                            ? "bg-[#ededfc] text-[#533afd]"
-                            : "text-[#64748d] hover:bg-white hover:text-[#061b31]"
-                        )}
-                      >
-                        <Expand className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => toggleGroupVisibility(group.key)}
-                      aria-label={isHidden ? `Show ${group.label}` : `Hide ${group.label}`}
-                      title={isHidden ? "Show in 3D view" : "Hide in 3D view"}
-                      className="rounded-[4px] p-1 text-[#64748d] hover:bg-white hover:text-[#061b31]"
-                    >
-                      {isHidden ? (
-                        <EyeOff className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      ) : (
-                        <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      )}
-                    </button>
-                  </div>
-                  {open && (
-                    <ul className="pb-1">
-                      {parts.map((part) => {
-                        const isSelected = selectedIds.includes(part.id);
-                        const peeled = isMuscles && isPeeledAway(part, peelDepth);
-                        return (
-                          <li key={part.id}>
-                            <button
-                              data-part-id={part.id}
-                              onClick={(e) => selectPart(part.id, e.shiftKey || e.metaKey || e.ctrlKey)}
-                              className={cn(
-                                "flex w-full items-center gap-2 py-1 pl-8 pr-3 text-left text-[14px] transition-colors",
-                                isSelected
-                                  ? "bg-[#ededfc] text-[#533afd]"
-                                  : peeled
-                                    ? "text-[#A3ACB9] hover:bg-[#f6f9fc] hover:text-[#425466]"
-                                    : "text-[#425466] hover:bg-[#f6f9fc] hover:text-[#061b31]"
-                              )}
-                              title={peeled ? "Peeled away — click to reveal this layer" : undefined}
-                            >
-                              <span className="flex-1 truncate">{part.label}</span>
-                              {part.layer && part.layer > 1 && (
-                                <span className="shrink-0 text-[11px] text-[#697386]">{layerLabel(part.layer)}</span>
-                              )}
-                              {part.short && (
-                                <span className="shrink-0 rounded-full bg-[#f6f9fc] px-1.5 font-mono text-[11px] text-[#425466]">
-                                  {part.short}
-                                </span>
-                              )}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
+            <AnatomyPartList
+              layer={layer}
+              query={query}
+              expanded={expanded}
+              onToggleExpanded={toggleExpanded}
+              hiddenGroups={hiddenGroups}
+              onToggleVisibility={toggleGroupVisibility}
+              expandGroups={expandGroups}
+              expansion={expansion}
+              onToggleGroupExpansion={toggleGroupExpansion}
+              selectedIds={selectedIds}
+              peelDepth={peelDepth}
+              onSelect={selectIds}
+            />
           </div>
         </aside>
       </div>
@@ -481,30 +412,32 @@ function MuscleDepthControls({
 
 interface SelectionCardProps {
   layer: AnatomyLayer;
-  parts: AnatomyPart[];
-  onRemove: (id: string) => void;
+  items: SelectionItem[];
+  onRemove: (ids: string[]) => void;
   onFocus: () => void;
   onClear: () => void;
 }
 
-function SelectionCard({ layer, parts, onRemove, onFocus, onClear }: SelectionCardProps) {
-  if (parts.length === 0) {
+function SelectionCard({ layer, items, onRemove, onFocus, onClear }: SelectionCardProps) {
+  if (items.length === 0) {
     return (
       <div className="border-b border-[#e5edf5] px-4 py-3">
         <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Selection</p>
         <p className="mt-1 text-[14px] text-[#64748d]">
-          Click a {layer === "skeleton" ? "bone" : "muscle"} in the model or pick one below.
+          {layer === "skeleton"
+            ? "Click a bone in the model or pick one below."
+            : "Click a muscle group in the model or pick one below."}
         </p>
       </div>
     );
   }
 
-  const single = parts.length === 1 ? parts[0] : null;
+  const single = items.length === 1 ? items[0] : null;
   return (
     <div className="border-b border-[#e5edf5] px-4 py-3">
       <div className="flex items-center justify-between">
         <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
-          {parts.length} selected
+          {items.length === 1 ? "Selected" : `${items.length} selected`}
         </p>
         <div className="flex gap-1">
           <button
@@ -523,25 +456,20 @@ function SelectionCard({ layer, parts, onRemove, onFocus, onClear }: SelectionCa
         </div>
       </div>
       {single ? (
-        <div className="mt-1.5">
-          <p className="text-[16px] font-medium text-[#061b31]">{single.label}</p>
-          <p className="mt-0.5 text-[13px] text-[#64748d]">
-            {groupLabel(layer, single.group)}
-            {single.side !== "midline" && ` · ${single.side === "right" ? "Right" : "Left"} side`}
-            {single.layer && ` · ${layerLabel(single.layer)} layer`}
-          </p>
-        </div>
+        <SelectionDetail layer={layer} item={single} />
       ) : (
         <ul className="mt-2 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
-          {parts.map((p) => (
+          {items.map((item) => (
             <li
-              key={p.id}
+              key={item.key}
               className="flex items-center gap-1 rounded-full bg-[#ededfc] py-0.5 pl-2 pr-1 text-[12px] text-[#533afd]"
             >
-              <span className="max-w-50 truncate">{p.short ?? p.label}</span>
+              <span className="max-w-50 truncate">
+                {item.isGroup ? item.label : (findPart(layer, item.ids[0])?.short ?? item.label)}
+              </span>
               <button
-                onClick={() => onRemove(p.id)}
-                aria-label={`Remove ${p.label}`}
+                onClick={() => onRemove(item.ids)}
+                aria-label={`Remove ${item.label}`}
                 className="rounded-full p-0.5 hover:bg-white"
               >
                 <X className="h-3 w-3" strokeWidth={2} />
@@ -550,6 +478,40 @@ function SelectionCard({ layer, parts, onRemove, onFocus, onClear }: SelectionCa
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function SelectionDetail({ layer, item }: { layer: AnatomyLayer; item: SelectionItem }) {
+  const parts = item.ids.map((id) => findPart(layer, id)).filter((p): p is AnatomyPart => Boolean(p));
+  const first = parts[0];
+  if (!first) return null;
+
+  if (item.isGroup) {
+    const layers = [...new Set(parts.map((p) => p.layer).filter((l): l is MuscleLayer => Boolean(l)))].sort();
+    const members = [...new Set(parts.map((p) => p.label.replace(/\b(right|left) /i, "")))];
+    return (
+      <div className="mt-1.5">
+        <p className="text-[16px] font-medium text-[#061b31]">{item.label}</p>
+        <p className="mt-0.5 text-[13px] text-[#64748d]">
+          {groupLabel(layer, first.group)} · {parts.length} parts
+          {layers.length > 0 && ` · ${layers.map(layerLabel).join(", ")}`}
+        </p>
+        <p className="mt-1 line-clamp-3 text-[13px] text-[#425466]" title={members.join(", ")}>
+          {members.join(", ")}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-1.5">
+      <p className="text-[16px] font-medium text-[#061b31]">{first.label}</p>
+      <p className="mt-0.5 text-[13px] text-[#64748d]">
+        {groupLabel(layer, first.group)}
+        {first.side !== "midline" && ` · ${first.side === "right" ? "Right" : "Left"} side`}
+        {first.layer && ` · ${layerLabel(first.layer)} layer`}
+      </p>
     </div>
   );
 }
