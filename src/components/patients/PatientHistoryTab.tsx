@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { BranchRole } from "@prisma/client";
 import { PatientVisitsTab } from "@/components/patients/PatientVisitsTab";
 import { PastAppointmentsTab } from "@/components/patients/PastAppointmentsTab";
+import { replaceUrl } from "@/lib/url-state";
 
 interface PatientHistoryTabProps {
   patientId: string;
@@ -22,7 +23,6 @@ export function PatientHistoryTab({
   patientId,
   branchRole,
 }: PatientHistoryTabProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const activeSub: SubTab = useMemo(() => {
@@ -42,12 +42,9 @@ export function PatientHistoryTab({
         params.delete("range");
         params.delete("page");
       }
-      router.replace(
-        `/dashboard/patients/${patientId}/details?${params.toString()}`,
-        { scroll: false },
-      );
+      replaceUrl(`/dashboard/patients/${patientId}/details?${params.toString()}`);
     },
-    [router, searchParams, patientId],
+    [searchParams, patientId],
   );
 
   return (

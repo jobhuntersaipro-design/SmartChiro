@@ -197,14 +197,15 @@ describe('PatientHistoryTab — sub-tab URL switching', () => {
     expect(url2).toContain('tab=history')
     expect(url2).toContain('sub=appointments')
 
-    // Verify the source emits a router.replace call (no history pollution)
+    // Verify the source replaces the URL (no history pollution, and no server
+    // re-render — replaceUrl uses history.replaceState)
     const filePath = path.resolve(
       __dirname,
       '../../components/patients/PatientHistoryTab.tsx',
     )
     expect(fs.existsSync(filePath)).toBe(true)
     const src = fs.readFileSync(filePath, 'utf-8')
-    expect(src).toMatch(/router\.replace/)
+    expect(src).toMatch(/replaceUrl\(/)
     // Emits the `sub` param to URLSearchParams (params.set("sub", ...))
     expect(src).toMatch(/["']sub["']/)
   })

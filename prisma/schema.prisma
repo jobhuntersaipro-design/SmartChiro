@@ -520,6 +520,8 @@ model Visit {
   @@index([doctorId])
   @@index([visitDate])
   @@index([visitType])
+  // Patient visit history, newest first.
+  @@index([patientId, visitDate])
 }
 
 model VisitQuestionnaire {
@@ -587,6 +589,8 @@ model Xray {
   @@index([visitId])
   @@index([status])
   @@index([uploadedById])
+  // Patient X-ray lists: filter by patient + status, newest first.
+  @@index([patientId, status, createdAt])
 }
 
 model Annotation {
@@ -619,6 +623,8 @@ model Annotation {
 
   @@index([xrayId])
   @@index([createdById])
+  // Latest annotation for an X-ray (viewer open, multi-view slot load).
+  @@index([xrayId, updatedAt])
 }
 
 // Captures every (xrayId, landmarkName) pair where the user dragged an AI-
@@ -726,6 +732,10 @@ model Appointment {
   // together. Without this Postgres can only use one of the single-column
   // indexes and scans the rest.
   @@index([branchId, dateTime])
+  // Per-doctor day/week views and per-patient history both filter by the
+  // owner column and sort/range on dateTime.
+  @@index([doctorId, dateTime])
+  @@index([patientId, dateTime])
 }
 
 // ─── Billing ───

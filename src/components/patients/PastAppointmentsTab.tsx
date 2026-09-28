@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Loader2, X, ChevronDown, Calendar } from "lucide-react";
 import type { BranchRole } from "@prisma/client";
 import type {
@@ -17,6 +17,7 @@ import {
 } from "@/components/patients/PastAppointmentTable";
 import { EditPastAppointmentDialog } from "@/components/patients/EditPastAppointmentDialog";
 import { IssueInvoiceDialog } from "@/components/patients/IssueInvoiceDialog";
+import { replaceUrl } from "@/lib/url-state";
 
 interface PastAppointmentsTabProps {
   patientId: string;
@@ -75,7 +76,6 @@ export function PastAppointmentsTab({
   patientId,
   branchRole,
 }: PastAppointmentsTabProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Initial state hydrated from URL so deep-links work + back button restores.
@@ -123,13 +123,10 @@ export function PastAppointmentsTab({
     else params.delete("range");
     if (page !== 1) params.set("page", String(page));
     else params.delete("page");
-    router.replace(
-      `/dashboard/patients/${patientId}/details?${params.toString()}`,
-      { scroll: false },
-    );
+    replaceUrl(`/dashboard/patients/${patientId}/details?${params.toString()}`);
     // searchParams intentionally excluded — we only push when local state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statuses, doctorId, range, page, patientId, router]);
+  }, [statuses, doctorId, range, page, patientId]);
 
   useEffect(() => {
     syncUrl();

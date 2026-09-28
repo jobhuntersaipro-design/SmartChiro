@@ -53,71 +53,81 @@ export async function GET(
   const url = new URL(req.url);
   const includeDetail = url.searchParams.get("include") === "detail";
 
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-    include: {
-      doctor: { select: { id: true, name: true } },
-      branch: { select: { id: true, name: true } },
-      _count: { select: { visits: true, xrays: true, appointments: true, documents: true } },
-      visits: {
-        select: { id: true, visitDate: true, subjective: true, visitType: true, appointmentId: true },
-        orderBy: { visitDate: "desc" },
-        take: 5,
-      },
-      xrays: {
-        select: {
-          id: true, title: true, bodyRegion: true, viewType: true, status: true,
-          thumbnailUrl: true, createdAt: true,
-          _count: { select: { annotations: true } },
-          notes: {
-            take: 1, orderBy: { createdAt: "desc" },
-            select: { bodyMd: true },
-          },
+  // The patient row and the detail stats are independent — fetch them
+  // together instead of one round trip after another.
+  const [patient, recentQuestionnaires, upcoming, grouped] = await Promise.all([
+    prisma.patient.findUnique({
+      where: { id: patientId },
+      include: {
+        doctor: { select: { id: true, name: true } },
+        branch: { select: { id: true, name: true } },
+        _count: { select: { visits: true, xrays: true, appointments: true, documents: true } },
+        visits: {
+          select: { id: true, visitDate: true, subjective: true, visitType: true, appointmentId: true },
+          orderBy: { visitDate: "desc" },
+          take: 5,
         },
-        where: { status: { in: ["READY", "ARCHIVED"] } },
-        orderBy: { createdAt: "desc" },
+        xrays: {
+          select: {
+            id: true, title: true, bodyRegion: true, viewType: true, status: true,
+            thumbnailUrl: true, createdAt: true,
+            _count: { select: { annotations: true } },
+            notes: {
+              take: 1, orderBy: { createdAt: "desc" },
+              select: { bodyMd: true },
+            },
+          },
+          where: { status: { in: ["READY", "ARCHIVED"] } },
+          orderBy: { createdAt: "desc" },
+        },
       },
-    },
-  });
+    }),
+    // Recovery trend: average overallImprovement from last 5 questionnaires
+    includeDetail
+      ? prisma.visitQuestionnaire.findMany({
+          where: { visit: { patientId } },
+          orderBy: { visit: { visitDate: "desc" } },
+          take: 5,
+          select: { overallImprovement: true },
+        })
+      : null,
+    // Next upcoming appointment
+    includeDetail
+      ? prisma.appointment.findFirst({
+          where: {
+            patientId,
+            dateTime: { gte: new Date() },
+            status: { in: ["SCHEDULED", "CHECKED_IN"] },
+          },
+          orderBy: { dateTime: "asc" },
+          select: { dateTime: true },
+        })
+      : null,
+    // Visit counts by type — let Postgres aggregate instead of loading every
+    // visit row into Node.
+    includeDetail
+      ? prisma.visit.groupBy({
+          by: ["visitType"],
+          where: { patientId },
+          _count: { _all: true },
+        })
+      : null,
+  ]);
 
   if (!patient) {
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });
   }
 
-  // Build detail stats if requested
   let recoveryTrend: number | null = null;
   let nextAppointment: string | null = null;
   let visitsByType: Record<string, number> | null = null;
 
   if (includeDetail) {
-    // Recovery trend: average overallImprovement from last 5 questionnaires
-    const recentQuestionnaires = await prisma.visitQuestionnaire.findMany({
-      where: { visit: { patientId } },
-      orderBy: { visit: { visitDate: "desc" } },
-      take: 5,
-      select: { overallImprovement: true },
-    });
-
-    if (recentQuestionnaires.length > 0) {
+    if (recentQuestionnaires && recentQuestionnaires.length > 0) {
       const sum = recentQuestionnaires.reduce((acc, q) => acc + q.overallImprovement, 0);
       recoveryTrend = Math.round((sum / recentQuestionnaires.length) * 10) / 10;
     }
-
-    // Next upcoming appointment
-    const upcoming = await prisma.appointment.findFirst({
-      where: {
-        patientId,
-        dateTime: { gte: new Date() },
-        status: { in: ["SCHEDULED", "CHECKED_IN"] },
-      },
-      orderBy: { dateTime: "asc" },
-      select: { dateTime: true },
-    });
     nextAppointment = upcoming?.dateTime.toISOString() ?? null;
-
-    // Visit counts by type — let Postgres aggregate instead of loading every
-    // visit row into Node (a patient with hundreds of visits would otherwise
-    // ship a large result set just to compute a 5-bucket count).
     visitsByType = {
       initial: 0,
       follow_up: 0,
@@ -125,12 +135,7 @@ export async function GET(
       reassessment: 0,
       discharge: 0,
     };
-    const grouped = await prisma.visit.groupBy({
-      by: ["visitType"],
-      where: { patientId },
-      _count: { _all: true },
-    });
-    for (const row of grouped) {
+    for (const row of grouped ?? []) {
       const t = row.visitType ?? "follow_up";
       if (t in visitsByType) visitsByType[t] = row._count._all;
     }

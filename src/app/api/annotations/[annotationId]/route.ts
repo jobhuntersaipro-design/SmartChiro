@@ -10,7 +10,8 @@ const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB warning
 /**
  * Persist any AI-landmark drag corrections from the saved canvasState into
  * the AiLandmarkCorrection table. Each row is keyed on (xrayId,
- * landmarkName) and upserted so the latest user-corrected position wins.
+ * landmarkName) and upserted so the latest user-corrected position wins;
+ * unchanged positions are skipped.
  *
  * Fail-soft: any error here is logged but never propagates — the annotation
  * save itself must succeed even if the learning-data write fails (Xray width
@@ -36,36 +37,49 @@ async function captureLandmarkCorrections(
     if (!annotation || !annotation.xray.width || !annotation.xray.height) return;
 
     const { xrayId, createdById, xray } = annotation;
-    // upsert one row per (xrayId, landmarkName). Sequential is fine — N≤16
-    // landmarks per X-ray, so the overhead is negligible vs the gain of
-    // straightforward error handling.
-    for (const row of rows) {
-      await prisma.aiLandmarkCorrection.upsert({
-        where: {
-          xrayId_landmarkName: { xrayId, landmarkName: row.landmarkName },
-        },
-        update: {
-          userId: createdById,
-          displayName: row.displayName,
-          finalX: row.finalX,
-          finalY: row.finalY,
-          imageWidth: xray.width!,
-          imageHeight: xray.height!,
-        },
-        create: {
-          xrayId,
-          userId: createdById,
-          landmarkName: row.landmarkName,
-          displayName: row.displayName,
-          aiX: row.aiX,
-          aiY: row.aiY,
-          finalX: row.finalX,
-          finalY: row.finalY,
-          imageWidth: xray.width!,
-          imageHeight: xray.height!,
-        },
-      });
-    }
+    // Autosave runs every few seconds: only write landmarks whose corrected
+    // position actually changed since the last save, in one transaction,
+    // instead of up to 16 sequential upserts per save.
+    const existing = await prisma.aiLandmarkCorrection.findMany({
+      where: { xrayId },
+      select: { landmarkName: true, finalX: true, finalY: true },
+    });
+    const stored = new Map(existing.map((e) => [e.landmarkName, e]));
+    const changed = rows.filter((row) => {
+      const prev = stored.get(row.landmarkName);
+      return !prev || prev.finalX !== row.finalX || prev.finalY !== row.finalY;
+    });
+    if (changed.length === 0) return;
+
+    await prisma.$transaction(
+      changed.map((row) =>
+        prisma.aiLandmarkCorrection.upsert({
+          where: {
+            xrayId_landmarkName: { xrayId, landmarkName: row.landmarkName },
+          },
+          update: {
+            userId: createdById,
+            displayName: row.displayName,
+            finalX: row.finalX,
+            finalY: row.finalY,
+            imageWidth: xray.width!,
+            imageHeight: xray.height!,
+          },
+          create: {
+            xrayId,
+            userId: createdById,
+            landmarkName: row.landmarkName,
+            displayName: row.displayName,
+            aiX: row.aiX,
+            aiY: row.aiY,
+            finalX: row.finalX,
+            finalY: row.finalY,
+            imageWidth: xray.width!,
+            imageHeight: xray.height!,
+          },
+        }),
+      ),
+    );
   } catch (err) {
     console.error("Failed to capture landmark corrections (fail-soft):", err);
   }

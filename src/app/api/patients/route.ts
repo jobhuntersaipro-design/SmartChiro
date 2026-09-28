@@ -41,7 +41,7 @@ function mapPatientToResponse(p: {
   doctor: { id: string; name: string | null } | null;
   _count: { visits: number; xrays: number };
   visits: { visitDate: Date }[];
-  xrays: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; _count: { annotations: number } }[];
+  xrays?: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; _count: { annotations: number } }[];
   appointments?: { id: string; dateTime: Date; status: string; doctorId: string; duration: number; notes: string | null }[];
 }) {
   return {
@@ -95,7 +95,7 @@ function mapPatientToResponse(p: {
         }
       : null,
     createdAt: p.createdAt.toISOString(),
-    xrays: p.xrays.map((x) => ({
+    xrays: (p.xrays ?? []).map((x) => ({
       id: x.id,
       title: x.title,
       bodyRegion: x.bodyRegion,
@@ -121,6 +121,8 @@ export async function GET(request: NextRequest) {
     const branchIdFilter = searchParams.get('branchId') || null
     const statusFilter = searchParams.get('status') || null
     const doctorIdFilter = searchParams.get('doctorId') || null
+    // ?picker=1 — the booking dialog's patient search: 20 rows, names only.
+    const pickerMode = searchParams.get('picker') === '1'
 
     // Determine user's role in their active branch
     const user = await prisma.user.findUnique({
@@ -177,26 +179,25 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    if (pickerMode) {
+      const options = await prisma.patient.findMany({
+        where,
+        select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+        orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+        take: 20,
+      })
+      return NextResponse.json(options)
+    }
+
     const now = new Date()
+    // The list shows counts, last visit and the next appointment. It used to
+    // also embed every patient's X-rays with annotation counts, which no
+    // list view reads (the detail endpoint serves them).
     const patients = await prisma.patient.findMany({
       where,
       include: {
         doctor: { select: { id: true, name: true } },
         _count: { select: { visits: true, xrays: true } },
-        xrays: {
-          where: { status: 'READY' },
-          select: {
-            id: true,
-            title: true,
-            bodyRegion: true,
-            viewType: true,
-            status: true,
-            thumbnailUrl: true,
-            createdAt: true,
-            _count: { select: { annotations: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-        },
         visits: {
           select: { visitDate: true },
           orderBy: { visitDate: 'desc' },

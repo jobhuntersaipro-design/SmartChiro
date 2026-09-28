@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Stethoscope, Users, CalendarCheck, ImageIcon, TrendingUp,
@@ -15,6 +15,7 @@ import { DoctorPatientsTab } from "./DoctorPatientsTab";
 import { DoctorScheduleTab } from "./DoctorScheduleTab";
 import { DoctorProfessionalTab } from "./DoctorProfessionalTab";
 import { DoctorAvailabilityTab } from "./DoctorAvailabilityTab";
+import { replaceUrl } from "@/lib/url-state";
 
 interface DoctorDetailViewProps {
   doctorId: string;
@@ -45,7 +46,6 @@ function getInitials(name: string | null, email: string): string {
 }
 
 export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: DoctorDetailViewProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabId) || "overview";
 
@@ -73,7 +73,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
 
   function handleTabChange(tab: TabId) {
     setActiveTab(tab);
-    router.replace(`/dashboard/doctors/${doctorId}?tab=${tab}`, { scroll: false });
+    replaceUrl(`/dashboard/doctors/${doctorId}?tab=${tab}`);
   }
 
   if (loading) {

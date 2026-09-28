@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Building2, Phone, Mail, Globe, Pencil,
@@ -14,6 +14,7 @@ import { BranchDoctorsTab } from "./BranchDoctorsTab";
 import { BranchScheduleTab } from "./BranchScheduleTab";
 import { BranchPatientsTab } from "./BranchPatientsTab";
 import { BranchSettingsTab } from "./BranchSettingsTab";
+import { replaceUrl } from "@/lib/url-state";
 
 interface BranchDetailViewProps {
   branchId: string;
@@ -32,7 +33,6 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 export function BranchDetailView({ branchId, userId, userName }: BranchDetailViewProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabId) || "overview";
 
@@ -64,7 +64,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
 
   function handleTabChange(tab: TabId) {
     setActiveTab(tab);
-    router.replace(`/dashboard/branches/${branchId}?tab=${tab}`, { scroll: false });
+    replaceUrl(`/dashboard/branches/${branchId}?tab=${tab}`);
   }
 
   if (loading) {

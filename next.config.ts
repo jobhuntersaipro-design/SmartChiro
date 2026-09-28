@@ -16,6 +16,17 @@ function r2Hostname(): string {
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // The anatomy GLBs are ~23 MB and change only when rebuilt (same file
+  // names), so cache for a day and revalidate in the background after that,
+  // instead of the default max-age=0 round trip on every visit.
+  async headers() {
+    return [
+      {
+        source: "/models/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=2592000" }],
+      },
+    ];
+  },
   devIndicators: false,
   images: {
     // Allow X-ray thumbnails served from R2 through next/image's optimizer.

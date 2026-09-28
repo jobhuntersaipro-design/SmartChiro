@@ -38,8 +38,8 @@ export function PatientCombobox({ value, onChange, disabled }: Props) {
       setLoading(true);
       try {
         const url = query.trim()
-          ? `/api/patients?search=${encodeURIComponent(query.trim())}`
-          : "/api/patients";
+          ? `/api/patients?picker=1&search=${encodeURIComponent(query.trim())}`
+          : "/api/patients?picker=1";
         const res = await fetch(url);
         if (!res.ok) {
           setResults([]);

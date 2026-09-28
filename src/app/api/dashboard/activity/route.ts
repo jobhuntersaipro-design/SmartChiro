@@ -38,78 +38,58 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ activities: [] });
   }
 
-  // Gather recent activities from multiple tables
-  const activities: ActivityItem[] = [];
-
-  // Recent annotations
-  const annotations = await prisma.annotation.findMany({
-    where: {
-      xray: { patient: { branchId: { in: branchIds } } },
-    },
-    include: {
-      createdBy: { select: { name: true } },
-      xray: {
-        include: {
-          patient: { select: { firstName: true, lastName: true, branch: { select: { name: true } } } },
-        },
+  // Three independent lookups, run together. Each selects only what the feed
+  // shows — the annotation query used to load full canvasState JSON.
+  const patientRef = { select: { firstName: true, lastName: true, branch: { select: { name: true } } } } as const;
+  const [annotations, patients, xrays] = await Promise.all([
+    prisma.annotation.findMany({
+      where: { xray: { patient: { branchId: { in: branchIds } } } },
+      select: {
+        id: true,
+        updatedAt: true,
+        createdBy: { select: { name: true } },
+        xray: { select: { patient: patientRef } },
       },
-    },
-    orderBy: { updatedAt: "desc" },
-    take: limit,
-  });
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+    }),
+    prisma.patient.findMany({
+      where: { branchId: { in: branchIds } },
+      select: { id: true, firstName: true, lastName: true, createdAt: true, branch: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    }),
+    prisma.xray.findMany({
+      where: { patient: { branchId: { in: branchIds } }, status: "READY" },
+      select: { id: true, createdAt: true, patient: patientRef },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    }),
+  ]);
 
-  for (const a of annotations) {
-    activities.push({
+  const activities: ActivityItem[] = [
+    ...annotations.map((a) => ({
       id: `annotation-${a.id}`,
-      type: "annotation",
+      type: "annotation" as const,
       description: `${a.createdBy.name ?? "A doctor"} annotated X-ray for ${a.xray.patient.firstName} ${a.xray.patient.lastName}`,
       timestamp: a.updatedAt.toISOString(),
       branchName: a.xray.patient.branch.name,
-    });
-  }
-
-  // Recent patients
-  const patients = await prisma.patient.findMany({
-    where: { branchId: { in: branchIds } },
-    include: {
-      branch: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
-
-  for (const p of patients) {
-    activities.push({
+    })),
+    ...patients.map((p) => ({
       id: `patient-${p.id}`,
-      type: "patient",
+      type: "patient" as const,
       description: `New patient ${p.firstName} ${p.lastName} registered`,
       timestamp: p.createdAt.toISOString(),
       branchName: p.branch.name,
-    });
-  }
-
-  // Recent X-ray uploads
-  const xrays = await prisma.xray.findMany({
-    where: {
-      patient: { branchId: { in: branchIds } },
-      status: "READY",
-    },
-    include: {
-      patient: { select: { firstName: true, lastName: true, branch: { select: { name: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
-
-  for (const x of xrays) {
-    activities.push({
+    })),
+    ...xrays.map((x) => ({
       id: `xray-${x.id}`,
-      type: "xray",
+      type: "xray" as const,
       description: `X-ray uploaded for ${x.patient.firstName} ${x.patient.lastName}`,
       timestamp: x.createdAt.toISOString(),
       branchName: x.patient.branch.name,
-    });
-  }
+    })),
+  ];
 
   // Sort by timestamp descending, take limit
   activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());

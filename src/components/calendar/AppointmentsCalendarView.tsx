@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
@@ -38,6 +38,7 @@ import type { CalendarAppointment, ConflictItem, AvailabilitySlot } from "@/type
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "./calendar.css";
+import { replaceUrl } from "@/lib/url-state";
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({
@@ -131,7 +132,6 @@ export function AppointmentsCalendarView({
   hideHeader = false,
   disableUrlSync = false,
 }: Props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const isAdmin = useMemo(
@@ -192,8 +192,8 @@ export function AppointmentsCalendarView({
     if (doctorIds.length > 0) params.set("doctors", doctorIds.join(","));
     params.set("view", PARAM_FROM_VIEW[view] ?? "week");
     params.set("date", date.toISOString().split("T")[0]);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [branchId, doctorIds, view, date, router, disableUrlSync]);
+    replaceUrl(`?${params.toString()}`);
+  }, [branchId, doctorIds, view, date, disableUrlSync]);
 
   // ─── Fetch appointments + availability when window changes ───
   const fetchAppointments = useCallback(async () => {

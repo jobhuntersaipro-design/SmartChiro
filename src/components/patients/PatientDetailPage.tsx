@@ -37,6 +37,7 @@ import {
   formatDobWithAge,
   formatAppointmentDateTime,
 } from "@/lib/format";
+import { replaceUrl } from "@/lib/url-state";
 
 interface PatientDetailPageProps {
   patientId: string;
@@ -143,10 +144,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
     // so the old "Visits" landing experience is preserved (legacy ?tab=visits
     // also resolves to History/Visits).
     const sub = tab === "history" ? "&sub=visits" : "";
-    router.replace(
-      `/dashboard/patients/${patientId}/details?tab=${tab}${sub}`,
-      { scroll: false },
-    );
+    replaceUrl(`/dashboard/patients/${patientId}/details?tab=${tab}${sub}`);
   }
 
   async function handleSave(pid: string, data: Record<string, unknown>) {

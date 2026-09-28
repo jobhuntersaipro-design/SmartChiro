@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Plus, List, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
 import { AppointmentsCalendarView } from "@/components/calendar/AppointmentsCalendarView";
 import { AppointmentsListView } from "./AppointmentsListView";
 import type { AppointmentTabId } from "@/lib/appointment-tabs";
+import { replaceUrl } from "@/lib/url-state";
 
 type ViewMode = "list" | "calendar";
 
@@ -43,7 +44,6 @@ function parseDateParam(s: string | null): Date {
 }
 
 export function AppointmentsPageShell({ currentUserId, branches }: Props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // ─── View mode ───
@@ -111,10 +111,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
       params.set("tab", activeTab);
       if (selectedAppointmentId) params.set("appointment", selectedAppointmentId);
     }
-    router.replace(`?${params.toString()}`, { scroll: false });
-    // `router` is stable across renders in Next App Router — excluded to avoid
-    // a needless redundant URL-replace cycle.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    replaceUrl(`?${params.toString()}`);
   }, [viewMode, branchId, doctorIds, selectedDate, activeTab, selectedAppointmentId]);
 
   return (

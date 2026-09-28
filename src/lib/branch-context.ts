@@ -18,17 +18,17 @@ export interface BranchContext {
  * Cached per request, so a page and its layout share one query.
  */
 export const loadBranchContext = cache(async (userId: string): Promise<BranchContext> => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      activeBranchId: true,
-      branchMemberships: {
-        orderBy: { createdAt: 'asc' },
-        select: { role: true, branch: { select: { id: true, name: true } } },
-      },
-    },
-  })
-  const branches = (user?.branchMemberships ?? []).map((m) => ({ id: m.branch.id, name: m.branch.name, role: m.role }))
-  const active = branches.find((b) => b.id === user?.activeBranchId) ?? branches[0] ?? null
+  // One round trip (Prisma's nested select would issue three), since this runs
+  // for every signed-in request. Parameterised via the tagged template.
+  const rows = await prisma.$queryRaw<{ id: string; name: string; role: BranchRole; activeBranchId: string | null }[]>`
+    SELECT b."id", b."name", m."role", u."activeBranchId"
+    FROM "BranchMember" m
+    JOIN "Branch" b ON b."id" = m."branchId"
+    JOIN "User" u ON u."id" = m."userId"
+    WHERE m."userId" = ${userId}
+    ORDER BY m."createdAt" ASC`
+  const branches = rows.map(({ id, name, role }) => ({ id, name, role }))
+  const activeId = rows[0]?.activeBranchId ?? null
+  const active = branches.find((b) => b.id === activeId) ?? branches[0] ?? null
   return { activeBranchId: active?.id ?? null, branchRole: active?.role ?? null, branches }
 })
