@@ -254,7 +254,17 @@ Recall is where clinics win back revenue; today only appointment reminders exist
 
 ## Phase 7 — Online booking and patient portal
 
-_Detailed before build._
+### 7.1 Online booking link
+- Branch settings → **Online booking** (OWNER/ADMIN): on/off, link slug (default from the branch name, unique), treatments offered, doctors bookable (default all clinicians), lead time (default 2 h), how far ahead (default 30 days), slot step (default 15 min), note shown to patients. The card shows the link with Copy and a WhatsApp share (`wa.me/?text=`).
+- Public page `/book/[slug]` (no login, mobile-first): treatment → doctor or "Any doctor" → date (days with no slots disabled) → time → details (name, phone required, email and IC optional, notes, PDPA data-processing consent required, marketing consent optional) → confirmation with the booking details, an `.ics` download and a WhatsApp link to the clinic.
+- Slots = doctor's weekly schedule (else branch hours) ∩ branch hours − breaks − time off − existing non-cancelled appointments − lead time, stepping by the slot size, for the treatment's default duration. The same engine re-checks on submit (409 `slot_taken` → pick another).
+- Patient matching in the branch by normalised phone (reuse the record, fill empty contact fields), else a new patient (status `new`, doctor = booked doctor). `Appointment.source` (`STAFF | ONLINE`, default STAFF); audit entry "Online booking"; the doctor gets the existing booking email and branch managers get a notification email (fail-soft). Reminders apply as for any booking.
+- Abuse limits: honeypot field, per-IP rate limit, at most 2 online bookings per phone per day, zod validation, no patient data returned beyond the booking itself.
+
+### 7.2 Patient portal
+- `/portal`: sign in with email (one-time 6-digit code by email, 10-minute expiry, 5 attempts, rate-limited); WhatsApp code later when an authentication template exists. A session covers every patient record (across branches) with that verified email.
+- Portal shows upcoming appointments (cancel up to the branch's cutoff, default 24 h; "Book again" links to the booking page), packages with sessions left and expiry, invoices and receipts (PDF download through portal-authorised routes), and contact details (read-only, "ask the clinic to change").
+- Sessions: `PatientPortalSession` (hashed token, patient email, expiry 30 days), httpOnly secure cookie; codes stored hashed. No clinical notes or X-rays in the portal.
 
 ## Phase 8 — MyInvois, commissions, T&CM expiry, accounting export
 
