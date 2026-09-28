@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
+import { loadBranchContext } from '@/lib/branch-context'
+import { narrowScope, scopedWhere } from '@/lib/branch-scope'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -39,6 +42,7 @@ function mapPatientToResponse(p: {
   doctorId: string; branchId: string;
   createdAt: Date;
   doctor: { id: string; name: string | null } | null;
+  branch?: { name: string } | null;
   _count: { visits: number; xrays: number };
   visits: { visitDate: Date }[];
   xrays?: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; annotations: { shapeCount: number }[] }[];
@@ -81,6 +85,7 @@ function mapPatientToResponse(p: {
     doctorId: p.doctorId,
     doctorName: p.doctor?.name ?? 'Unknown',
     branchId: p.branchId,
+    branchName: p.branch?.name ?? null,
     lastVisit: p.visits[0]?.visitDate?.toISOString() ?? null,
     totalVisits: p._count.visits,
     totalXrays: p._count.xrays,
@@ -124,60 +129,36 @@ export async function GET(request: NextRequest) {
     // ?picker=1 — the booking dialog's patient search: 20 rows, names only.
     const pickerMode = searchParams.get('picker') === '1'
 
-    // Determine user's role in their active branch
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        activeBranchId: true,
-        branchMemberships: {
-          select: { branchId: true, role: true },
-        },
-      },
-    })
+    // Scope follows the sidebar branch switcher (one branch or "All
+    // branches"); an explicit ?branchId= narrows it to that member branch.
+    // In each branch, DOCTORs see only their own patients.
+    const scope = narrowScope(await loadBranchContext(userId), branchIdFilter)
+    const and: Prisma.PatientWhereInput[] = [scopedWhere(scope, userId)]
 
-    const activeBranchId = branchIdFilter || user?.activeBranchId || user?.branchMemberships[0]?.branchId
-    const membershipInBranch = user?.branchMemberships.find(
-      (m) => m.branchId === activeBranchId
-    )
-    const isOwnerOrAdmin = membershipInBranch?.role === 'OWNER' || membershipInBranch?.role === 'ADMIN'
-
-    // Build where clause
-    const where: Record<string, unknown> = {}
-
-    if (isOwnerOrAdmin && activeBranchId) {
-      // OWNER/ADMIN: see all patients in the branch
-      where.branchId = activeBranchId
-      // OWNER/ADMIN can filter by doctorId
-      if (doctorIdFilter && doctorIdFilter !== 'all') {
-        where.doctorId = doctorIdFilter
-      }
-    } else {
-      // DOCTOR: see only own patients, AND only within branches they are
-      // actually a member of (so an orphaned doctorId reference on a patient
-      // in another branch can't leak that patient).
-      const memberBranchIds = user?.branchMemberships.map((m) => m.branchId) ?? []
-      const targetBranchIds = branchIdFilter
-        ? memberBranchIds.includes(branchIdFilter) ? [branchIdFilter] : []
-        : memberBranchIds
-      where.doctorId = userId
-      where.branchId = { in: targetBranchIds }
+    // Doctor filter: only meaningful where the caller sees whole branches.
+    const managesAll = scope.branchIds.length > 0 && scope.branchIds.every((id) => scope.roles[id] !== 'DOCTOR')
+    if (managesAll && doctorIdFilter && doctorIdFilter !== 'all') {
+      and.push({ doctorId: doctorIdFilter })
     }
 
     // Status filter
     if (statusFilter && statusFilter !== 'all') {
-      where.status = statusFilter
+      and.push({ status: statusFilter })
     }
 
     // Search filter — now includes IC number
     if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { icNumber: { contains: search, mode: 'insensitive' } },
-      ]
+      and.push({
+        OR: [
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+          { icNumber: { contains: search, mode: 'insensitive' } },
+        ],
+      })
     }
+    const where: Prisma.PatientWhereInput = { AND: and }
 
     if (pickerMode) {
       const options = await prisma.patient.findMany({
@@ -197,6 +178,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         doctor: { select: { id: true, name: true } },
+        branch: { select: { name: true } },
         _count: { select: { visits: true, xrays: true } },
         visits: {
           select: { visitDate: true },

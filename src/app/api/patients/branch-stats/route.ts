@@ -3,10 +3,11 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { clinicCalendar } from '@/lib/clinic-time'
 import { ACTIVE_PATIENT_STATUS } from '@/lib/stats-scope'
+import { loadBranchContext } from '@/lib/branch-context'
 
-// Returns per-branch patient stats for branches the current user has OWNER/ADMIN
-// access to. DOCTOR users get a single entry for their active branch with
-// counts scoped to their own patients.
+// Returns per-branch patient stats for the branches in the user's current
+// scope (the sidebar branch, or every branch in "All branches"). In branches
+// where the user is a DOCTOR, counts cover their own patients only.
 //
 // Response: { role, scope, branches: [{ branchId, branchName, totalPatients,
 //   activePatients, newThisMonth, upcomingThisWeek }] }
@@ -19,45 +20,20 @@ export async function GET() {
     }
     const userId = session.user.id
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        activeBranchId: true,
-        branchMemberships: {
-          select: {
-            branchId: true,
-            role: true,
-            branch: { select: { id: true, name: true } },
-          },
-        },
-      },
-    })
-
-    const memberships = user?.branchMemberships ?? []
-    const activeBranchId = user?.activeBranchId ?? memberships[0]?.branchId ?? null
-    const activeMembership = memberships.find((m) => m.branchId === activeBranchId)
-    const isOwnerOrAdmin = activeMembership?.role === 'OWNER' || activeMembership?.role === 'ADMIN'
+    // Branches follow the sidebar branch switcher (one branch or "All
+    // branches"); in branches where the user is a DOCTOR, own patients only.
+    const context = await loadBranchContext(userId)
 
     const now = new Date()
     const cal = clinicCalendar(now)
     const monthStart = cal.monthStart
     const weekEnd = cal.addDays(7)
 
-    // For OWNER/ADMIN: include every branch they're an OWNER/ADMIN in.
-    // For DOCTOR: just their active branch with own-patient scope.
-    const branchScopes = isOwnerOrAdmin
-      ? memberships
-          .filter((m) => m.role === 'OWNER' || m.role === 'ADMIN')
-          .map((m) => ({ branchId: m.branchId, branchName: m.branch.name, scopedToOwn: false }))
-      : activeBranchId && activeMembership
-        ? [
-            {
-              branchId: activeBranchId,
-              branchName: activeMembership.branch.name,
-              scopedToOwn: true,
-            },
-          ]
-        : []
+    const branchScopes = context.branchIds.map((branchId) => ({
+      branchId,
+      branchName: context.branches.find((b) => b.id === branchId)?.name ?? '',
+      scopedToOwn: context.roles[branchId] === 'DOCTOR',
+    }))
 
     const branches = await Promise.all(
       branchScopes.map(async ({ branchId, branchName, scopedToOwn }) => {
@@ -90,8 +66,8 @@ export async function GET() {
     )
 
     return NextResponse.json({
-      role: activeMembership?.role ?? 'DOCTOR',
-      scope: isOwnerOrAdmin ? 'all-branches' : 'own-patients',
+      role: context.branchRole ?? 'DOCTOR',
+      scope: branchScopes.every((b) => b.scopedToOwn) ? 'own-patients' : 'all-branches',
       branches,
     })
   } catch (error) {

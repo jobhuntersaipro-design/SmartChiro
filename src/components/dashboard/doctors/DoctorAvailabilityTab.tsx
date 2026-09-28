@@ -175,6 +175,7 @@ function TimeOffSection({
               <label className="block text-[12px] font-medium text-[#425466] mb-1">Type</label>
               <Select
                 value={draft.type}
+                items={LEAVE_TYPES}
                 onValueChange={(v) => setDraft({ ...draft, type: v as typeof draft.type })}
               >
                 <SelectTrigger className="h-9 rounded-md text-[13px]">
@@ -195,6 +196,7 @@ function TimeOffSection({
               </label>
               <Select
                 value={draft.branchId || "all"}
+                items={[{ value: "all", label: "All branches" }, ...doctor.branches.map((b) => ({ value: b.id, label: b.name }))]}
                 onValueChange={(v) =>
                   setDraft({ ...draft, branchId: v === "all" || v == null ? "" : v })
                 }
@@ -406,7 +408,11 @@ function BreakTimeSection({
           </p>
         </div>
         {doctor.branches.length > 1 && (
-          <Select value={activeBranch} onValueChange={(v) => v && setActiveBranch(v)}>
+          <Select
+            value={activeBranch}
+            items={doctor.branches.map((b) => ({ value: b.id, label: b.name }))}
+            onValueChange={(v) => v && setActiveBranch(v)}
+          >
             <SelectTrigger className="h-8 w-45 rounded-md text-[13px]">
               <SelectValue />
             </SelectTrigger>
@@ -436,6 +442,7 @@ function BreakTimeSection({
             >
               <Select
                 value={String(s.dayOfWeek)}
+                items={DAYS.map((d, i) => ({ value: String(i), label: d }))}
                 onValueChange={(v) =>
                   v && updateSlot(idx, { dayOfWeek: parseInt(v, 10) })
                 }

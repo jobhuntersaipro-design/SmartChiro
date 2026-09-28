@@ -2,11 +2,15 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Patient } from "@/types/patient";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { PhoneLinks } from "@/components/patients/PhoneLinks";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface PatientCardProps {
   patient: Patient;
+  /** Show the patient's branch (the list spans several branches). */
+  showBranch?: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -24,14 +28,16 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PatientCard({ patient }: PatientCardProps) {
+export function PatientCard({ patient, showBranch = false }: PatientCardProps) {
   const router = useRouter();
   const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
   const fullName = `${patient.firstName} ${patient.lastName}`;
+  const href = `/dashboard/patients/${patient.id}/details`;
 
   return (
+    // Whole card opens the patient; keyboard users use the name link (Enter).
     <div
-      onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
+      onClick={() => router.push(href)}
       className="rounded-[6px] border border-[#e5edf5] bg-white p-4 cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:border-[#c1c9d2]"
       style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
     >
@@ -44,7 +50,13 @@ export function PatientCard({ patient }: PatientCardProps) {
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="text-[15px] font-medium text-[#061b31] truncate">{fullName}</p>
+            <Link
+              href={href}
+              onClick={(e) => e.stopPropagation()}
+              className="block truncate rounded-[4px] text-[15px] font-medium text-[#061b31] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
+            >
+              {fullName}
+            </Link>
             {patient.icNumber && (
               <p className="text-[13px] text-[#64748d] truncate">{patient.icNumber}</p>
             )}
@@ -55,7 +67,10 @@ export function PatientCard({ patient }: PatientCardProps) {
 
       {/* Contact */}
       {patient.phone && (
-        <p className="text-[13px] text-[#64748d] mb-3 truncate">{patient.phone}</p>
+        <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[13px] text-[#64748d]" className="flex mb-3 max-w-full" />
+      )}
+      {showBranch && patient.branchName && (
+        <p className="text-[13px] text-[#64748d] mb-3 truncate" title={patient.branchName}>{patient.branchName}</p>
       )}
 
       {/* Stats */}

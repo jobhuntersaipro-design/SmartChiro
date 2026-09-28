@@ -88,6 +88,12 @@ interface Props {
    * param (list|calendar). Pass true to skip our internal `view=day|week|month`
    * URL sync to avoid clobbering. */
   disableUrlSync?: boolean;
+  /** Branch to show (the shell's branch, or the default one while the shell
+   * lists "All branches"). Takes precedence over `?branch=`; when it changes
+   * the calendar switches to it. */
+  initialBranchId?: string;
+  /** Told when the user picks another branch in the calendar's own select. */
+  onBranchChange?: (branchId: string) => void;
 }
 
 const VIEW_FROM_PARAM: Record<string, View> = {
@@ -128,6 +134,8 @@ export function AppointmentsCalendarView({
   branches,
   hideHeader = false,
   disableUrlSync = false,
+  initialBranchId: branchIdProp,
+  onBranchChange,
 }: Props) {
   const searchParams = useSearchParams();
 
@@ -140,8 +148,14 @@ export function AppointmentsCalendarView({
   );
 
   // ─── URL state ───
-  const initialBranchId =
-    searchParams.get("branch") ?? branches[0]?.id ?? "";
+  const isBranch = (id: string | null | undefined): id is string =>
+    !!id && branches.some((b) => b.id === id);
+  const urlBranchId = searchParams.get("branch");
+  const initialBranchId = isBranch(branchIdProp)
+    ? branchIdProp
+    : isBranch(urlBranchId)
+      ? urlBranchId
+      : branches[0]?.id ?? "";
   const initialDoctorIds =
     searchParams.get("doctors")?.split(",").filter(Boolean) ?? [];
   const initialView =
@@ -158,6 +172,15 @@ export function AppointmentsCalendarView({
     const known = new Set(branches.find((b) => b.id === initialBranchId)?.doctors.map((d) => d.id));
     return initialDoctorIds.filter((id) => known.has(id));
   });
+  // Follow the shell's branch when it changes (e.g. the sidebar branch switcher).
+  const [syncedBranchProp, setSyncedBranchProp] = useState(branchIdProp);
+  if (branchIdProp !== syncedBranchProp) {
+    setSyncedBranchProp(branchIdProp);
+    if (isBranch(branchIdProp) && branchIdProp !== branchId) {
+      setBranchId(branchIdProp);
+      setDoctorIds([]);
+    }
+  }
   const [view, setView] = useState<View>(initialView);
   const [date, setDate] = useState<Date>(initialDate);
   const [appointments, setAppointments] = useState<CalendarAppointment[]>([]);
@@ -501,6 +524,7 @@ export function AppointmentsCalendarView({
         onBranchChange={(id) => {
           setBranchId(id);
           setDoctorIds([]); // clear doctor filter when branch changes
+          onBranchChange?.(id);
         }}
         onDoctorIdsChange={setDoctorIds}
         onViewChange={setView}

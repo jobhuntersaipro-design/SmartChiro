@@ -32,6 +32,8 @@ interface DashboardViewProps {
   userName: string | null;
   branchRole: BranchRole | null;
   activeBranchId: string | null;
+  /** "All branches" is on in the sidebar switcher. */
+  allBranches?: boolean;
 }
 
 export function DashboardView({
@@ -39,6 +41,7 @@ export function DashboardView({
   userName,
   branchRole,
   activeBranchId,
+  allBranches = false,
 }: DashboardViewProps) {
   const isDoctor = branchRole === "DOCTOR";
   const isOwner = branchRole === "OWNER";
@@ -46,15 +49,14 @@ export function DashboardView({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Branch filter state — synced with URL ?branch=xxx
-  const selectedBranchId = searchParams.get("branch") || null;
+  // Branch filter state — synced with URL ?branch=xxx (`all` = every branch).
+  // Without one it follows the sidebar branch switcher.
+  const branchUrlParam = searchParams.get("branch");
+  const selectedBranchId =
+    branchUrlParam === "all" ? null : branchUrlParam || (allBranches ? null : activeBranchId);
 
   const setSelectedBranchId = useCallback((branchId: string | null) => {
-    if (branchId) {
-      router.push(`/dashboard?branch=${branchId}`, { scroll: false });
-    } else {
-      router.push("/dashboard", { scroll: false });
-    }
+    router.push(`/dashboard?branch=${branchId ?? "all"}`, { scroll: false });
   }, [router]);
 
   // Data states

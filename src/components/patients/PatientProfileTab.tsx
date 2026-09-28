@@ -2,9 +2,9 @@
 
 import { AlertTriangle } from "lucide-react";
 import { ExternalLink } from "@/components/patients/ExternalLink";
+import { PhoneLinks } from "@/components/patients/PhoneLinks";
 import {
   formatDobWithAge,
-  buildWhatsAppUrl,
   buildMailtoUrl,
   buildMapsUrl,
   buildDoctorHref,
@@ -130,6 +130,18 @@ function DetailRow({
   );
 }
 
+/** Phone number with separate call and WhatsApp icon links. */
+function PhoneRow({ label, phone, name }: { label: string; phone: string | null; name: string }) {
+  return (
+    <div>
+      <p className="text-[13px] text-[#64748d]">{label}</p>
+      <div className="mt-0.5 text-[14px] text-[#061b31]">
+        {phone ? <PhoneLinks phone={phone} name={name} /> : "-"}
+      </div>
+    </div>
+  );
+}
+
 function Section({
   title,
   children,
@@ -150,10 +162,9 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
   const hasAllergies = !!patient.allergies && patient.allergies.trim().length > 0;
   const fullAddress = buildFullAddress(patient);
   const addressForLink = fullAddress === "-" ? null : fullAddress;
-  const phoneHref = buildWhatsAppUrl(patient.phone);
   const emailHref = buildMailtoUrl(patient.email);
   const mapsHref = buildMapsUrl(addressForLink);
-  const emergencyPhoneHref = buildWhatsAppUrl(patient.emergencyPhone);
+  const fullName = `${patient.firstName} ${patient.lastName}`;
 
   return (
     <div>
@@ -178,7 +189,7 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
       <Section title="Contact Information">
         <div className="grid grid-cols-2 gap-y-3 gap-x-8">
           <DetailRow label="Email" value={patient.email} href={emailHref} />
-          <DetailRow label="Phone" value={patient.phone} href={phoneHref} />
+          <PhoneRow label="Phone" phone={patient.phone} name={fullName} />
           <div className="col-span-2">
             <DetailRow label="Address" value={fullAddress} href={mapsHref} />
           </div>
@@ -189,7 +200,11 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
       <Section title="Emergency Contact">
         <div className="grid grid-cols-2 gap-y-3 gap-x-8">
           <DetailRow label="Name" value={patient.emergencyName} />
-          <DetailRow label="Phone" value={patient.emergencyPhone} href={emergencyPhoneHref} />
+          <PhoneRow
+            label="Phone"
+            phone={patient.emergencyPhone}
+            name={patient.emergencyName || `${fullName}'s emergency contact`}
+          />
           <DetailRow label="Relationship" value={patient.emergencyRelation} />
         </div>
       </Section>
@@ -238,7 +253,6 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
       {/* Administrative */}
       <Section title="Administrative">
         <div className="grid grid-cols-2 gap-y-3 gap-x-8">
-          <DetailRow label="Patient ID" value={patient.id} mono />
           <DetailRow
             label="Doctor"
             value={patient.doctorName}

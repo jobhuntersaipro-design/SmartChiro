@@ -55,6 +55,8 @@ export interface Patient {
   doctorId: string;
   doctorName: string;
   branchId: string;
+  /** Set by the patients list; shown when it spans several branches. */
+  branchName?: string | null;
   // Computed
   lastVisit: string | null;
   totalVisits: number;

@@ -7,8 +7,12 @@ export default async function InvoicesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { activeBranchId, branchRole, branches } = await loadBranchContext(session.user.id);
+  // Follows the sidebar branch switcher; "All branches" lists every branch the
+  // user owns or administers.
+  const { activeBranchId, branchRole, branches, allBranches } = await loadBranchContext(session.user.id);
   const branchName = branches.find((b) => b.id === activeBranchId)?.name ?? null;
+
+  if (allBranches) return <InvoiceListView branchId="all" branchName="All branches" />;
 
   if (!activeBranchId || (branchRole !== "OWNER" && branchRole !== "ADMIN")) {
     return (

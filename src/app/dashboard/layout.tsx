@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   if (!session?.user) {
     redirect("/login");
   }
-  const { branches, activeBranchId } = await loadBranchContext(session.user.id);
+  const { branches, activeBranchId, allBranches, canUseAllBranches } = await loadBranchContext(session.user.id);
 
   return (
     <DashboardShell
@@ -24,6 +24,8 @@ export default async function DashboardLayout({
         branchRole: session.user.branchRole ?? null,
         activeBranchId,
         branches: branches.map(({ id, name, role }) => ({ id, name, role })),
+        allBranches,
+        canUseAllBranches,
       }}
     >
       {children}

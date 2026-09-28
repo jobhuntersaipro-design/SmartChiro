@@ -133,7 +133,8 @@ function SkeletonCards({ count }: { count: number }) {
   );
 }
 
-export function BranchStatsCards() {
+/** `scopeKey` changes when the sidebar branch switcher changes scope; refetch then. */
+export function BranchStatsCards({ scopeKey }: { scopeKey?: string } = {}) {
   const [data, setData] = useState<BranchStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -142,7 +143,7 @@ export function BranchStatsCards() {
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => setData(j))
       .finally(() => setLoading(false));
-  }, []);
+  }, [scopeKey]);
 
   if (loading) return <SkeletonCards count={3} />;
   if (!data || data.branches.length === 0) return null;

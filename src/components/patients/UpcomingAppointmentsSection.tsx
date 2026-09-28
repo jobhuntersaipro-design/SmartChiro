@@ -202,11 +202,14 @@ const COLS = "grid-cols-[160px_180px_140px_minmax(160px,1fr)_120px_36px_36px]";
 interface UpcomingAppointmentsSectionProps {
   currentUserId?: string;
   isAdmin?: boolean;
+  /** Changes when the sidebar branch switcher changes scope; refetch then. */
+  scopeKey?: string;
 }
 
 export function UpcomingAppointmentsSection({
   currentUserId,
   isAdmin = false,
+  scopeKey,
 }: UpcomingAppointmentsSectionProps = {}) {
   const [range, setRange] = useState<Range>("week");
   const [appointments, setAppointments] = useState<UpcomingAppointment[]>([]);
@@ -264,7 +267,7 @@ export function UpcomingAppointmentsSection({
 
   useEffect(() => {
     if (!collapsed) load(range);
-  }, [range, load, collapsed]);
+  }, [range, load, collapsed, scopeKey]);
 
   // Branches and doctors that exist in the current dataset (basis for filter dropdowns)
   const branchOptions = useMemo(() => {

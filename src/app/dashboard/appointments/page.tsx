@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { loadBranchContext } from "@/lib/branch-context";
 import { AppointmentsPageShell } from "@/components/appointments/AppointmentsPageShell";
 
 export default async function AppointmentsPage() {
@@ -44,10 +45,20 @@ export default async function AppointmentsPage() {
       })),
   }));
 
+  // Defaults follow the sidebar branch switcher. In "All branches" the list
+  // spans every branch; the calendar needs one branch for its doctor columns.
+  const scope = await loadBranchContext(session.user.id);
+  const calendarBranchId = scope.allBranches
+    ? userBranches[0]?.id ?? ""
+    : scope.activeBranchId ?? userBranches[0]?.id ?? "";
+
   return (
     <AppointmentsPageShell
       currentUserId={session.user.id}
       branches={userBranches}
+      initialBranchId={scope.allBranches ? "all" : calendarBranchId}
+      calendarBranchId={calendarBranchId}
+      allowAllBranches={scope.canUseAllBranches}
     />
   );
 }

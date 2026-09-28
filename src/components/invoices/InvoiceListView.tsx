@@ -18,6 +18,7 @@ interface InvoiceRow {
   paidAt: string | null;
   createdAt: string;
   patient: { id: string; firstName: string; lastName: string };
+  branch?: { name: string };
 }
 
 interface Summary {
@@ -234,6 +235,9 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
                       >
                         {row.patient.firstName} {row.patient.lastName}
                       </Link>
+                      {branchId === "all" && row.branch && (
+                        <span className="block text-[13px] text-[#64748d]">{row.branch.name}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466]">{dateMY(row.createdAt)}</td>
                     <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466]">

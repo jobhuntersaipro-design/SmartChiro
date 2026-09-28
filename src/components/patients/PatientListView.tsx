@@ -18,6 +18,10 @@ interface PatientListViewProps {
   userId: string;
   userName: string | null;
   branchRole: string;
+  /** Changes when the sidebar branch switcher changes scope; lists refetch. */
+  scopeKey: string;
+  /** The scope spans several branches ("All branches"). */
+  multiBranch: boolean;
 }
 
 function fuzzyMatch(text: string, query: string): boolean {
@@ -90,7 +94,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
-export function PatientListView({ userId, userName, branchRole }: PatientListViewProps) {
+export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: PatientListViewProps) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -180,10 +184,11 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
     }
   }, [isAdmin]);
 
+  // The server scopes both lists to the sidebar branch; refetch when it changes.
   useEffect(() => {
     fetchPatients();
     fetchDoctors();
-  }, [fetchPatients, fetchDoctors]);
+  }, [fetchPatients, fetchDoctors, scopeKey]);
 
   // Client-side filtering
   const filtered = useMemo(() => {
@@ -275,13 +280,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
       </div>
 
       {/* Per-branch stat cards (or personal cards for DOCTOR) */}
-      <BranchStatsCards />
-
-      {/* Upcoming appointments section */}
-      <UpcomingAppointmentsSection
-        currentUserId={userId}
-        isAdmin={branchRole === "OWNER" || branchRole === "ADMIN"}
-      />
+      <BranchStatsCards scopeKey={scopeKey} />
 
       {/* Filter bar — sticky to top of viewport while scrolling */}
       <div className="sticky top-13 z-20 -mx-2 px-2 py-2 bg-[#f6f9fc]/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-[#f6f9fc]/80">
@@ -387,16 +386,26 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
           sortKey={sortKey}
           sortDir={sortDir}
           onSortChange={handleSortChange}
+          showBranch={multiBranch}
         />
       )}
 
       {!loading && !error && filtered.length > 0 && viewMode === "grid" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
+            <PatientCard key={patient.id} patient={patient} showBranch={multiBranch} />
           ))}
         </div>
       )}
+
+      {/* The page is a directory first; upcoming appointments sit below (collapsible). */}
+      <div className="mt-6">
+        <UpcomingAppointmentsSection
+          currentUserId={userId}
+          isAdmin={isAdmin}
+          scopeKey={scopeKey}
+        />
+      </div>
 
       {/* Add patient dialog */}
       <AddPatientDialog

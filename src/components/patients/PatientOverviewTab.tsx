@@ -18,9 +18,9 @@ import {
   Phone,
 } from "lucide-react";
 import { ExternalLink } from "@/components/patients/ExternalLink";
+import { PhoneLinks } from "@/components/patients/PhoneLinks";
 import {
   formatDobWithAge,
-  buildWhatsAppUrl,
   buildDoctorHref,
 } from "@/lib/format";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
@@ -425,16 +425,12 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                 <div className="flex items-start gap-2.5">
                   <Phone className="h-3.5 w-3.5 text-[#64748d] mt-0.5 shrink-0" strokeWidth={1.5} />
                   <span className="text-[13px] text-[#64748d] shrink-0 w-20">Phone</span>
-                  {(() => {
-                    const href = buildWhatsAppUrl(patient.emergencyPhone);
-                    return href ? (
-                      <ExternalLink href={href} className="text-[13px] text-[#533afd] hover:underline">
-                        {patient.emergencyPhone}
-                      </ExternalLink>
-                    ) : (
-                      <span className="text-[13px] text-[#273951]">{patient.emergencyPhone}</span>
-                    );
-                  })()}
+                  <PhoneLinks
+                    phone={patient.emergencyPhone}
+                    name={patient.emergencyName || "emergency contact"}
+                    textClassName="text-[13px] text-[#273951]"
+                    className="-my-1"
+                  />
                 </div>
               )}
               {patient.emergencyRelation && (

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { branchIdsForParam } from "@/lib/branch-context";
 import { findConflictingAppointments } from "@/lib/appointments";
 import { findOverlappingBreak } from "@/lib/availability";
 import { outsideHoursSummary } from "@/lib/operating-hours";
@@ -46,8 +47,12 @@ export async function GET(req: Request): Promise<Response> {
   }
 
   // RBAC: caller must be a member of the branch. Cross-branch leak → 404.
-  const role = await getUserBranchRole(user.id, branchId);
-  if (!role) {
+  // "all" = every branch the caller belongs to (the "All branches" list).
+  if (branchId !== "all" && !(await getUserBranchRole(user.id, branchId))) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+  const branchIds = await branchIdsForParam(user.id, branchId);
+  if (branchIds.length === 0) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
@@ -92,7 +97,7 @@ export async function GET(req: Request): Promise<Response> {
   // First check the count to enforce the 500-event cap.
   const count = await prisma.appointment.count({
     where: {
-      branchId,
+      branchId: { in: branchIds },
       dateTime: dateFilter,
       ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
       ...(statusFilter ? { status: statusFilter } : {}),
@@ -107,7 +112,7 @@ export async function GET(req: Request): Promise<Response> {
 
   const appointments = await prisma.appointment.findMany({
     where: {
-      branchId,
+      branchId: { in: branchIds },
       dateTime: dateFilter,
       ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
       ...(statusFilter ? { status: statusFilter } : {}),

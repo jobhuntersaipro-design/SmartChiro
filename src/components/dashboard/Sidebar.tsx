@@ -52,6 +52,9 @@ interface SidebarUser {
   branchRole: BranchRole | null;
   activeBranchId: string | null;
   branches: { id: string; name: string; role: BranchRole }[];
+  /** "All branches" scope is on / may be switched on. */
+  allBranches?: boolean;
+  canUseAllBranches?: boolean;
 }
 
 const ROLE_LABEL: Record<BranchRole, string> = { OWNER: "Owner", ADMIN: "Admin", DOCTOR: "Doctor" };
@@ -66,15 +69,21 @@ function BranchSwitcher({ user }: { user: SidebarUser }) {
       <span className="text-[12px] font-medium tracking-[0.04em] text-[#64748d] uppercase">Health Center</span>
     );
   }
+  const allOn = !!user.allBranches;
+  const current = allOn ? "All branches" : active.name;
   const label = (
-    <span className="block truncate text-[13px] text-[#64748d]" title={`${active.name} · ${ROLE_LABEL[active.role]}`}>
-      {active.name}
+    <span
+      className="block truncate text-[13px] text-[#64748d]"
+      title={allOn ? `All branches (${user.branches.length})` : `${active.name} · ${ROLE_LABEL[active.role]}`}
+    >
+      {current}
     </span>
   );
   if (user.branches.length < 2) return label;
 
+  // "all" = every branch the user belongs to (owners/admins of 2+ branches).
   async function switchTo(branchId: string) {
-    if (branchId === active.id) return;
+    if (allOn ? branchId === "all" : branchId === active.id) return;
     setSwitching(true);
     try {
       const res = await fetch("/api/me/active-branch", {
@@ -83,7 +92,8 @@ function BranchSwitcher({ user }: { user: SidebarUser }) {
         body: JSON.stringify({ branchId }),
       });
       if (!res.ok) throw new Error();
-      toast.success(`Switched to ${user.branches.find((b) => b.id === branchId)?.name ?? "branch"}`);
+      const name = branchId === "all" ? "all branches" : user.branches.find((b) => b.id === branchId)?.name ?? "branch";
+      toast.success(`Switched to ${name}`);
       router.refresh();
     } catch {
       toast.error("Couldn't switch branch.");
@@ -96,20 +106,32 @@ function BranchSwitcher({ user }: { user: SidebarUser }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={switching}
-        aria-label={`Branch: ${active.name}. Switch branch`}
+        aria-label={`Branch: ${current}. Switch branch`}
         className="flex w-full min-w-0 items-center gap-1 rounded-[4px] text-left hover:text-[#061b31] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
       >
         <span className="min-w-0 flex-1">{label}</span>
         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[#64748d]" strokeWidth={1.5} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
+        {user.canUseAllBranches && (
+          <>
+            <DropdownMenuItem onClick={() => void switchTo("all")} className="flex items-center gap-2">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[14px] text-[#061b31]">All branches</span>
+                <span className="block text-[12px] text-[#64748d]">{user.branches.length} branches</span>
+              </span>
+              {allOn && <Check className="h-4 w-4 text-[#533afd]" strokeWidth={2} />}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         {user.branches.map((b) => (
           <DropdownMenuItem key={b.id} onClick={() => void switchTo(b.id)} className="flex items-center gap-2">
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px] text-[#061b31]">{b.name}</span>
               <span className="block text-[12px] text-[#64748d]">{ROLE_LABEL[b.role]}</span>
             </span>
-            {b.id === active.id && <Check className="h-4 w-4 text-[#533afd]" strokeWidth={2} />}
+            {!allOn && b.id === active.id && <Check className="h-4 w-4 text-[#533afd]" strokeWidth={2} />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

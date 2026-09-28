@@ -10,7 +10,6 @@ import {
   ImageIcon,
   TrendingUp,
   Mail,
-  Phone,
   User,
   Pencil,
   Trash2,
@@ -29,8 +28,8 @@ import { PatientHistoryTab } from "@/components/patients/PatientHistoryTab";
 import { PatientXraysTab } from "@/components/patients/PatientXraysTab";
 import { PatientProfileTab } from "@/components/patients/PatientProfileTab";
 import { ExternalLink } from "@/components/patients/ExternalLink";
+import { PhoneLinks } from "@/components/patients/PhoneLinks";
 import {
-  buildWhatsAppUrl,
   buildMailtoUrl,
   buildDoctorHref,
   buildBranchHref,
@@ -222,7 +221,6 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   const dobDisplay = formatDobWithAge(patient.dateOfBirth);
   const gender = formatGender(patient.gender);
   const isActive = patient.status.toLowerCase() === "active";
-  const whatsappHref = buildWhatsAppUrl(patient.phone);
   const mailtoHref = buildMailtoUrl(patient.email);
 
   const statCards = [
@@ -287,14 +285,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
                   <span>{dobDisplay}</span>
                 )}
                 {patient.phone && (
-                  <span className="flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    {whatsappHref ? (
-                      <ExternalLink href={whatsappHref}>{patient.phone}</ExternalLink>
-                    ) : (
-                      patient.phone
-                    )}
-                  </span>
+                  <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[#273951]" />
                 )}
                 {patient.email && (
                   <span className="flex items-center gap-1.5">

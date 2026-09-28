@@ -22,6 +22,8 @@ model User {
   stripeSubscriptionId String? @unique
 
   activeBranchId String?
+  /// Owner/admin of 2+ branches working across all of them ("All branches" in the sidebar).
+  allBranches    Boolean @default(false)
 
   accounts            Account[]
   sessions            Session[]

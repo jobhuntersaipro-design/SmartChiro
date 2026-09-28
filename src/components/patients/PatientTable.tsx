@@ -4,8 +4,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Patient } from "@/types/patient";
 import { MoreHorizontal, Eye, Pencil, Trash2, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatAppointmentDateTime, getAppointmentWeekday, buildWhatsAppUrl } from "@/lib/format";
+import { formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
+import { PhoneLinks } from "@/components/patients/PhoneLinks";
 
 export type SortKey = "upcomingAppointment" | "lastName" | "totalVisits" | "status";
 export type SortDir = "asc" | "desc";
@@ -17,6 +19,8 @@ interface PatientTableProps {
   sortKey?: SortKey;
   sortDir?: SortDir;
   onSortChange?: (key: SortKey) => void;
+  /** Show each patient's branch (the list spans several branches). */
+  showBranch?: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -152,9 +156,10 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
   );
 }
 
-// Flexible minimums (~830 px) so the table fits a laptop next to the sidebar.
+// Flexible minimums (~890 px) so the table fits a laptop next to the sidebar;
+// the contact column fits a full number plus its call / WhatsApp icons.
 const COL_GRID =
-  "grid grid-cols-[minmax(180px,2fr)_minmax(150px,1.4fr)_minmax(120px,1fr)_minmax(110px,1fr)_100px_60px_40px] gap-3";
+  "grid grid-cols-[minmax(180px,2fr)_minmax(150px,1.4fr)_minmax(175px,1.2fr)_minmax(110px,1fr)_100px_60px_40px] gap-3";
 
 export function PatientTable({
   patients,
@@ -163,6 +168,7 @@ export function PatientTable({
   sortKey = "upcomingAppointment",
   sortDir = "asc",
   onSortChange,
+  showBranch = false,
 }: PatientTableProps) {
   const router = useRouter();
 
@@ -225,10 +231,13 @@ export function PatientTable({
       {sorted.map((patient) => {
         const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
         const fullName = `${patient.firstName} ${patient.lastName}`;
+        const href = `/dashboard/patients/${patient.id}/details`;
         return (
+          // The whole row opens the patient on click; keyboard users reach the
+          // same page through the name link (Enter).
           <div
             key={patient.id}
-            onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
+            onClick={() => router.push(href)}
             className={`${COL_GRID} items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 last:rounded-b-[6px] transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5`}
           >
             {/* Patient name + IC */}
@@ -239,7 +248,13 @@ export function PatientTable({
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <span className="text-[15px] font-medium text-[#061b31] block truncate">{fullName}</span>
+                <Link
+                  href={href}
+                  onClick={(e) => e.stopPropagation()}
+                  className="block truncate rounded-[4px] text-[15px] font-medium text-[#061b31] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
+                >
+                  {fullName}
+                </Link>
                 {patient.icNumber ? (
                   <span className="text-[13px] text-[#64748d] block truncate">{patient.icNumber}</span>
                 ) : patient.email ? (
@@ -253,29 +268,21 @@ export function PatientTable({
               <NextAppointmentCell apt={patient.upcomingAppointment} />
             </div>
 
-            {/* Contact — phone links to WhatsApp chat */}
+            {/* Contact — number, call and WhatsApp icons */}
             <div className="min-w-0">
-              {patient.phone ? (
-                <a
-                  href={buildWhatsAppUrl(patient.phone) ?? "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-[14px] text-[#273951] hover:text-[#25D366] hover:underline underline-offset-2 transition-colors block truncate"
-                  title="Open WhatsApp chat"
-                >
-                  {patient.phone}
-                </a>
-              ) : (
-                <span className="text-[14px] text-[#94a3b8]">—</span>
-              )}
+              <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[14px] text-[#273951]" className="max-w-full" />
               {patient.phone && patient.email && (
                 <span className="text-[12px] text-[#64748d] block truncate">{patient.email}</span>
               )}
             </div>
 
             {/* Doctor */}
-            <span className="text-[14px] text-[#273951] truncate">{patient.doctorName}</span>
+            <div className="min-w-0">
+              <span className="text-[14px] text-[#273951] block truncate">{patient.doctorName}</span>
+              {showBranch && patient.branchName && (
+                <span className="text-[12px] text-[#64748d] block truncate" title={patient.branchName}>{patient.branchName}</span>
+              )}
+            </div>
 
             {/* Status */}
             <StatusBadge status={patient.status} />
@@ -286,7 +293,7 @@ export function PatientTable({
             {/* Actions */}
             <ActionsMenu
               patient={patient}
-              onView={() => router.push(`/dashboard/patients/${patient.id}/details`)}
+              onView={() => router.push(href)}
               onEdit={onEdit}
               onDelete={onDelete}
             />

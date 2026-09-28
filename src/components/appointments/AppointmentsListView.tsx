@@ -31,6 +31,8 @@ interface BranchOption {
 interface Props {
   currentUserId: string;
   branches: BranchOption[];
+  /** Offer "All branches" (branchId "all") in the branch select. */
+  allowAllBranches?: boolean;
   branchId: string;
   doctorIds: string[];
   selectedDate: Date;
@@ -72,7 +74,8 @@ function getMarkerWindow(selectedDate: Date): { start: Date; end: Date } {
 
 export function AppointmentsListView({
   currentUserId,
-  branches,
+  branches: memberBranches,
+  allowAllBranches = false,
   branchId,
   doctorIds,
   selectedDate,
@@ -109,9 +112,23 @@ export function AppointmentsListView({
   const [cancelTarget, setCancelTarget] = useState<CalendarAppointment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CalendarAppointment | null>(null);
 
+  // "All branches" is a pseudo-branch whose doctors are every branch's doctors.
+  const branches = useMemo<BranchOption[]>(() => {
+    if (!allowAllBranches) return memberBranches;
+    const doctors = new Map<string, BranchOption["doctors"][number]>();
+    memberBranches.forEach((b) => b.doctors.forEach((d) => doctors.set(d.id, d)));
+    const all: BranchOption = {
+      ...memberBranches[0],
+      id: "all",
+      name: "All branches",
+      doctors: Array.from(doctors.values()).sort((a, b) => a.name.localeCompare(b.name)),
+    };
+    return memberBranches.length > 0 ? [all, ...memberBranches] : memberBranches;
+  }, [allowAllBranches, memberBranches]);
+
   const isAdmin = useMemo(
-    () => branches.some((b) => b.role === "OWNER" || b.role === "ADMIN"),
-    [branches]
+    () => memberBranches.some((b) => b.role === "OWNER" || b.role === "ADMIN"),
+    [memberBranches]
   );
 
   const branch = useMemo(

@@ -92,7 +92,12 @@ export function AppointmentSidebarFilters({
           <label className="block text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-1.5">
             Branch
           </label>
-          <Select value={branchId} onValueChange={(v) => v && onBranchChange(v)}>
+          <Select
+            value={branchId}
+            // Trigger shows the branch name, not its id.
+            items={branches.map((b) => ({ value: b.id, label: b.name }))}
+            onValueChange={(v) => v && onBranchChange(v)}
+          >
             <SelectTrigger className="h-9 w-full rounded-md text-[13px]">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>

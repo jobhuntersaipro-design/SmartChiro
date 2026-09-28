@@ -16,6 +16,9 @@ interface SidebarUser {
   branchRole: BranchRole | null;
   activeBranchId: string | null;
   branches: { id: string; name: string; role: BranchRole }[];
+  /** "All branches" scope is on / may be switched on. */
+  allBranches?: boolean;
+  canUseAllBranches?: boolean;
 }
 
 export function DashboardShell({

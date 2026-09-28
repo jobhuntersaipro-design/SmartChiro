@@ -32,6 +32,14 @@ export function buildWhatsAppUrl(phone: string | null | undefined): string | nul
   return `https://wa.me/${digits}`
 }
 
+/** `tel:` link in international form (MY local `012…` → `+6012…`). */
+export function buildTelUrl(phone: string | null | undefined): string | null {
+  if (!phone) return null
+  const digits = normalizePhoneDigits(phone)
+  if (digits.length < 7) return null
+  return `tel:+${digits}`
+}
+
 export function buildMailtoUrl(email: string | null | undefined): string | null {
   if (!email) return null
   if (!EMAIL_RE.test(email)) return null

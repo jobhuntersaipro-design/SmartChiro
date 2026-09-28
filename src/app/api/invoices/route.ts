@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { loadBranchContext } from "@/lib/branch-context";
+import { isBranchManager } from "@/lib/branch-scope";
 import { effectiveInvoiceStatus, type InvoiceStatus } from "@/lib/invoices";
 
 const PAGE_SIZE = 20;
@@ -23,8 +24,9 @@ function statusWhere(filter: Filter, now: Date): Prisma.InvoiceWhereInput {
 }
 
 /**
- * Invoices for one branch (the active branch unless ?branchId=), for its
- * OWNER/ADMIN. Filters: ?status= (all | DRAFT | SENT | OVERDUE | PAID |
+ * Invoices for one branch (the sidebar branch unless ?branchId=), for its
+ * OWNER/ADMIN. `branchId=all` (the default in "All branches") covers every
+ * branch the caller owns or administers. Filters: ?status= (all | DRAFT | SENT | OVERDUE | PAID |
  * CANCELLED — overdue is derived from the due date), ?search= (invoice number
  * or patient name), ?page=. Summary figures cover the whole branch.
  */
@@ -33,11 +35,20 @@ export async function GET(req: Request): Promise<Response> {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
-  const branchId = url.searchParams.get("branchId") ?? (await loadBranchContext(user.id)).activeBranchId;
-  if (!branchId) return NextResponse.json({ error: "no_branch" }, { status: 404 });
-  const role = await getUserBranchRole(user.id, branchId);
-  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (role !== "OWNER" && role !== "ADMIN") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const context = await loadBranchContext(user.id);
+  const branchParam = url.searchParams.get("branchId") ?? (context.allBranches ? "all" : context.activeBranchId);
+  if (!branchParam) return NextResponse.json({ error: "no_branch" }, { status: 404 });
+  let branchIds: string[];
+  if (branchParam === "all") {
+    branchIds = context.branches.filter((b) => isBranchManager(b.role)).map((b) => b.id);
+    if (branchIds.length === 0) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  } else {
+    const role = await getUserBranchRole(user.id, branchParam);
+    if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    if (role !== "OWNER" && role !== "ADMIN") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    branchIds = [branchParam];
+  }
+  const branchId = { in: branchIds };
 
   const rawFilter = url.searchParams.get("status") ?? "all";
   const filter: Filter = (FILTERS as readonly string[]).includes(rawFilter) ? (rawFilter as Filter) : "all";
@@ -81,6 +92,7 @@ export async function GET(req: Request): Promise<Response> {
         createdAt: true,
         appointmentId: true,
         patient: { select: { id: true, firstName: true, lastName: true } },
+        branch: { select: { name: true } },
       },
     }),
     prisma.invoice.count({ where }),

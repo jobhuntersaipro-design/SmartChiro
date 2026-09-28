@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   formatDobWithAge,
   buildWhatsAppUrl,
+  buildTelUrl,
   todayLocalISODate,
   buildMailtoUrl,
   buildMapsUrl,
@@ -48,6 +49,19 @@ describe('formatDobWithAge', () => {
 
   it('returns null for unparseable input', () => {
     expect(formatDobWithAge('not-a-date')).toBeNull()
+  })
+})
+
+describe('buildTelUrl', () => {
+  it('builds an international tel: link, local 0 → +60', () => {
+    expect(buildTelUrl('012-345 6789')).toBe('tel:+60123456789')
+    expect(buildTelUrl('+60 12-345 6789')).toBe('tel:+60123456789')
+  })
+
+  it('returns null for missing or too-short numbers', () => {
+    expect(buildTelUrl(null)).toBeNull()
+    expect(buildTelUrl('')).toBeNull()
+    expect(buildTelUrl('12-34')).toBeNull()
   })
 })
 

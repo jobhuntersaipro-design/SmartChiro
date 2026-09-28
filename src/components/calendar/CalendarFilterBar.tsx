@@ -167,7 +167,12 @@ export function CalendarFilterBar({
 
         {/* Branch select */}
         {branches.length > 1 && (
-          <Select value={branchId} onValueChange={(v) => v && onBranchChange(v)}>
+          <Select
+            value={branchId}
+            // Trigger shows the branch name, not its id.
+            items={branches.map((b) => ({ value: b.id, label: b.name }))}
+            onValueChange={(v) => v && onBranchChange(v)}
+          >
             <SelectTrigger className="h-8 w-50 rounded-md text-[13px]">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>

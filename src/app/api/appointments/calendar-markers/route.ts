@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { branchIdsForParam } from "@/lib/branch-context";
 import { clinicDateKey } from "@/lib/clinic-time";
 
 export async function GET(req: Request): Promise<Response> {
@@ -16,8 +17,12 @@ export async function GET(req: Request): Promise<Response> {
     return NextResponse.json({ error: "missing_params" }, { status: 400 });
   }
 
-  const role = await getUserBranchRole(user.id, branchId);
-  if (!role) {
+  // "all" = every branch the caller belongs to (the "All branches" list).
+  if (branchId !== "all" && !(await getUserBranchRole(user.id, branchId))) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+  const branchIds = await branchIdsForParam(user.id, branchId);
+  if (branchIds.length === 0) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
@@ -35,7 +40,7 @@ export async function GET(req: Request): Promise<Response> {
   // a flat select is faster than a $queryRaw groupBy with timezone math.
   const rows = await prisma.appointment.findMany({
     where: {
-      branchId,
+      branchId: { in: branchIds },
       dateTime: { gte: startDate, lt: endDate },
       ...(doctorIds ? { doctorId: { in: doctorIds } } : {}),
       status: { notIn: ["CANCELLED", "NO_SHOW"] },

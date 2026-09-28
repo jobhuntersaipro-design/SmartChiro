@@ -23,6 +23,12 @@ interface BranchOption {
 interface Props {
   currentUserId: string;
   branches: BranchOption[];
+  /** The sidebar branch, or "all" in "All branches" (the list can span them). */
+  initialBranchId: string;
+  /** Branch the calendar shows while the list spans all branches. */
+  calendarBranchId: string;
+  /** Offer "All branches" in the list's branch select. */
+  allowAllBranches: boolean;
 }
 
 const STORAGE_KEY = "appointments_view_mode";
@@ -44,7 +50,13 @@ function parseDateParam(s: string | null): Date {
   return clinicInstantFromInputs(key, "12:00");
 }
 
-export function AppointmentsPageShell({ currentUserId, branches }: Props) {
+export function AppointmentsPageShell({
+  currentUserId,
+  branches,
+  initialBranchId,
+  calendarBranchId,
+  allowAllBranches,
+}: Props) {
   const searchParams = useSearchParams();
 
   // ─── View mode ───
@@ -69,12 +81,23 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
   }, []);
 
   // ─── Shared filter state ───
-  const [branchId, setBranchId] = useState<string>(
-    searchParams.get("branch") ?? branches[0]?.id ?? ""
+  // A shared `?branch=` link wins on arrival; otherwise the sidebar branch.
+  const urlBranch = searchParams.get("branch");
+  const [branchId, setBranchId] = useState<string>(() =>
+    urlBranch && (urlBranch === "all" ? allowAllBranches : branches.some((b) => b.id === urlBranch))
+      ? urlBranch
+      : initialBranchId
   );
   const [doctorIds, setDoctorIds] = useState<string[]>(
     searchParams.get("doctors")?.split(",").filter(Boolean) ?? []
   );
+  // Switching branch in the sidebar re-renders the page with a new default.
+  const [syncedInitialBranch, setSyncedInitialBranch] = useState(initialBranchId);
+  if (initialBranchId !== syncedInitialBranch) {
+    setSyncedInitialBranch(initialBranchId);
+    setBranchId(initialBranchId);
+    setDoctorIds([]);
+  }
   const [selectedDate, setSelectedDate] = useState<Date>(
     parseDateParam(searchParams.get("date"))
   );
@@ -179,6 +202,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
           <AppointmentsListView
             currentUserId={currentUserId}
             branches={branches}
+            allowAllBranches={allowAllBranches}
             branchId={branchId}
             doctorIds={doctorIds}
             selectedDate={selectedDate}
@@ -203,6 +227,9 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
               branches={branches}
               hideHeader
               disableUrlSync
+              // The calendar needs one branch for its doctor columns.
+              initialBranchId={branchId === "all" ? calendarBranchId : branchId}
+              onBranchChange={setBranchId}
             />
           </div>
         )}
