@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
-import { can } from "@/lib/permissions";
-import type { Prisma } from "@prisma/client";
+import { billingAccess } from "@/lib/billing-access";
+import { createInvoice, parseLineItems, toSen } from "@/lib/invoices";
+import { invoiceErrorResponse } from "@/lib/invoice-detail";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
@@ -11,7 +12,9 @@ const LineItem = z.object({
   description: z.string(),
   quantity: z.number().int().positive(),
   unitPrice: z.number().nonnegative(),
-  total: z.number().nonnegative(),
+  /** Accepted for older clients; totals are always recomputed. */
+  total: z.number().nonnegative().optional(),
+  taxable: z.boolean().optional(),
 });
 
 const Body = z
@@ -20,12 +23,12 @@ const Body = z
   })
   .optional();
 
-function generateInvoiceNumber(): string {
-  const ts = Date.now().toString(36).toUpperCase();
-  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `INV-${ts}-${rand}`;
-}
-
+/**
+ * Void an unpaid invoice and re-issue it as a new DRAFT (same patient, branch,
+ * appointment and due date; same line items unless overridden). Totals and
+ * SST are recomputed with the branch's current settings. Invoices with money
+ * against them can't be re-issued — refund first.
+ */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { invoiceId } = await ctx.params;
 
@@ -40,22 +43,26 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
       patientId: true,
       appointmentId: true,
       status: true,
-      amount: true,
-      currency: true,
+      amountPaid: true,
       lineItems: true,
       dueDate: true,
+      notes: true,
     },
   });
   if (!original) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  // RBAC: OWNER/ADMIN/FRONT_DESK at the invoice's branch only.
+  // RBAC: OWNER/ADMIN at the invoice's branch only.
+  // TODO(front-desk): decide whether FRONT_DESK may re-issue invoices.
   const role = await getUserBranchRole(user.id, original.branchId);
-  if (!can(role, "invoice.manage")) {
+  if (!billingAccess(role).manage) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   if (original.status === "PAID") {
     return NextResponse.json({ error: "invoice_already_paid" }, { status: 422 });
+  }
+  if (toSen(Number(original.amountPaid)) !== 0) {
+    return NextResponse.json({ error: "invoice_has_payments" }, { status: 422 });
   }
 
   const raw = await req.json().catch(() => ({}));
@@ -66,29 +73,28 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
       { status: 422 }
     );
   }
-  const overrideItems = parsed.data?.lineItems;
+  const lines = parsed.data?.lineItems ?? parseLineItems(original.lineItems);
 
-  const lineItems = (overrideItems ?? (original.lineItems as Prisma.InputJsonValue));
-
-  const newInvoice = await prisma.$transaction(async (tx) => {
-    await tx.invoice.update({
-      where: { id: invoiceId },
-      data: { status: "CANCELLED" },
-    });
-    return tx.invoice.create({
-      data: {
-        invoiceNumber: generateInvoiceNumber(),
-        amount: original.amount,
-        currency: original.currency,
-        status: "DRAFT",
-        dueDate: original.dueDate ?? null,
-        lineItems,
-        patientId: original.patientId,
+  let newInvoice;
+  try {
+    newInvoice = await prisma.$transaction(async (tx) => {
+      await tx.invoice.update({
+        where: { id: invoiceId },
+        data: { status: "CANCELLED" },
+      });
+      return createInvoice(tx, {
         branchId: original.branchId,
+        patientId: original.patientId,
         appointmentId: original.appointmentId,
-      },
+        dueDate: original.dueDate,
+        notes: original.notes,
+        lines: lines.map(({ description, quantity, unitPrice, taxable }) => ({ description, quantity, unitPrice, taxable })),
+        status: "DRAFT",
+      });
     });
-  });
+  } catch (err) {
+    return invoiceErrorResponse(err);
+  }
 
   return NextResponse.json(
     {

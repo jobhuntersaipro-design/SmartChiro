@@ -45,6 +45,7 @@ model User {
   landmarkCorrections AiLandmarkCorrection[] @relation("AiLandmarkCorrectionUser")
   carePlans           CarePlan[]             @relation("CarePlanDoctor")
   appointmentSeries   AppointmentSeries[]    @relation("SeriesDoctor")
+  paymentsReceived    Payment[]              @relation("PaymentReceivedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,6 +126,7 @@ enum AppointmentStatus {
 enum InvoiceStatus {
   DRAFT
   SENT
+  PARTIALLY_PAID
   PAID
   OVERDUE
   CANCELLED
@@ -203,10 +205,24 @@ model Branch {
   billingContactEmail String?
   billingContactPhone String?
 
+  // Billing & tax (Phase 4) — printed on invoices and receipts
+  legalName           String?
+  ssmRegNo            String?
+  tin                 String?
+  sstRegNo            String?
+  sstEnabled          Boolean @default(false)
+  sstRate             Decimal @default(6) @db.Decimal(5, 2)
+  invoicePrefix       String?
+  paymentInstructions String?
+  // Per-branch number sequences, bumped atomically (UPDATE ... RETURNING)
+  invoiceSeq          Int     @default(0)
+  receiptSeq          Int     @default(0)
+
   members      BranchMember[]
   patients     Patient[]
   appointments Appointment[]
   invoices     Invoice[]
+  payments     Payment[]
 
   doctorTimeOff   DoctorTimeOff[]   @relation("BranchTimeOff")
   doctorBreakTime DoctorBreakTime[] @relation("BranchBreakTime")
@@ -446,6 +462,8 @@ model Patient {
   state        String?
   postcode     String?
   country      String? @default("Malaysia")
+  // ISO 3166-1 alpha-2; null with a valid MyKad IC counts as MY (SST)
+  nationality  String?
 
   // Emergency contact breakdown
   emergencyName     String?
@@ -775,6 +793,15 @@ model Invoice {
   notes         String?
   lineItems     Json
 
+  // `amount` is the grand total. Tax is snapshotted at issue so later rate
+  // changes don't rewrite history; amountPaid is the sum of its payments.
+  subtotal   Decimal? @db.Decimal(10, 2)
+  taxRate    Decimal? @db.Decimal(5, 2)
+  taxAmount  Decimal? @db.Decimal(10, 2)
+  taxLabel   String?
+  amountPaid Decimal  @default(0) @db.Decimal(10, 2)
+  issuedAt   DateTime @default(now())
+
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
@@ -786,6 +813,7 @@ model Invoice {
 
   // Set when this invoice is the sale of a prepaid package (Phase 3).
   packageSale PatientPackage?
+  payments Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -795,6 +823,43 @@ model Invoice {
   @@index([status])
   @@index([invoiceNumber])
   @@index([appointmentId])
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  DUITNOW_QR
+  FPX
+  EWALLET
+  BANK_TRANSFER
+  PANEL
+}
+
+// A payment (or, when negative, a refund) against an invoice. Deposits,
+// instalments and split payments are several rows on one invoice.
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod
+  reference     String?
+  receivedAt    DateTime
+  notes         String?
+  receiptNumber String        @unique
+  refundReason  String?
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  receivedById String?
+  receivedBy   User?   @relation("PaymentReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+  @@index([branchId, receivedAt])
 }
 
 // ─── Documents ───

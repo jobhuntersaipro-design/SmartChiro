@@ -6,6 +6,7 @@ import { loadBranchContext } from '@/lib/branch-context'
 import { narrowScope, scopedWhere } from '@/lib/branch-scope'
 import { defaultReminderChannel, reminderChannelError } from '@/lib/reminder-channel'
 import { can, redactClinicalFields } from '@/lib/permissions'
+import { isValidMyKad, parseNationality } from '@/lib/invoices'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -37,6 +38,7 @@ function mapPatientToResponse(p: {
   standardFollowUpFee: number | null;
   addressLine1: string | null; addressLine2: string | null; city: string | null;
   state: string | null; postcode: string | null; country: string | null;
+  nationality: string | null;
   emergencyName: string | null; emergencyPhone: string | null; emergencyRelation: string | null;
   status: string | null;
   reminderChannel: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
@@ -74,6 +76,7 @@ function mapPatientToResponse(p: {
     state: p.state,
     postcode: p.postcode,
     country: p.country,
+    nationality: p.nationality,
     emergencyName: p.emergencyName,
     emergencyPhone: p.emergencyPhone,
     emergencyRelation: p.emergencyRelation,
@@ -227,7 +230,7 @@ export async function POST(request: NextRequest) {
       emergencyName, emergencyPhone, emergencyRelation,
       medicalHistory, notes, doctorId,
       initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
-      reminderChannel, preferredLanguage,
+      reminderChannel, preferredLanguage, nationality,
     } = body
 
     const VALID_REMINDER_CHANNELS = ['WHATSAPP', 'EMAIL', 'BOTH', 'NONE'] as const
@@ -273,6 +276,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Nationality (ISO 3166-1 alpha-2) drives SST; a MyKad holder defaults to MY.
+    const parsedNationality = parseNationality(nationality)
+    if (parsedNationality === 'invalid') {
+      return NextResponse.json(
+        { error: 'Invalid nationality. Use a 2-letter ISO country code (e.g. MY, SG).' },
+        { status: 400 }
+      )
+    }
+    const resolvedNationality = parsedNationality ?? (isValidMyKad(icNumber) ? 'MY' : null)
 
     // Validate blood type
     if (bloodType && !VALID_BLOOD_TYPES.includes(bloodType)) {
@@ -405,6 +418,7 @@ export async function POST(request: NextRequest) {
         state: state?.trim() || null,
         postcode: postcode?.trim() || null,
         country: country?.trim() || null,
+        nationality: resolvedNationality,
         emergencyName: emergencyName?.trim() || null,
         emergencyPhone: emergencyPhone?.trim() || null,
         emergencyRelation: emergencyRelation || null,

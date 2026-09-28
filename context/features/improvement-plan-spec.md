@@ -186,6 +186,31 @@ Rules: series weekdays/time are clinic wall-clock; weeks for `intervalWeeks` cou
 - Invoice and receipt PDFs show legal name, SSM, TIN, SST no. (when set), tax breakdown, payments made and balance.
 **Done when:** a foreign patient's adjustment invoice shows 6% SST, a split payment (cash + DuitNow) produces two receipts and a PAID invoice, and a Malaysian patient pays no SST.
 
+### 4.4 API (backend built; screens pending)
+Migration `20260929050000_payments_sst` (enum `PaymentMethod`, `InvoiceStatus.PARTIALLY_PAID`, `Payment`, invoice tax snapshot + `amountPaid` + `issuedAt`, branch billing fields + `invoiceSeq`/`receiptSeq`, `Patient.nationality`). Existing PAID invoices got one migrated cash payment each (`MIG-<invoiceId>` receipt) so balances hold; older invoices keep their old numbers.
+
+Access: OWNER/ADMIN manage (create, pay, refund); DOCTOR may read invoice detail, PDFs and receipts; FRONT_DESK is pending (`TODO(front-desk)` marks each check — create + record payment yes, refund no). Non-members get 404. Money is ringgit numbers with 2 dp; rounding is half-up on the sen.
+
+| Endpoint | Body / query | Result |
+| --- | --- | --- |
+| `GET /api/invoices` | `?branchId=&status=all\|DRAFT\|SENT\|OVERDUE\|PARTIALLY_PAID\|PAID\|CANCELLED&search=&page=` | rows gain `amountPaid`, `balance`; `summary.outstanding` = unpaid balance of SENT/OVERDUE/PARTIALLY_PAID; `paidThisMonth` = payments received this clinic month, net of refunds |
+| `POST /api/invoices` | `{ patientId, branchId?, lines: [{ description, quantity, unitPrice, taxable? }], dueDate?: "YYYY-MM-DD", notes?, appointmentId?, status?: DRAFT\|SENT }` | 201 `{ invoice }` (detail shape). 422 `validation` / `patient_not_in_branch` / `appointment_mismatch` |
+| `GET /api/invoices/[id]` | — | `{ invoice }`: lines, `subtotal`, `taxRate`, `taxAmount`, `taxLabel`, `total` (= `amount`), `amountPaid`, `balance`, `status`, `patient` (`nationality`, `isMalaysian`), `branch` tax details, `payments[]` (`receiptNumber`, `method`, `methodLabel`, `reference`, `receivedAt`, `receivedBy`, `isRefund`, `refundReason`) |
+| `PATCH /api/invoices/[id]` | `{ status: SENT\|PAID\|CANCELLED, method?, reference? }` | PAID records one payment for the balance (default CASH) → `{ invoice, payment }`. PARTIALLY_PAID can only go to PAID; cancelling with money on it → 422 `invoice_has_payments` |
+| `POST /api/invoices/[id]/payments` | `{ amount, method, reference?, receivedAt?: "YYYY-MM-DD" \| ISO, notes? }`; refund: `{ amount: -n, method, refundReason }` | 201 `{ payment, invoice }`. 422 `overpayment` (+`balance`), `invoice_cancelled`, `refund_reason_required`, `refund_exceeds_paid`, `received_in_future`; refunds by DOCTOR → 403 |
+| `GET /api/invoices/[id]/payments/[paymentId]/receipt` | — | receipt PDF for that payment (method, reference, receipt no., paid to date, balance after) |
+| `GET /api/invoices/[id]/pdf` | — | invoice PDF (tax breakdown, payments table, balance, payment instructions); a receipt once PAID |
+| `POST /api/invoices/[id]/regenerate` | `{ lineItems? }` | as before; totals/SST recomputed; 422 `invoice_has_payments` when money was taken |
+| `POST /api/appointments/[id]/invoice` | `{ amount, dueDays?, lineItems? }` | as before; now numbered per branch and SST-aware |
+| `GET/PUT /api/branches/[id]/billing` | `{ legalName?, ssmRegNo?, tin?, sstRegNo?, sstEnabled?, sstRate?, invoicePrefix?: 1–8 A–Z/0–9, paymentInstructions? }` (omitted = unchanged, "" clears) | `{ billing: {…, effectivePrefix, nextInvoiceNumber, nextReceiptNumber}, canEdit }`. OWNER writes, ADMIN reads |
+| `POST /api/patients`, `PATCH /api/patients/[id]` | `nationality`: ISO 3166-1 alpha-2 (case-insensitive) or null | stored upper-case; omitted + valid MyKad IC → `MY`; unknown code → 400 |
+
+Numbers: `INV-<PREFIX>-<YYYY>-<00001>` / `RCP-…`, one sequence per branch (bumped with `UPDATE … RETURNING` inside the transaction; a number already used by another branch with the same prefix is skipped). Year = clinic year at issue.
+
+Reusable server code (`src/lib/invoices.ts`): `createInvoice(tx, { branchId, patientId, lines, dueDate?, notes?, appointmentId?, status?, issuedAt? })` (use it for the package sale), `recordPayment(tx, …)`, `computeTotals`, `isMalaysianPatient`, `invoiceStatusFor`, `nextNumber`, `PAYMENT_METHOD_LABEL`. Detail/PDF assembly in `src/lib/invoice-detail.ts`. The optional link from a manual invoice to a patient package lands with the Phase 3 package models (the package sale calls `createInvoice`).
+
+For the screens: the list's status styles need a `PARTIALLY_PAID` entry ("Partially paid"); "Mark paid" should become "Record payment" (amount defaults to `balance`, method defaults to cash); the patient page and Invoices page get "New invoice"; Branch → Settings gets a Billing & tax card.
+
 ## Phase 5 — Reports
 
 _Detailed before build._

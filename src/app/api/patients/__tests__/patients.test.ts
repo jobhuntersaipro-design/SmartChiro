@@ -232,6 +232,23 @@ describe('Patient CRUD', () => {
       }))
       expect(res.status).toBe(400)
     })
+
+    it('stores nationality (upper-cased), defaults MyKad holders to MY and rejects unknown codes', async () => {
+      mockAuth.mockResolvedValue({ user: { id: doctorId } })
+      const foreign = await POST(createRequest('POST', '/api/patients', { firstName: 'Tom', lastName: 'Ng', nationality: 'sg' }))
+      expect(foreign.status).toBe(201)
+      expect((await foreign.json()).nationality).toBe('SG')
+
+      const ic = `850615-10-${String(Date.now()).slice(-4)}`
+      const local = await POST(createRequest('POST', '/api/patients', { firstName: 'Aminah', lastName: 'Yusof', icNumber: ic }))
+      expect(local.status).toBe(201)
+      expect((await local.json()).nationality).toBe('MY')
+
+      const bad = await POST(createRequest('POST', '/api/patients', { firstName: 'X', lastName: 'Y', nationality: 'Malaysia' }))
+      expect(bad.status).toBe(400)
+
+      await prisma.patient.deleteMany({ where: { lastName: { in: ['Ng', 'Yusof'] }, branchId } })
+    })
   })
 
   // ─── GET /api/patients/[patientId] ───
@@ -368,6 +385,19 @@ describe('Patient CRUD', () => {
         { params: Promise.resolve({ patientId: patient1Id }) }
       )
       expect(res.status).toBe(400)
+    })
+
+    it('updates nationality, validating the ISO code', async () => {
+      mockAuth.mockResolvedValue({ user: { id: ownerId } })
+      const call = (body: Record<string, unknown>) =>
+        PATCH(createRequest('PATCH', `/api/patients/${patient3Id}`, body), { params: Promise.resolve({ patientId: patient3Id }) })
+
+      expect((await call({ nationality: 'XX' })).status).toBe(400)
+      const res = await call({ nationality: 'id' })
+      expect(res.status).toBe(200)
+      expect((await res.json()).patient.nationality).toBe('ID')
+      const cleared = await call({ nationality: null })
+      expect((await cleared.json()).patient.nationality).toBeNull()
     })
   })
 

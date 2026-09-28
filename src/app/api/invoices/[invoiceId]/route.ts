@@ -2,14 +2,47 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
-import { can } from "@/lib/permissions";
-import { canTransitionInvoice, effectiveInvoiceStatus, type InvoiceStatus } from "@/lib/invoices";
+import { billingAccess } from "@/lib/billing-access";
+import {
+  PAYMENT_METHODS,
+  canTransitionInvoice,
+  effectiveInvoiceStatus,
+  fromSen,
+  recordPayment,
+  toSen,
+  type AnyInvoiceStatus,
+} from "@/lib/invoices";
+import { invoiceErrorResponse, loadInvoiceDetail, serializeInvoiceDetail, serializePayment } from "@/lib/invoice-detail";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
-const Body = z.object({ status: z.enum(["SENT", "PAID", "CANCELLED"]) });
+/** Invoice detail: line items, tax snapshot, payments, balance and the branch's tax details. */
+export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const { invoiceId } = await ctx.params;
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-/** Mark an invoice sent, paid (stamps paidAt) or cancelled. OWNER/ADMIN/FRONT_DESK of its branch. */
+  const invoice = await loadInvoiceDetail(invoiceId);
+  if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const role = await getUserBranchRole(user.id, invoice.branchId);
+  // TODO(front-desk): FRONT_DESK reads invoices too.
+  if (!billingAccess(role).read) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  return NextResponse.json({ invoice: serializeInvoiceDetail(invoice) });
+}
+
+const Body = z.object({
+  status: z.enum(["SENT", "PAID", "CANCELLED"]),
+  /** Used when marking paid: the balance is recorded as one payment. */
+  method: z.enum(PAYMENT_METHODS).optional(),
+  reference: z.string().trim().max(100).nullable().optional(),
+});
+
+/**
+ * Mark an invoice sent, paid or cancelled. "Paid" records a payment for the
+ * outstanding balance (method from the body, default cash) so the payment
+ * history and receipts stay complete. OWNER/ADMIN of its branch.
+ */
 export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const { invoiceId } = await ctx.params;
   const user = await getCurrentUser();
@@ -17,34 +50,56 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
-    select: { branchId: true, status: true, dueDate: true },
+    select: { branchId: true, status: true, dueDate: true, amount: true, amountPaid: true },
   });
   if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const role = await getUserBranchRole(user.id, invoice.branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (!can(role, "invoice.manage")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  // TODO(front-desk): FRONT_DESK may mark sent / record payment (not cancel a paid one — refunds stay OWNER/ADMIN).
+  if (!billingAccess(role).manage) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 422 });
-  const next = parsed.data.status;
+  const { status: next, method, reference } = parsed.data;
 
-  const current = effectiveInvoiceStatus(invoice.status as InvoiceStatus, invoice.dueDate);
+  const current = effectiveInvoiceStatus(invoice.status as AnyInvoiceStatus, invoice.dueDate);
   if (!canTransitionInvoice(current, next)) {
     return NextResponse.json({ error: "invalid_transition", from: current, to: next }, { status: 422 });
   }
+  const balanceSen = toSen(Number(invoice.amount)) - toSen(Number(invoice.amountPaid));
+  if (next === "CANCELLED" && toSen(Number(invoice.amountPaid)) !== 0) {
+    return NextResponse.json({ error: "invoice_has_payments" }, { status: 422 });
+  }
 
-  const updated = await prisma.invoice.update({
-    where: { id: invoiceId },
-    data: { status: next, ...(next === "PAID" ? { paidAt: new Date() } : {}) },
-    select: { id: true, status: true, paidAt: true, dueDate: true },
-  });
+  let paymentId: string | null = null;
+  try {
+    if (next === "PAID" && balanceSen > 0) {
+      const result = await prisma.$transaction((tx) =>
+        recordPayment(tx, {
+          invoiceId,
+          amount: fromSen(balanceSen),
+          method: method ?? "CASH",
+          reference: reference ?? null,
+          receivedById: user.id,
+        }),
+      );
+      paymentId = result.payment.id;
+    } else {
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { status: next, ...(next === "PAID" ? { paidAt: new Date() } : {}) },
+      });
+    }
+  } catch (err) {
+    return invoiceErrorResponse(err);
+  }
+
+  const updated = await loadInvoiceDetail(invoiceId);
+  const detail = serializeInvoiceDetail(updated!);
+  const recorded = paymentId ? updated!.payments.find((p) => p.id === paymentId) : undefined;
   return NextResponse.json({
-    invoice: {
-      ...updated,
-      status: effectiveInvoiceStatus(updated.status as InvoiceStatus, updated.dueDate),
-      paidAt: updated.paidAt?.toISOString() ?? null,
-      dueDate: updated.dueDate?.toISOString() ?? null,
-    },
+    invoice: detail,
+    ...(recorded ? { payment: serializePayment(recorded) } : {}),
   });
 }

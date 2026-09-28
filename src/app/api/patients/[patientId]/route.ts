@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { reminderChannelError } from "@/lib/reminder-channel";
 import { getPatientAccess } from "@/lib/auth/patient-access";
 import { can } from "@/lib/permissions";
+import { isValidMyKad, parseNationality } from "@/lib/invoices";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
@@ -149,6 +150,7 @@ export async function GET(
       state: patient.state,
       postcode: patient.postcode,
       country: patient.country,
+      nationality: patient.nationality,
       emergencyName: patient.emergencyName,
       emergencyPhone: patient.emergencyPhone,
       emergencyRelation: patient.emergencyRelation,
@@ -224,7 +226,7 @@ export async function PATCH(
     addressLine1, addressLine2, city, state, postcode, country,
     emergencyName, emergencyPhone, emergencyRelation, status,
     initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
-    reminderChannel, preferredLanguage,
+    reminderChannel, preferredLanguage, nationality,
   } = body;
 
   const VALID_REMINDER_CHANNELS = ["WHATSAPP", "EMAIL", "BOTH", "NONE"] as const;
@@ -285,6 +287,15 @@ export async function PATCH(
     );
   }
 
+  // Nationality (ISO 3166-1 alpha-2) drives SST.
+  const parsedNationality = nationality === undefined ? undefined : parseNationality(nationality);
+  if (parsedNationality === "invalid") {
+    return NextResponse.json(
+      { error: "Invalid nationality. Use a 2-letter ISO country code (e.g. MY, SG)." },
+      { status: 400 }
+    );
+  }
+
   // Validate blood type
   if (bloodType !== undefined && bloodType && !VALID_BLOOD_TYPES.includes(bloodType)) {
     return NextResponse.json(
@@ -339,6 +350,12 @@ export async function PATCH(
   if (doctorId !== undefined) updateData.doctorId = doctorId;
   // New fields
   if (icNumber !== undefined) updateData.icNumber = icNumber?.trim() || null;
+  if (parsedNationality !== undefined) {
+    updateData.nationality = parsedNationality;
+  } else if (!patientRef.nationality && isValidMyKad(icNumber)) {
+    // A MyKad entered with no nationality on file: Malaysian.
+    updateData.nationality = "MY";
+  }
   if (occupation !== undefined) updateData.occupation = occupation?.trim() || null;
   if (race !== undefined) updateData.race = race || null;
   if (maritalStatus !== undefined) updateData.maritalStatus = maritalStatus || null;
@@ -414,6 +431,7 @@ export async function PATCH(
       state: updated.state,
       postcode: updated.postcode,
       country: updated.country,
+      nationality: updated.nationality,
       emergencyName: updated.emergencyName,
       emergencyPhone: updated.emergencyPhone,
       emergencyRelation: updated.emergencyRelation,

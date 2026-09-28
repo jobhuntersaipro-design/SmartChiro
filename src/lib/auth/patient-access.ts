@@ -20,7 +20,7 @@ export interface PatientAccess {
 export async function getPatientAccess(userId: string, patientId: string): Promise<PatientAccess> {
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
-    select: { id: true, branchId: true, doctorId: true },
+    select: { id: true, branchId: true, doctorId: true, nationality: true },
   });
   if (!patient) return { patient: null, role: null, allowed: false, clinical: false };
 

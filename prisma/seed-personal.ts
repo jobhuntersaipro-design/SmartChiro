@@ -694,9 +694,27 @@ async function main() {
         dueDate: due,
         paidAt: inv.status === 'PAID' ? issued : null,
         lineItems: inv.items,
+        subtotal: inv.amount,
+        taxAmount: 0,
+        amountPaid: inv.status === 'PAID' ? inv.amount : 0,
+        issuedAt: issued,
         patientId,
         branchId: branches[patient.branchIdx].id,
         createdAt: issued,
+        // Paid invoices carry their payment so balances and "paid this month" add up.
+        ...(inv.status === 'PAID'
+          ? {
+              payments: {
+                create: {
+                  amount: inv.amount,
+                  method: 'CASH' as const,
+                  receivedAt: issued,
+                  receiptNumber: `JH-RCP-${String(invCount + 1).padStart(4, '0')}`,
+                  branchId: branches[patient.branchIdx].id,
+                },
+              },
+            }
+          : {}),
       },
     })
     invCount++

@@ -43,9 +43,14 @@ describe("invoices API", () => {
             status,
             dueDate: dueDays === null ? null : new Date(Date.now() + dueDays * 86400000),
             paidAt: status === "PAID" ? new Date() : null,
+            amountPaid: status === "PAID" ? amount : 0,
             lineItems: [{ description: "Adjustment", quantity: 1, unitPrice: amount, total: amount }],
             patientId,
             branchId,
+            // "Paid this month" counts payments received, so a paid invoice carries its payment.
+            ...(status === "PAID"
+              ? { payments: { create: { amount, method: "CASH", receivedAt: new Date(), receiptNumber: `${PREFIX}-R-${key}`, branchId } } }
+              : {}),
           },
         })
         .then((inv) => (ids[key] = inv.id));
