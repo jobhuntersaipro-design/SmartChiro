@@ -231,7 +231,21 @@ For the screens: the list's status styles need a `PARTIALLY_PAID` entry ("Partia
 
 ## Phase 6 — WhatsApp recall and review requests
 
-_Detailed before build._
+Recall is where clinics win back revenue; today only appointment reminders exist.
+
+### 6.1 Languages
+- Patient `preferredLanguage` gains `zh` (Simplified Chinese). The reminder template gets a `zh_CN` translation; email reminder defaults get a Chinese version. Language pickers show English / Bahasa Melayu / 中文.
+
+### 6.2 Consent (PDPA + Meta marketing rules)
+- Patient `marketingConsent` (default false) + `marketingConsentAt`. Recall and review messages go only to consenting patients; appointment reminders (utility) don't need it. Consent is a checkbox on add/edit patient and the profile, and every outreach message says how to opt out ("Reply STOP"). An inbound "STOP" on WhatsApp (webhook `messages`) clears consent.
+
+### 6.3 Outreach
+- Branch outreach settings (in the Reminders card): recall on/off, recall after N days since last visit (default 42), cooldown before recalling again (default 90), daily limit (default 30); review requests on/off, send N hours after a completed visit (default 3), cooldown per patient (default 180 days), Google review URL.
+- `PatientOutreach` rows (type `RECALL | REVIEW`, channel, status `PENDING | SENT | FAILED | SKIPPED`, scheduled/sent times, external id, failure reason, appointment for reviews). The existing dispatch cron materialises candidates and sends due rows: WhatsApp template first (when the branch is connected and the template approved), email fallback.
+- Recall candidate: active, consenting patient, last completed visit ≥ N days ago, nothing booked, not recalled within the cooldown. Review candidate: appointment COMPLETED ≥ delay hours ago (and within 3 days), patient consenting, no review request within the cooldown, branch has a review URL.
+- WhatsApp templates `smartchiro_recall_v1` and `smartchiro_review_v1` (category MARKETING, en / ms / zh) are created with the reminder template on connect and on "Refresh templates"; status is tracked per template and language.
+- Manual actions: "Send recall" on the dashboard's recall signal and on a patient; outreach history on the patient profile and a branch outreach log (last 100) in settings.
+**Done when:** a lapsed consenting patient gets one recall (WhatsApp or email) and not again within the cooldown; a completed visit triggers one review request; a non-consenting patient gets neither.
 
 ## Phase 7 — Online booking and patient portal
 
