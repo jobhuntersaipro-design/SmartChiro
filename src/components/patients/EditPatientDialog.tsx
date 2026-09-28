@@ -84,6 +84,15 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
     }
   }, [patient, open]);
 
+  useEffect(() => {
+    if (!open || !patient) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, patient, onOpenChange]);
+
   if (!open || !patient) return null;
 
   function update(key: string, value: string) {
@@ -115,13 +124,17 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={() => onOpenChange(false)} />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-patient-title"
         className="relative z-10 w-full max-w-160 max-h-[90vh] rounded-2xl border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between p-5 pb-0">
-          <h2 className="text-[18px] font-light text-[#061b31]">Edit Patient</h2>
+          <h2 id="edit-patient-title" className="text-[18px] font-light text-[#061b31]">Edit Patient</h2>
           <button
             onClick={() => onOpenChange(false)}
+            aria-label="Close"
             className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />

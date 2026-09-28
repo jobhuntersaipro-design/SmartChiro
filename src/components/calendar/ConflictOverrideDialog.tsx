@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { format } from "date-fns/format";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,23 @@ interface Props {
 }
 
 export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Props) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={onCancel}
     >
       <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="conflict-override-title"
         onClick={(e) => e.stopPropagation()}
         className="w-120 rounded-2xl border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
@@ -27,7 +39,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
             <AlertTriangle className="h-4.5 w-4.5 text-[#9b6829]" strokeWidth={1.75} />
           </div>
           <div>
-            <h2 className="text-[16px] font-medium text-[#0A2540]">Conflicting appointment</h2>
+            <h2 id="conflict-override-title" className="text-[16px] font-medium text-[#0A2540]">Conflicting appointment</h2>
             <p className="text-[13px] text-[#64748d] mt-0.5">
               The new time overlaps with{" "}
               {conflicts.length === 1 ? "another booking" : `${conflicts.length} other bookings`} for this doctor.

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import type { BaseShape } from "@/types/annotation";
 
@@ -48,6 +49,17 @@ export function CascadeDeleteDialog({
   // pending shape and dismisses the modal mid-click).
   const stopAll = (e: React.SyntheticEvent) => e.stopPropagation();
 
+  useEffect(() => {
+    // Stop propagation so the canvas's window-level Escape doesn't also clear the selection.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      onCancel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -60,6 +72,9 @@ export function CascadeDeleteDialog({
       onMouseUp={stopAll}
     >
       <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="cascade-delete-title"
         className="flex w-full max-w-md flex-col gap-4 p-5"
         onClick={(e) => e.stopPropagation()}
         onPointerDown={stopAll}
@@ -76,7 +91,7 @@ export function CascadeDeleteDialog({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle size={16} strokeWidth={1.75} style={{ color: "#F5A623" }} />
-            <h3 className="text-sm font-semibold" style={{ color: "#0A2540" }}>
+            <h3 id="cascade-delete-title" className="text-sm font-semibold" style={{ color: "#0A2540" }}>
               Delete linked landmark
             </h3>
           </div>

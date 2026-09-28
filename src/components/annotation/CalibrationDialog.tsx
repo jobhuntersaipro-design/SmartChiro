@@ -59,6 +59,9 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
       onMouseUp={stopAll}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="calibration-dialog-title"
         className="flex w-full max-w-sm flex-col gap-4 p-5"
         onClick={(e) => e.stopPropagation()}
         onPointerDown={stopAll}
@@ -75,7 +78,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <Ruler size={16} strokeWidth={1.75} style={{ color: "#533afd" }} />
-            <h3 className="text-sm font-semibold" style={{ color: "#0A2540" }}>
+            <h3 id="calibration-dialog-title" className="text-sm font-semibold" style={{ color: "#0A2540" }}>
               Calibrate measurements
             </h3>
           </div>

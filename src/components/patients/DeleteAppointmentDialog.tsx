@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatAppointmentDateTime } from "@/lib/format";
@@ -22,6 +22,15 @@ export function DeleteAppointmentDialog({
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!appointmentId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [appointmentId, onClose]);
 
   if (!appointmentId) return null;
 
@@ -57,6 +66,9 @@ export function DeleteAppointmentDialog({
       onClick={onClose}
     >
       <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-115 rounded-2xl border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
@@ -66,7 +78,7 @@ export function DeleteAppointmentDialog({
             <AlertTriangle className="h-4 w-4 text-[#DF1B41]" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-[18px] font-medium text-[#0A2540]">
+            <h2 id="delete-appointment-title" className="text-[18px] font-medium text-[#0A2540]">
               Permanently delete appointment?
             </h2>
             <p className="text-[14px] text-[#425466] mt-1">

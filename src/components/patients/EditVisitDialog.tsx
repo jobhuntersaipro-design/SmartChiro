@@ -238,6 +238,17 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
     }));
   }, []);
 
+  // Escape goes through the same dirty-check as a backdrop click. No deps
+  // array so the listener always sees the current render's form state.
+  useEffect(() => {
+    if (!open || !visit) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleBackdropClick();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
+
   if (!open || !visit) return null;
 
   function handleClose() {
@@ -295,6 +306,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleBackdropClick} />
 
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-visit-title"
         className="relative z-10 w-full max-w-150 max-h-[90vh] flex flex-col rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"
         style={{
           boxShadow:
@@ -302,9 +316,10 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
         }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5edf5]">
-          <h2 className="text-[18px] font-light text-[#061b31]">Edit Visit</h2>
+          <h2 id="edit-visit-title" className="text-[18px] font-light text-[#061b31]">Edit Visit</h2>
           <button
             onClick={handleClose}
+            aria-label="Close"
             className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -322,8 +337,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
             <div className="space-y-3 pb-3 pl-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Visit Date</label>
+                  <label htmlFor="edit-visit-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">Visit Date</label>
                   <input
+                    id="edit-visit-visit-date"
                     type="date"
                     value={form.visitDate || ""}
                     onChange={(e) => updateField("visitDate", e.target.value)}
@@ -331,8 +347,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Visit Type</label>
+                  <label htmlFor="edit-visit-visit-type" className="block text-[13px] font-medium text-[#273951] mb-1.5">Visit Type</label>
                   <select
+                    id="edit-visit-visit-type"
                     value={form.visitType || "follow_up"}
                     onChange={(e) => updateField("visitType", e.target.value)}
                     className={selectClass}
@@ -346,8 +363,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 </div>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Chief Complaint</label>
+                <label htmlFor="edit-visit-chief-complaint" className="block text-[13px] font-medium text-[#273951] mb-1.5">Chief Complaint</label>
                 <input
+                  id="edit-visit-chief-complaint"
                   type="text"
                   value={form.chiefComplaint || ""}
                   onChange={(e) => updateField("chiefComplaint", e.target.value)}
@@ -420,8 +438,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                     maxLabel="10 — Fully Recovered"
                   />
                   <div>
-                    <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Patient Comments</label>
+                    <label htmlFor="edit-visit-patient-comments" className="block text-[13px] font-medium text-[#273951] mb-1.5">Patient Comments</label>
                     <textarea
+                      id="edit-visit-patient-comments"
                       value={form.questionnaire?.patientComments || ""}
                       onChange={(e) => updateQuestionnaire("patientComments", e.target.value)}
                       placeholder="Any additional notes from the patient..."
@@ -443,8 +462,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
           {sections.soap && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Subjective</label>
+                <label htmlFor="edit-visit-subjective" className="block text-[13px] font-medium text-[#273951] mb-1.5">Subjective</label>
                 <textarea
+                  id="edit-visit-subjective"
                   value={form.subjective || ""}
                   onChange={(e) => updateField("subjective", e.target.value)}
                   placeholder="Patient's description of symptoms..."
@@ -453,8 +473,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Objective</label>
+                <label htmlFor="edit-visit-objective" className="block text-[13px] font-medium text-[#273951] mb-1.5">Objective</label>
                 <textarea
+                  id="edit-visit-objective"
                   value={form.objective || ""}
                   onChange={(e) => updateField("objective", e.target.value)}
                   placeholder="Clinical findings, observations, exam results..."
@@ -463,8 +484,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Assessment</label>
+                <label htmlFor="edit-visit-assessment" className="block text-[13px] font-medium text-[#273951] mb-1.5">Assessment</label>
                 <textarea
+                  id="edit-visit-assessment"
                   value={form.assessment || ""}
                   onChange={(e) => updateField("assessment", e.target.value)}
                   placeholder="Diagnosis, differential diagnosis..."
@@ -473,8 +495,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Plan</label>
+                <label htmlFor="edit-visit-plan" className="block text-[13px] font-medium text-[#273951] mb-1.5">Plan</label>
                 <textarea
+                  id="edit-visit-plan"
                   value={form.plan || ""}
                   onChange={(e) => updateField("plan", e.target.value)}
                   placeholder="Treatment plan, follow-up actions..."
@@ -494,8 +517,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
           {sections.treatment && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Areas Adjusted</label>
+                <label htmlFor="edit-visit-areas-adjusted" className="block text-[13px] font-medium text-[#273951] mb-1.5">Areas Adjusted</label>
                 <input
+                  id="edit-visit-areas-adjusted"
                   type="text"
                   value={form.areasAdjusted || ""}
                   onChange={(e) => updateField("areasAdjusted", e.target.value)}
@@ -504,8 +528,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Technique Used</label>
+                <label htmlFor="edit-visit-technique-used" className="block text-[13px] font-medium text-[#273951] mb-1.5">Technique Used</label>
                 <select
+                  id="edit-visit-technique-used"
                   value={form.techniqueUsed || ""}
                   onChange={(e) => updateField("techniqueUsed", e.target.value)}
                   className={selectClass}
@@ -517,8 +542,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Subluxation Findings</label>
+                <label htmlFor="edit-visit-subluxation-findings" className="block text-[13px] font-medium text-[#273951] mb-1.5">Subluxation Findings</label>
                 <textarea
+                  id="edit-visit-subluxation-findings"
                   value={form.subluxationFindings || ""}
                   onChange={(e) => updateField("subluxationFindings", e.target.value)}
                   placeholder="Subluxation findings and listings..."
@@ -527,8 +553,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Treatment Notes</label>
+                <label htmlFor="edit-visit-treatment-notes" className="block text-[13px] font-medium text-[#273951] mb-1.5">Treatment Notes</label>
                 <textarea
+                  id="edit-visit-treatment-notes"
                   value={form.treatmentNotes || ""}
                   onChange={(e) => updateField("treatmentNotes", e.target.value)}
                   placeholder="Additional treatment notes..."
@@ -549,8 +576,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
             <div className="space-y-3 pb-3 pl-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">BP Systolic</label>
+                  <label htmlFor="edit-visit-bp-systolic" className="block text-[13px] font-medium text-[#273951] mb-1.5">BP Systolic</label>
                   <input
+                    id="edit-visit-bp-systolic"
                     type="number"
                     value={form.bloodPressureSys ?? ""}
                     onChange={(e) => updateField("bloodPressureSys", e.target.value ? Number(e.target.value) : undefined)}
@@ -559,8 +587,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">BP Diastolic</label>
+                  <label htmlFor="edit-visit-bp-diastolic" className="block text-[13px] font-medium text-[#273951] mb-1.5">BP Diastolic</label>
                   <input
+                    id="edit-visit-bp-diastolic"
                     type="number"
                     value={form.bloodPressureDia ?? ""}
                     onChange={(e) => updateField("bloodPressureDia", e.target.value ? Number(e.target.value) : undefined)}
@@ -571,8 +600,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Heart Rate</label>
+                  <label htmlFor="edit-visit-heart-rate" className="block text-[13px] font-medium text-[#273951] mb-1.5">Heart Rate</label>
                   <input
+                    id="edit-visit-heart-rate"
                     type="number"
                     value={form.heartRate ?? ""}
                     onChange={(e) => updateField("heartRate", e.target.value ? Number(e.target.value) : undefined)}
@@ -581,8 +611,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Weight (kg)</label>
+                  <label htmlFor="edit-visit-weight-kg" className="block text-[13px] font-medium text-[#273951] mb-1.5">Weight (kg)</label>
                   <input
+                    id="edit-visit-weight-kg"
                     type="number"
                     step="0.1"
                     value={form.weight ?? ""}
@@ -592,8 +623,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Temp (C)</label>
+                  <label htmlFor="edit-visit-temp-c" className="block text-[13px] font-medium text-[#273951] mb-1.5">Temp (C)</label>
                   <input
+                    id="edit-visit-temp-c"
                     type="number"
                     step="0.1"
                     value={form.temperature ?? ""}
@@ -615,8 +647,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
           {sections.recommendations && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Recommendations</label>
+                <label htmlFor="edit-visit-recommendations" className="block text-[13px] font-medium text-[#273951] mb-1.5">Recommendations</label>
                 <textarea
+                  id="edit-visit-recommendations"
                   value={form.recommendations || ""}
                   onChange={(e) => updateField("recommendations", e.target.value)}
                   placeholder="Home care instructions, exercises..."
@@ -625,8 +658,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Referrals</label>
+                <label htmlFor="edit-visit-referrals" className="block text-[13px] font-medium text-[#273951] mb-1.5">Referrals</label>
                 <textarea
+                  id="edit-visit-referrals"
                   value={form.referrals || ""}
                   onChange={(e) => updateField("referrals", e.target.value)}
                   placeholder="Specialist referrals if any..."
@@ -635,8 +669,9 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">Next Visit Date</label>
+                <label htmlFor="edit-visit-next-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">Next Visit Date</label>
                 <input
+                  id="edit-visit-next-visit-date"
                   type="date"
                   value={nextVisitDate}
                   onChange={(e) => setNextVisitDate(e.target.value)}

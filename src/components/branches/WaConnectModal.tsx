@@ -52,10 +52,24 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
     };
   }, [open, branchId, onConnected]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-105 rounded-2xl border border-[#E3E8EE] bg-white p-6 shadow-lg">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Connect WhatsApp"
+        className="w-105 rounded-2xl border border-[#E3E8EE] bg-white p-6 shadow-lg"
+      >
         <div className="mb-3 text-[18px] font-medium text-[#0A2540]">Connect WhatsApp</div>
         <p className="mb-4 text-[15px] text-[#425466]">
           Scan this QR with the WhatsApp app on the owner&apos;s phone (Settings → Linked

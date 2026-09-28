@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, AlertTriangle } from "lucide-react";
 import type { Visit } from "@/types/visit";
@@ -16,6 +16,16 @@ interface DeleteVisitDialogProps {
 export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDeleted }: DeleteVisitDialogProps) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // No deps array: always call the current render's handleClose.
+  useEffect(() => {
+    if (!open || !visit) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
 
   if (!open || !visit) return null;
 
@@ -56,6 +66,9 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleClose} />
 
       <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-visit-title"
         className="relative z-10 w-full max-w-105 rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"
         style={{
           boxShadow:
@@ -63,9 +76,10 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
         }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5edf5]">
-          <h2 className="text-[18px] font-light text-[#061b31]">Delete Visit</h2>
+          <h2 id="delete-visit-title" className="text-[18px] font-light text-[#061b31]">Delete Visit</h2>
           <button
             onClick={handleClose}
+            aria-label="Close"
             className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />

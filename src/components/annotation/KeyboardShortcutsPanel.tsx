@@ -107,6 +107,9 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="keyboard-shortcuts-title"
         className="relative max-h-[85vh] w-full max-w-180 overflow-y-auto"
         style={{
           backgroundColor: "#FFFFFF",
@@ -124,11 +127,12 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
             borderRadius: "8px 8px 0 0",
           }}
         >
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#061b31" }}>
+          <h2 id="keyboard-shortcuts-title" style={{ fontSize: 18, fontWeight: 600, color: "#061b31" }}>
             Keyboard Shortcuts
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="flex items-center justify-center transition-colors hover:bg-[#f6f9fc]"
             style={{ width: 32, height: 32, borderRadius: 4, color: "#64748d" }}
           >

@@ -118,6 +118,15 @@ export function EditAppointmentDialog({
     return () => clearTimeout(t);
   }, [doctor, date, time, duration, appointmentId]);
 
+  useEffect(() => {
+    if (!appointmentId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [appointmentId, onClose]);
+
   if (!appointmentId) return null;
 
   const iso = inputsToIso(date, time);
@@ -173,11 +182,14 @@ export function EditAppointmentDialog({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
-        <h2 className="text-[18px] font-medium text-[#0A2540] mb-1">Edit appointment</h2>
+        <h2 id="edit-appointment-title" className="text-[18px] font-medium text-[#0A2540] mb-1">Edit appointment</h2>
         {appt && (
           <p className="text-[13px] text-[#64748d] mb-4">
             {appt.patient.firstName} {appt.patient.lastName}
@@ -194,8 +206,9 @@ export function EditAppointmentDialog({
           <>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
+                <label htmlFor="edit-appointment-date" className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
                 <input
+                  id="edit-appointment-date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -203,8 +216,9 @@ export function EditAppointmentDialog({
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-[#425466] mb-1">Time</label>
+                <label htmlFor="edit-appointment-time" className="block text-[12px] font-medium text-[#425466] mb-1">Time</label>
                 <input
+                  id="edit-appointment-time"
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
@@ -214,10 +228,11 @@ export function EditAppointmentDialog({
             </div>
 
             <div className="mb-4">
-              <label className="block text-[12px] font-medium text-[#425466] mb-1">
+              <label htmlFor="edit-appointment-duration" className="block text-[12px] font-medium text-[#425466] mb-1">
                 Duration (minutes)
               </label>
               <input
+                id="edit-appointment-duration"
                 type="number"
                 min={15}
                 max={180}
@@ -237,8 +252,9 @@ export function EditAppointmentDialog({
 
             {isAdmin && (
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-[#425466] mb-1">Status</label>
+                <label htmlFor="edit-appointment-status" className="block text-[12px] font-medium text-[#425466] mb-1">Status</label>
                 <select
+                  id="edit-appointment-status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
@@ -256,8 +272,9 @@ export function EditAppointmentDialog({
             )}
 
             <div className="mb-4">
-              <label className="block text-[12px] font-medium text-[#425466] mb-1">Notes</label>
+              <label htmlFor="edit-appointment-notes" className="block text-[12px] font-medium text-[#425466] mb-1">Notes</label>
               <textarea
+                id="edit-appointment-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}

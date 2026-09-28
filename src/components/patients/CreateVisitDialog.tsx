@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   X, Loader2, ChevronDown, ChevronUp,
@@ -154,7 +154,9 @@ function blankVisitForm(): CreateVisitData {
 export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: CreateVisitDialogProps) {
   const [form, setForm] = useState<CreateVisitData>(blankVisitForm);
   const [nextVisitDate, setNextVisitDate] = useState<string>("");
-  const [questionnaireEnabled, setQuestionnaireEnabled] = useState(true);
+  // Opt-in: untouched 5/10 defaults were saved on every visit and skewed the
+  // Recovery Trend, which averages these scores.
+  const [questionnaireEnabled, setQuestionnaireEnabled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -191,12 +193,23 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
     }));
   }, []);
 
+  // Escape goes through the same dirty-check as a backdrop click. No deps
+  // array so the listener always sees the current render's form state.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleBackdropClick();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
+
   if (!open) return null;
 
   function handleClose() {
     setForm(blankVisitForm());
     setNextVisitDate("");
-    setQuestionnaireEnabled(true);
+    setQuestionnaireEnabled(false);
     setSubmitError(null);
     onOpenChange(false);
   }
@@ -257,6 +270,9 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
 
       {/* Dialog */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-visit-title"
         className="relative z-10 w-full max-w-150 max-h-[90vh] flex flex-col rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"
         style={{
           boxShadow:
@@ -265,9 +281,10 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5edf5]">
-          <h2 className="text-[18px] font-light text-[#061b31]">Add Visit</h2>
+          <h2 id="create-visit-title" className="text-[18px] font-light text-[#061b31]">Add Visit</h2>
           <button
             onClick={handleClose}
+            aria-label="Close"
             className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -287,10 +304,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             <div className="space-y-3 pb-3 pl-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     Visit Date
                   </label>
                   <input
+                    id="create-visit-visit-date"
                     type="date"
                     value={form.visitDate || ""}
                     onChange={(e) => updateField("visitDate", e.target.value)}
@@ -298,10 +316,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-visit-type" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     Visit Type
                   </label>
                   <select
+                    id="create-visit-visit-type"
                     value={form.visitType || "follow_up"}
                     onChange={(e) => updateField("visitType", e.target.value)}
                     className={selectClass}
@@ -315,10 +334,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 </div>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-chief-complaint" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Chief Complaint
                 </label>
                 <input
+                  id="create-visit-chief-complaint"
                   type="text"
                   value={form.chiefComplaint || ""}
                   onChange={(e) => updateField("chiefComplaint", e.target.value)}
@@ -352,7 +372,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
               </label>
               {!questionnaireEnabled && (
                 <p className="text-[13px] text-[#64748d] italic pl-6">
-                  Questionnaire will be skipped. You can add it later by editing the visit.
+                  Not recorded unless you tick this — only real answers count towards the recovery trend.
                 </p>
               )}
               {questionnaireEnabled && (
@@ -394,10 +414,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 maxLabel="10 — Fully Recovered"
               />
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-patient-comments" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Patient Comments
                 </label>
                 <textarea
+                  id="create-visit-patient-comments"
                   value={form.questionnaire?.patientComments || ""}
                   onChange={(e) => updateQuestionnaire("patientComments", e.target.value)}
                   placeholder="Any additional notes from the patient..."
@@ -420,10 +441,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           {sections.soap && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-subjective" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Subjective
                 </label>
                 <textarea
+                  id="create-visit-subjective"
                   value={form.subjective || ""}
                   onChange={(e) => updateField("subjective", e.target.value)}
                   placeholder="Patient's description of symptoms..."
@@ -432,10 +454,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-objective" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Objective
                 </label>
                 <textarea
+                  id="create-visit-objective"
                   value={form.objective || ""}
                   onChange={(e) => updateField("objective", e.target.value)}
                   placeholder="Clinical findings, observations, exam results..."
@@ -444,10 +467,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-assessment" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Assessment
                 </label>
                 <textarea
+                  id="create-visit-assessment"
                   value={form.assessment || ""}
                   onChange={(e) => updateField("assessment", e.target.value)}
                   placeholder="Diagnosis, differential diagnosis..."
@@ -456,10 +480,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-plan" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Plan
                 </label>
                 <textarea
+                  id="create-visit-plan"
                   value={form.plan || ""}
                   onChange={(e) => updateField("plan", e.target.value)}
                   placeholder="Treatment plan, follow-up actions..."
@@ -480,10 +505,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           {sections.treatment && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-areas-adjusted" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Areas Adjusted
                 </label>
                 <input
+                  id="create-visit-areas-adjusted"
                   type="text"
                   value={form.areasAdjusted || ""}
                   onChange={(e) => updateField("areasAdjusted", e.target.value)}
@@ -492,10 +518,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-technique-used" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Technique Used
                 </label>
                 <select
+                  id="create-visit-technique-used"
                   value={form.techniqueUsed || ""}
                   onChange={(e) => updateField("techniqueUsed", e.target.value)}
                   className={selectClass}
@@ -509,10 +536,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-subluxation-findings" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Subluxation Findings
                 </label>
                 <textarea
+                  id="create-visit-subluxation-findings"
                   value={form.subluxationFindings || ""}
                   onChange={(e) => updateField("subluxationFindings", e.target.value)}
                   placeholder="Subluxation findings and listings..."
@@ -521,10 +549,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-treatment-notes" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Treatment Notes
                 </label>
                 <textarea
+                  id="create-visit-treatment-notes"
                   value={form.treatmentNotes || ""}
                   onChange={(e) => updateField("treatmentNotes", e.target.value)}
                   placeholder="Additional treatment notes..."
@@ -546,10 +575,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             <div className="space-y-3 pb-3 pl-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-bp-systolic" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     BP Systolic
                   </label>
                   <input
+                    id="create-visit-bp-systolic"
                     type="number"
                     value={form.bloodPressureSys ?? ""}
                     onChange={(e) =>
@@ -560,10 +590,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-bp-diastolic" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     BP Diastolic
                   </label>
                   <input
+                    id="create-visit-bp-diastolic"
                     type="number"
                     value={form.bloodPressureDia ?? ""}
                     onChange={(e) =>
@@ -576,10 +607,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-heart-rate" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     Heart Rate
                   </label>
                   <input
+                    id="create-visit-heart-rate"
                     type="number"
                     value={form.heartRate ?? ""}
                     onChange={(e) =>
@@ -590,10 +622,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-weight-kg" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     Weight (kg)
                   </label>
                   <input
+                    id="create-visit-weight-kg"
                     type="number"
                     step="0.1"
                     value={form.weight ?? ""}
@@ -605,10 +638,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-temp-c" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     Temp (C)
                   </label>
                   <input
+                    id="create-visit-temp-c"
                     type="number"
                     step="0.1"
                     value={form.temperature ?? ""}
@@ -633,10 +667,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           {sections.recommendations && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-recommendations" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Recommendations
                 </label>
                 <textarea
+                  id="create-visit-recommendations"
                   value={form.recommendations || ""}
                   onChange={(e) => updateField("recommendations", e.target.value)}
                   placeholder="Home care instructions, exercises..."
@@ -645,10 +680,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-referrals" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Referrals
                 </label>
                 <textarea
+                  id="create-visit-referrals"
                   value={form.referrals || ""}
                   onChange={(e) => updateField("referrals", e.target.value)}
                   placeholder="Specialist referrals if any..."
@@ -657,10 +693,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-next-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Next Visit Date
                 </label>
                 <input
+                  id="create-visit-next-visit-date"
                   type="date"
                   value={nextVisitDate}
                   min={new Date().toISOString().slice(0, 10)}
