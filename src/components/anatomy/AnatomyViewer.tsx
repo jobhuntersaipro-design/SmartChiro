@@ -2,7 +2,7 @@
 
 import { Suspense, use, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { CameraControls } from "@react-three/drei";
+import { CameraControls, CameraControlsImpl } from "@react-three/drei";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { AlertTriangle, Loader2 } from "lucide-react";
@@ -328,10 +328,61 @@ interface CameraRigProps {
   registry: MeshRegistry;
   focusRequest: FocusRequest | null;
   resetNonce: number;
+  container: React.RefObject<HTMLDivElement | null>;
 }
 
-function CameraRig({ registry, focusRequest, resetNonce }: CameraRigProps) {
+const { ACTION } = CameraControlsImpl;
+const GHOST_OPACITY_CUTOFF = 0.2;
+
+/** True when the ray hits any visible, non-ghosted mesh (including the non-interactive underlay). */
+function rayHitsModel(raycaster: THREE.Raycaster, scene: THREE.Scene): boolean {
+  const hits: THREE.Intersection[] = [];
+  scene.traverseVisible((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    const material = obj.material as THREE.Material;
+    if (material.transparent && material.opacity < GHOST_OPACITY_CUTOFF) return;
+    // Call the prototype directly: underlay meshes stub out their own raycast.
+    THREE.Mesh.prototype.raycast.call(obj, raycaster, hits);
+  });
+  return hits.length > 0;
+}
+
+function CameraRig({ registry, focusRequest, resetNonce, container }: CameraRigProps) {
   const controls = useRef<CameraControls>(null);
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+
+  // Like the X-ray viewer's hand tool: a drag that starts on the model rotates
+  // it, a drag that starts on empty space moves (pans) the view.
+  useEffect(() => {
+    const el = container.current;
+    if (!el) return;
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+
+    function onPointerDown(e: PointerEvent) {
+      const cc = controls.current;
+      if (!cc || e.button !== 0 || e.target !== gl.domElement) return;
+      const rect = gl.domElement.getBoundingClientRect();
+      ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+      raycaster.setFromCamera(ndc, cc.camera);
+      const onModel = rayHitsModel(raycaster, scene);
+      cc.mouseButtons.left = onModel ? ACTION.ROTATE : ACTION.TRUCK;
+      cc.touches.one = onModel ? ACTION.TOUCH_ROTATE : ACTION.TOUCH_TRUCK;
+      if (!onModel && el) el.style.cursor = "grabbing";
+    }
+    function onPointerUp() {
+      if (el?.style.cursor === "grabbing") el.style.cursor = "";
+    }
+
+    // Capture phase on an ancestor so the action is set before camera-controls sees the event.
+    el.addEventListener("pointerdown", onPointerDown, { capture: true });
+    window.addEventListener("pointerup", onPointerUp);
+    return () => {
+      el.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [container, gl, scene]);
 
   useEffect(() => {
     const cc = controls.current;
@@ -453,7 +504,9 @@ export default function AnatomyViewer({
   }
 
   function setCursor(pointer: boolean) {
-    if (containerRef.current) containerRef.current.style.cursor = pointer ? "pointer" : "";
+    const el = containerRef.current;
+    // Leave the "grabbing" cursor alone while an empty-space pan is in progress.
+    if (el && el.style.cursor !== "grabbing") el.style.cursor = pointer ? "pointer" : "";
   }
 
   function handleHover(id: string, event: ThreeEvent<PointerEvent>) {
@@ -481,7 +534,7 @@ export default function AnatomyViewer({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_center,#2a3157_0%,#1A1F36_55%,#10132a_100%)]"
+      className="relative h-full w-full cursor-grab overflow-hidden bg-[radial-gradient(ellipse_at_center,#2a3157_0%,#1A1F36_55%,#10132a_100%)]"
     >
       <Canvas
         frameloop="demand"
@@ -520,7 +573,12 @@ export default function AnatomyViewer({
             <LayerModel layer="skeleton" materials={materials} interactive={false} />
           )}
         </Suspense>
-        <CameraRig registry={registry} focusRequest={focusRequest} resetNonce={resetNonce} />
+        <CameraRig
+          registry={registry}
+          focusRequest={focusRequest}
+          resetNonce={resetNonce}
+          container={containerRef}
+        />
       </Canvas>
 
       <div

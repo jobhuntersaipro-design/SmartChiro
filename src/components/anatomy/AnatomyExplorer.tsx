@@ -243,7 +243,7 @@ export function AnatomyExplorer() {
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-[#0A2540]/70 to-transparent px-3 pb-2.5 pt-8">
             <p className="hidden text-[12px] text-white/70 md:block">
-              Drag to rotate · Right-drag to pan · Scroll to zoom · Shift+click to multi-select
+              Drag the model to rotate · Drag empty space to move · Scroll to zoom · Shift+click to multi-select
               {isMuscles && " · Alt+click for a single muscle"} · Esc to clear
             </p>
             <a

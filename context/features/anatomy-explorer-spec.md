@@ -14,7 +14,10 @@ by the "tap a body region and it zooms in" anatomy reels. Two layers:
 
 ## Interaction
 
-- Drag to rotate, right-drag to pan, scroll to zoom (camera-controls).
+- Drag the model to rotate it. Drag empty space beside the model to move
+  (pan) the view, like the X-ray viewer's hand tool; a pointer-down raycast
+  decides which. The cursor shows a grab hand over empty space. Right-drag also
+  pans, and scroll zooms (camera-controls).
 - Hover shows a tooltip; click selects and flies the camera to the part.
   Posterior parts are viewed from behind and lateral parts from their side
   (`focusView` in `src/lib/anatomy/camera.ts`).
