@@ -62,6 +62,7 @@ import { CalibrationDialog } from "./CalibrationDialog";
 import { CascadeDeleteDialog } from "./CascadeDeleteDialog";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
 import { useViewerInputs } from "@/hooks/useViewerInputs";
+import { useStableCallbacks } from "@/hooks/useStableCallbacks";
 import { SeriesStrip, type SeriesXray } from "./SeriesStrip";
 import { ToolIndicatorChip } from "./ToolIndicatorChip";
 import { FirstRunOverlay } from "./FirstRunOverlay";
@@ -1488,9 +1489,13 @@ export function AnnotationCanvas({
     (e: React.PointerEvent) => {
       const rect = containerRectRef.current ?? (e.currentTarget as HTMLElement).getBoundingClientRect();
 
+      const previewBefore = drawing.peekDrawingShape();
       drawing.handlePointerMove(e, rect);
       interaction.handlePointerMove(e);
-      setRenderTick((n) => n + 1);
+      // Repaint only when the ref-held preview changed (a shape being drawn).
+      // Pan, drag and marquee update state themselves; plain hovering changes
+      // nothing, and forcing a render here re-rendered every shape per move.
+      if (drawing.peekDrawingShape() !== previewBefore) setRenderTick((n) => n + 1);
     },
     [drawing, interaction]
   );
@@ -1525,32 +1530,85 @@ export function AnnotationCanvas({
   // Collect all shapes to render (committed + drawing preview + pending).
   // Dedupe by id — during the commit-pending → onAddShape transition, the same shape
   // can briefly exist in both `shapes` and `pendingShape`. Preview/pending wins.
-  const shapeById = new Map<string, BaseShape>();
-  for (const s of shapes) shapeById.set(s.id, s);
-  if (drawing.drawingShape) shapeById.set(drawing.drawingShape.id, drawing.drawingShape);
-  if (drawing.pendingShape) shapeById.set(drawing.pendingShape.shape.id, drawing.pendingShape.shape);
-  // Resolve any pointRefs against the live shape map so measurements that
-  // snapped to a vertex follow that vertex when it moves. Pure function —
-  // returns the original shape (referential equality preserved) when no refs
-  // resolved or no points changed.
-  const allShapesToRender = Array.from(shapeById.values()).map((s) =>
-    resolveShapeRefs(s, shapeById)
-  );
+  //
+  // Memoised on the shape data, so re-renders that don't touch shapes (tool
+  // changes, hover, panel toggles) hand ShapeRenderer the same props and the
+  // memo'd renderer skips them.
+  const drawingShape = drawing.drawingShape;
+  const pendingShape = drawing.pendingShape?.shape ?? null;
+  const allShapesToRender = useMemo(() => {
+    const byId = new Map<string, BaseShape>();
+    for (const s of shapes) byId.set(s.id, s);
+    if (drawingShape) byId.set(drawingShape.id, drawingShape);
+    if (pendingShape) byId.set(pendingShape.id, pendingShape);
+    // Resolve any pointRefs against the live shape map so measurements that
+    // snapped to a vertex follow that vertex when it moves. Pure function —
+    // returns the original shape (referential equality preserved) when no refs
+    // resolved or no points changed.
+    return Array.from(byId.values()).map((s) => resolveShapeRefs(s, byId));
+  }, [shapes, drawingShape, pendingShape]);
 
   // Globally-unique P# labels for every dot on every point/line/polyline shape.
-  // Recomputed each render so adding/removing/reordering shapes keeps labels stable.
-  const vertexLabelsByShape = computeGlobalPointLabels(allShapesToRender);
+  // Each shape keeps its previous label array while the labels are unchanged,
+  // so a moving preview doesn't hand every other ShapeRenderer new props.
+  const vertexLabelCacheRef = useRef(new Map<string, string[]>());
+  const vertexLabelsByShape = useMemo(() => {
+    const next = computeGlobalPointLabels(allShapesToRender);
+    const stable = new Map<string, string[]>();
+    for (const [id, labels] of next) {
+      const prev = vertexLabelCacheRef.current.get(id);
+      stable.set(id, prev && prev.length === labels.length && prev.every((l, i) => l === labels[i]) ? prev : labels);
+    }
+    vertexLabelCacheRef.current = stable;
+    return stable;
+  }, [allShapesToRender]);
   // Committed shapes with linked vertices resolved — the panel's readings then
-  // match what the canvas draws.
-  const panelShapes = shapes.map((s) => resolveShapeRefs(s, shapeById));
-  // What's drawn: shapes and marquee placed on the flipped/rotated view.
-  const displayShapes = orientation
-    ? allShapesToRender.map((s) => orientShape(s, orientation))
-    : allShapesToRender;
+  // match what the canvas draws. Committed shapes never link to the preview,
+  // so this doesn't change (or re-render the panel) while drawing.
+  const panelShapes = useMemo(() => {
+    const byId = new Map(shapes.map((s) => [s.id, s]));
+    return shapes.map((s) => resolveShapeRefs(s, byId));
+  }, [shapes]);
+  // What's drawn: shapes and marquee placed on the flipped/rotated view,
+  // visible only, landmark dots on top of lines that pass through them.
+  const displayShapes = useMemo(
+    () =>
+      (orientation ? allShapesToRender.map((s) => orientShape(s, orientation)) : allShapesToRender)
+        .filter((s) => s.visible)
+        .sort((a, b) => {
+          const aLm = a.type === "landmark" ? 1 : 0;
+          const bLm = b.type === "landmark" ? 1 : 0;
+          if (aLm !== bLm) return aLm - bLm;
+          return a.zIndex - b.zIndex;
+        }),
+    [allShapesToRender, orientation],
+  );
   const displayMarquee =
     interaction.marqueeRect && orientation
       ? orientRect(interaction.marqueeRect, orientation)
       : interaction.marqueeRect;
+
+  // Stable identities so the memo'd panel and series strip skip the per-move
+  // re-renders while a shape is being drawn.
+  const panelHandlers = useStableCallbacks({
+    onSelectShape: (id: string) => interaction.setSelectedShapeIds([id]),
+    onSetSelectedShapeIds: (ids: string[]) => interaction.setSelectedShapeIds(ids),
+    onToggleVisibility: toggleShapeVisibility,
+    onToggleLock: toggleShapeLock,
+    onDeleteShapes: handleDeleteShapes,
+    onRequestDeleteShapes: requestDeleteShapes,
+    onUpdateShape: handleUpdateShape,
+    onStyleChange: setCurrentStyle,
+    onTogglePanel: handleTogglePropertiesPanel,
+    onClearCalibration: () => {
+      imageAdj.setPixelsPerMm(undefined);
+      autoSave.markDirty();
+    },
+    onEditCalibration: requestEditCalibration,
+    onResetLandmarksToAi: handleResetLandmarksToAi,
+    onBeforeNavigate: () => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments),
+  });
+  const dependentCounts = useMemo(() => buildDependentCounts(shapes), [shapes]);
 
   // Text input screen position
   const textScreenPos = drawing.textInputState.active && drawing.textInputState.position
@@ -1715,16 +1773,6 @@ export function AnnotationCanvas({
                     style={{ overflow: "visible" }}
                   >
                     {displayShapes
-                      .filter((s) => s.visible)
-                      .sort((a, b) => {
-                        // Landmark dots always render on top of any line /
-                        // ruler / polyline / arrow so a measurement that
-                        // passes through a landmark doesn't obscure it.
-                        const aLm = a.type === "landmark" ? 1 : 0;
-                        const bLm = b.type === "landmark" ? 1 : 0;
-                        if (aLm !== bLm) return aLm - bLm;
-                        return a.zIndex - b.zIndex;
-                      })
                       .map((shape) => (
                         <ShapeRenderer
                           key={shape.id}
@@ -1884,7 +1932,7 @@ export function AnnotationCanvas({
                   patientId={patientId}
                   currentXrayId={xrayId}
                   xrays={patientSeries}
-                  onBeforeNavigate={() => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments)}
+                  onBeforeNavigate={panelHandlers.onBeforeNavigate}
                 />
 
                 {/* First-run overlay (once per user) */}
@@ -1993,16 +2041,6 @@ export function AnnotationCanvas({
                             style={{ overflow: "visible" }}
                           >
                             {displayShapes
-                              .filter((s) => s.visible)
-                              .sort((a, b) => {
-                        // Landmark dots always render on top of any line /
-                        // ruler / polyline / arrow so a measurement that
-                        // passes through a landmark doesn't obscure it.
-                        const aLm = a.type === "landmark" ? 1 : 0;
-                        const bLm = b.type === "landmark" ? 1 : 0;
-                        if (aLm !== bLm) return aLm - bLm;
-                        return a.zIndex - b.zIndex;
-                      })
                               .map((shape) => (
                                 <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} />
                               ))}
@@ -2169,22 +2207,11 @@ export function AnnotationCanvas({
         <PropertiesPanel
           shapes={panelShapes}
           selectedShapeIds={interaction.selectedShapeIds}
-          onSelectShape={(id) => interaction.setSelectedShapeIds([id])}
-          onSetSelectedShapeIds={interaction.setSelectedShapeIds}
-          onToggleVisibility={toggleShapeVisibility}
-          onToggleLock={toggleShapeLock}
-          onDeleteShapes={handleDeleteShapes}
-          onRequestDeleteShapes={requestDeleteShapes}
-          onUpdateShape={handleUpdateShape}
           currentStyle={currentStyle}
-          onStyleChange={setCurrentStyle}
           isOpen={propertiesPanelOpen}
-          onTogglePanel={handleTogglePropertiesPanel}
           pixelsPerMm={imageAdj.adjustments.pixelsPerMm}
-          dependentCounts={buildDependentCounts(shapes)}
-          onClearCalibration={() => imageAdj.setPixelsPerMm(undefined)}
-          onEditCalibration={requestEditCalibration}
-          onResetLandmarksToAi={handleResetLandmarksToAi}
+          dependentCounts={dependentCounts}
+          {...panelHandlers}
         />
       </div>
 
@@ -2293,7 +2320,7 @@ export function AnnotationCanvas({
 
       {/* Status Bar */}
       <StatusBar
-        cursorPosition={interaction.cursorPosition}
+        cursorStore={interaction.cursorStore}
         selectedCount={interaction.selectedShapeIds.length}
         isDirty={autoSave.isDirty}
         activeTool={interaction.activeTool}

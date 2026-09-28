@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { BaseShape } from "@/types/annotation";
 import { formatMeasurement, LANDMARK_LABEL_SENTINEL } from "@/lib/measurements";
 
@@ -36,7 +37,9 @@ interface ShapeRendererProps {
   pixelsPerMm?: number;
 }
 
-export function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm }: ShapeRendererProps) {
+// Memoised: the canvas re-renders on every pointer move while drawing, but
+// only the shape being drawn changes — the rest keep identical props.
+export const ShapeRenderer = memo(function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm }: ShapeRendererProps) {
   const sw = shape.style.strokeWidth / zoom;
   const dashArray =
     shape.style.lineDash.length > 0
@@ -199,7 +202,7 @@ export function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm
       )}
     </g>
   );
-}
+});
 
 // ─── Ruler / Calibration Reference Renderer ───
 

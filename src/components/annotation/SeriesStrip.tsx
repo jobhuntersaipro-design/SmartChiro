@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronUp, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
@@ -22,7 +22,7 @@ interface SeriesStripProps {
   onNavigate?: (xrayId: string) => void
 }
 
-export function SeriesStrip({
+function SeriesStripView({
   patientId, currentXrayId, xrays, onBeforeNavigate, scrollDirection, onNavigate,
 }: SeriesStripProps) {
   const [collapsed, setCollapsed] = useState(false)
@@ -159,3 +159,5 @@ export function SeriesStrip({
     </aside>
   )
 }
+
+export const SeriesStrip = memo(SeriesStripView)

@@ -154,6 +154,7 @@ interface UseDrawingToolsReturn {
   handleDoubleClick: (e: React.MouseEvent, containerRect: DOMRect) => void;
   handleKeyDown: (e: KeyboardEvent) => boolean;
   drawingShape: BaseShape | null;
+  peekDrawingShape: () => BaseShape | null;
   isDrawing: boolean;
   cancelDrawing: () => void;
   textInputState: { active: boolean; position: Point | null; shapeId: string | null };
@@ -1321,6 +1322,10 @@ export function useDrawingTools({
     if (activeTool === "polyline") commitPolyline();
   }, [activeTool, commitPolyline]);
 
+  // The live preview shape (a ref, so reading it doesn't re-render). The
+  // canvas compares it across a pointer move to decide whether to repaint.
+  const peekDrawingShape = useCallback(() => drawingShapeRef.current, []);
+
   return {
     handlePointerDown,
     handlePointerMove,
@@ -1328,6 +1333,7 @@ export function useDrawingTools({
     handleDoubleClick,
     handleKeyDown,
     drawingShape: drawingShapeRef.current,
+    peekDrawingShape,
     isDrawing: stateRef.current.isDrawing || stateRef.current.textInputActive,
     cancelDrawing,
     textInputState: {

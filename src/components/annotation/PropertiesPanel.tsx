@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   Eye,
@@ -228,7 +228,7 @@ interface PropertiesPanelProps {
   onResetLandmarksToAi?: (ids: string[]) => void;
 }
 
-export function PropertiesPanel({
+function PropertiesPanelView({
   shapes,
   selectedShapeIds,
   onSelectShape,
@@ -1717,3 +1717,7 @@ function humanizeLandmarkName(name: string): string {
   };
   return map[name] ?? name.replace(/_/g, " ");
 }
+
+// Memoised: the canvas re-renders on every pointer move while drawing; the
+// panel's props (shapes, selection, stable handlers) don't change then.
+export const PropertiesPanel = memo(PropertiesPanelView);

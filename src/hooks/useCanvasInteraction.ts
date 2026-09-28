@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ToolId, ToolState, BaseShape, Point } from "@/types/annotation";
 import { screenToImage } from "@/types/annotation";
+import { createCursorStore, type CursorStore } from "@/lib/cursor-store";
 import type { ViewTransform } from "@/types/annotation";
 
 interface UseCanvasInteractionOptions {
@@ -178,7 +179,8 @@ interface UseCanvasInteractionReturn {
   toolState: ToolState;
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[]) => void;
-  cursorPosition: Point | null;
+  /** Pointer position (image space) — subscribe instead of re-rendering on every move. */
+  cursorStore: CursorStore;
   isPanning: boolean;
   isDragging: boolean;
   /** Image-space rectangle for the in-progress rubber-band selection, or
@@ -200,7 +202,7 @@ export function useCanvasInteraction({
   const [activeTool, setActiveToolState] = useState<ToolId>("hand");
   const [toolState, setToolState] = useState<ToolState>("idle");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
-  const [cursorPosition, setCursorPosition] = useState<Point | null>(null);
+  const [cursorStore] = useState(createCursorStore);
   const [isPanning, setIsPanning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -388,7 +390,7 @@ export function useCanvasInteraction({
       const screenX = e.clientX - rect.left;
       const screenY = e.clientY - rect.top;
       const imagePos = screenToImage(screenX, screenY, transform);
-      setCursorPosition(imagePos);
+      cursorStore.set(imagePos);
 
       if (isPanning && panStartRef.current) {
         const dx = e.clientX - panStartRef.current.x;
@@ -445,7 +447,7 @@ export function useCanvasInteraction({
         }
       }
     },
-    [transform, isPanning, pan, activeTool, onMoveShapes, onMoveVertex, marquee]
+    [transform, isPanning, pan, activeTool, onMoveShapes, onMoveVertex, marquee, cursorStore]
   );
 
   const handlePointerUp = useCallback(
@@ -687,7 +689,7 @@ export function useCanvasInteraction({
     toolState,
     selectedShapeIds,
     setSelectedShapeIds,
-    cursorPosition,
+    cursorStore,
     isPanning,
     isDragging,
     marqueeRect,

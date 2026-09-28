@@ -1,11 +1,13 @@
 "use client";
 
 import { Undo2, Redo2 } from "lucide-react";
-import type { Point, ViewMode } from "@/types/annotation";
+import { useSyncExternalStore } from "react";
+import type { ViewMode } from "@/types/annotation";
+import type { CursorStore } from "@/lib/cursor-store";
 import type { SaveStatus } from "@/lib/annotation-saver";
 
 interface StatusBarProps {
-  cursorPosition: Point | null;
+  cursorStore: CursorStore;
   selectedCount: number;
   isDirty: boolean;
   activeTool: string;
@@ -21,8 +23,17 @@ interface StatusBarProps {
   onRedo?: () => void;
 }
 
+function CursorReadout({ store }: { store: CursorStore }) {
+  const position = useSyncExternalStore(store.subscribe, store.get, () => null);
+  return (
+    <span className="tabular-nums">
+      {position ? `X: ${Math.round(position.x)}  Y: ${Math.round(position.y)}` : "—"}
+    </span>
+  );
+}
+
 export function StatusBar({
-  cursorPosition,
+  cursorStore,
   selectedCount,
   isDirty,
   activeTool,
@@ -107,11 +118,7 @@ export function StatusBar({
             Comparison Mode — {viewMode === "side-by-side" ? "Side by Side" : "2\u00d72 Grid"}
           </span>
         ) : (
-          <span className="tabular-nums">
-            {cursorPosition
-              ? `X: ${Math.round(cursorPosition.x)}  Y: ${Math.round(cursorPosition.y)}`
-              : "—"}
-          </span>
+          <CursorReadout store={cursorStore} />
         )}
         {selectedCount > 0 && (
           <span>
