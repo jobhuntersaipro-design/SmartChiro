@@ -20,7 +20,6 @@ import { enUS } from "date-fns/locale/en-US";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
@@ -599,6 +598,11 @@ export function AppointmentsCalendarView({
             setDeleteTarget(popoverEvent);
             setPopoverEvent(null);
           }}
+          onStatusChanged={() => {
+            setPopoverEvent(null);
+            setPopoverAnchor(null);
+            fetchAppointments();
+          }}
         />
       )}
 
@@ -665,7 +669,6 @@ export function AppointmentsCalendarView({
           onCancel={conflictDialog.onCancel}
         />
       )}
-      <Toaster richColors closeButton position="bottom-right" />
 
       {/* Hidden navigation buttons (kept for keyboard nav, visible variants are in CalendarFilterBar) */}
       <div className="sr-only">

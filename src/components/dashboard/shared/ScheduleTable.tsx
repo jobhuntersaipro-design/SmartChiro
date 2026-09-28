@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calendar } from "lucide-react";
 import { EmptyState } from "./EmptyState";
+import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
 import { formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
 
 export interface ScheduleAppointment {
@@ -55,12 +56,15 @@ interface ScheduleTableProps {
   appointments: ScheduleAppointment[];
   showDoctor?: boolean;
   showBranch?: boolean;
+  /** Shows one-click Check in / Start / Complete / No-show; called after a change. */
+  onStatusChanged?: () => void;
 }
 
 export function ScheduleTable({
   appointments,
   showDoctor = false,
   showBranch = false,
+  onStatusChanged,
 }: ScheduleTableProps) {
   const router = useRouter();
 
@@ -89,6 +93,7 @@ export function ScheduleTable({
             )}
             <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Notes</th>
             <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Status</th>
+            {onStatusChanged && <th className="px-4 py-2.5"><span className="sr-only">Actions</span></th>}
           </tr>
         </thead>
         <tbody>
@@ -135,6 +140,19 @@ export function ScheduleTable({
                 <td className="px-4 py-3">
                   <StatusIndicator status={appt.status} />
                 </td>
+                {onStatusChanged && (
+                  <td className="px-4 py-2 text-right whitespace-nowrap">
+                    <span className="inline-flex gap-1.5">
+                      <AppointmentStatusActions
+                        appointmentId={appt.id}
+                        status={appt.status}
+                        dateTime={appt.dateTime}
+                        onChanged={onStatusChanged}
+                        size="xs"
+                      />
+                    </span>
+                  </td>
+                )}
               </tr>
             );
           })}

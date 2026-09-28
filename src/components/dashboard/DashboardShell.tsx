@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import type { BranchRole } from "@prisma/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
@@ -44,6 +45,8 @@ export function DashboardShell({
           <main className="flex-1 overflow-y-auto px-8 py-6">{children}</main>
         </div>
       </div>
+      {/* One toast host for every dashboard page (the full-screen viewer has its own). */}
+      <Toaster richColors closeButton position="bottom-right" />
     </TooltipProvider>
   );
 }

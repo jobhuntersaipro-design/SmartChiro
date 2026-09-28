@@ -119,6 +119,12 @@ export function DashboardView({
     }
   }, [branchParam]);
 
+  // Quiet refresh after a check-in / no-show from the table (no skeleton flash).
+  const refreshSchedule = useCallback(async () => {
+    const res = await fetch(`/api/dashboard/schedule?branchId=${branchParam}`);
+    if (res.ok) setAppointments((await res.json()).appointments);
+  }, [branchParam]);
+
   // Fetch activity
   const fetchActivity = useCallback(async () => {
     try {
@@ -245,6 +251,7 @@ export function DashboardView({
               appointments={appointments}
               showDoctor={!isDoctor}
               showBranch={!isDoctor && !selectedBranchId}
+              onStatusChanged={refreshSchedule}
             />
           )}
         </div>

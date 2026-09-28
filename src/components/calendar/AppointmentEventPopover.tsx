@@ -6,6 +6,8 @@ import { format } from "date-fns/format";
 import { Pencil, X, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { doctorColor } from "./doctor-color";
+import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
+import { nextStatusActions } from "@/lib/appointment-status-actions";
 import type { CalendarAppointment } from "@/types/appointment";
 
 interface Props {
@@ -17,6 +19,8 @@ interface Props {
   onEdit: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  /** After a Check in / Start / Complete / No-show from the popover. */
+  onStatusChanged: () => void;
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
@@ -37,6 +41,7 @@ export function AppointmentEventPopover({
   onEdit,
   onCancel,
   onDelete,
+  onStatusChanged,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -133,6 +138,17 @@ export function AppointmentEventPopover({
         )}
       </div>
 
+      {canEdit && nextStatusActions(appointment.status, new Date(appointment.dateTime)).length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3 border-t border-[#e5edf5]">
+          <AppointmentStatusActions
+            appointmentId={appointment.id}
+            status={appointment.status}
+            dateTime={appointment.dateTime}
+            onChanged={onStatusChanged}
+            size="xs"
+          />
+        </div>
+      )}
       <div className="flex items-center justify-end gap-2 px-3 pb-3 border-t border-[#e5edf5] pt-3">
         {canEdit && (
           <Button

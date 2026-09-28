@@ -9,7 +9,6 @@ import {
   Mail,
   ExternalLink,
   Pencil,
-  CheckCircle2,
   XCircle,
   Trash2,
   ClipboardList,
@@ -21,6 +20,7 @@ import { ReminderStatusBadge } from "@/components/appointments/ReminderStatusBad
 import { AppointmentAuditLog } from "@/components/appointments/AppointmentAuditLog";
 import { buildWhatsAppUrl, buildMailtoUrl, formatDobWithAge } from "@/lib/format";
 import { STATUS_TOKENS } from "@/lib/appointment-tabs";
+import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
 import type { CalendarAppointment } from "@/types/appointment";
 
 interface Props {
@@ -60,7 +60,6 @@ export function AppointmentDetailPanel({
   const ref = useRef<HTMLDivElement>(null);
   const [patientDetail, setPatientDetail] = useState<PatientDetail | null>(null);
   const [linkedVisit, setLinkedVisit] = useState<VisitLink | null>(null);
-  const [completing, setCompleting] = useState(false);
   const [creatingVisit, setCreatingVisit] = useState(false);
 
   // Trap focus + Esc-to-close
@@ -122,31 +121,6 @@ export function AppointmentDetailPanel({
   const dt = new Date(appointment.dateTime);
   const canEdit = isAdmin || appointment.doctor.id === currentUserId;
   const canDelete = isAdmin;
-  const canMarkComplete =
-    canEdit &&
-    (appointment.status === "SCHEDULED" ||
-      appointment.status === "CHECKED_IN" ||
-      appointment.status === "IN_PROGRESS");
-
-  async function handleMarkComplete() {
-    setCompleting(true);
-    try {
-      const res = await fetch(`/api/appointments/${appointment!.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ status: "COMPLETED" }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        toast.error(body.error ?? "Could not mark as complete");
-        return;
-      }
-      toast.success("Appointment marked as complete");
-      onChanged();
-    } finally {
-      setCompleting(false);
-    }
-  }
 
   async function handleCreateVisit() {
     setCreatingVisit(true);
@@ -358,21 +332,13 @@ export function AppointmentDetailPanel({
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} /> Edit
             </Button>
           )}
-          {canMarkComplete && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkComplete}
-              disabled={completing}
-              className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#108c3d] gap-1.5"
-            >
-              {completing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />
-              ) : (
-                <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-              )}
-              Mark complete
-            </Button>
+          {canEdit && (
+            <AppointmentStatusActions
+              appointmentId={appointment.id}
+              status={appointment.status}
+              dateTime={appointment.dateTime}
+              onChanged={onChanged}
+            />
           )}
           {canEdit && appointment.status !== "CANCELLED" && (
             <Button

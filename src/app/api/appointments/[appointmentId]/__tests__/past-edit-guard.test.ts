@@ -95,6 +95,24 @@ describe("PATCH /api/appointments/:id past-edit guard", () => {
     expect(data.error).toBe("forbidden_past_edit");
   });
 
+  it("DOCTOR can still change the status of their own past appointment (late check-in, no-show)", async () => {
+    const fx = await buildPastAppt();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: fx.doctorId } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("DOCTOR");
+    const res = await PATCH(
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ status: "IN_PROGRESS" }) }),
+      { params: Promise.resolve({ appointmentId: fx.appointmentId }) }
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).appointment.status).toBe("IN_PROGRESS");
+
+    const mixed = await PATCH(
+      new Request("http://x", { method: "PATCH", body: JSON.stringify({ status: "COMPLETED", duration: 90 }) }),
+      { params: Promise.resolve({ appointmentId: fx.appointmentId }) }
+    );
+    expect(mixed.status).toBe(403);
+  });
+
   it("ADMIN PATCH dateTime on past appointment → 422 cannot_reschedule_past", async () => {
     const fx = await buildPastAppt();
     vi.mocked(getCurrentUser).mockResolvedValue({ id: fx.adminId } as never);

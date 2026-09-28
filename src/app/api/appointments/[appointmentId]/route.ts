@@ -104,17 +104,20 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const isPast = appt.dateTime.getTime() < Date.now();
 
-  // DOCTOR (not OWNER/ADMIN) cannot edit a past appointment at all.
-  if (isPast && role !== "OWNER" && role !== "ADMIN") {
-    return NextResponse.json({ error: "forbidden_past_edit" }, { status: 403 });
-  }
-
   const parsed = Body.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json(
       { error: "validation", details: parsed.error.flatten() },
       { status: 422 }
     );
+  }
+
+  // Once the start time has passed, a DOCTOR (not OWNER/ADMIN) may still move
+  // their own appointment through the day — check in a late patient, start,
+  // complete, mark no-show — but can't edit anything else on it.
+  const statusOnly = Object.keys(parsed.data).every((k) => k === "status");
+  if (isPast && role !== "OWNER" && role !== "ADMIN" && !statusOnly) {
+    return NextResponse.json({ error: "forbidden_past_edit" }, { status: 403 });
   }
 
   // Past-edit guard: cannot reschedule a past appointment (block dateTime/doctorId changes).

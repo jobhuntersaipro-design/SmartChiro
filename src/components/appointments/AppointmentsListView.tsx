@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/sonner";
 
 import { EditAppointmentDialog } from "@/components/patients/EditAppointmentDialog";
 import { CancelAppointmentDialog } from "@/components/patients/CancelAppointmentDialog";
@@ -353,7 +352,6 @@ export function AppointmentsListView({
           onChanged();
         }}
       />
-      <Toaster richColors closeButton position="bottom-right" />
     </div>
   );
 }
