@@ -1003,6 +1003,7 @@ export function AnnotationCanvas({
 
   // ─── Close / Export ───
   const handleClose = useCallback(async () => {
+    // Dirty-only save: just opening and closing an X-ray writes nothing.
     await autoSave.saveNow(buildCanvasState(), imageAdj.adjustments);
     if (autoSave.hasUnsavedChanges() && !window.confirm("Some changes haven't been saved. Leave anyway?")) return;
     onClose();
@@ -1016,8 +1017,14 @@ export function AnnotationCanvas({
       const tab = window.open("", "_blank");
       try {
         const target = await autoSave.saveAndGetTarget(buildCanvasState(), imageAdj.adjustments);
-        if (!target.annotationId) throw new Error("Draw something first — there's nothing to export yet.");
-        const res = await fetch(`/api/xrays/${target.xrayId}/annotations/${target.annotationId}/export`, {
+        if (autoSave.hasUnsavedChanges()) {
+          throw new Error("Your latest changes haven't saved yet, so the export would be out of date. Try again in a moment.");
+        }
+        // Nothing drawn or adjusted means no annotation row — export the plain film.
+        const exportUrl = target.annotationId
+          ? `/api/xrays/${target.xrayId}/annotations/${target.annotationId}/export`
+          : `/api/xrays/${target.xrayId}/export`;
+        const res = await fetch(exportUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ format, includeAdjustments: true }),
@@ -1399,7 +1406,10 @@ export function AnnotationCanvas({
         duration: 12_000,
         action: {
           label: "Apply",
-          onClick: () => imageAdj.setPixelsPerMm(ppm),
+          onClick: () => {
+            imageAdj.setPixelsPerMm(ppm);
+            autoSave.markDirty();
+          },
         },
       },
     );
@@ -1407,7 +1417,7 @@ export function AnnotationCanvas({
     // Watching `shapes` as well — fetchAnnotationForXray sets both shapes
     // and adjustments together, so a shape-array swap is a good proxy for
     // "the new annotation has finished loading."
-  }, [pendingCalibrationCarry, shapes, imageAdj]);
+  }, [pendingCalibrationCarry, shapes, imageAdj, autoSave]);
 
   // Fit to viewport once image loads
   useEffect(() => {

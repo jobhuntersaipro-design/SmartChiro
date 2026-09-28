@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireXrayAccess } from "@/lib/auth/xray-guard";
 import type { BaseShape } from "@/types/annotation";
 import { extractLandmarkCorrections } from "@/lib/landmark-corrections";
+import { countShapes } from "@/lib/annotation-content";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB hard cap
 const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB warning
@@ -126,6 +127,7 @@ export async function PUT(
     const data = {
       canvasState,
       canvasStateSize: canvasStateSize ?? 0,
+      shapeCount: countShapes(canvasState),
       imageAdjustments: imageAdjustments ?? undefined,
       version: { increment: 1 },
     };

@@ -23,6 +23,7 @@ interface UseAutoSaveReturn {
   sizeWarning: string | null;
   markDirty: () => void;
   updateState: (state: AnnotationCanvasState, adjustments: ImageAdjustments) => void;
+  /** Save anything unsaved now (close, navigate, Save button). Clean state sends nothing. */
   saveNow: (state: AnnotationCanvasState, adjustments: ImageAdjustments) => Promise<void>;
   /** Retry after a failure; after a conflict this overwrites the other copy. */
   retrySave: () => void;
@@ -85,7 +86,9 @@ export function useAutoSave({
   const saveNow = useCallback(
     (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
       saver.update(state, adjustments);
-      return saver.flush({ force: true });
+      // Dirty-only: forcing here re-sent clean state and, for an X-ray with
+      // no annotation yet, created an empty row every time the viewer closed.
+      return saver.flush();
     },
     [saver],
   );
@@ -104,7 +107,7 @@ export function useAutoSave({
   const saveAndGetTarget = useCallback(
     async (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
       saver.update(state, adjustments);
-      await saver.flush({ force: true });
+      await saver.flush();
       return { xrayId: saver.xrayId, annotationId: saver.annotationId };
     },
     [saver],

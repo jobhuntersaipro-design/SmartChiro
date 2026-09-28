@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { canManageXray } from "@/lib/auth/xray";
+import { countShapes } from "@/lib/annotation-content";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB
 const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -94,6 +95,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         label: label !== undefined ? label : undefined,
         canvasState,
         canvasStateSize,
+        shapeCount: countShapes(canvasState),
         imageAdjustments: imageAdjustments ?? undefined,
         version: { increment: 1 },
       },

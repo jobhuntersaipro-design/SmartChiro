@@ -602,6 +602,7 @@ model Annotation {
   // Canvas state — the core payload
   canvasState     Json // AnnotationCanvasState
   canvasStateSize Int  @default(0) // byte size of canvasState JSON (for quota tracking)
+  shapeCount      Int  @default(0) // canvasState.shapes.length — 0 means nothing drawn (not "annotated")
 
   // Snapshot
   thumbnailUrl String? // auto-generated preview after save

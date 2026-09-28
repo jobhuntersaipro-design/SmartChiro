@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { canManageXray } from "@/lib/auth/xray";
+import { countShapes } from "@/lib/annotation-content";
 
 type RouteParams = { params: Promise<{ xrayId: string; annotationId: string }> };
 
@@ -35,6 +36,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         label: newLabel,
         canvasState: source.canvasState as object,
         canvasStateSize: source.canvasStateSize,
+        shapeCount: countShapes(source.canvasState),
         imageAdjustments: source.imageAdjustments as object | undefined,
         version: 1,
         xrayId,

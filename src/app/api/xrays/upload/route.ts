@@ -4,6 +4,7 @@ import { r2Client, buildXrayKey, getR2PublicUrl } from '@/lib/r2'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { auth } from '@/lib/auth'
 import { canManagePatientXrays } from '@/lib/auth/xray'
+import { checkUploadedImage } from '@/lib/image-sniff'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300 MB
@@ -59,8 +60,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const width = widthStr ? parseInt(widthStr, 10) : null
-    const height = heightStr ? parseInt(heightStr, 10) : null
+    const declaredWidth = widthStr ? parseInt(widthStr, 10) : NaN
+    const declaredHeight = heightStr ? parseInt(heightStr, 10) : NaN
+
+    // The file's own bytes decide: it must really be the declared PNG/JPEG,
+    // and its header size wins over the size the browser reported.
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const check = checkUploadedImage(fileBuffer, file.type, {
+      width: Number.isFinite(declaredWidth) ? declaredWidth : null,
+      height: Number.isFinite(declaredHeight) ? declaredHeight : null,
+    })
+    if (!check.ok) {
+      return NextResponse.json({ error: 'invalid_image', message: check.message }, { status: 422 })
+    }
+    const { width, height } = check
 
     // Verify branch membership (also returns false if patient doesn't exist)
     if (!(await canManagePatientXrays(uploadedById, patientId))) {
@@ -100,7 +113,6 @@ export async function POST(request: NextRequest) {
     const fileUrl = getR2PublicUrl(originalKey)
 
     // Upload original to R2
-    const fileBuffer = Buffer.from(await file.arrayBuffer())
     await r2Client.send(
       new PutObjectCommand({
         Bucket: R2_BUCKET_NAME,

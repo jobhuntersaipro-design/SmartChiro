@@ -71,7 +71,8 @@ export async function GET(
           select: {
             id: true, title: true, bodyRegion: true, viewType: true, status: true,
             thumbnailUrl: true, createdAt: true,
-            _count: { select: { annotations: true } },
+            // The viewer counts the shapes on the latest annotation — show the same number.
+            annotations: { orderBy: { updatedAt: "desc" }, take: 1, select: { shapeCount: true } },
             notes: {
               take: 1, orderBy: { createdAt: "desc" },
               select: { bodyMd: true },
@@ -199,7 +200,7 @@ export async function GET(
         status: x.status,
         thumbnailUrl: x.thumbnailUrl,
         createdAt: x.createdAt.toISOString(),
-        annotationCount: x._count.annotations,
+        annotationCount: x.annotations[0]?.shapeCount ?? 0,
         hasNotes: x.notes.length > 0,
         notePreview: x.notes[0]?.bodyMd?.slice(0, 80) ?? null,
       })),

@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
         prisma.xray.count({
           where: {
             uploadedById: userId,
-            annotations: { none: {} },
+            annotations: { none: { shapeCount: { gt: 0 } } },
             status: "READY",
           },
         }),

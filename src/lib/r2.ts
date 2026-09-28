@@ -47,6 +47,24 @@ export async function headR2Object(key: string): Promise<{ size: number } | null
 }
 
 /**
+ * The first `length` bytes of an object in R2 (ranged GET), or null when it
+ * doesn't exist. Other errors throw.
+ */
+export async function readR2ObjectPrefix(key: string, length: number): Promise<Uint8Array | null> {
+  try {
+    const res = await r2Client.send(
+      new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key, Range: `bytes=0-${length - 1}` })
+    )
+    if (!res.Body) return new Uint8Array()
+    return await res.Body.transformToByteArray()
+  } catch (error) {
+    const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode
+    if (status === 404 || (error as Error).name === 'NoSuchKey') return null
+    throw error
+  }
+}
+
+/**
  * Delete an object from R2.
  */
 export async function deleteR2Object(key: string): Promise<void> {

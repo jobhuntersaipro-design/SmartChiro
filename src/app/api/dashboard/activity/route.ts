@@ -43,7 +43,8 @@ export async function GET(req: NextRequest) {
   const patientRef = { select: { firstName: true, lastName: true, branch: { select: { name: true } } } } as const;
   const [annotations, patients, xrays] = await Promise.all([
     prisma.annotation.findMany({
-      where: { xray: { patient: { branchId: { in: branchIds } } } },
+      // Only annotations with something drawn — an empty row is not "annotated".
+      where: { shapeCount: { gt: 0 }, xray: { patient: { branchId: { in: branchIds } } } },
       select: {
         id: true,
         updatedAt: true,

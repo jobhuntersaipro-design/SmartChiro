@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { canManageXray } from "@/lib/auth/xray";
+import { countShapes, isEmptyAnnotation } from "@/lib/annotation-content";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -29,6 +30,7 @@ export async function GET(
         version: true,
         thumbnailUrl: true,
         canvasStateSize: true,
+        shapeCount: true,
         createdById: true,
         createdAt: true,
         updatedAt: true,
@@ -72,6 +74,15 @@ export async function POST(
       );
     }
 
+    // Opening and closing the viewer must not leave an "annotation" behind:
+    // a new row needs at least one shape or a changed image adjustment.
+    if (isEmptyAnnotation(canvasState, imageAdjustments)) {
+      return NextResponse.json(
+        { error: "empty_annotation", message: "Nothing to save — draw or adjust something first." },
+        { status: 422 }
+      );
+    }
+
     // Validate canvas state size
     const canvasStateSize = Buffer.byteLength(JSON.stringify(canvasState), "utf8");
     if (canvasStateSize > MAX_CANVAS_STATE_SIZE) {
@@ -99,6 +110,7 @@ export async function POST(
         label: label ?? null,
         canvasState,
         canvasStateSize,
+        shapeCount: countShapes(canvasState),
         imageAdjustments: imageAdjustments ?? undefined,
         version: 1,
         xrayId,

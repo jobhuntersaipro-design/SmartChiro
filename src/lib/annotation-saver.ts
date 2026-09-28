@@ -1,4 +1,5 @@
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
+import { isEmptyAnnotation } from "@/lib/annotation-content";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed" | "conflict";
 
@@ -52,6 +53,9 @@ class FatalError extends Error {}
  *   against the old target.
  * - Each save sends the version it started from; a 409 means someone else
  *   saved in between, which is surfaced instead of silently overwritten.
+ * - An X-ray with no annotation yet only gets one once there is something to
+ *   keep (a shape or a changed adjustment) — opening and closing the viewer,
+ *   or drawing and undoing, creates nothing.
  */
 export class AnnotationSaver {
   private target: SaveTarget;
@@ -107,7 +111,10 @@ export class AnnotationSaver {
     this.scheduleDebounce();
   }
 
-  /** Save now if there is anything unsaved (or always, with `force`). */
+  /**
+   * Save now if there is anything unsaved. `force` re-sends even when clean —
+   * only for an explicit retry/overwrite; closing and exporting don't need it.
+   */
   flush(options: { force?: boolean; overwrite?: boolean } = {}): Promise<void> {
     this.clearDebounce();
     if (!options.force && !this.isDirty) return this.chain;
@@ -173,6 +180,7 @@ export class AnnotationSaver {
   unloadRequest(): { url: string; body: string } | null {
     if (!this.isDirty || !this.latest || this.conflicted) return null;
     const { state, adjustments } = this.latest;
+    if (!this.target.annotationId && isEmptyAnnotation(state, adjustments)) return null;
     const canvasStateSize = byteSize(JSON.stringify(state));
     if (this.target.annotationId) {
       return {
@@ -256,6 +264,8 @@ export class AnnotationSaver {
     };
 
     if (!target.annotationId) {
+      // Nothing to keep and nowhere it was kept before: don't create a row.
+      if (isEmptyAnnotation(snapshot.state, snapshot.adjustments)) return;
       const res = await this.fetchImpl(`/api/xrays/${target.xrayId}/annotations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

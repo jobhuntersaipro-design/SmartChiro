@@ -41,7 +41,7 @@ function mapPatientToResponse(p: {
   doctor: { id: string; name: string | null } | null;
   _count: { visits: number; xrays: number };
   visits: { visitDate: Date }[];
-  xrays?: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; _count: { annotations: number } }[];
+  xrays?: { id: string; title: string | null; bodyRegion: string | null; viewType: string | null; status: string; thumbnailUrl: string | null; createdAt: Date; annotations: { shapeCount: number }[] }[];
   appointments?: { id: string; dateTime: Date; status: string; doctorId: string; duration: number; notes: string | null }[];
 }) {
   return {
@@ -102,7 +102,7 @@ function mapPatientToResponse(p: {
       viewType: x.viewType,
       status: x.status,
       thumbnailUrl: x.thumbnailUrl,
-      annotationCount: x._count.annotations,
+      annotationCount: x.annotations[0]?.shapeCount ?? 0,
       createdAt: x.createdAt.toISOString(),
     })),
   }
@@ -420,7 +420,9 @@ export async function POST(request: NextRequest) {
           where: { status: 'READY' },
           select: {
             id: true, title: true, bodyRegion: true, viewType: true, status: true,
-            thumbnailUrl: true, createdAt: true, _count: { select: { annotations: true } },
+            thumbnailUrl: true, createdAt: true,
+            // The viewer counts the shapes on the latest annotation — show the same number.
+            annotations: { orderBy: { updatedAt: 'desc' }, take: 1, select: { shapeCount: true } },
           },
           orderBy: { createdAt: 'desc' },
         },

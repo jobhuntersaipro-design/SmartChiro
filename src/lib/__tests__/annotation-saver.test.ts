@@ -189,3 +189,72 @@ describe("AnnotationSaver", () => {
     expect(f.calls[0].body.baseVersion).toBe(2);
   });
 });
+
+describe("AnnotationSaver — empty canvases and closing", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  const empty = (): AnnotationCanvasState => ({ ...state("x"), shapes: [], metadata: { shapeCount: 0, measurementCount: 0, lastModifiedShapeId: null } });
+
+  it("never creates an annotation for an empty canvas with default adjustments", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl, null);
+    saver.update(empty(), ADJ);
+    // Drawn and undone: dirty, but nothing to keep.
+    saver.markDirty();
+    expect(saver.unloadRequest()).toBeNull();
+    await vi.advanceTimersByTimeAsync(500);
+    // Even a forced save (retry / overwrite) must not POST an empty row.
+    await saver.flush({ force: true });
+    expect(f.calls).toHaveLength(0);
+    expect(saver.isDirty).toBe(false);
+    expect(saver.annotationId).toBeNull();
+  });
+
+  it("creates an annotation for an adjustment alone (orientation lives on the annotation)", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl, null);
+    saver.update(empty(), { ...ADJ, rotation: 90 });
+    saver.markDirty();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(f.calls).toHaveLength(1);
+    expect(f.calls[0]).toMatchObject({ url: "/api/xrays/xr-1/annotations", method: "POST" });
+    await f.respond(201, { annotation: { id: "ann-new", version: 1 } });
+    expect(saver.annotationId).toBe("ann-new");
+  });
+
+  it("still saves an emptied canvas into an existing annotation", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl, "ann-1");
+    saver.update(empty(), ADJ);
+    saver.markDirty();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(f.calls[0]).toMatchObject({ url: "/api/annotations/ann-1", method: "PUT" });
+  });
+
+  it("a normal (close/export) flush sends nothing when there are no unsaved edits", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl, "ann-1");
+    saver.update(state("a"), ADJ);
+    await saver.flush();
+    expect(f.calls).toHaveLength(0);
+
+    const fresh = makeSaver(f.fetchImpl, null).saver;
+    fresh.update(empty(), ADJ);
+    await fresh.flush();
+    expect(f.calls).toHaveLength(0);
+  });
+
+  it("a normal flush saves pending edits right away", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl, "ann-1");
+    saver.update(state("a"), ADJ);
+    saver.markDirty();
+    const done = saver.flush();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(f.calls).toHaveLength(1);
+    await f.respond(200, { version: 4 });
+    await done;
+    expect(saver.isDirty).toBe(false);
+  });
+});

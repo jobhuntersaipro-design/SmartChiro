@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireXrayAccess } from '@/lib/auth/xray-guard'
-import { buildXrayKey, headR2Object } from '@/lib/r2'
+import { buildXrayKey, headR2Object, readR2ObjectPrefix } from '@/lib/r2'
+import { checkUploadedImage, SNIFF_BYTES } from '@/lib/image-sniff'
 
 const confirmSchema = z.object({
   width: z.number().int().min(100, 'Image must be at least 100 × 100 pixels.').max(16384, 'Image dimensions exceed the maximum of 16384 × 16384 pixels.'),
@@ -52,24 +53,40 @@ export async function POST(
     // X-ray shows up with a broken image. Storage errors other than "not
     // found" are logged and don't block (the upload itself succeeded).
     const ext = xray.mimeType === 'image/png' ? 'png' : 'jpg'
+    const key = buildXrayKey(xray.patient.branchId, xray.patientId, xray.id, `original.${ext}`)
+    let header: Uint8Array | null = null
     try {
-      const object = await headR2Object(buildXrayKey(xray.patient.branchId, xray.patientId, xray.id, `original.${ext}`))
+      const object = await headR2Object(key)
       if (!object) {
         return NextResponse.json(
           { error: 'UPLOAD_NOT_RECEIVED', message: "The file didn't reach storage. Please upload it again." },
           { status: 409 }
         )
       }
+      header = await readR2ObjectPrefix(key, SNIFF_BYTES)
     } catch (error) {
       console.error('Could not verify uploaded X-ray (continuing):', error)
+    }
+
+    // The declared type and size come from the browser: check the file's
+    // magic bytes, and store the size from its header rather than the claim.
+    let realWidth = width
+    let realHeight = height
+    if (header) {
+      const check = checkUploadedImage(header, xray.mimeType, { width, height })
+      if (!check.ok) {
+        return NextResponse.json({ error: 'invalid_image', message: check.message }, { status: 422 })
+      }
+      realWidth = check.width ?? width
+      realHeight = check.height ?? height
     }
 
     const updatedXray = await prisma.xray.update({
       where: { id: xrayId },
       data: {
         status: 'READY',
-        width,
-        height,
+        width: realWidth,
+        height: realHeight,
         ...(title ? { title } : {}),
         ...(bodyRegion ? { bodyRegion } : {}),
         ...(viewType ? { viewType } : {}),
