@@ -121,11 +121,39 @@ The sidebar branch switcher drives every page (patients directory, appointments 
 
 ## Phase 3 — Treatment plans, packages, recurring bookings
 
-_Detailed before build._
+Malaysian chiro clinics sell care as prepaid packages (e.g. 12 adjustments) and book 2–3 visits a week. Today revenue for this is tracked outside the app.
+
+### 3.1 Package catalogue and patient packages
+- `PackageTemplate` (per branch): name, description, sessions, price (MYR), validity in days (optional), which treatment types redeem it (empty = any), active flag. Managed by OWNER/ADMIN in Branch → Settings → Packages.
+- `PatientPackage`: snapshot of name/sessions/price at sale, `sessionsUsed`, `purchasedAt`, `expiresAt`, status `ACTIVE | COMPLETED | EXPIRED | CANCELLED`, sold by, optional sale invoice (Phase 4 links payments). Selling a package from the patient page creates it and a sale invoice (one line: the package).
+- `PackageRedemption`: one per appointment (`appointmentId` unique), `redeemedAt`, `redeemedBy`, `reversedAt`. When an appointment is marked **Complete**, the earliest-expiring active package whose treatment types match is redeemed automatically; the panel shows "Package: 5 of 12 used" and an **Undo** (reverse). Appointments paid by a package don't prompt for an invoice.
+- Patient page gets a **Packages** section: active packages with sessions left, expiry, history of redemptions; front desk can sell and view (no clinical data).
+- Expiry: packages past `expiresAt` become `EXPIRED` (checked on read and by the existing dispatch cron); remaining sessions show as package liability in Phase 5.
+
+### 3.2 Care plans and recurring bookings
+- `AppointmentSeries`: patient, doctor, branch, treatment type, duration, room, rule = weekdays (0–6) + start time (clinic time) + every N weeks + end (count or until date), optional link to a `PatientPackage` and a `CarePlan`. Appointments get `seriesId` + `seriesIndex`.
+- Booking dialog gets **Repeat** (off / weekly on selected days, every N weeks, N visits or until date). A dry-run endpoint returns every occurrence with its problems (conflict, break, outside hours, past) so the user sees which dates will be skipped or can adjust before creating. Creation runs the same checks per occurrence and creates the valid ones in one transaction.
+- Edits on a series appointment ask **This appointment** / **This and following**: time/doctor/duration/cancel apply to the chosen scope; completed and past occurrences are never changed.
+- `CarePlan` (clinical, not visible to front desk): title, doctor, visits per week, total visits, start date, goals/notes, status; creating one can generate the series and (optionally) sell a matching package. Shown on the patient page with progress (completed / planned visits).
+- Reminders: existing per-appointment reminders already cover series occurrences.
+**Done when:** a 12-visit, 3×/week plan can be sold and booked in one flow; completing each visit decrements the package; moving "this and following" shifts the rest.
 
 ## Phase 4 — Payments, manual invoices, SST, receipts
 
-_Detailed before build._
+### 4.1 Payments
+- `Payment`: invoice, amount, method `CASH | CARD | DUITNOW_QR | FPX | EWALLET | BANK_TRANSFER | PANEL`, reference (e.g. DuitNow ref, card last 4, TPA claim no.), received at (clinic time), received by, notes, `receiptNumber` (unique, per-branch sequence). Deposits, instalments and split payments are just several payments on one invoice.
+- Invoice gains `PARTIALLY_PAID` status; `amountPaid` and balance derive from payments; status moves DRAFT/SENT → PARTIALLY_PAID → PAID automatically; `paidAt` = when the balance reached zero. Existing "mark paid" becomes "Record payment" (defaults to the balance, cash).
+- Refund = negative payment with a reason (OWNER/ADMIN only).
+- Online collection (DuitNow QR / FPX via a gateway such as Billplz or iPay88) needs the clinic's merchant account → not built; methods are recorded manually. Noted as a Phase 8+ option.
+
+### 4.2 Manual invoices
+- `POST /api/invoices` creates an invoice without an appointment: patient, branch, line items (description, qty, unit price, taxable), due date, notes; optional links to appointment or patient package. "New invoice" on the Invoices page and patient page. Invoice numbers per branch: `<prefix>-<yyyy>-<seq>` (prefix from branch settings, default branch initials).
+
+### 4.3 SST and clinic tax details
+- Branch billing settings: legal name, SSM registration no., TIN, SST registration no., SST enabled, SST rate (default 6%), invoice prefix, payment instructions (bank account / DuitNow ID shown on invoices).
+- Patient `nationality` (ISO country, default MY when an MyKad IC is entered); SST applies to taxable lines only when the branch has SST enabled **and** the patient is not Malaysian (chiropractic services to non-citizens since 1 Jul 2025). Invoice stores subtotal, tax rate, tax amount, total so later rate changes don't rewrite history.
+- Invoice and receipt PDFs show legal name, SSM, TIN, SST no. (when set), tax breakdown, payments made and balance.
+**Done when:** a foreign patient's adjustment invoice shows 6% SST, a split payment (cash + DuitNow) produces two receipts and a PAID invoice, and a Malaysian patient pays no SST.
 
 ## Phase 5 — Reports
 
