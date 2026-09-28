@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { snapshotOf } from "@/lib/branch-audit";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -62,10 +63,10 @@ export async function GET(req: NextRequest) {
   const branchIds = memberships.map((m) => m.branch.id);
 
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart.getTime() + 86400000);
-  const weekStart = new Date(todayStart);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  const cal = clinicCalendar(now);
+  const todayStart = cal.dayStart;
+  const todayEnd = cal.dayEnd;
+  const weekStart = cal.weekStart;
   const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
 
   const [todayCounts, weekCounts] = await Promise.all([

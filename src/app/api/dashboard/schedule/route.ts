@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -14,8 +15,7 @@ export async function GET(req: NextRequest) {
   const branchRole = session.user.branchRole;
 
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart.getTime() + 86400000);
+  const { dayStart: todayStart, dayEnd: todayEnd } = clinicCalendar(now);
 
   const where: Record<string, unknown> = {
     dateTime: { gte: todayStart, lt: todayEnd },

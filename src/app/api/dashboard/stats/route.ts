@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -14,13 +15,14 @@ export async function GET(req: NextRequest) {
   const branchRole = session.user.branchRole;
 
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart.getTime() + 86400000);
+  const cal = clinicCalendar(now);
+  const todayStart = cal.dayStart;
+  const todayEnd = cal.dayEnd;
   const weekStart = new Date(todayStart.getTime() - 7 * 86400000);
   const lastWeekStart = new Date(weekStart.getTime() - 7 * 86400000);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  const monthStart = cal.monthStart;
+  const lastMonthStart = cal.lastMonthStart;
+  const lastMonthEnd = new Date(cal.monthStart.getTime() - 1);
 
   if (branchRole === "DOCTOR") {
     const activeBranchId = session.user.activeBranchId;

@@ -2,20 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { clinicCalendar } from '@/lib/clinic-time'
 
 type Range = 'today' | 'week' | 'month'
 
 function rangeBounds(range: Range, now: Date = new Date()): { gte: Date; lt: Date } {
-  const start = new Date(now)
-  start.setHours(0, 0, 0, 0)
-  const lt = new Date(start)
-  if (range === 'today') {
-    lt.setDate(lt.getDate() + 1)
-  } else if (range === 'week') {
-    lt.setDate(lt.getDate() + 7)
-  } else {
-    lt.setDate(lt.getDate() + 30)
-  }
+  const lt = clinicCalendar(now).addDays(range === 'today' ? 1 : range === 'week' ? 7 : 30)
   // gte = now (not start of day) so the list excludes appointments earlier today.
   return { gte: now, lt }
 }

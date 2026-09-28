@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -50,11 +51,10 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     }
   }
 
-  // Build date range for the target day
-  const dayStart = new Date(targetDate);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(targetDate);
-  dayEnd.setHours(23, 59, 59, 999);
+  // The clinic day containing the target date (the server runs in UTC).
+  const cal = clinicCalendar(targetDate);
+  const dayStart = cal.dayStart;
+  const dayEnd = new Date(cal.dayEnd.getTime() - 1);
 
   const appointments = await prisma.appointment.findMany({
     where: {

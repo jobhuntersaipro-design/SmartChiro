@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 export async function GET(req: Request): Promise<Response> {
   const user = await getCurrentUser();
@@ -45,10 +46,7 @@ export async function GET(req: Request): Promise<Response> {
   };
 
   const now = new Date();
-  const dayStart = new Date();
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
+  const { dayStart, dayEnd } = clinicCalendar(now);
 
   const [
     grouped,

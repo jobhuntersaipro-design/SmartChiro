@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { clinicCalendar } from '@/lib/clinic-time'
 
 // Returns per-branch patient stats for branches the current user has OWNER/ADMIN
 // access to. DOCTOR users get a single entry for their active branch with
@@ -9,18 +10,8 @@ import { auth } from '@/lib/auth'
 // Response: { role, scope, branches: [{ branchId, branchName, activePatients,
 //   newThisMonth, upcomingThisWeek }] }
 
-function startOfMonth(now: Date = new Date()): Date {
-  const d = new Date(now)
-  d.setDate(1)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function startOfDay(now: Date = new Date()): Date {
-  const d = new Date(now)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
+const startOfMonth = (now: Date = new Date()): Date => clinicCalendar(now).monthStart
+const startOfDay = (now: Date = new Date()): Date => clinicCalendar(now).dayStart
 
 export async function GET() {
   try {

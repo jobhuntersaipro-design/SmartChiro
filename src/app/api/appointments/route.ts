@@ -8,6 +8,7 @@ import { logAppointmentEvent } from "@/lib/appointment-audit";
 import { sendDoctorBookingNotification } from "@/lib/email";
 import { treatmentLabelFor } from "@/lib/treatment-colors";
 import type { AppointmentStatus } from "@/types/appointment";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 const TREATMENT_TYPES = [
   "INITIAL_CONSULT",
@@ -79,10 +80,7 @@ export async function GET(req: Request): Promise<Response> {
   } else if (tab === "noshow") {
     statusFilter = { equals: "NO_SHOW" };
   } else if (tab === "today") {
-    const dayStart = new Date();
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayEnd.getDate() + 1);
+    const { dayStart, dayEnd } = clinicCalendar();
     dateFilter = { gte: dayStart, lt: dayEnd };
     statusFilter = { in: ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS"] };
   } else if (tab === "upcoming") {
