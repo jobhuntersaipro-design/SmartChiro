@@ -12,7 +12,7 @@ const SAMPLE: TemplateContext = {
   date: "29 April 2026",
   time: "14:30",
   dayOfWeek: "Wednesday",
-  doctorName: "Dr Lee",
+  doctorName: "Dr. Lee",
   branchName: "SmartChiro KL",
   branchAddress: "1 Jalan Sentral, KL",
   branchPhone: "+60312345678",
@@ -23,12 +23,22 @@ type Props = {
   value: string;
   onChange: (next: string) => void;
   charLimit?: number;
+  /** The branch's real details replace the sample ones in the preview. */
+  branch?: { name: string; address?: string | null; phone?: string | null };
 };
 
-export function ReminderTemplateEditor({ label, value, onChange, charLimit }: Props) {
+export function ReminderTemplateEditor({ label, value, onChange, charLimit, branch }: Props) {
   const [, setFocused] = useState(false);
   const v = validateTemplate(value);
-  const preview = v.ok ? renderTemplate(value, SAMPLE) : "";
+  const sample: TemplateContext = branch
+    ? {
+        ...SAMPLE,
+        branchName: branch.name || SAMPLE.branchName,
+        branchAddress: branch.address || SAMPLE.branchAddress,
+        branchPhone: branch.phone || SAMPLE.branchPhone,
+      }
+    : SAMPLE;
+  const preview = v.ok ? renderTemplate(value, sample) : "";
 
   function insert(token: string) {
     onChange(value + `{${token}}`);

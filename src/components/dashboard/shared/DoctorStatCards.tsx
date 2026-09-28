@@ -3,6 +3,7 @@
 import { Users, Calendar, Image, PenTool } from "lucide-react";
 import { StatCard } from "./StatCard";
 import type { DoctorStats } from "@/types/dashboard";
+import { todayProgressLabel } from "@/lib/format";
 
 interface DoctorStatCardsProps {
   stats: DoctorStats;
@@ -31,7 +32,7 @@ export function DoctorStatCards({ stats, branchName }: DoctorStatCardsProps) {
         iconBg="#EFF6FF"
         value={stats.todayAppointments}
         label="Today's Appointments"
-        subtitle={`${stats.remainingAppointments} remaining`}
+        subtitle={todayProgressLabel(stats.todayAppointments, stats.remainingAppointments)}
       />
       <StatCard
         icon={Image}

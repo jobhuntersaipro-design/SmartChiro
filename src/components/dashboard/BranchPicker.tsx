@@ -31,14 +31,16 @@ export function BranchPicker({
   }, []);
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative min-w-0" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:border-[#c1c9d2] active:scale-[0.98]"
+        aria-expanded={open}
+        title={label}
+        className="flex max-w-full items-center gap-2 h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] whitespace-nowrap hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:border-[#c1c9d2] active:scale-[0.98]"
       >
-        <Building2 className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-        {label}
-        <ChevronDown className={`h-3.5 w-3.5 text-[#64748d] transition-transform duration-200 ${open ? "rotate-180" : ""}`} strokeWidth={1.5} />
+        <Building2 className="h-4 w-4 shrink-0 text-[#64748d]" strokeWidth={1.5} />
+        <span className="truncate">{label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[#64748d] transition-transform duration-200 ${open ? "rotate-180" : ""}`} strokeWidth={1.5} />
       </button>
 
       {open && (

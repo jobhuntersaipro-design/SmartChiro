@@ -21,6 +21,7 @@ import {
   formatAppointmentDateOnly,
   getAppointmentWeekday,
 } from "@/lib/format";
+import { formatMYR } from "@/lib/invoices";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +53,7 @@ interface PastAppointmentTableProps {
 
 // When | Doctor | Branch | Status | Visit | Invoice | Actions
 const COLS =
-  "grid-cols-[160px_180px_140px_minmax(140px,1fr)_110px_120px_36px]";
+  "grid-cols-[160px_180px_140px_minmax(120px,1fr)_90px_160px_36px]";
 
 const SHADOW_CARD =
   "0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(50,50,93,0.06), 0 1px 1px rgba(0,0,0,0.04)";
@@ -123,8 +124,9 @@ function StatusCell({ row }: { row: PastAppointment }) {
     row.isStale || row.status === "IN_PROGRESS" || row.status === "SCHEDULED";
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-[13px] font-medium leading-none"
+      className="inline-flex items-center gap-1.5 text-[13px] font-medium leading-none whitespace-nowrap"
       style={{ color: config.text }}
+      title={config.label}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${isLive ? "animate-subtle-blink" : ""}`}
@@ -177,11 +179,11 @@ function InvoiceCell({
     })();
     return (
       <span
-        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums"
+        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums whitespace-nowrap"
         style={{ background: tone.bg, color: tone.text }}
-        title={inv.invoiceNumber}
+        title={`${inv.invoiceNumber} · ${formatMYR(inv.amount)} · ${tone.label}`}
       >
-        RM {inv.amount.toLocaleString()} · {tone.label}
+        {formatMYR(inv.amount)} · {tone.label}
       </span>
     );
   }
@@ -189,10 +191,10 @@ function InvoiceCell({
   const sum = row.invoices.reduce((acc, i) => acc + i.amount, 0);
   return (
     <span
-      className="text-[12px] text-[#425466] tabular-nums"
+      className="text-[12px] text-[#425466] tabular-nums whitespace-nowrap"
       title={row.invoices.map((i) => i.invoiceNumber).join(", ")}
     >
-      RM {sum.toLocaleString()} ({row.invoices.length})
+      {formatMYR(sum)} ({row.invoices.length})
     </span>
   );
 }
@@ -374,7 +376,7 @@ export function PastAppointmentTable({
         <>
           {/* Header */}
           <div
-            className={`grid ${COLS} gap-4 px-4 py-2 border-b border-[#e5edf5] bg-[#fafbfd]`}
+            className={`grid ${COLS} gap-4 min-w-max px-4 py-2 border-b border-[#e5edf5] bg-[#fafbfd]`}
           >
             <SortableHeader
               label="When"
@@ -416,18 +418,20 @@ export function PastAppointmentTable({
           {rows.map((r) => (
             <div
               key={r.id}
-              className={`grid ${COLS} gap-4 items-center px-4 h-12 border-b border-[#eef2f7] last:border-b-0 hover:bg-[#fafbfd] transition-colors duration-200`}
+              className={`grid ${COLS} gap-4 min-w-max items-center px-4 h-12 border-b border-[#eef2f7] last:border-b-0 hover:bg-[#fafbfd] transition-colors duration-200`}
             >
               <TimeCell iso={r.dateTime} />
               <Link
                 href={`/dashboard/doctors/${r.doctor.id}`}
                 className="text-[14px] text-[#425466] hover:text-[#533afd] transition-colors duration-200 truncate"
+                title={r.doctor.name ?? undefined}
               >
                 {r.doctor.name}
               </Link>
               <Link
                 href={`/dashboard/branches/${r.branch.id}`}
                 className="text-[13px] text-[#425466] hover:text-[#533afd] transition-colors duration-200 truncate"
+                title={r.branch.name}
               >
                 {r.branch.name}
               </Link>

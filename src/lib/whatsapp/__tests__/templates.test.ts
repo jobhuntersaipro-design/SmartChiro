@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { reminderTemplateParams } from "../templates";
-import { pickTemplateLanguage, renderTemplatePreview } from "../template-text";
+import {
+  SAMPLE_TEMPLATE_PARAMS,
+  pickTemplateLanguage,
+  renderTemplatePreview,
+  sampleTemplateParams,
+} from "../template-text";
 import type { TemplateContext } from "@/types/reminder";
 
 const ctx: TemplateContext = {
@@ -49,5 +54,12 @@ describe("renderTemplatePreview", () => {
     expect(renderTemplatePreview("en", ["A", "B", "C", "D", "E"])).toBe(
       "Hi A, this is a reminder of your appointment at B on C at D with E. If you need to reschedule, please reply to this message or call the clinic.",
     );
+  });
+
+  it("previews with the branch's full name when one is given", () => {
+    const text = renderTemplatePreview("en", sampleTemplateParams("SmartChiro Bangsar South Wellness Centre"));
+    expect(text).toContain("at SmartChiro Bangsar South Wellness Centre on");
+    expect(sampleTemplateParams("  ")).toEqual(SAMPLE_TEMPLATE_PARAMS);
+    expect(sampleTemplateParams(null)[1]).toBe(SAMPLE_TEMPLATE_PARAMS[1]);
   });
 });

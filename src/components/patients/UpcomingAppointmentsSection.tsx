@@ -75,8 +75,9 @@ function StatusCell({ status }: { status: string }) {
   const isLive = status === "SCHEDULED";
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-[13px] font-medium leading-none"
+      className="inline-flex items-center gap-1.5 text-[13px] font-medium leading-none whitespace-nowrap"
       style={{ color: c.text }}
+      title={c.label}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${isLive ? "animate-subtle-blink" : ""}`}
@@ -452,8 +453,10 @@ export function UpcomingAppointmentsSection({
             <EmptyState message="No appointments match the current filters." />
           ) : (
             <>
+              {/* Scrolls sideways inside the card on narrow screens, never the page. */}
+              <div className="overflow-x-auto">
               {/* Table header */}
-              <div className={`grid ${COLS} gap-4 px-4 py-2 border-b border-[#e5edf5]`}>
+              <div className={`grid ${COLS} gap-4 min-w-max px-4 py-2 border-b border-[#e5edf5]`}>
                 <SortableHeader label="When"    k="when"    active={sortKey === "when"}    dir={sortDir} onSort={onSort} />
                 <SortableHeader label="Patient" k="patient" active={sortKey === "patient"} dir={sortDir} onSort={onSort} />
                 <SortableHeader label="Doctor"  k="doctor"  active={sortKey === "doctor"}  dir={sortDir} onSort={onSort} />
@@ -467,24 +470,27 @@ export function UpcomingAppointmentsSection({
                 return (
                   <div
                     key={a.id}
-                    className={`grid ${COLS} gap-4 items-center px-4 h-11 border-b border-[#eef2f7] last:border-b-0 hover:bg-[#fafbfd] transition-colors`}
+                    className={`grid ${COLS} gap-4 min-w-max items-center px-4 h-11 border-b border-[#eef2f7] last:border-b-0 hover:bg-[#fafbfd] transition-colors`}
                   >
                     <TimeCell iso={a.dateTime} />
                     <Link
                       href={`/dashboard/patients/${a.patient.id}/details`}
                       className="text-[14px] font-medium text-[#061b31] hover:text-[#533afd] transition-colors truncate"
+                      title={`${a.patient.firstName} ${a.patient.lastName}`}
                     >
                       {a.patient.firstName} {a.patient.lastName}
                     </Link>
                     <Link
                       href={`/dashboard/doctors/${a.doctor.id}`}
                       className="text-[14px] text-[#425466] hover:text-[#533afd] transition-colors truncate"
+                      title={a.doctor.name ?? undefined}
                     >
                       {a.doctor.name}
                     </Link>
                     <Link
                       href={`/dashboard/branches/${a.branch.id}`}
                       className="text-[13px] text-[#425466] hover:text-[#533afd] transition-colors truncate"
+                      title={a.branch.name}
                     >
                       {a.branch.name}
                     </Link>
@@ -514,6 +520,7 @@ export function UpcomingAppointmentsSection({
                   </div>
                 );
               })}
+              </div>
               {/* Pager — always visible so the user knows there's a paged surface */}
               <div className="flex items-center justify-between gap-3 px-4 h-10 border-t border-[#e5edf5] bg-[#fafbfd]">
                 <span className="text-[12px] text-[#64748d] tabular-nums">

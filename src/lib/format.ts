@@ -114,3 +114,28 @@ export function todayLocalISODate(now: Date = new Date()): string {
 
 /** Confirmation used before closing a form that has unsaved input. */
 export const DISCARD_CHANGES_PROMPT = "Discard your unsaved changes?";
+
+/**
+ * "Dr. <name>" exactly once. Doctor names are stored however they were typed
+ * ("Dr. Suresh Menon", "dr suresh", "Suresh Menon"), so any leading "Dr"/"Dr."
+ * is stripped before the title is added — never "Dr. Dr. Suresh Menon".
+ */
+export function displayDoctorName(name: string | null | undefined, fallback = 'Unknown doctor'): string {
+  const bare = (name ?? '').trim().replace(/^(dr\.?\s+|dr\.)+/i, '').trim()
+  return bare ? `Dr. ${bare}` : fallback
+}
+
+/**
+ * Sub-line for a "today" count. "All wrapped up" only once something was booked
+ * and nothing is left — never next to an empty day.
+ */
+export function todayProgressLabel(total: number, remaining: number): string {
+  if (total <= 0) return 'Nothing booked today'
+  if (remaining <= 0) return 'All wrapped up'
+  return `${remaining} remaining`
+}
+
+/** "1 appointment", "3 appointments". Pass `pluralForm` for irregular words. */
+export function plural(n: number, singular: string, pluralForm: string = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : pluralForm}`
+}

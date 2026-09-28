@@ -32,7 +32,7 @@ export default function Home() {
       </p>
       <div className="mt-10 flex gap-4">
         <Link
-          href="/login"
+          href="/register"
           className="inline-flex items-center justify-center px-4 py-2 text-[15px] font-medium text-white transition-colors hover:opacity-90"
           style={{
             backgroundColor: "#533afd",

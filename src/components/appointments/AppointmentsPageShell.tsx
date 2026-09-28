@@ -142,8 +142,8 @@ export function AppointmentsPageShell({
   return (
     <div className="flex flex-col gap-4 h-[calc(100vh-110px)]">
       {/* Top bar */}
-      <div className="flex items-baseline justify-between gap-3 px-6 pt-4">
-        <div>
+      <div className="flex flex-col gap-3 px-4 pt-4 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
+        <div className="min-w-0">
           <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">
             Appointments
           </h1>
@@ -151,7 +151,7 @@ export function AppointmentsPageShell({
             Schedule, reschedule, and manage all bookings.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* View toggle */}
           <div
             role="tablist"

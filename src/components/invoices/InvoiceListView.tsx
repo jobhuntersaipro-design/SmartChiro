@@ -61,7 +61,7 @@ function SummaryCard({ label, value, hint }: { label: string; value: string; hin
   return (
     <div className="rounded-[6px] border border-[#e5edf5] bg-white p-4 shadow-(--shadow-card)">
       <p className="text-[14px] text-[#64748d]">{label}</p>
-      <p className="mt-1 text-[23px] font-light tabular-nums text-[#061b31]">{value}</p>
+      <p className="mt-1 text-[23px] font-light tabular-nums text-[#061b31] whitespace-nowrap truncate" title={value}>{value}</p>
       {hint && <p className="mt-0.5 text-[13px] text-[#64748d]">{hint}</p>}
     </div>
   );
@@ -190,17 +190,17 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-[6px] border border-[#e5edf5] bg-white shadow-(--shadow-card)">
+      <div className="relative overflow-x-auto rounded-[6px] border border-[#e5edf5] bg-white shadow-(--shadow-card)">
         <table className="w-full min-w-180">
           <thead>
-            <tr className="border-b border-[#e5edf5] text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
+            <tr className="border-b border-[#e5edf5] text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d] whitespace-nowrap">
               <th className="px-4 py-2.5">Invoice</th>
               <th className="px-4 py-2.5">Patient</th>
               <th className="px-4 py-2.5">Issued</th>
               <th className="px-4 py-2.5">Due</th>
               <th className="px-4 py-2.5 text-right">Amount</th>
               <th className="px-4 py-2.5">Status</th>
-              <th className="px-4 py-2.5"><span className="sr-only">Actions</span></th>
+              <th className="px-4 py-2.5 min-w-56"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -227,8 +227,8 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
                 const style = STATUS_STYLE[row.status];
                 return (
                   <tr key={row.id} className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc]">
-                    <td className="px-4 py-3 font-mono text-[14px] text-[#061b31]">{row.invoiceNumber}</td>
-                    <td className="px-4 py-3 text-[15px]">
+                    <td className="px-4 py-3 font-mono text-[14px] text-[#061b31] whitespace-nowrap">{row.invoiceNumber}</td>
+                    <td className="px-4 py-3 text-[15px] whitespace-nowrap">
                       <Link
                         href={`/dashboard/patients/${row.patient.id}/details?tab=history&sub=appointments`}
                         className="text-[#273951] hover:text-[#533afd] hover:underline"
@@ -239,12 +239,12 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
                         <span className="block text-[13px] text-[#64748d]">{row.branch.name}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466]">{dateMY(row.createdAt)}</td>
-                    <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466]">
+                    <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466] whitespace-nowrap">{dateMY(row.createdAt)}</td>
+                    <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466] whitespace-nowrap">
                       {row.status === "PAID" && row.paidAt ? `Paid ${dateMY(row.paidAt)}` : row.dueDate ? dateMY(row.dueDate) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right text-[15px] tabular-nums text-[#061b31]">{formatMYR(row.amount)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-right text-[15px] tabular-nums text-[#061b31] whitespace-nowrap">{formatMYR(row.amount)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-[13px] font-medium ${style.className}`}>
                         {style.label}
                       </span>

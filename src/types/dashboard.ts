@@ -28,6 +28,19 @@ export interface OwnerStats {
   totalBranches: number;
 }
 
+/** Owner/admin "what needs attention" numbers — GET /api/dashboard/signals. */
+export interface OwnerSignals {
+  /** Sum of invoices marked PAID today (clinic day), in MYR. */
+  revenueToday: number;
+  paidInvoicesToday: number;
+  noShowsToday: number;
+  /** Past appointments still SCHEDULED — never checked in, completed or marked no-show. */
+  staleAppointments: number;
+  /** Active patients whose last visit was 30+ days ago and who have nothing booked. */
+  recallDue: number;
+  recallSample: { id: string; name: string; lastVisit: string }[];
+}
+
 export interface DoctorStats {
   myPatients: number;
   todayAppointments: number;

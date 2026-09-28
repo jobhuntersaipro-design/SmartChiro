@@ -3,6 +3,7 @@
 import { Users, Calendar, Image, Stethoscope } from "lucide-react";
 import { StatCard } from "./StatCard";
 import type { OwnerStats } from "@/types/dashboard";
+import { todayProgressLabel } from "@/lib/format";
 
 interface OwnerStatCardsProps {
   stats: OwnerStats;
@@ -33,7 +34,11 @@ export function OwnerStatCards({ stats, branchLabel, showClinical = true }: Owne
         iconBg="#EFF6FF"
         value={stats.todayAppointments}
         label="Today's Appointments"
-        subtitle={`${stats.completedAppointments} completed, ${stats.remainingAppointments} remaining`}
+        subtitle={
+          stats.todayAppointments > 0 && stats.remainingAppointments > 0
+            ? `${stats.completedAppointments} completed, ${stats.remainingAppointments} remaining`
+            : todayProgressLabel(stats.todayAppointments, stats.remainingAppointments)
+        }
       />
       {showClinical && (
         <StatCard

@@ -87,7 +87,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
 
       {/* Table */}
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden"
+        className="rounded-[6px] border border-[#e5edf5] bg-white overflow-x-auto"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
         {loading ? (
@@ -105,11 +105,11 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#e5edf5]">
-                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Name</th>
-                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Doctor</th>
-                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Last Visit</th>
-                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">X-Rays</th>
-                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">Visits</th>
+                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d] whitespace-nowrap">Name</th>
+                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d] whitespace-nowrap">Doctor</th>
+                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d] whitespace-nowrap">Last Visit</th>
+                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d] whitespace-nowrap">X-Rays</th>
+                <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d] whitespace-nowrap">Visits</th>
               </tr>
             </thead>
             <tbody>
@@ -120,15 +120,15 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
                   onClick={() => router.push(`/dashboard/patients/${p.id}/details`)}
                 >
                   <td className="px-5 py-3">
-                    <div className="text-[15px] font-medium text-[#061b31]">
+                    <div className="text-[15px] font-medium text-[#061b31] whitespace-nowrap">
                       {p.firstName} {p.lastName}
                     </div>
-                    {p.email && <div className="text-[13px] text-[#64748d]">{p.email}</div>}
+                    {p.email && <div className="text-[13px] text-[#64748d] truncate max-w-60" title={p.email}>{p.email}</div>}
                   </td>
-                  <td className="px-5 py-3 text-[14px] text-[#273951]">
+                  <td className="px-5 py-3 text-[14px] text-[#273951] whitespace-nowrap">
                     {p.doctor?.name ?? "Unassigned"}
                   </td>
-                  <td className="px-5 py-3 text-[14px] text-[#273951]">
+                  <td className="px-5 py-3 text-[14px] text-[#273951] whitespace-nowrap">
                     {p.lastVisitDate
                       ? new Date(p.lastVisitDate).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric", year: "numeric" })
                       : "—"}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Calendar } from "lucide-react";
 import { EmptyState } from "./EmptyState";
 import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
-import { formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
+import { formatAppointmentDateTime, formatAppointmentTime } from "@/lib/format";
 
 export interface ScheduleAppointment {
   id: string;
@@ -31,23 +31,9 @@ const statusConfig: Record<string, { text: string; dot: string; label: string }>
 function StatusIndicator({ status }: { status: string }) {
   const c = statusConfig[status] ?? statusConfig.SCHEDULED;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium whitespace-nowrap" style={{ color: c.text }}>
       <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: c.dot }} />
       {c.label}
-    </span>
-  );
-}
-
-function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean }) {
-  return (
-    <span
-      className="inline-flex items-center justify-center rounded-[3px] px-1 py-px text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
-      style={{
-        background: isWeekend ? "#fef3c7" : "#f1f5f9",
-        color: isWeekend ? "#854d0e" : "#475569",
-      }}
-    >
-      {label}
     </span>
   );
 }
@@ -78,44 +64,78 @@ export function ScheduleTable({
     );
   }
 
+  const rows = appointments.slice(0, 10);
+  const th = "px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d] whitespace-nowrap";
+
   return (
-    <div className="overflow-x-auto">
+    <>
+    {/* Phones: one card per appointment instead of a sideways-scrolling table. */}
+    <ul className="sm:hidden divide-y divide-[#e5edf5]">
+      {rows.map((appt) => (
+        <li key={appt.id} className="px-4 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Link
+                href={appointmentHref(appt)}
+                className="block truncate text-[15px] font-medium text-[#061b31] hover:text-[#533afd]"
+                title={`${appt.patient.firstName} ${appt.patient.lastName}`}
+              >
+                {appt.patient.firstName} {appt.patient.lastName}
+              </Link>
+              <p className="text-[13px] text-[#64748d] tabular-nums truncate">
+                {formatAppointmentTime(appt.dateTime)}
+                {showDoctor && appt.doctor ? ` · ${appt.doctor.name}` : ""}
+              </p>
+            </div>
+            <StatusIndicator status={appt.status} />
+          </div>
+          {onStatusChanged && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <AppointmentStatusActions
+                appointmentId={appt.id}
+                status={appt.status}
+                dateTime={appt.dateTime}
+                onChanged={onStatusChanged}
+                size="xs"
+              />
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+
+    <div className="relative hidden sm:block overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-[#e5edf5]">
-            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">When</th>
-            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Patient</th>
-            {showDoctor && (
-              <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Doctor</th>
-            )}
-            {showBranch && (
-              <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Branch</th>
-            )}
-            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Notes</th>
-            <th className="px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Status</th>
-            {onStatusChanged && <th className="px-4 py-2.5"><span className="sr-only">Actions</span></th>}
+            <th className={th}>When</th>
+            <th className={th}>Patient</th>
+            {showDoctor && <th className={th}>Doctor</th>}
+            {showBranch && <th className={th}>Branch</th>}
+            <th className={th}>Notes</th>
+            <th className={th}>Status</th>
+            {onStatusChanged && <th className="px-4 py-2.5 min-w-44"><span className="sr-only">Actions</span></th>}
           </tr>
         </thead>
         <tbody>
-          {appointments.slice(0, 10).map((appt) => {
-            const dow = getAppointmentWeekday(appt.dateTime);
-            const dateText = formatAppointmentDateTime(appt.dateTime);
-            const params = new URLSearchParams({ view: "list", tab: "today", appointment: appt.id });
-            if (appt.branch) params.set("branch", appt.branch.id);
-
+          {rows.map((appt) => {
             return (
               <tr
                 key={appt.id}
                 className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors duration-200 cursor-pointer"
-                onClick={() => router.push(`/dashboard/appointments?${params.toString()}`)}
+                onClick={() => router.push(appointmentHref(appt))}
               >
+                {/* Today's list — the time is enough; the full date is on hover. */}
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1.5">
-                    {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
-                    <span className="text-[14px] text-[#273951] tabular-nums">{dateText}</span>
-                  </span>
+                  <time
+                    dateTime={appt.dateTime}
+                    title={formatAppointmentDateTime(appt.dateTime) ?? undefined}
+                    className="text-[14px] text-[#273951] tabular-nums"
+                  >
+                    {formatAppointmentTime(appt.dateTime)}
+                  </time>
                 </td>
-                <td className="px-4 py-3 text-[15px] text-[#273951]">
+                <td className="px-4 py-3 text-[15px] text-[#273951] whitespace-nowrap">
                   <Link
                     href={`/dashboard/patients/${appt.patient.id}/details`}
                     onClick={(e) => e.stopPropagation()}
@@ -125,23 +145,26 @@ export function ScheduleTable({
                   </Link>
                 </td>
                 {showDoctor && (
-                  <td className="px-4 py-3 text-[15px] text-[#273951]">
+                  <td className="px-4 py-3 text-[15px] text-[#273951] whitespace-nowrap">
                     {appt.doctor?.name ?? "—"}
                   </td>
                 )}
                 {showBranch && (
-                  <td className="px-4 py-3 text-[15px] text-[#273951]">
+                  <td
+                    className="px-4 py-3 text-[15px] text-[#273951] whitespace-nowrap truncate max-w-40"
+                    title={appt.branch?.name}
+                  >
                     {appt.branch?.name ?? "—"}
                   </td>
                 )}
-                <td className="px-4 py-3 text-[14px] text-[#64748d] truncate max-w-50">
+                <td className="px-4 py-3 text-[14px] text-[#64748d] truncate max-w-40" title={appt.notes ?? undefined}>
                   {appt.notes ?? "—"}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <StatusIndicator status={appt.status} />
                 </td>
                 {onStatusChanged && (
-                  <td className="px-4 py-2 text-right whitespace-nowrap">
+                  <td className="px-4 py-2 text-right whitespace-nowrap min-w-44">
                     <span className="inline-flex gap-1.5">
                       <AppointmentStatusActions
                         appointmentId={appt.id}
@@ -159,5 +182,12 @@ export function ScheduleTable({
         </tbody>
       </table>
     </div>
+    </>
   );
+}
+
+function appointmentHref(appt: ScheduleAppointment): string {
+  const params = new URLSearchParams({ view: "list", tab: "today", appointment: appt.id });
+  if (appt.branch) params.set("branch", appt.branch.id);
+  return `/dashboard/appointments?${params.toString()}`;
 }

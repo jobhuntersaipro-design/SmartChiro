@@ -103,12 +103,12 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden">
+      <div className="rounded-[6px] border border-[#e5edf5] bg-white overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#e5edf5]">
               {["Name", "IC Number", "Phone", "Gender", "Status", "Last Visit", "Visits", "X-Rays"].map((h) => (
-                <th key={h} className="px-4 py-3 text-left text-[12px] font-medium text-[#64748d] uppercase tracking-wide">
+                <th key={h} className="px-4 py-3 text-left text-[12px] font-medium text-[#64748d] uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -137,26 +137,26 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
                 const colors = statusColors[p.status ?? "active"] ?? statusColors.active;
                 return (
                   <tr key={p.id} className="border-b border-[#e5edf5] hover:bg-[#F6F9FC] transition-colors">
-                    <td className="px-4 py-3 text-[14px] text-[#061b31] font-medium">
+                    <td className="px-4 py-3 text-[14px] text-[#061b31] font-medium whitespace-nowrap">
                       <Link href={`/dashboard/patients/${p.id}/details`} className="hover:text-[#533afd] hover:underline">
                         {p.firstName} {p.lastName}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951]">
+                    <td className="px-4 py-3 text-[13px] text-[#273951] whitespace-nowrap">
                       {p.icNumber ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951]">
+                    <td className="px-4 py-3 text-[13px] text-[#273951] whitespace-nowrap">
                       {p.phone ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951]">
+                    <td className="px-4 py-3 text-[13px] text-[#273951] whitespace-nowrap">
                       {p.gender ?? "-"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light whitespace-nowrap ${colors.bg} ${colors.text}`}>
                         {p.status ?? "active"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#64748d]">
+                    <td className="px-4 py-3 text-[13px] text-[#64748d] whitespace-nowrap">
                       {p.lastVisit ? formatDate(p.lastVisit) : "-"}
                     </td>
                     <td className="px-4 py-3 text-[13px] text-[#273951]" style={{ fontFeatureSettings: '"tnum"' }}>

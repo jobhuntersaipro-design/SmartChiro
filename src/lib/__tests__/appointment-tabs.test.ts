@@ -149,6 +149,17 @@ describe("deriveStats", () => {
     const stats = deriveStats(list, [], NOW, TODAY);
     expect(stats.todayRemaining).toBe(1);
   });
+
+  it("todayRemaining keeps checked-in / in-progress patients whose slot has started", () => {
+    const list: CalendarAppointment[] = [
+      makeAppt({ id: "waiting", dateTime: "2026-05-07T07:00:00.000Z", status: "CHECKED_IN" }),
+      makeAppt({ id: "on-table", dateTime: "2026-05-07T07:30:00.000Z", status: "IN_PROGRESS" }),
+      makeAppt({ id: "done", dateTime: "2026-05-07T06:00:00.000Z", status: "COMPLETED" }),
+    ];
+    const stats = deriveStats(list, [], NOW, TODAY);
+    expect(stats.todayCount).toBe(3);
+    expect(stats.todayRemaining).toBe(2);
+  });
 });
 
 describe("STATUS_TOKENS", () => {

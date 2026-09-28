@@ -24,6 +24,7 @@ import {
   buildDoctorHref,
 } from "@/lib/format";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { RECOVERY_METRICS, directionHint, scoreTone, type ScoreTone } from "@/lib/recovery-scores";
 
 interface PatientOverviewTabProps {
   patientId: string;
@@ -103,10 +104,15 @@ function formatVisitType(type: string): string {
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+const SCORE_PILL: Record<ScoreTone, { bg: string; text: string }> = {
+  good: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
+  fair: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-[#F5A623]" },
+  poor: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
+};
+
+/** Pill colours for the overall-improvement score (higher is better). */
 function getScoreColor(score: number): { bg: string; text: string } {
-  if (score >= 7) return { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" };
-  if (score >= 4) return { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-[#F5A623]" };
-  return { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" };
+  return SCORE_PILL[scoreTone(score, RECOVERY_METRICS.overallImprovement.direction)];
 }
 
 function LoadingSkeleton({ rows = 3 }: { rows?: number }) {
@@ -252,6 +258,9 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
               <h2 className="text-[15px] font-medium text-[#061b31]">Recovery Trend</h2>
+              <span className="ml-auto text-[12px] text-[#64748d]">
+                Overall improvement · {directionHint(RECOVERY_METRICS.overallImprovement.direction).toLowerCase()}
+              </span>
             </div>
           </div>
           {loadingVisits ? (

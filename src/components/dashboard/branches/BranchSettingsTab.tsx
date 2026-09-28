@@ -289,7 +289,11 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       )}
 
       {/* Appointment Reminders */}
-      <BranchReminderSettingsCard branchId={branch.id} canEdit={true} />
+      <BranchReminderSettingsCard
+        branchId={branch.id}
+        canEdit={true}
+        branch={{ name: branch.name, address: branch.address, phone: branch.phone }}
+      />
 
       {/* Activity Log — visible to OWNER + ADMIN per 2026-05-05 RBAC */}
       {(isOwner || branch.userRole === "ADMIN") && (

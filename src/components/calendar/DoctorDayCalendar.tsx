@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { AppointmentActionsMenu } from "@/components/patients/AppointmentActionsMenu";
 import { treatmentTokensFor, treatmentLabelFor } from "@/lib/treatment-colors";
 import { STATUS_TOKENS } from "@/lib/appointment-tabs";
+import { plural } from "@/lib/format";
 import type { CalendarAppointment, AvailabilitySlot } from "@/types/appointment";
 import {
   clinicDateKey,
@@ -214,12 +215,13 @@ export function DoctorDayCalendar({
             >
               <DoctorAvatar doctor={d} />
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#061b31] truncate">
+                <p className="text-[14px] font-semibold text-[#061b31] truncate" title={d.name ?? "Unassigned"}>
                   {d.name ?? "Unassigned"}
                 </p>
                 <p className="text-[12px] text-[#697386] truncate">
-                  Today&apos;s appointment: {todaysCount} patient
-                  {todaysCount === 1 ? "" : "s"}
+                  {todaysCount === 0
+                    ? isToday ? "No appointments today" : "No appointments"
+                    : plural(todaysCount, "appointment")}
                 </p>
               </div>
             </div>

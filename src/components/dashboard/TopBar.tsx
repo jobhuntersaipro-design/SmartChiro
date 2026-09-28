@@ -1,12 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, Search } from "lucide-react";
+
+const LONG_PLACEHOLDER = "Search patients — name, IC or phone";
 
 export function TopBar({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  // The long hint doesn't fit a phone; start short (SSR-safe) and widen on larger screens.
+  const [placeholder, setPlaceholder] = useState("Search");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const apply = () => setPlaceholder(mq.matches ? LONG_PLACEHOLDER : "Search");
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +45,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu?: () => void }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Search patients"
-          placeholder="Search patients — name, IC or phone"
+          placeholder={placeholder}
           className="flex h-8 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200"
         />
       </form>

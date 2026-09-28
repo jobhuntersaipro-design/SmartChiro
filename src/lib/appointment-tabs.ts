@@ -152,10 +152,10 @@ export function deriveStats(
     const isThisWeek = dt >= weekStart && dt < weekEnd;
     if (isToday && a.status !== "CANCELLED") {
       todayCount++;
-      if (
-        dt.getTime() > now.getTime() &&
-        (a.status === "SCHEDULED" || a.status === "CHECKED_IN")
-      ) {
+      // A checked-in or in-progress patient is still on the day's list even
+      // once their slot has started; a SCHEDULED one only until its start.
+      const inClinic = a.status === "CHECKED_IN" || a.status === "IN_PROGRESS";
+      if (inClinic || (a.status === "SCHEDULED" && dt.getTime() > now.getTime())) {
         todayRemaining++;
       }
     }

@@ -10,6 +10,7 @@ import type { BranchRole } from "@prisma/client";
 import { ManageDoctorsSheet } from "../owner/ManageDoctorsSheet";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 import { roleLabel } from "@/lib/permissions";
+import { plural } from "@/lib/format";
 
 interface BranchDoctorsTabProps {
   branchId: string;
@@ -101,20 +102,23 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                 className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4 transition-all duration-200 hover:border-[#c1c9d2]"
                 style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-10 w-10 shrink-0">
                       <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[13px] font-medium">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[15px] font-medium text-[#061b31]">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="text-[15px] font-medium text-[#061b31] truncate"
+                          title={member.name ?? member.email}
+                        >
                           {member.name ?? member.email}
                         </span>
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
                             isOwnerMember
                               ? "bg-[#ededfc] text-[#533afd]"
                               : member.role === "ADMIN"
@@ -125,25 +129,25 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                           {roleLabel(member.role)}
                         </span>
                       </div>
-                      <p className="text-[13px] text-[#64748d]">{member.email}</p>
+                      <p className="text-[13px] text-[#64748d] truncate" title={member.email}>{member.email}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex shrink-0 items-center gap-4">
                     {/* Stats */}
-                    <div className="hidden sm:flex items-center gap-4 text-[13px] text-[#64748d]">
+                    <div className="hidden sm:flex items-center gap-4 text-[13px] text-[#64748d] whitespace-nowrap">
                       <span className="flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {member.patientCount ?? 0} patients
+                        {plural(member.patientCount ?? 0, "patient")}
                       </span>
                       <span className="flex items-center gap-1">
                         <ImageIcon className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {member.xrayCountThisMonth ?? 0} X-rays
+                        {plural(member.xrayCountThisMonth ?? 0, "X-ray")}
                       </span>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       <Link
                         href={`/dashboard/doctors/${member.userId}`}
                         className="text-[13px] text-[#533afd] hover:text-[#4434d4] font-medium"

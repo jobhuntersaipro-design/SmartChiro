@@ -61,7 +61,7 @@ export function AppointmentTabs({ active, counts, onChange }: Props) {
             aria-label={`${tab.label}, ${count ?? 0} appointment${count === 1 ? "" : "s"}`}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.id)}
-            className={`relative inline-flex items-center gap-2 px-4 h-11 text-[14px] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] ${
+            className={`relative inline-flex shrink-0 items-center gap-2 px-4 h-11 text-[14px] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] ${
               isActive
                 ? "text-[#635BFF] font-semibold"
                 : "text-[#425466] font-medium hover:text-[#0A2540]"

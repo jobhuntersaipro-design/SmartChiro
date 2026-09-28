@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { ReminderTemplateEditor } from "./ReminderTemplateEditor";
 import { WhatsAppConnectionPanel } from "./WhatsAppConnectionPanel";
 import { ALLOWED_OFFSETS_MIN, type Templates } from "@/types/reminder";
-import { renderTemplatePreview } from "@/lib/whatsapp/template-text";
+import { renderTemplatePreview, sampleTemplateParams } from "@/lib/whatsapp/template-text";
 
 type Props = {
   branchId: string;
   canEdit: boolean;
+  /** Real branch details so previews read as the patient will see them. */
+  branch?: { name: string; address?: string | null; phone?: string | null };
 };
 
 const OFFSET_LABELS: Record<number, string> = {
@@ -24,7 +26,7 @@ type ServerState = {
   settings: { enabled: boolean; offsetsMin: number[]; templates: Templates };
 };
 
-export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
+export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props) {
   const [state, setState] = useState<ServerState | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -120,7 +122,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
             WhatsApp message (Meta-approved template)
           </div>
           <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-3 text-[14px] leading-relaxed text-[#425466]">
-            {renderTemplatePreview("en")}
+            {renderTemplatePreview("en", sampleTemplateParams(branch?.name))}
           </div>
           <p className="mt-1.5 text-[13px] text-[#697386]">
             WhatsApp only allows approved templates for reminders, so this text is fixed. Patients who prefer Bahasa Melayu get the Malay version.
@@ -130,6 +132,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
           label="Email plain-text (English)"
           value={s.templates.email?.en ?? ""}
           onChange={canEdit ? (v) => setTemplateField("email", "en", v) : () => {}}
+          branch={branch}
         />
       </div>
 

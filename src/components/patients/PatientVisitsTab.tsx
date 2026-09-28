@@ -10,11 +10,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RecoveryScoreBar } from "@/components/patients/RecoveryScoreBar";
+import { RECOVERY_METRIC_ORDER } from "@/lib/recovery-scores";
 import { CreateVisitDialog } from "@/components/patients/CreateVisitDialog";
 import { EditVisitDialog } from "@/components/patients/EditVisitDialog";
 import { DeleteVisitDialog } from "@/components/patients/DeleteVisitDialog";
 import { ExternalLink } from "@/components/patients/ExternalLink";
-import { buildDoctorHref, formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
+import { buildDoctorHref, displayDoctorName, formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
 import type { Visit } from "@/types/visit";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
@@ -188,10 +189,10 @@ function VisitCard({
         >
           {visit.doctor.id && visit.doctor.name ? (
             <ExternalLink href={buildDoctorHref(visit.doctor.id)}>
-              Dr. {visit.doctor.name}
+              {displayDoctorName(visit.doctor.name)}
             </ExternalLink>
           ) : (
-            <span className="text-[#64748d]">Dr. {visit.doctor.name || "Unknown"}</span>
+            <span className="text-[#64748d]">{displayDoctorName(visit.doctor.name)}</span>
           )}
         </span>
 
@@ -251,12 +252,10 @@ function VisitCard({
                 <Activity className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
                 Recovery Questionnaire
               </h4>
-              <div className="grid grid-cols-5 gap-3">
-                <RecoveryScoreBar label="Pain" score={q.painLevel} inverted />
-                <RecoveryScoreBar label="Mobility" score={q.mobilityScore} />
-                <RecoveryScoreBar label="Sleep" score={q.sleepQuality} />
-                <RecoveryScoreBar label="Function" score={q.dailyFunction} />
-                <RecoveryScoreBar label="Overall" score={q.overallImprovement} />
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {RECOVERY_METRIC_ORDER.map((metric) => (
+                  <RecoveryScoreBar key={metric} metric={metric} score={q[metric]} />
+                ))}
               </div>
               {q.patientComments && (
                 <p className="mt-2 text-[13px] text-[#64748d] italic">

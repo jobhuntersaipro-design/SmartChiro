@@ -65,12 +65,12 @@ export function ActivityFeed({ activities, showBranch = false }: ActivityFeedPro
               <p className="text-[14px] text-[#273951] leading-snug">
                 {item.description}
               </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[13px] text-[#64748d]">
+              <div className="flex min-w-0 items-center gap-2 mt-0.5">
+                <span className="text-[13px] text-[#64748d] whitespace-nowrap">
                   {formatRelativeTime(item.timestamp)}
                 </span>
                 {showBranch && item.branchName && (
-                  <span className="text-[13px] text-[#64748d]">
+                  <span className="text-[13px] text-[#64748d] truncate" title={item.branchName}>
                     &middot; {item.branchName}
                   </span>
                 )}

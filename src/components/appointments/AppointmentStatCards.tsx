@@ -4,6 +4,7 @@ import { Calendar, Users, CheckCircle2, BarChart3 } from "lucide-react";
 import type { CalendarAppointment } from "@/types/appointment";
 import { deriveStats } from "@/lib/appointment-tabs";
 import { clinicDateKey } from "@/lib/clinic-time";
+import { plural, todayProgressLabel } from "@/lib/format";
 
 interface Props {
   appointments: CalendarAppointment[];
@@ -45,19 +46,15 @@ export function AppointmentStatCards({
       <StatCard
         icon={<Calendar className="h-4 w-4 text-[#635BFF]" strokeWidth={1.75} />}
         label={dayLabel}
-        primary={`${stats.todayCount} appointment${stats.todayCount === 1 ? "" : "s"}`}
+        primary={stats.todayCount === 0 ? "No appointments" : plural(stats.todayCount, "appointment")}
         secondary={
-          showingToday && stats.todayRemaining > 0
-            ? `${stats.todayRemaining} remaining`
-            : showingToday
-            ? "All wrapped up"
-            : "All bookings"
+          showingToday ? todayProgressLabel(stats.todayCount, stats.todayRemaining) : "All bookings"
         }
       />
       <StatCard
         icon={<Users className="h-4 w-4 text-[#0570DE]" strokeWidth={1.75} />}
         label="This week"
-        primary={`${stats.weekCount} appointment${stats.weekCount === 1 ? "" : "s"}`}
+        primary={plural(stats.weekCount, "appointment")}
         secondary={doctorsLabel}
       />
       <StatCard

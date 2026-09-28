@@ -24,6 +24,8 @@ import { SkeletonStatCards } from "./shared/SkeletonCard";
 import { SkeletonTable } from "./shared/SkeletonTable";
 
 import { QuickActionsPanel } from "./owner/QuickActionsPanel";
+import { OwnerSignalsCard } from "./owner/OwnerSignalsCard";
+import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
 
 import { RecentPatientsCard } from "./doctor/RecentPatientsCard";
 import { RecentXraysGrid } from "./doctor/RecentXraysGrid";
@@ -49,6 +51,12 @@ export function DashboardView({
   // Front desk gets the owner layout (today's schedule with check-in actions,
   // patient / appointment counts) minus clinical stats.
   const showClinicalStats = can(branchRole, "dashboard.clinicalStats");
+  // Revenue signals, quick actions: OWNER/ADMIN. Booking: anyone who manages
+  // appointments (front desk included).
+  const canManage = isOwner || branchRole === "ADMIN";
+  const canBook = can(branchRole, "appointment.manageAll");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [signalsKey, setSignalsKey] = useState(0);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -127,6 +135,7 @@ export function DashboardView({
 
   // Quiet refresh after a check-in / no-show from the table (no skeleton flash).
   const refreshSchedule = useCallback(async () => {
+    setSignalsKey((k) => k + 1);
     const res = await fetch(`/api/dashboard/schedule?branchId=${branchParam}`);
     if (res.ok) setAppointments((await res.json()).appointments);
   }, [branchParam]);
@@ -213,6 +222,7 @@ export function DashboardView({
         branches={branchList}
         selectedBranchId={selectedBranchId}
         onBranchChange={setSelectedBranchId}
+        onNewAppointment={canBook ? () => setCreateOpen(true) : undefined}
       />
 
       {/* Stat Cards */}
@@ -227,8 +237,11 @@ export function DashboardView({
         <OwnerStatCards stats={ownerStats} branchLabel={branchLabel} showClinical={showClinicalStats} />
       ) : null}
 
+      {/* Owner / front desk: what needs attention today */}
+      {canManage && <OwnerSignalsCard branchParam={branchParam} refreshKey={signalsKey} />}
+
       {/* Owner / front desk: Quick Actions */}
-      {(isOwner || branchRole === "ADMIN") && (
+      {canManage && (
         <QuickActionsPanel
           branchRole={branchRole}
           onCreateBranch={() => router.push("/dashboard/branches")}
@@ -237,7 +250,7 @@ export function DashboardView({
       )}
 
       {/* Schedule + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className="grid grid-cols-1 2xl:grid-cols-[1fr_320px] gap-6 [&>*]:min-w-0">
         <div
           className="rounded-[6px] border border-[#e5edf5] bg-white"
           style={{
@@ -303,6 +316,22 @@ export function DashboardView({
             <RecentXraysGrid xrays={recentXrays} />
           </div>
         </div>
+      )}
+
+      {canBook && (
+        <CreateAppointmentDialog
+          open={createOpen}
+          isAdmin
+          currentUserId={userId}
+          prefilledPatient={null}
+          prefilledDoctor={null}
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => {
+            setCreateOpen(false);
+            void refreshSchedule();
+            void fetchStats();
+          }}
+        />
       )}
     </div>
   );
