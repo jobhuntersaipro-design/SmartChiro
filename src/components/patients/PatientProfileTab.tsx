@@ -12,6 +12,8 @@ import {
 } from "@/lib/format";
 import { formatMYR } from "@/lib/invoices";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { languageLabel } from "@/lib/outreach/consent";
+import { PatientOutreachSection } from "@/components/patients/PatientOutreachSection";
 
 interface PatientProfileTabProps {
   patient: {
@@ -42,7 +44,8 @@ interface PatientProfileTabProps {
     notes: string | null;
     status: string;
     reminderChannel?: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
-    preferredLanguage?: 'en' | 'ms';
+    preferredLanguage?: 'en' | 'ms' | 'zh';
+    marketingConsent?: boolean;
     initialTreatmentFee?: number | null;
     firstTreatmentFee?: number | null;
     standardFollowUpFee?: number | null;
@@ -55,6 +58,8 @@ interface PatientProfileTabProps {
   };
   /** Medical history / notes — false for front desk. */
   showClinical?: boolean;
+  /** Called after the profile changes the patient (marketing consent). */
+  onPatientChange?: () => void;
 }
 
 function formatDateTime(dateStr: string): string {
@@ -159,7 +164,7 @@ function Section({
   );
 }
 
-export function PatientProfileTab({ patient, showClinical = true }: PatientProfileTabProps) {
+export function PatientProfileTab({ patient, showClinical = true, onPatientChange }: PatientProfileTabProps) {
   const dobDisplay = formatDobWithAge(patient.dateOfBirth);
   const hasAllergies = !!patient.allergies && patient.allergies.trim().length > 0;
   const fullAddress = buildFullAddress(patient);
@@ -273,7 +278,7 @@ export function PatientProfileTab({ patient, showClinical = true }: PatientProfi
           <DetailRow label="Reminder Channel" value={patient.reminderChannel ?? "WHATSAPP"} />
           <DetailRow
             label="Preferred Language"
-            value={patient.preferredLanguage === "ms" ? "Bahasa Malaysia" : "English"}
+            value={languageLabel(patient.preferredLanguage)}
           />
           <DetailRow label="Created" value={formatDateTime(patient.createdAt)} />
           <DetailRow
@@ -282,6 +287,13 @@ export function PatientProfileTab({ patient, showClinical = true }: PatientProfi
           />
         </div>
       </Section>
+
+      <PatientOutreachSection
+        patientId={patient.id}
+        patientName={`${patient.firstName} ${patient.lastName}`}
+        marketingConsent={patient.marketingConsent}
+        onConsentChange={onPatientChange}
+      />
     </div>
   );
 }

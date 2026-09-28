@@ -2,8 +2,14 @@ import { prisma } from "@/lib/prisma";
 import { normalizePhoneDigits } from "@/lib/format";
 import { decryptSecret } from "./crypto";
 import { GraphError, graphRequest, mapGraphError } from "./graph";
-import { pickTemplateLanguage } from "./template-text";
-import type { TemplateLang, TemplateStatusMap } from "@/types/whatsapp";
+import {
+  REMINDER_TEMPLATE_NAME,
+  metaLanguageCode,
+  pickTemplateLanguage,
+  statusForTemplate,
+  templateByName,
+} from "./template-text";
+import type { TemplateLang } from "@/types/whatsapp";
 import type { WhatsAppErrorCode } from "@/types/reminder";
 
 export type WhatsAppSendResult =
@@ -11,26 +17,45 @@ export type WhatsAppSendResult =
   | { ok: false; code: WhatsAppErrorCode; message: string };
 
 /** Sends the approved reminder template from the branch's connected number. */
-export async function sendReminderTemplate(args: {
+export function sendReminderTemplate(args: {
   branchId: string;
   to: string;
   lang: TemplateLang;
-  params: string[];
+  params: string[] | ((lang: TemplateLang) => string[]);
+}): Promise<WhatsAppSendResult> {
+  return sendTemplate({ ...args, templateName: REMINDER_TEMPLATE_NAME });
+}
+
+/**
+ * Sends one of the managed templates (reminder, recall, review) from the
+ * branch's connected number, in the patient's language when approved, else
+ * another approved language.
+ */
+export async function sendTemplate(args: {
+  branchId: string;
+  templateName: string;
+  to: string;
+  lang: TemplateLang;
+  /** Values, or a builder called with the language actually sent (dates follow the template language). */
+  params: string[] | ((lang: TemplateLang) => string[]);
 }): Promise<WhatsAppSendResult> {
   const account = await prisma.whatsAppAccount.findUnique({ where: { branchId: args.branchId } });
   if (!account || account.status !== "CONNECTED") {
     return { ok: false, code: "session_disconnected", message: "WhatsApp is not connected for this branch" };
   }
 
-  const lang = pickTemplateLanguage(args.lang, account.templateStatus as TemplateStatusMap);
+  const lang = pickTemplateLanguage(args.lang, statusForTemplate(account.templateStatus, args.templateName));
   if (!lang) {
-    return { ok: false, code: "template_not_approved", message: "Reminder template is not approved by Meta yet" };
+    const label = templateByName(args.templateName)?.label ?? args.templateName;
+    return { ok: false, code: "template_not_approved", message: `${label} template is not approved by Meta yet` };
   }
 
   const to = normalizePhoneDigits(args.to);
   if (to.length < 8 || to.length > 15) {
     return { ok: false, code: "invalid_e164", message: `Invalid phone number: ${args.to}` };
   }
+
+  const params = typeof args.params === "function" ? args.params(lang) : args.params;
 
   let token: string;
   try {
@@ -52,10 +77,10 @@ export async function sendReminderTemplate(args: {
           to,
           type: "template",
           template: {
-            name: account.templateName,
-            language: { code: lang },
+            name: args.templateName,
+            language: { code: metaLanguageCode(lang) },
             components: [
-              { type: "body", parameters: args.params.map((text) => ({ type: "text", text })) },
+              { type: "body", parameters: params.map((text) => ({ type: "text", text })) },
             ],
           },
         },

@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { branchAccess, toPublicAccount } from "@/lib/whatsapp/account";
 import { decryptSecret } from "@/lib/whatsapp/crypto";
 import { GraphError } from "@/lib/whatsapp/graph";
-import { ensureReminderTemplates } from "@/lib/whatsapp/templates";
+import { ensureWhatsAppTemplates } from "@/lib/whatsapp/templates";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
-/** Creates any missing reminder template language and refreshes approval status. */
+/** Creates any missing template language (reminder, recall, review) and refreshes approval status. */
 export async function POST(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
   const access = await branchAccess(branchId);
@@ -17,7 +17,7 @@ export async function POST(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!account) return NextResponse.json({ error: "not_connected" }, { status: 404 });
 
   try {
-    const { status, errors } = await ensureReminderTemplates(
+    const { status, errors } = await ensureWhatsAppTemplates(
       account.wabaId,
       decryptSecret(account.accessTokenEnc),
     );

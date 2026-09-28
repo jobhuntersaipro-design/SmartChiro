@@ -4,15 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, RefreshCw, Send } from "lucide-react";
 import { runEmbeddedSignup, type SignupFlow } from "@/lib/whatsapp/embedded-signup";
-import { TEMPLATE_LANGS } from "@/lib/whatsapp/template-text";
-import type { PublicWhatsAppAccount, TemplateLang, WhatsAppConnectionState } from "@/types/whatsapp";
+import { LANG_LABEL, REMINDER_TEMPLATE_NAME, TEMPLATE_LANGS, WA_TEMPLATE_LIST } from "@/lib/whatsapp/template-text";
+import type { PublicWhatsAppAccount, WhatsAppConnectionState } from "@/types/whatsapp";
 import { WhatsAppManualConnectForm } from "./WhatsAppManualConnectForm";
 
 interface Props {
   branchId: string;
 }
-
-const LANG_LABEL: Record<TemplateLang, string> = { en: "English", ms: "Bahasa Melayu" };
 
 const TYPE_LABEL: Record<PublicWhatsAppAccount["connectionType"], string> = {
   COEXISTENCE: "WhatsApp Business app",
@@ -110,7 +108,7 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
   async function sendTest(e: React.FormEvent) {
     e.preventDefault();
     const j = await post("/test", "test", { to: testTo, lang: "en" });
-    if (j) toast.success(`Test message sent (${j.lang === "ms" ? "Bahasa Melayu" : "English"} template)`);
+    if (j) toast.success(`Test message sent (${LANG_LABEL[j.lang as keyof typeof LANG_LABEL] ?? "English"} template)`);
   }
 
   async function disconnect() {
@@ -213,22 +211,33 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#425466]">
-        <span>Reminder template:</span>
-        {TEMPLATE_LANGS.map((l) => {
-          const pill = templatePill(account.templateStatus[l]);
+      <div className="space-y-1.5 text-[14px] text-[#425466]">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium text-[#0A2540]">Message templates</span>
+          {canManage && (
+            <button type="button" onClick={refreshTemplates} disabled={busy !== null} className="inline-flex items-center gap-1 text-[#635BFF] hover:underline disabled:opacity-50">
+              <RefreshCw className={`h-3.5 w-3.5 ${busy === "templates" ? "animate-spin" : ""}`} strokeWidth={1.5} />
+              Refresh templates
+            </button>
+          )}
+        </div>
+        {WA_TEMPLATE_LIST.map((t) => {
+          const statuses =
+            account.templateStatuses?.[t.name] ?? (t.name === REMINDER_TEMPLATE_NAME ? account.templateStatus : {});
           return (
-            <span key={l} className={`rounded-full px-2 py-0.5 text-[13px] font-medium ${pill.className}`}>
-              {LANG_LABEL[l]}: {pill.label}
-            </span>
+            <div key={t.name} className="flex flex-wrap items-center gap-1.5">
+              <span className="w-32 shrink-0">{t.label}</span>
+              {TEMPLATE_LANGS.map((l) => {
+                const pill = templatePill(statuses[l]);
+                return (
+                  <span key={l} className={`rounded-full px-2 py-0.5 text-[13px] font-medium ${pill.className}`}>
+                    {LANG_LABEL[l]}: {pill.label}
+                  </span>
+                );
+              })}
+            </div>
           );
         })}
-        {canManage && (
-          <button type="button" onClick={refreshTemplates} disabled={busy !== null} className="inline-flex items-center gap-1 text-[#635BFF] hover:underline disabled:opacity-50">
-            <RefreshCw className={`h-3.5 w-3.5 ${busy === "templates" ? "animate-spin" : ""}`} strokeWidth={1.5} />
-            Refresh
-          </button>
-        )}
       </div>
       {account.status === "CONNECTED" && account.lastError && (
         <p className="text-[14px] text-[#9A5B00]">{account.lastError}</p>

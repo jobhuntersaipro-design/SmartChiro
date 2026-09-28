@@ -22,9 +22,9 @@ const Body = z.object({
     )
     .min(1),
   templates: z.object({
-    whatsapp: z.object({ en: StringTpl, ms: StringTpl }).partial().optional(),
+    whatsapp: z.object({ en: StringTpl, ms: StringTpl, zh: StringTpl }).partial().optional(),
     email: z
-      .object({ en: StringTpl, ms: StringTpl, htmlEn: StringTpl, htmlMs: StringTpl })
+      .object({ en: StringTpl, ms: StringTpl, zh: StringTpl, htmlEn: StringTpl, htmlMs: StringTpl, htmlZh: StringTpl })
       .partial()
       .optional(),
   }),
@@ -78,10 +78,13 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
   const tpls: Array<string | undefined> = [
     data.templates.whatsapp?.en,
     data.templates.whatsapp?.ms,
+    data.templates.whatsapp?.zh,
     data.templates.email?.en,
     data.templates.email?.ms,
+    data.templates.email?.zh,
     data.templates.email?.htmlEn,
     data.templates.email?.htmlMs,
+    data.templates.email?.htmlZh,
   ];
   for (const tpl of tpls) {
     if (tpl && tpl.length > 0) {
@@ -99,12 +102,15 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
     whatsapp: {
       en: data.templates.whatsapp?.en ?? DEFAULT_TEMPLATES.whatsapp.en,
       ms: data.templates.whatsapp?.ms ?? DEFAULT_TEMPLATES.whatsapp.ms,
+      zh: data.templates.whatsapp?.zh ?? DEFAULT_TEMPLATES.whatsapp.zh,
     },
     email: {
       en: data.templates.email?.en ?? DEFAULT_TEMPLATES.email.en,
       ms: data.templates.email?.ms ?? DEFAULT_TEMPLATES.email.ms,
+      zh: data.templates.email?.zh ?? DEFAULT_TEMPLATES.email.zh,
       htmlEn: data.templates.email?.htmlEn ?? DEFAULT_TEMPLATES.email.htmlEn,
       htmlMs: data.templates.email?.htmlMs ?? DEFAULT_TEMPLATES.email.htmlMs,
+      htmlZh: data.templates.email?.htmlZh ?? DEFAULT_TEMPLATES.email.htmlZh,
     },
   };
 

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { appSecret } from "./config";
 import { encryptSecret } from "./crypto";
 import { GraphError, graphRequest } from "./graph";
-import { ensureReminderTemplates, REMINDER_TEMPLATE_NAME } from "./templates";
+import { ensureWhatsAppTemplates, REMINDER_TEMPLATE_NAME } from "./templates";
 
 /** Exchanges the Embedded Signup code (30 s TTL) for a business token. */
 export async function exchangeCode(code: string): Promise<string> {
@@ -111,7 +111,7 @@ export async function connectAccount(input: ConnectInput) {
     }
   }
 
-  const templates = await ensureReminderTemplates(wabaId, token);
+  const templates = await ensureWhatsAppTemplates(wabaId, token);
   const templateStatus = templates.status;
   errors.push(...templates.errors.map((m) => `Template setup: ${m}`));
 

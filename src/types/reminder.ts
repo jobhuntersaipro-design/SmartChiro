@@ -8,8 +8,9 @@ export type { ReminderChannel, ReminderStatus, WaSessionStatus };
 
 /** The shape of `BranchReminderSettings.templates` (Json column). */
 export type Templates = {
-  whatsapp: { en: string; ms: string };
-  email: { en: string; ms: string; htmlEn: string; htmlMs: string };
+  whatsapp: { en: string; ms: string; zh?: string };
+  /** `zh` / `htmlZh` are optional: rows saved before Chinese existed lack them. */
+  email: { en: string; ms: string; zh?: string; htmlEn: string; htmlMs: string; htmlZh?: string };
 };
 
 /** Allowed offsets in minutes (minutes before appointment.dateTime). */

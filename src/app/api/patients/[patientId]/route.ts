@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { reminderChannelError } from "@/lib/reminder-channel";
+import { PATIENT_LANGUAGE_VALUES, consentFields } from "@/lib/outreach/consent";
 import { getPatientAccess } from "@/lib/auth/patient-access";
 import { can } from "@/lib/permissions";
 import { isValidMyKad, parseNationality } from "@/lib/invoices";
@@ -160,6 +161,8 @@ export async function GET(
       status: patient.status ?? "active",
       reminderChannel: patient.reminderChannel,
       preferredLanguage: patient.preferredLanguage,
+      marketingConsent: patient.marketingConsent,
+      marketingConsentAt: patient.marketingConsentAt?.toISOString() ?? null,
       doctorId: patient.doctorId,
       doctorName: patient.doctor?.name ?? "Unknown",
       branchId: patient.branchId,
@@ -226,11 +229,11 @@ export async function PATCH(
     addressLine1, addressLine2, city, state, postcode, country,
     emergencyName, emergencyPhone, emergencyRelation, status,
     initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
-    reminderChannel, preferredLanguage, nationality,
+    reminderChannel, preferredLanguage, nationality, marketingConsent,
   } = body;
 
   const VALID_REMINDER_CHANNELS = ["WHATSAPP", "EMAIL", "BOTH", "NONE"] as const;
-  const VALID_LANGUAGES = ["en", "ms"] as const;
+  const VALID_LANGUAGES = PATIENT_LANGUAGE_VALUES;
   const VALID_PATIENT_STATUSES = ["active", "inactive", "discharged"] as const;
   if (reminderChannel !== undefined && reminderChannel !== null && !VALID_REMINDER_CHANNELS.includes(reminderChannel)) {
     return NextResponse.json(
@@ -243,6 +246,9 @@ export async function PATCH(
       { error: `Invalid preferredLanguage. Must be one of: ${VALID_LANGUAGES.join(", ")}` },
       { status: 400 }
     );
+  }
+  if (marketingConsent !== undefined && typeof marketingConsent !== "boolean") {
+    return NextResponse.json({ error: "marketingConsent must be true or false" }, { status: 400 });
   }
   if (status !== undefined && status !== null && !VALID_PATIENT_STATUSES.includes(status)) {
     return NextResponse.json(
@@ -383,6 +389,13 @@ export async function PATCH(
   }
   if (reminderChannel !== undefined) updateData.reminderChannel = reminderChannel;
   if (preferredLanguage !== undefined) updateData.preferredLanguage = preferredLanguage;
+  if (marketingConsent !== undefined) {
+    const current = await prisma.patient.findUnique({
+      where: { id: patientId },
+      select: { marketingConsent: true, marketingConsentAt: true },
+    });
+    Object.assign(updateData, consentFields(marketingConsent, current));
+  }
 
   let updated;
   try {
@@ -441,6 +454,8 @@ export async function PATCH(
       status: updated.status ?? "active",
       reminderChannel: updated.reminderChannel,
       preferredLanguage: updated.preferredLanguage,
+      marketingConsent: updated.marketingConsent,
+      marketingConsentAt: updated.marketingConsentAt?.toISOString() ?? null,
       doctorId: updated.doctorId,
       doctorName: updated.doctor?.name ?? "Unknown",
       branchId: updated.branchId,

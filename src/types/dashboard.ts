@@ -38,7 +38,7 @@ export interface OwnerSignals {
   staleAppointments: number;
   /** Active patients whose last visit was 30+ days ago and who have nothing booked. */
   recallDue: number;
-  recallSample: { id: string; name: string; lastVisit: string }[];
+  recallSample: { id: string; name: string; lastVisit: string; marketingConsent?: boolean }[];
 }
 
 export interface DoctorStats {

@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       take: 3,
       select: {
         visitDate: true,
-        patient: { select: { id: true, firstName: true, lastName: true } },
+        patient: { select: { id: true, firstName: true, lastName: true, marketingConsent: true } },
       },
     }),
   ]);
@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
       id: v.patient.id,
       name: `${v.patient.firstName} ${v.patient.lastName}`,
       lastVisit: v.visitDate.toISOString(),
+      marketingConsent: v.patient.marketingConsent,
     })),
   };
   return NextResponse.json(body);

@@ -5,6 +5,7 @@ import type { Prisma } from '@prisma/client'
 import { loadBranchContext } from '@/lib/branch-context'
 import { narrowScope, scopedWhere } from '@/lib/branch-scope'
 import { defaultReminderChannel, reminderChannelError } from '@/lib/reminder-channel'
+import { PATIENT_LANGUAGE_VALUES, consentFields } from '@/lib/outreach/consent'
 import { can, redactClinicalFields } from '@/lib/permissions'
 import { isValidMyKad, parseNationality } from '@/lib/invoices'
 
@@ -43,6 +44,8 @@ function mapPatientToResponse(p: {
   status: string | null;
   reminderChannel: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
   preferredLanguage: string;
+  marketingConsent: boolean;
+  marketingConsentAt: Date | null;
   doctorId: string; branchId: string;
   createdAt: Date;
   doctor: { id: string; name: string | null } | null;
@@ -87,6 +90,8 @@ function mapPatientToResponse(p: {
     status: p.status ?? 'active',
     reminderChannel: p.reminderChannel,
     preferredLanguage: p.preferredLanguage,
+    marketingConsent: p.marketingConsent,
+    marketingConsentAt: p.marketingConsentAt?.toISOString() ?? null,
     doctorId: p.doctorId,
     doctorName: p.doctor?.name ?? 'Unknown',
     branchId: p.branchId,
@@ -230,11 +235,11 @@ export async function POST(request: NextRequest) {
       emergencyName, emergencyPhone, emergencyRelation,
       medicalHistory, notes, doctorId,
       initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
-      reminderChannel, preferredLanguage, nationality,
+      reminderChannel, preferredLanguage, nationality, marketingConsent,
     } = body
 
     const VALID_REMINDER_CHANNELS = ['WHATSAPP', 'EMAIL', 'BOTH', 'NONE'] as const
-    const VALID_LANGUAGES = ['en', 'ms'] as const
+    const VALID_LANGUAGES = PATIENT_LANGUAGE_VALUES
     if (reminderChannel && !VALID_REMINDER_CHANNELS.includes(reminderChannel)) {
       return NextResponse.json(
         { error: `Invalid reminderChannel. Must be one of: ${VALID_REMINDER_CHANNELS.join(', ')}` },
@@ -431,6 +436,7 @@ export async function POST(request: NextRequest) {
         status: 'active',
         reminderChannel: resolvedReminderChannel,
         preferredLanguage: preferredLanguage ?? 'en',
+        ...consentFields(marketingConsent === true, null),
         branchId,
         doctorId: assignedDoctorId,
       },

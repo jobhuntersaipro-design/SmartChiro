@@ -50,7 +50,10 @@ export interface Patient {
   status: string;
   // Reminder preferences
   reminderChannel: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
-  preferredLanguage: 'en' | 'ms';
+  preferredLanguage: 'en' | 'ms' | 'zh';
+  // Marketing consent (recall / review messages)
+  marketingConsent?: boolean;
+  marketingConsentAt?: string | null;
   // Relations
   doctorId: string;
   doctorName: string;
@@ -158,5 +161,6 @@ export interface CreatePatientData {
   firstTreatmentFee?: number;
   standardFollowUpFee?: number;
   reminderChannel?: 'WHATSAPP' | 'EMAIL' | 'BOTH' | 'NONE';
-  preferredLanguage?: 'en' | 'ms';
+  preferredLanguage?: 'en' | 'ms' | 'zh';
+  marketingConsent?: boolean;
 }

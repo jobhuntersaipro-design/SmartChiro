@@ -6,6 +6,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     appointmentReminder: { updateMany: (a: unknown) => updateMany(a) },
     whatsAppAccount: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
+    patientOutreach: { updateMany: vi.fn() },
   },
 }));
 

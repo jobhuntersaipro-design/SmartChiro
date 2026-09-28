@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ReminderTemplateEditor } from "./ReminderTemplateEditor";
 import { WhatsAppConnectionPanel } from "./WhatsAppConnectionPanel";
+import { OutreachSettingsCard } from "./OutreachSettingsCard";
 import { ALLOWED_OFFSETS_MIN, type Templates } from "@/types/reminder";
 import { renderTemplatePreview, sampleTemplateParams } from "@/lib/whatsapp/template-text";
 
@@ -68,6 +69,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
   }
 
   return (
+    <>
     <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
       <div className="mb-4 flex items-center justify-between">
         <div>
@@ -125,7 +127,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
             {renderTemplatePreview("en", sampleTemplateParams(branch?.name))}
           </div>
           <p className="mt-1.5 text-[13px] text-[#697386]">
-            WhatsApp only allows approved templates for reminders, so this text is fixed. Patients who prefer Bahasa Melayu get the Malay version.
+            WhatsApp only allows approved templates for reminders, so this text is fixed. Patients get it in their language (English, Bahasa Melayu or 中文).
           </p>
         </div>
         <ReminderTemplateEditor
@@ -155,5 +157,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
         </div>
       )}
     </div>
+    <OutreachSettingsCard branchId={branchId} canEdit={canEdit} branch={branch} />
+    </>
   );
 }

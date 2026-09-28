@@ -7,6 +7,8 @@ import { Patient } from "@/types/patient";
 import { DateInput } from "@/components/ui/date-input";
 import { todayLocalISODate } from "@/lib/format";
 import { reminderChannelError } from "@/lib/reminder-channel";
+import { PATIENT_LANGUAGES } from "@/lib/outreach/consent";
+import { MarketingConsentCheckbox } from "@/components/patients/MarketingConsentCheckbox";
 
 interface EditPatientDialogProps {
   patient: Patient | null;
@@ -91,6 +93,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         standardFollowUpFee: patient.standardFollowUpFee != null ? String(patient.standardFollowUpFee) : "",
         reminderChannel: patient.reminderChannel || "WHATSAPP",
         preferredLanguage: patient.preferredLanguage || "en",
+        marketingConsent: patient.marketingConsent ? "true" : "false",
       });
       setSubmitError(null);
       setDobError(null);
@@ -126,6 +129,12 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
       for (const key of ["initialTreatmentFee", "firstTreatmentFee", "standardFollowUpFee"] as const) {
         const val = form[key];
         payload[key] = val === "" || val === undefined ? null : Number(val);
+      }
+      // Only send consent when it changed here, so a consent change made on
+      // the profile isn't overwritten by a stale form.
+      delete payload.marketingConsent;
+      if (form.marketingConsent !== (patient!.marketingConsent ? "true" : "false")) {
+        payload.marketingConsent = form.marketingConsent === "true";
       }
       await onSave(patient!.id, payload);
       onOpenChange(false);
@@ -325,11 +334,16 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                 </FormField>
                 <FormField label="Preferred Language">
                   <select value={form.preferredLanguage || "en"} onChange={(e) => update("preferredLanguage", e.target.value)} className={selectClass}>
-                    <option value="en">English</option>
-                    <option value="ms">Bahasa Malaysia</option>
+                    {PATIENT_LANGUAGES.map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
                   </select>
                 </FormField>
               </div>
+              <MarketingConsentCheckbox
+                checked={form.marketingConsent === "true"}
+                onChange={(v) => update("marketingConsent", v ? "true" : "false")}
+              />
               {isAdmin && branchDoctors && branchDoctors.length > 0 && (
                 <FormField label="Assigned Doctor">
                   <select value={form.doctorId || ""} onChange={(e) => update("doctorId", e.target.value)} className={selectClass}>

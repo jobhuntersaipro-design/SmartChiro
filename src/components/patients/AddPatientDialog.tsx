@@ -17,6 +17,8 @@ import {
   reminderChannelError,
   type ReminderChannelValue,
 } from "@/lib/reminder-channel";
+import { PATIENT_LANGUAGES, type PatientLanguage } from "@/lib/outreach/consent";
+import { MarketingConsentCheckbox } from "@/components/patients/MarketingConsentCheckbox";
 
 interface AddPatientDialogProps {
   open: boolean;
@@ -601,14 +603,19 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   <FormField label="Preferred language">
                     <select
                       value={form.preferredLanguage ?? "en"}
-                      onChange={(e) => updateField("preferredLanguage", e.target.value as "en" | "ms")}
+                      onChange={(e) => updateField("preferredLanguage", e.target.value as PatientLanguage)}
                       className={selectClass}
                     >
-                      <option value="en">English</option>
-                      <option value="ms">Bahasa Malaysia</option>
+                      {PATIENT_LANGUAGES.map((l) => (
+                        <option key={l.value} value={l.value}>{l.label}</option>
+                      ))}
                     </select>
                   </FormField>
                 </div>
+                <MarketingConsentCheckbox
+                  checked={form.marketingConsent ?? false}
+                  onChange={(v) => updateField("marketingConsent", v)}
+                />
 
                 {/* Medical section label */}
                 <div className="flex items-center gap-2 pt-1">

@@ -1,7 +1,8 @@
 import type { BranchRole, WhatsAppAccount } from "@prisma/client";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { can } from "@/lib/permissions";
-import type { PublicWhatsAppAccount, TemplateStatusMap } from "@/types/whatsapp";
+import type { PublicWhatsAppAccount } from "@/types/whatsapp";
+import { REMINDER_TEMPLATE_NAME, allTemplateStatuses, statusForTemplate } from "./template-text";
 
 export type { PublicWhatsAppAccount };
 
@@ -15,7 +16,8 @@ export function toPublicAccount(a: WhatsAppAccount): PublicWhatsAppAccount {
     status: a.status,
     lastError: a.lastError,
     templateName: a.templateName,
-    templateStatus: a.templateStatus as TemplateStatusMap,
+    templateStatus: statusForTemplate(a.templateStatus, REMINDER_TEMPLATE_NAME),
+    templateStatuses: allTemplateStatuses(a.templateStatus),
     templatesCheckedAt: a.templatesCheckedAt?.toISOString() ?? null,
     connectedAt: a.updatedAt.toISOString(),
   };

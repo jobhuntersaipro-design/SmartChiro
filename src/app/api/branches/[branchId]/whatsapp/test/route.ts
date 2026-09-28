@@ -8,7 +8,7 @@ type RouteCtx = { params: Promise<{ branchId: string }> };
 
 const Body = z.object({
   to: z.string().trim().min(7).max(20),
-  lang: z.enum(["en", "ms"]).default("en"),
+  lang: z.enum(["en", "ms", "zh"]).default("en"),
 });
 
 /** Sends the reminder template with sample values so owners can check delivery. */

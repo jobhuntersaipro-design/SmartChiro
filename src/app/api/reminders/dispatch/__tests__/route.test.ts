@@ -5,6 +5,10 @@ vi.mock("@/lib/reminders/dispatcher", () => ({
   materializePending: vi.fn().mockResolvedValue(0),
   dispatchDue: vi.fn().mockResolvedValue({ processed: 0 }),
 }));
+vi.mock("@/lib/outreach/dispatcher", () => ({
+  materializeOutreach: vi.fn().mockResolvedValue({ recalls: 0, reviews: 0 }),
+  dispatchOutreach: vi.fn().mockResolvedValue({ processed: 0 }),
+}));
 
 beforeEach(() => {
   process.env.CRON_SECRET = "secret-x";

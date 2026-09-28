@@ -5,7 +5,9 @@ import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 import { sendReminderEmail } from "@/lib/email";
 import { plannedReminders, resolveChannels } from "./materialize";
 import { renderTemplate } from "./templates";
-import { DEFAULT_TEMPLATES } from "./default-templates";
+import { reminderEmailHtml, reminderEmailText } from "./default-templates";
+import { toTemplateLang } from "@/lib/whatsapp/template-text";
+import type { TemplateLang } from "@/types/whatsapp";
 import { backoffMs, MAX_ATTEMPTS } from "./backoff";
 import { shouldFallback, oppositeChannel } from "./fallback";
 import type { TemplateContext, Templates } from "@/types/reminder";
@@ -138,7 +140,7 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
 
   const settings = r.appointment.branch.reminderSettings;
   const templates = (settings?.templates ?? {}) as Partial<Templates>;
-  const lang = (r.appointment.patient.preferredLanguage === "ms" ? "ms" : "en") as "en" | "ms";
+  const lang = toTemplateLang(r.appointment.patient.preferredLanguage);
 
   const ctx = buildContext(r.appointment, lang);
   // WhatsApp sends the Meta-approved template with `ctx` as parameters; only
@@ -147,15 +149,8 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
   let html: string | undefined;
   try {
     if (r.channel === "EMAIL") {
-      body = renderTemplate(
-        templates.email?.[lang] ?? DEFAULT_TEMPLATES.email[lang],
-        ctx
-      );
-      html = renderTemplate(
-        (lang === "ms" ? templates.email?.htmlMs : templates.email?.htmlEn) ??
-          (lang === "ms" ? DEFAULT_TEMPLATES.email.htmlMs : DEFAULT_TEMPLATES.email.htmlEn),
-        ctx
-      );
+      body = renderTemplate(reminderEmailText(templates, lang), ctx);
+      html = renderTemplate(reminderEmailHtml(templates, lang), ctx);
     }
   } catch (e) {
     await prisma.appointmentReminder.update({
@@ -177,7 +172,9 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
       branchId: r.appointment.branchId,
       to: r.appointment.patient.phone ?? "",
       lang,
-      params: reminderTemplateParams(ctx),
+      // Dates follow the language Meta actually sends (fallback when the
+      // patient's language isn't approved yet).
+      params: (sentLang) => reminderTemplateParams(sentLang === lang ? ctx : buildContext(r.appointment, sentLang)),
     });
     result = wa.ok
       ? { ok: true, externalId: wa.msgId }
@@ -279,12 +276,14 @@ type AppointmentForContext = {
   doctor: { name: string | null };
 };
 
+const DATE_LOCALE: Record<TemplateLang, string> = { en: "en-MY", ms: "ms-MY", zh: "zh-CN" };
+
 function buildContext(
   appt: AppointmentForContext,
-  lang: "en" | "ms"
+  lang: TemplateLang
 ): TemplateContext {
   const dt = new Date(appt.dateTime);
-  const dateLocale = lang === "ms" ? "ms-MY" : "en-MY";
+  const dateLocale = DATE_LOCALE[lang];
   // The server runs in UTC; reminders must show the clinic's wall-clock time.
   const timeZone = CLINIC_TIME_ZONE;
   return {
@@ -304,7 +303,7 @@ function buildContext(
       timeZone,
     }),
     dayOfWeek: dt.toLocaleDateString(dateLocale, { weekday: "long", timeZone }),
-    doctorName: appt.doctor.name ?? "your doctor",
+    doctorName: appt.doctor.name ?? (lang === "zh" ? "医生" : "your doctor"),
     branchName: appt.branch.name,
     branchAddress: appt.branch.address ?? "",
     branchPhone: appt.branch.phone ?? "",

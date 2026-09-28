@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import type { OwnerSignals } from "@/types/dashboard";
 import { formatMYR } from "@/lib/invoices";
 import { formatAppointmentDateOnly, plural } from "@/lib/format";
+import { SendRecallButton } from "@/components/outreach/SendRecallButton";
 
 interface OwnerSignalsCardProps {
   /** "all" or one branch id — same scope as the stat cards. */
@@ -106,6 +107,13 @@ export function OwnerSignalsCard({ branchParam, refreshKey = 0 }: OwnerSignalsCa
                     <span className="shrink-0 text-[12px] text-[#94a3b8] tabular-nums">
                       {formatAppointmentDateOnly(p.lastVisit)}
                     </span>
+                    <SendRecallButton
+                      variant="link"
+                      patientId={p.id}
+                      patientName={p.name}
+                      disabled={p.marketingConsent === false}
+                      disabledReason="No marketing consent"
+                    />
                   </li>
                 ))}
               </ul>

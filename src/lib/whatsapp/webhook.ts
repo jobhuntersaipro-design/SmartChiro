@@ -1,7 +1,8 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { TEMPLATE_LANGS } from "./template-text";
-import type { TemplateLang, TemplateStatusMap } from "@/types/whatsapp";
+import { normalizePhoneDigits } from "@/lib/format";
+import { langFromMetaCode, templateByName, withTemplateStatus } from "./template-text";
+import type { TemplateLang } from "@/types/whatsapp";
 
 /** Verifies Meta's `X-Hub-Signature-256: sha256=<hex>` over the raw body. */
 export function verifyMetaSignature(rawBody: string, header: string | null, secret: string): boolean {
@@ -14,7 +15,8 @@ export function verifyMetaSignature(rawBody: string, header: string | null, secr
 export type WebhookEvent =
   | { kind: "message_failed"; msgId: string; reason: string }
   | { kind: "template_status"; wabaId: string; name: string; lang: TemplateLang; status: string }
-  | { kind: "account_removed"; wabaId: string; reason: string };
+  | { kind: "account_removed"; wabaId: string; reason: string }
+  | { kind: "opt_out"; phoneNumberId: string; from: string };
 
 const REMOVAL_EVENTS = new Set([
   "PARTNER_REMOVED",
@@ -23,9 +25,31 @@ const REMOVAL_EVENTS = new Set([
   "ACCOUNT_OFFBOARDED",
 ]);
 
+/** Opt-out keywords the outreach templates tell patients to reply with. */
+const STOP_WORDS = new Set(["stop", "berhenti", "停止", "unsubscribe"]);
+
+/** True when an inbound message is an opt-out ("STOP", "Berhenti", "停止"), ignoring case and punctuation. */
+export function isOptOutText(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const t = text
+    .trim()
+    .toLowerCase()
+    .replace(/^[\s"'“”「」.!。！]+|[\s"'“”「」.!。！]+$/g, "");
+  return STOP_WORDS.has(t);
+}
+
+interface InboundMessage {
+  from?: string;
+  type?: string;
+  text?: { body?: string };
+  button?: { text?: string; payload?: string };
+}
+
 interface Change {
   field?: string;
   value?: {
+    metadata?: { phone_number_id?: string };
+    messages?: InboundMessage[];
     statuses?: Array<{
       id?: string;
       status?: string;
@@ -43,6 +67,28 @@ interface Payload {
   entry?: Array<{ id?: string; changes?: Change[] }>;
 }
 
+function messageEvents(v: NonNullable<Change["value"]>): WebhookEvent[] {
+  const out: WebhookEvent[] = [];
+  for (const s of v.statuses ?? []) {
+    if (s.status !== "failed" || !s.id) continue;
+    const err = s.errors?.[0];
+    const detail = err?.title ?? err?.message ?? "failed";
+    out.push({
+      kind: "message_failed",
+      msgId: s.id,
+      reason: `wa_failed: ${detail}${err?.code ? ` (${err.code})` : ""}`,
+    });
+  }
+  const phoneNumberId = v.metadata?.phone_number_id;
+  for (const m of v.messages ?? []) {
+    const text = m.type === "button" ? (m.button?.text ?? m.button?.payload) : m.text?.body;
+    if (phoneNumberId && m.from && isOptOutText(text)) {
+      out.push({ kind: "opt_out", phoneNumberId, from: m.from });
+    }
+  }
+  return out;
+}
+
 /** Pulls the events we act on out of a Meta webhook payload; ignores the rest. */
 export function extractWebhookEvents(payload: unknown): WebhookEvent[] {
   const p = payload as Payload;
@@ -53,19 +99,10 @@ export function extractWebhookEvents(payload: unknown): WebhookEvent[] {
     for (const change of entry.changes ?? []) {
       const v = change.value ?? {};
       if (change.field === "messages") {
-        for (const s of v.statuses ?? []) {
-          if (s.status !== "failed" || !s.id) continue;
-          const err = s.errors?.[0];
-          const detail = err?.title ?? err?.message ?? "failed";
-          out.push({
-            kind: "message_failed",
-            msgId: s.id,
-            reason: `wa_failed: ${detail}${err?.code ? ` (${err.code})` : ""}`,
-          });
-        }
+        out.push(...messageEvents(v));
       } else if (change.field === "message_template_status_update") {
-        const lang = v.message_template_language?.split("_")[0] as TemplateLang | undefined;
-        if (wabaId && v.event && v.message_template_name && lang && TEMPLATE_LANGS.includes(lang)) {
+        const lang = langFromMetaCode(v.message_template_language);
+        if (wabaId && v.event && v.message_template_name && lang) {
           out.push({ kind: "template_status", wabaId, name: v.message_template_name, lang, status: v.event });
         }
       } else if (change.field === "account_update") {
@@ -78,6 +115,42 @@ export function extractWebhookEvents(payload: unknown): WebhookEvent[] {
   return out;
 }
 
+/**
+ * Clears marketing consent for every consenting patient whose phone matches
+ * `from` (Meta's wa_id, digits with country code) in the branches connected
+ * to that phone number. Returns the number of patients opted out.
+ */
+export async function applyOptOut(phoneNumberId: string, from: string): Promise<number> {
+  const accounts = await prisma.whatsAppAccount.findMany({
+    where: { phoneNumberId },
+    select: { branchId: true },
+  });
+  if (!accounts.length) return 0;
+  const target = normalizePhoneDigits(from);
+  const candidates = await prisma.patient.findMany({
+    where: {
+      branchId: { in: accounts.map((a) => a.branchId) },
+      marketingConsent: true,
+      phone: { not: null },
+    },
+    select: { id: true, phone: true },
+  });
+  const ids = candidates.filter((p) => p.phone && normalizePhoneDigits(p.phone) === target).map((p) => p.id);
+  if (!ids.length) return 0;
+  await prisma.$transaction([
+    prisma.patient.updateMany({
+      where: { id: { in: ids } },
+      data: { marketingConsent: false, marketingConsentAt: null },
+    }),
+    // Anything still queued for them must not go out.
+    prisma.patientOutreach.updateMany({
+      where: { patientId: { in: ids }, status: "PENDING" },
+      data: { status: "SKIPPED", failureReason: "opted_out" },
+    }),
+  ]);
+  return ids.length;
+}
+
 export async function applyWebhookEvent(e: WebhookEvent): Promise<void> {
   switch (e.kind) {
     case "message_failed":
@@ -85,17 +158,24 @@ export async function applyWebhookEvent(e: WebhookEvent): Promise<void> {
         where: { externalId: e.msgId, channel: "WHATSAPP" },
         data: { status: "FAILED", failureReason: e.reason },
       });
+      await prisma.patientOutreach.updateMany({
+        where: { externalId: e.msgId, channel: "WHATSAPP" },
+        data: { status: "FAILED", failureReason: e.reason },
+      });
       return;
     case "template_status": {
+      if (!templateByName(e.name)) return;
       const accounts = await prisma.whatsAppAccount.findMany({
-        where: { wabaId: e.wabaId, templateName: e.name },
+        where: { wabaId: e.wabaId },
         select: { id: true, templateStatus: true },
       });
       for (const a of accounts) {
-        const status = { ...(a.templateStatus as TemplateStatusMap), [e.lang]: e.status };
         await prisma.whatsAppAccount.update({
           where: { id: a.id },
-          data: { templateStatus: status, templatesCheckedAt: new Date() },
+          data: {
+            templateStatus: withTemplateStatus(a.templateStatus, e.name, e.lang, e.status),
+            templatesCheckedAt: new Date(),
+          },
         });
       }
       return;
@@ -108,6 +188,9 @@ export async function applyWebhookEvent(e: WebhookEvent): Promise<void> {
           lastError: `Disconnected in Meta (${e.reason}). Reconnect WhatsApp to resume reminders.`,
         },
       });
+      return;
+    case "opt_out":
+      await applyOptOut(e.phoneNumberId, e.from);
       return;
   }
 }

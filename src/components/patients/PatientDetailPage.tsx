@@ -437,7 +437,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         <PatientCareTab key={bookingVersion} patient={patient} branchRole={branchRole} currentUserId={currentUserId} />
       )}
       {activeTab === "profile" && (
-        <PatientProfileTab patient={patient} showClinical={clinical} />
+        <PatientProfileTab patient={patient} showClinical={clinical} onPatientChange={fetchPatient} />
       )}
 
       {/* Dialogs */}

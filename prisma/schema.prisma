@@ -236,6 +236,8 @@ model Branch {
   carePlans         CarePlan[]
   appointmentSeries AppointmentSeries[]
 
+  outreach PatientOutreach[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -475,7 +477,12 @@ model Patient {
 
   // Reminder preferences
   reminderChannel   ReminderChannel @default(WHATSAPP)
-  preferredLanguage String          @default("en") // "en" | "ms"
+  preferredLanguage String          @default("en") // "en" | "ms" | "zh"
+
+  // Marketing consent (PDPA + Meta marketing rules): recall and review
+  // messages go only to consenting patients. Reminders don't need it.
+  marketingConsent   Boolean   @default(false)
+  marketingConsentAt DateTime?
 
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -493,6 +500,7 @@ model Patient {
   packages          PatientPackage[]
   carePlans         CarePlan[]
   appointmentSeries AppointmentSeries[]
+  outreach          PatientOutreach[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -754,6 +762,7 @@ model Appointment {
   visit     Visit?
   invoices  Invoice[]
   reminders AppointmentReminder[]
+  outreach  PatientOutreach[]
 
   // Recurring series (Phase 3). Occurrences keep their row when the series is deleted.
   seriesId    String?
@@ -893,8 +902,19 @@ model BranchReminderSettings {
   enabled    Boolean  @default(false)
   offsetsMin Int[]
   templates  Json
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+
+  // Outreach (Phase 6): recall of lapsed patients and review requests.
+  recallEnabled      Boolean @default(false)
+  recallAfterDays    Int     @default(42)
+  recallCooldownDays Int     @default(90)
+  recallDailyLimit   Int     @default(30)
+  reviewEnabled      Boolean @default(false)
+  reviewDelayHours   Int     @default(3)
+  reviewCooldownDays Int     @default(180)
+  googleReviewUrl    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WaSession {
@@ -964,6 +984,50 @@ model AppointmentReminder {
   @@unique([appointmentId, channel, offsetMin, isFallback])
   @@index([scheduledFor, status])
   @@index([appointmentId])
+}
+
+// ─── Outreach: recall + review requests (Phase 6) ───
+
+enum OutreachType {
+  RECALL
+  REVIEW
+}
+
+enum OutreachStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model PatientOutreach {
+  id            String          @id @default(cuid())
+  patientId     String
+  patient       Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  type          OutreachType
+  // WHATSAPP or EMAIL only (a fallback switches the row's channel to EMAIL)
+  channel       ReminderChannel
+  status        OutreachStatus  @default(PENDING)
+  scheduledFor  DateTime
+  sentAt        DateTime?
+  externalId    String?
+  failureReason String?
+  attemptCount  Int             @default(0)
+  // Set for REVIEW (the completed visit it follows up); one review per appointment
+  appointmentId String?
+  appointment   Appointment?    @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  // null when created by the cron
+  createdById   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([appointmentId, type])
+  @@index([branchId, type, status, scheduledFor])
+  @@index([patientId, type, createdAt])
+  @@index([status, scheduledFor])
+  @@index([externalId])
 }
 
 // ─── Packages, care plans, recurring series (Phase 3) ───
