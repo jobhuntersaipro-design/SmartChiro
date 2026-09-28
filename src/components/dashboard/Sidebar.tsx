@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
-  FileText,
   Settings,
   Plus,
   LogOut,
@@ -19,7 +18,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -37,7 +36,6 @@ const navItems = [
   { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope },
   { label: "Appointments", href: "/dashboard/appointments", icon: Calendar },
   { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone },
-  { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
 ];
 
 interface SidebarUser {
@@ -105,6 +103,9 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-label={collapsed ? item.label : undefined}
+                title={collapsed ? item.label : undefined}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[15px] transition-all duration-200",
                   isActive
@@ -125,17 +126,20 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
 
       {/* Bottom section */}
       <div className="px-3 pb-3 space-y-0.5">
-        {/* New Appointment button */}
-        <Button
+        {/* New Appointment — opens the create dialog on the Appointments page */}
+        <Link
+          href="/dashboard/appointments?create=1"
+          aria-label={collapsed ? "New Appointment" : undefined}
+          title={collapsed ? "New Appointment" : undefined}
           className={cn(
+            buttonVariants({ size: collapsed ? "icon" : "default" }),
             "w-full justify-start gap-2 text-[15px] font-medium rounded-md",
             collapsed && "justify-center px-0"
           )}
-          size={collapsed ? "icon" : "default"}
         >
           <Plus className="h-4 w-4 shrink-0" strokeWidth={2} />
           {!collapsed && <span>New Appointment</span>}
-        </Button>
+        </Link>
 
         <div className="my-2 h-px bg-border" />
 
@@ -207,6 +211,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         {/* Collapse toggle */}
         <button
           onClick={onToggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="flex w-full items-center justify-center rounded-md p-1.5 text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 active:scale-95"
         >
           {collapsed ? (

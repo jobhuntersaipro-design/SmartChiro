@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus, LayoutGrid, List, X, Search as SearchIcon, Users, FilterX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Patient, CreatePatientData } from "@/types/patient";
@@ -93,13 +94,24 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  // `?search=` comes from the top-bar search; `?add=1` from dashboard Quick Actions.
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [doctorFilter, setDoctorFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [sortKey, setSortKey] = useState<SortKey>("upcomingAppointment");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(() => {
+    const add = searchParams.get("add");
+    return add === "1" || add === "true";
+  });
+
+  // A new top-bar search while already on this page updates the filter.
+  const urlSearch = searchParams.get("search");
+  useEffect(() => {
+    if (urlSearch !== null) setSearch(urlSearch);
+  }, [urlSearch]);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [deletePatient, setDeletePatient] = useState<Patient | null>(null);
   const [toast, setToast] = useState<string | null>(null);

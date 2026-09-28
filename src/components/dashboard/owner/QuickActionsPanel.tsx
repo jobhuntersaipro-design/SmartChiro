@@ -42,16 +42,16 @@ export function QuickActionsPanel({
         <QuickActionLink
           icon={UserRoundPlus}
           label="Add Patient"
-          href="/dashboard/patients?add=true"
+          href="/dashboard/patients?add=1"
         />
         <QuickActionLink
           icon={CalendarPlus}
           label="New Appointment"
-          href="/dashboard/calendar"
+          href="/dashboard/appointments?create=1"
         />
         <QuickActionLink
           icon={Upload}
-          label="Upload X-Ray"
+          label="Upload X-Ray (choose patient)"
           href="/dashboard/patients"
         />
       </div>

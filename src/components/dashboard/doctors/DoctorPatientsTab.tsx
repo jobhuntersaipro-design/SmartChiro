@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Search, Users, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PatientRow {
@@ -136,7 +137,9 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
                 return (
                   <tr key={p.id} className="border-b border-[#e5edf5] hover:bg-[#F6F9FC] transition-colors">
                     <td className="px-4 py-3 text-[14px] text-[#061b31] font-medium">
-                      {p.firstName} {p.lastName}
+                      <Link href={`/dashboard/patients/${p.id}/details`} className="hover:text-[#533afd] hover:underline">
+                        {p.firstName} {p.lastName}
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-[13px] text-[#273951]">
                       {p.icNumber ?? "-"}

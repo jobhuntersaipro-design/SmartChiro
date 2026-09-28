@@ -11,6 +11,7 @@ import {
   treatmentLabelFor,
 } from "@/lib/treatment-colors";
 import type { TreatmentType } from "@/types/appointment";
+import { defaultStart } from "@/lib/appointment-defaults";
 
 interface Props {
   open: boolean;
@@ -24,6 +25,8 @@ interface Props {
     phone?: string | null;
   } | null;
   prefilledDoctor?: { id: string; name: string } | null;
+  /** ISO start time, e.g. from clicking an empty calendar slot. */
+  prefilledDateTime?: string | null;
   onClose: () => void;
   onCreated: () => void;
 }
@@ -43,15 +46,6 @@ interface PatientOption {
   phone: string | null;
 }
 
-function defaultDate(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
 function inputsToIso(date: string, time: string): string | null {
   if (!date || !time) return null;
   const [y, m, d] = date.split("-").map((s) => parseInt(s, 10));
@@ -67,13 +61,14 @@ export function CreateAppointmentDialog({
   currentUserId,
   prefilledPatient,
   prefilledDoctor,
+  prefilledDateTime,
   onClose,
   onCreated,
 }: Props) {
   const [patient, setPatient] = useState<PatientOption | null>(null);
   const [doctor, setDoctor] = useState<{ id: string; name: string } | null>(null);
-  const [date, setDate] = useState(defaultDate());
-  const [time, setTime] = useState("10:00");
+  const [date, setDate] = useState(() => defaultStart(prefilledDateTime).date);
+  const [time, setTime] = useState(() => defaultStart(prefilledDateTime).time);
   const [duration, setDuration] = useState(30);
   const [notes, setNotes] = useState("");
   const [treatmentType, setTreatmentType] = useState<TreatmentType | "">("");
@@ -97,15 +92,16 @@ export function CreateAppointmentDialog({
         : null,
     );
     setDoctor(prefilledDoctor ?? null);
-    setDate(defaultDate());
-    setTime("10:00");
+    const start = defaultStart(prefilledDateTime);
+    setDate(start.date);
+    setTime(start.time);
     setDuration(30);
     setNotes("");
     setTreatmentType("");
     setError(null);
     setConflicts([]);
     setBreakConfirm(null);
-  }, [open, prefilledPatient, prefilledDoctor]);
+  }, [open, prefilledPatient, prefilledDoctor, prefilledDateTime]);
 
   // Doctors who are not admins can only book for themselves — auto-pin
   useEffect(() => {
@@ -190,11 +186,14 @@ export function CreateAppointmentDialog({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#e5edf5] bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
-        <h2 className="text-[18px] font-medium text-[#0A2540] mb-4">Schedule appointment</h2>
+        <h2 id="create-appointment-title" className="text-[18px] font-medium text-[#0A2540] mb-4">Schedule appointment</h2>
 
         <div className="mb-3">
           <label className="block text-[12px] font-medium text-[#425466] mb-1">Patient</label>

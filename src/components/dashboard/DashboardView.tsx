@@ -215,12 +215,12 @@ export function DashboardView({
         <OwnerStatCards stats={ownerStats} branchLabel={branchLabel} />
       ) : null}
 
-      {/* Owner: Quick Actions */}
-      {isOwner && (
+      {/* Owner / front desk: Quick Actions */}
+      {(isOwner || branchRole === "ADMIN") && (
         <QuickActionsPanel
           branchRole={branchRole}
           onCreateBranch={() => router.push("/dashboard/branches")}
-          onAddDoctor={() => router.push("/dashboard/branches")}
+          onAddDoctor={() => router.push("/dashboard/doctors")}
         />
       )}
 

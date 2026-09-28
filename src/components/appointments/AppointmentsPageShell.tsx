@@ -87,7 +87,8 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
   );
 
   // ─── Create dialog (top-level) ───
-  const [createOpen, setCreateOpen] = useState(false);
+  // `?create=1` (sidebar / Quick Actions "New Appointment") opens the dialog on arrival.
+  const [createOpen, setCreateOpen] = useState(() => searchParams.get("create") === "1");
   // Bump on create/edit/cancel/delete so the list re-fetches without us having
   // to mutate `selectedDate` (which would also trigger an unrelated URL push).
   const [refreshKey, setRefreshKey] = useState(0);

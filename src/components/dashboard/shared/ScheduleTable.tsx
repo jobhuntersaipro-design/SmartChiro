@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Calendar } from "lucide-react";
 import { EmptyState } from "./EmptyState";
 import { formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
@@ -60,6 +62,8 @@ export function ScheduleTable({
   showDoctor = false,
   showBranch = false,
 }: ScheduleTableProps) {
+  const router = useRouter();
+
   if (appointments.length === 0) {
     return (
       <EmptyState
@@ -91,11 +95,14 @@ export function ScheduleTable({
           {appointments.slice(0, 10).map((appt) => {
             const dow = getAppointmentWeekday(appt.dateTime);
             const dateText = formatAppointmentDateTime(appt.dateTime);
+            const params = new URLSearchParams({ view: "list", tab: "today", appointment: appt.id });
+            if (appt.branch) params.set("branch", appt.branch.id);
 
             return (
               <tr
                 key={appt.id}
                 className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors duration-200 cursor-pointer"
+                onClick={() => router.push(`/dashboard/appointments?${params.toString()}`)}
               >
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span className="inline-flex items-center gap-1.5">
@@ -104,7 +111,13 @@ export function ScheduleTable({
                   </span>
                 </td>
                 <td className="px-4 py-3 text-[15px] text-[#273951]">
-                  {appt.patient.firstName} {appt.patient.lastName}
+                  <Link
+                    href={`/dashboard/patients/${appt.patient.id}/details`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:text-[#533afd] hover:underline"
+                  >
+                    {appt.patient.firstName} {appt.patient.lastName}
+                  </Link>
                 </td>
                 {showDoctor && (
                   <td className="px-4 py-3 text-[15px] text-[#273951]">

@@ -25,7 +25,7 @@ export function RecentPatientsCard({ patients }: RecentPatientsCardProps) {
       {patients.map((patient) => (
         <Link
           key={patient.id}
-          href={`/dashboard/patients`}
+          href={`/dashboard/patients/${patient.id}/details`}
           className="flex items-center justify-between px-4 py-3 border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group hover:translate-x-1"
         >
           <div>

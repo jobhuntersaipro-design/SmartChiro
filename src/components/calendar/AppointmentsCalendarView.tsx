@@ -608,6 +608,7 @@ export function AppointmentsCalendarView({
         isAdmin={isAdmin}
         currentUserId={currentUserId}
         prefilledPatient={null}
+        prefilledDateTime={createPrefill?.dateTime ?? null}
         prefilledDoctor={
           createPrefill?.doctorId
             ? branch?.doctors.find((d) => d.id === createPrefill.doctorId)

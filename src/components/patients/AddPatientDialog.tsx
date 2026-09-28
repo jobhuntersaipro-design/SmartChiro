@@ -207,6 +207,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
       {/* Dialog */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-patient-title"
         className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-2xl border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)" }}
       >
@@ -217,7 +220,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
               <UserPlus className="h-4.5 w-4.5 text-[#533afd]" strokeWidth={1.5} />
             </div>
             <div>
-              <h2 className="text-[18px] font-medium text-[#061b31] tracking-[-0.01em]">Add New Patient</h2>
+              <h2 id="add-patient-title" className="text-[18px] font-medium text-[#061b31] tracking-[-0.01em]">Add New Patient</h2>
               <p className="text-[13px] text-[#64748d]">Step {step} of 3 — {STEPS[step - 1].description}</p>
             </div>
           </div>

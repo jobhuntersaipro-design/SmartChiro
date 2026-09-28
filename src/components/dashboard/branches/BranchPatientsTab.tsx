@@ -116,7 +116,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
                 <tr
                   key={p.id}
                   className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors cursor-pointer"
-                  onClick={() => router.push("/dashboard/patients")}
+                  onClick={() => router.push(`/dashboard/patients/${p.id}/details`)}
                 >
                   <td className="px-5 py-3">
                     <div className="text-[15px] font-medium text-[#061b31]">
