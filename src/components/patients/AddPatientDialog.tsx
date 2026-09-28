@@ -10,6 +10,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { CreatePatientData } from "@/types/patient";
+import { DISCARD_CHANGES_PROMPT } from "@/lib/format";
 
 interface AddPatientDialogProps {
   open: boolean;
@@ -184,6 +185,12 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
     }
   }
 
+  function handleBackdropClick() {
+    const dirty = Object.values(touched).some(Boolean);
+    if (dirty && !window.confirm(DISCARD_CHANGES_PROMPT)) return;
+    handleClose();
+  }
+
   function handleClose() {
     setForm({ firstName: "", lastName: "" });
     setErrors({});
@@ -196,7 +203,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleBackdropClick} />
 
       {/* Dialog */}
       <div

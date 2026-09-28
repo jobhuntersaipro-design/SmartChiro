@@ -8,6 +8,7 @@ import {
   MessageSquare, FileText, Heart,
 } from "lucide-react";
 import type { CreateVisitData } from "@/types/visit";
+import { DISCARD_CHANGES_PROMPT, todayLocalISODate } from "@/lib/format";
 
 interface CreateVisitDialogProps {
   open: boolean;
@@ -134,11 +135,9 @@ function SliderField({
   );
 }
 
-// ─── Main Component ───
-
-export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: CreateVisitDialogProps) {
-  const [form, setForm] = useState<CreateVisitData>({
-    visitDate: new Date().toISOString().slice(0, 10),
+function blankVisitForm(): CreateVisitData {
+  return {
+    visitDate: todayLocalISODate(),
     visitType: "follow_up",
     questionnaire: {
       painLevel: 5,
@@ -147,7 +146,13 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
       dailyFunction: 5,
       overallImprovement: 5,
     },
-  });
+  };
+}
+
+// ─── Main Component ───
+
+export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: CreateVisitDialogProps) {
+  const [form, setForm] = useState<CreateVisitData>(blankVisitForm);
   const [nextVisitDate, setNextVisitDate] = useState<string>("");
   const [questionnaireEnabled, setQuestionnaireEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -189,21 +194,18 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
   if (!open) return null;
 
   function handleClose() {
-    setForm({
-      visitDate: new Date().toISOString().slice(0, 10),
-      visitType: "follow_up",
-      questionnaire: {
-        painLevel: 5,
-        mobilityScore: 5,
-        sleepQuality: 5,
-        dailyFunction: 5,
-        overallImprovement: 5,
-      },
-    });
+    setForm(blankVisitForm());
     setNextVisitDate("");
     setQuestionnaireEnabled(true);
     setSubmitError(null);
     onOpenChange(false);
+  }
+
+  // A stray click outside must not throw away a half-written SOAP note.
+  function handleBackdropClick() {
+    const dirty = JSON.stringify(form) !== JSON.stringify(blankVisitForm()) || nextVisitDate !== "";
+    if (dirty && !window.confirm(DISCARD_CHANGES_PROMPT)) return;
+    handleClose();
   }
 
   function daysFromToday(dateStr: string): number | undefined {
@@ -251,7 +253,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleBackdropClick} />
 
       {/* Dialog */}
       <div

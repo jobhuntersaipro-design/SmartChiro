@@ -8,6 +8,7 @@ import {
   MessageSquare, FileText, Heart,
 } from "lucide-react";
 import type { CreateVisitData, Visit } from "@/types/visit";
+import { DISCARD_CHANGES_PROMPT } from "@/lib/format";
 
 interface EditVisitDialogProps {
   open: boolean;
@@ -244,6 +245,12 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
     onOpenChange(false);
   }
 
+  function handleBackdropClick() {
+    const dirty = visit !== null && JSON.stringify(form) !== JSON.stringify(visitToFormData(visit));
+    if (dirty && !window.confirm(DISCARD_CHANGES_PROMPT)) return;
+    handleClose();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!visit) return;
@@ -285,7 +292,7 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleBackdropClick} />
 
       <div
         className="relative z-10 w-full max-w-150 max-h-[90vh] flex flex-col rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"

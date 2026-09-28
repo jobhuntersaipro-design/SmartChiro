@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   formatDobWithAge,
   buildWhatsAppUrl,
+  todayLocalISODate,
   buildMailtoUrl,
   buildMapsUrl,
   buildDoctorHref,
@@ -110,3 +111,15 @@ describe('buildBranchHref', () => {
     expect(buildBranchHref('b123')).toBe('/dashboard/branches/b123')
   })
 })
+
+describe("todayLocalISODate", () => {
+  it("uses the local calendar date, not the UTC one", () => {
+    // 07:30 local on 28 Sep — in UTC+8 this is still 27 Sep, which toISOString() would return.
+    const local = new Date(2026, 8, 28, 7, 30);
+    expect(todayLocalISODate(local)).toBe("2026-09-28");
+  });
+
+  it("zero-pads month and day", () => {
+    expect(todayLocalISODate(new Date(2026, 0, 5, 12))).toBe("2026-01-05");
+  });
+});
