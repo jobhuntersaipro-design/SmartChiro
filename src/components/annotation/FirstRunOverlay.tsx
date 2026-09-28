@@ -1,28 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { MousePointer2, Move, Sun, ScrollText, ZoomIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const KEY = 'smartchiro:viewer-firstrun-v2'
 
-// Read the dismissed flag once at hook init, lazily, so we can derive the
-// initial `open` state directly instead of cascading via setState in an
-// effect (the React 19 lint hates that — and it's wasteful).
-function shouldShowFirstRun(): boolean {
-  if (typeof window === 'undefined') return false
-  return !window.localStorage.getItem(KEY)
-}
+// The dismissed flag lives in localStorage, which the server can't see — read it
+// through useSyncExternalStore so the server render (hidden) hydrates cleanly.
+const noopSubscribe = () => () => {}
+const readUnseen = () => !window.localStorage.getItem(KEY)
+const serverUnseen = () => false
 
 export function FirstRunOverlay() {
-  const [open, setOpen] = useState<boolean>(shouldShowFirstRun)
+  const unseen = useSyncExternalStore(noopSubscribe, readUnseen, serverUnseen)
+  const [dismissed, setDismissed] = useState(false)
 
   function dismiss() {
-    if (typeof window !== 'undefined') window.localStorage.setItem(KEY, '1')
-    setOpen(false)
+    window.localStorage.setItem(KEY, '1')
+    setDismissed(true)
   }
 
-  if (!open) return null
+  if (!unseen || dismissed) return null
 
   const tiles = [
     { icon: <Move className="w-5 h-5" />,        title: 'Pan',           desc: 'Scroll, drag empty space, or middle-click drag.' },

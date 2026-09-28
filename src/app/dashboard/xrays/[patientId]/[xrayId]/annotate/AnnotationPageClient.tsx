@@ -14,6 +14,7 @@ interface AnnotationPageClientProps {
   patientId: string;
   userId: string;
   annotationId: string | null;
+  annotationVersion: number | null;
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
@@ -29,6 +30,7 @@ export function AnnotationPageClient({
   patientId,
   userId,
   annotationId,
+  annotationVersion,
   initialCanvasState,
   initialAdjustments,
   xrayId,
@@ -46,6 +48,7 @@ export function AnnotationPageClient({
       patientId={patientId}
       userId={userId}
       annotationId={annotationId}
+      annotationVersion={annotationVersion}
       initialCanvasState={initialCanvasState}
       initialAdjustments={initialAdjustments}
       xrayId={xrayId}

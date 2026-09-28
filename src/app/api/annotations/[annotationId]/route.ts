@@ -93,7 +93,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { canvasState, canvasStateSize, imageAdjustments } = body;
+    const { canvasState, canvasStateSize, imageAdjustments, baseVersion } = body;
 
     if (!canvasState) {
       return NextResponse.json(
@@ -109,16 +109,40 @@ export async function PUT(
       );
     }
 
-    const annotation = await prisma.annotation.update({
-      where: { id: annotationId },
-      data: {
-        canvasState,
-        canvasStateSize: canvasStateSize ?? 0,
-        imageAdjustments: imageAdjustments ?? undefined,
-        version: { increment: 1 },
-      },
-      select: { id: true, version: true },
-    });
+    const data = {
+      canvasState,
+      canvasStateSize: canvasStateSize ?? 0,
+      imageAdjustments: imageAdjustments ?? undefined,
+      version: { increment: 1 },
+    };
+
+    // Optimistic concurrency: when the client says which version it edited,
+    // only write if nobody saved in between (another tab or a colleague).
+    // Without baseVersion (tab-close beacon, explicit overwrite) last write wins.
+    let annotation: { id: string; version: number };
+    if (typeof baseVersion === "number") {
+      const { count } = await prisma.annotation.updateMany({
+        where: { id: annotationId, version: baseVersion },
+        data,
+      });
+      if (count === 0) {
+        const current = await prisma.annotation.findUnique({
+          where: { id: annotationId },
+          select: { version: true },
+        });
+        return NextResponse.json(
+          { error: "version_conflict", version: current?.version ?? null },
+          { status: 409 }
+        );
+      }
+      annotation = { id: annotationId, version: baseVersion + 1 };
+    } else {
+      annotation = await prisma.annotation.update({
+        where: { id: annotationId },
+        data,
+        select: { id: true, version: true },
+      });
+    }
 
     // Side-channel: capture any AI-landmark corrections the user just made.
     // Awaited so the request can be observed by tests, but fail-soft so it

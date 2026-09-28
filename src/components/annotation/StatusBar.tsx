@@ -2,8 +2,7 @@
 
 import { Undo2, Redo2 } from "lucide-react";
 import type { Point, ViewMode } from "@/types/annotation";
-
-type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
+import type { SaveStatus } from "@/lib/annotation-saver";
 
 interface StatusBarProps {
   cursorPosition: Point | null;
@@ -57,6 +56,28 @@ export function StatusBar({
                 style={{ color: "#533afd" }}
               >
                 Retry
+              </button>
+            )}
+          </span>
+        );
+      case "conflict":
+        return (
+          <span className="flex items-center gap-1.5">
+            <span style={{ color: "#DF1B41" }}>{saveError ?? "Changed elsewhere"}</span>
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+              style={{ color: "#533afd" }}
+            >
+              Reload
+            </button>
+            {onRetrySave && (
+              <button
+                onClick={onRetrySave}
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+                style={{ color: "#DF1B41" }}
+              >
+                Overwrite
               </button>
             )}
           </span>

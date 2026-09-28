@@ -13,6 +13,8 @@ interface UseImageAdjustmentsReturn {
   setInvert: (value: boolean) => void;
   setPixelsPerMm: (value: number | undefined) => void;
   reset: () => void;
+  /** Swap in another X-ray's saved adjustments (multi-view slot switch). */
+  replace: (value: ImageAdjustments) => void;
   cssFilter: string;
   isModified: boolean;
 }
@@ -50,16 +52,11 @@ export function useImageAdjustments(
     setAdjustments({ ...DEFAULT_IMAGE_ADJUSTMENTS });
   }, []);
 
-  // CSS filter string for brightness/contrast/invert
-  // brightness: 0 → 1.0 (100%), -100 → 0.0, +100 → 2.0
-  // contrast: 0 → 1.0, -100 → 0.0, +100 → 2.0
-  const cssFilter = useMemo(() => {
-    const b = 1 + adjustments.brightness / 100;
-    const c = 1 + adjustments.contrast / 100;
-    const filters = [`brightness(${b})`, `contrast(${c})`];
-    if (adjustments.invert) filters.push("invert(1)");
-    return filters.join(" ");
-  }, [adjustments.brightness, adjustments.contrast, adjustments.invert]);
+  const replace = useCallback((value: ImageAdjustments) => {
+    setAdjustments({ ...DEFAULT_IMAGE_ADJUSTMENTS, ...value });
+  }, []);
+
+  const cssFilter = useMemo(() => adjustmentsToCssFilter(adjustments), [adjustments]);
 
   const isModified = useMemo(() => {
     return (
@@ -76,7 +73,20 @@ export function useImageAdjustments(
     setInvert,
     setPixelsPerMm,
     reset,
+    replace,
     cssFilter,
     isModified,
   };
+}
+
+/**
+ * CSS filter string for brightness/contrast/invert.
+ * brightness: 0 → 1.0 (100%), -100 → 0.0, +100 → 2.0; contrast likewise.
+ */
+export function adjustmentsToCssFilter(adjustments: ImageAdjustments): string {
+  const b = 1 + adjustments.brightness / 100;
+  const c = 1 + adjustments.contrast / 100;
+  const filters = [`brightness(${b})`, `contrast(${c})`];
+  if (adjustments.invert) filters.push("invert(1)");
+  return filters.join(" ");
 }

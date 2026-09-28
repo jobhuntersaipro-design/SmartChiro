@@ -20,7 +20,7 @@ import { useCanvasViewport } from "@/hooks/useCanvasViewport";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { useImageAdjustments } from "@/hooks/useImageAdjustments";
+import { adjustmentsToCssFilter, useImageAdjustments } from "@/hooks/useImageAdjustments";
 import { useDrawingTools } from "@/hooks/useDrawingTools";
 import {
   nextMeasurementId,
@@ -67,6 +67,7 @@ interface AnnotationCanvasProps {
   patientId: string;
   userId: string;
   annotationId: string | null;
+  annotationVersion?: number | null;
   initialCanvasState?: AnnotationCanvasState;
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
@@ -83,6 +84,7 @@ export function AnnotationCanvas({
   patientId,
   userId,
   annotationId,
+  annotationVersion = null,
   initialCanvasState,
   initialAdjustments,
   xrayId,
@@ -199,14 +201,27 @@ export function AnnotationCanvas({
     });
   }, []);
 
-  // Per-xray cache: shapes, annotationId, and viewport state for multi-view isolation
+  // Per-xray cache for multi-view isolation: shapes, the annotation they save
+  // to (+ its server version), that X-ray's own adjustments/calibration, and viewport.
   interface XrayCache {
     shapes: BaseShape[];
     annotationId: string | null;
+    version?: number | null;
+    adjustments?: ImageAdjustments;
     viewportState?: { zoom: number; panX: number; panY: number };
   }
   const shapesPerXrayRef = useRef<Map<string, XrayCache>>(
-    new Map([[xrayId, { shapes: initialCanvasState?.shapes ?? [], annotationId }]])
+    new Map([
+      [
+        xrayId,
+        {
+          shapes: initialCanvasState?.shapes ?? [],
+          annotationId,
+          version: annotationVersion,
+          adjustments: initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS },
+        },
+      ],
+    ])
   );
 
   // Track the xray ID that the current shapes belong to
@@ -253,7 +268,7 @@ export function AnnotationCanvas({
     },
   });
 
-  const autoSave = useAutoSave({ annotationId, xrayId, userId });
+  const autoSave = useAutoSave({ annotationId, annotationVersion, xrayId, userId });
   const undoRedo = useUndoRedo({
     shapes,
     setShapes,
@@ -628,6 +643,26 @@ export function AnnotationCanvas({
     onDeleteShapes: handleDeleteShapes,
   });
 
+  // ─── Canvas State Helpers ───
+  const buildCanvasState = useCallback((): AnnotationCanvasState => {
+    return {
+      version: 1,
+      shapes,
+      viewport: {
+        zoom: viewport.transform.zoom,
+        panX: viewport.transform.panX,
+        panY: viewport.transform.panY,
+      },
+      metadata: {
+        shapeCount: shapes.length,
+        measurementCount: shapes.filter(
+          (s) => s.type === "ruler" || s.type === "angle" || s.type === "cobb_angle"
+        ).length,
+        lastModifiedShapeId: shapes.length > 0 ? shapes[shapes.length - 1].id : null,
+      },
+    };
+  }, [shapes, viewport.transform]);
+
   // Fetch annotation for an xray that hasn't been loaded yet. Defined ahead
   // of the useEffect below since the effect calls it for newly-activated grid
   // slots that don't have shapes cached yet.
@@ -645,22 +680,44 @@ export function AnnotationCanvas({
       const latestId = annotations[0].id;
       const fullRes = await fetch(`/api/xrays/${targetXrayId}/annotations/${latestId}`);
       if (!fullRes.ok) return;
-      const fullData = await fullRes.json();
-      const loadedShapes: BaseShape[] = fullData.canvasState?.shapes ?? [];
-      shapesPerXrayRef.current.set(targetXrayId, { shapes: loadedShapes, annotationId: latestId });
-
-      // If this xray is still the active one, update shapes state
-      if (activeXrayIdRef.current === targetXrayId) {
+      const { annotation } = (await fullRes.json()) as {
+        annotation: {
+          canvasState: AnnotationCanvasState | null;
+          imageAdjustments: ImageAdjustments | null;
+          version: number;
+        };
+      };
+      const loadedShapes: BaseShape[] = annotation.canvasState?.shapes ?? [];
+      const loadedAdjustments = annotation.imageAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS };
+      const isActive = activeXrayIdRef.current === targetXrayId;
+      if (isActive && autoSave.adoptIfEditing(latestId, annotation.version)) {
+        // Drawn on before the saved annotation arrived — keep both.
+        setShapes((prev) => [...loadedShapes, ...prev]);
+        imageAdj.replace(loadedAdjustments);
+      } else if (isActive) {
+        shapesPerXrayRef.current.set(targetXrayId, {
+          shapes: loadedShapes,
+          annotationId: latestId,
+          version: annotation.version,
+          adjustments: loadedAdjustments,
+        });
+        autoSave.switchTarget(targetXrayId, latestId, annotation.version);
         setShapes(loadedShapes);
-        autoSave.switchTarget(targetXrayId, latestId);
+        imageAdj.replace(loadedAdjustments);
       } else {
+        shapesPerXrayRef.current.set(targetXrayId, {
+          shapes: loadedShapes,
+          annotationId: latestId,
+          version: annotation.version,
+          adjustments: loadedAdjustments,
+        });
         // Non-active cell — trigger re-render so read-only overlay updates
         setRenderTick((n) => n + 1);
       }
     } catch (err) {
       console.error("Failed to fetch annotation for xray:", targetXrayId, err);
     }
-  }, [autoSave]);
+  }, [autoSave, imageAdj]);
 
   // ─── Multi-View: Switch active slot → swap shapes per xray ───
   const prevActiveSlotRef = useRef(activeSlotIndex);
@@ -682,6 +739,8 @@ export function AnnotationCanvas({
       shapesPerXrayRef.current.set(prevXrayId, {
         shapes: [...shapes],
         annotationId: autoSave.currentAnnotationId,
+        version: autoSave.currentVersion,
+        adjustments: imageAdj.adjustments,
         viewportState: { ...viewport.transform },
       });
     }
@@ -697,8 +756,9 @@ export function AnnotationCanvas({
     // Load shapes for the new xray
     const cached = shapesPerXrayRef.current.get(newXrayId);
     if (cached) {
+      autoSave.switchTarget(newXrayId, cached.annotationId, cached.version ?? null);
       setShapes(cached.shapes);
-      autoSave.switchTarget(newXrayId, cached.annotationId);
+      imageAdj.replace(cached.adjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS });
       activeXrayIdRef.current = newXrayId;
       // Restore viewport state if previously saved
       if (cached.viewportState) {
@@ -713,8 +773,9 @@ export function AnnotationCanvas({
       }
     } else {
       // Not yet loaded — start with empty and fetch from API
-      setShapes([]);
       autoSave.switchTarget(newXrayId, null);
+      setShapes([]);
+      imageAdj.replace({ ...DEFAULT_IMAGE_ADJUSTMENTS });
       activeXrayIdRef.current = newXrayId;
       requestAnimationFrame(() => {
         viewport.fitToViewport();
@@ -789,6 +850,8 @@ export function AnnotationCanvas({
           shapesPerXrayRef.current.set(currentSlot.xrayId, {
             shapes: [...shapes],
             annotationId: autoSave.currentAnnotationId,
+            version: autoSave.currentVersion,
+            adjustments: imageAdj.adjustments,
             viewportState: { ...viewport.transform },
           });
         }
@@ -821,8 +884,9 @@ export function AnnotationCanvas({
       // Same slot overwrite → swap shapes inline.
       const cached = shapesPerXrayRef.current.get(xray.id);
       if (cached) {
+        autoSave.switchTarget(xray.id, cached.annotationId, cached.version ?? null);
         setShapes(cached.shapes);
-        autoSave.switchTarget(xray.id, cached.annotationId);
+        imageAdj.replace(cached.adjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS });
         activeXrayIdRef.current = xray.id;
         if (cached.viewportState) {
           viewport.setTransform(cached.viewportState);
@@ -831,8 +895,9 @@ export function AnnotationCanvas({
           setImageLoaded(false);
         }
       } else {
-        setShapes([]);
         autoSave.switchTarget(xray.id, null);
+        setShapes([]);
+        imageAdj.replace({ ...DEFAULT_IMAGE_ADJUSTMENTS });
         activeXrayIdRef.current = xray.id;
         setViewportReady(false);
         setImageLoaded(false);
@@ -841,7 +906,7 @@ export function AnnotationCanvas({
       undoRedo.clear();
       interaction.setSelectedShapeIds([]);
     },
-    [viewMode, activeSlotIndex, gridSlots, shapes, autoSave, undoRedo, interaction, fetchAnnotationForXray, viewport, patientId]
+    [viewMode, activeSlotIndex, gridSlots, shapes, autoSave, undoRedo, interaction, fetchAnnotationForXray, viewport, patientId, imageAdj, buildCanvasState]
   );
 
   // ─── Shape Update (from properties panel) ───
@@ -908,25 +973,6 @@ export function AnnotationCanvas({
     [undoRedo, autoSave],
   );
 
-  // ─── Canvas State Helpers ───
-  const buildCanvasState = useCallback((): AnnotationCanvasState => {
-    return {
-      version: 1,
-      shapes,
-      viewport: {
-        zoom: viewport.transform.zoom,
-        panX: viewport.transform.panX,
-        panY: viewport.transform.panY,
-      },
-      metadata: {
-        shapeCount: shapes.length,
-        measurementCount: shapes.filter(
-          (s) => s.type === "ruler" || s.type === "angle" || s.type === "cobb_angle"
-        ).length,
-        lastModifiedShapeId: shapes.length > 0 ? shapes[shapes.length - 1].id : null,
-      },
-    };
-  }, [shapes, viewport.transform]);
 
   // Keep auto-save refs current so debounced/interval saves have latest data
   useEffect(() => {
@@ -938,6 +984,8 @@ export function AnnotationCanvas({
       shapesPerXrayRef.current.set(currentXray, {
         shapes,
         annotationId: autoSave.currentAnnotationId,
+        version: autoSave.currentVersion,
+        adjustments: imageAdj.adjustments,
         viewportState: existing?.viewportState,
       });
     }
@@ -1982,14 +2030,17 @@ export function AnnotationCanvas({
                   }
 
                   // ─── Non-active cell: simple viewer with read-only annotations ───
-                  const cachedShapes = slot.xrayId ? shapesPerXrayRef.current.get(slot.xrayId)?.shapes : undefined;
+                  const cached = slot.xrayId ? shapesPerXrayRef.current.get(slot.xrayId) : undefined;
+                  const cachedShapes = cached?.shapes;
                   return (
                     <div key={i} className="relative h-full w-full">
                       <ViewportCell
                         slot={slot}
                         isActive={false}
                         onClick={() => setActiveSlotIndex(i)}
-                        cssFilter={imageAdj.cssFilter}
+                        cssFilter={
+                          cached?.adjustments ? adjustmentsToCssFilter(cached.adjustments) : undefined
+                        }
                         imageTransform={imageTransform}
                         viewState={gridViewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
                         onViewStateChange={(state) => handleGridViewStateChange(i, state)}

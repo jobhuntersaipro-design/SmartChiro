@@ -67,6 +67,7 @@ export default async function AnnotationPage({
       patientId={xray.patientId}
       userId={session.user.id}
       annotationId={annotation?.id ?? null}
+      annotationVersion={annotation?.version ?? null}
       initialCanvasState={annotation?.canvasState as unknown as AnnotationCanvasState | undefined}
       initialAdjustments={annotation?.imageAdjustments as unknown as ImageAdjustments | undefined}
       xrayId={xrayId}

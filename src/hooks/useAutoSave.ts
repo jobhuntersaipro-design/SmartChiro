@@ -1,17 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
+import { AnnotationSaver, type SaveStatus } from "@/lib/annotation-saver";
 
 interface UseAutoSaveOptions {
   annotationId: string | null;
+  /** Server version of `annotationId` as loaded, for conflict detection. */
+  annotationVersion?: number | null;
   xrayId: string;
   userId: string;
   interval?: number; // ms, default 30000
   debounceMs?: number; // ms, default 500
 }
-
-type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
 
 interface UseAutoSaveReturn {
   isDirty: boolean;
@@ -23,236 +24,123 @@ interface UseAutoSaveReturn {
   markDirty: () => void;
   updateState: (state: AnnotationCanvasState, adjustments: ImageAdjustments) => void;
   saveNow: (state: AnnotationCanvasState, adjustments: ImageAdjustments) => Promise<void>;
+  /** Retry after a failure; after a conflict this overwrites the other copy. */
   retrySave: () => void;
-  /** Switch the target xray and annotation for saves (used in multi-view) */
-  switchTarget: (xrayId: string, annotationId: string | null) => void;
+  /** Switch the target xray and annotation for saves (multi-view). Pending edits are saved to the old target first. */
+  switchTarget: (xrayId: string, annotationId: string | null, version?: number | null) => void;
+  /** See AnnotationSaver.adoptIfEditing. */
+  adoptIfEditing: (annotationId: string, version: number | null) => boolean;
   /** Current annotation ID (may be created during save) */
   currentAnnotationId: string | null;
+  currentVersion: number | null;
 }
-
-const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB
-const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB
-const MAX_RETRIES = 3;
 
 export function useAutoSave({
   annotationId: initialAnnotationId,
+  annotationVersion = null,
   xrayId,
   userId,
   interval = 30000,
   debounceMs = 500,
 }: UseAutoSaveOptions): UseAutoSaveReturn {
   const [isDirty, setIsDirty] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [sizeWarning, setSizeWarning] = useState<string | null>(null);
 
-  const latestStateRef = useRef<AnnotationCanvasState | null>(null);
-  const latestAdjustmentsRef = useRef<ImageAdjustments | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const retryCountRef = useRef(0);
-  const annotationIdRef = useRef<string | null>(initialAnnotationId);
-  const xrayIdRef = useRef<string>(xrayId);
+  const [saver] = useState(
+    () =>
+      new AnnotationSaver(
+        { xrayId, annotationId: initialAnnotationId, version: annotationVersion },
+        userId,
+        {
+          onStatus: (status, error) => {
+            setSaveStatus(status);
+            setSaveError(error);
+          },
+          onDirty: setIsDirty,
+          onSaved: setLastSavedAt,
+          onSizeWarning: setSizeWarning,
+        },
+        undefined,
+        debounceMs,
+      ),
+  );
 
-  const save = useCallback(
-    async (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
-      // If no annotation exists yet, create one for this xrayId
-      if (!annotationIdRef.current) {
-        try {
-          const createRes = await fetch(`/api/xrays/${xrayIdRef.current}/annotations`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              canvasState: state,
-              canvasStateSize: new Blob([JSON.stringify(state)]).size,
-              imageAdjustments: adjustments,
-              createdById: userId,
-            }),
-          });
-          if (createRes.ok) {
-            const data = await createRes.json();
-            annotationIdRef.current = data.annotation.id;
-            setIsDirty(false);
-            setLastSavedAt(new Date());
-            setSaveStatus("saved");
-            retryCountRef.current = 0;
-          } else {
-            throw new Error(`Create failed with status ${createRes.status}`);
-          }
-        } catch {
-          setSaveStatus("failed");
-          setSaveError("Failed to create annotation. Check your connection.");
-        }
-        return;
-      }
+  const markDirty = useCallback(() => saver.markDirty(), [saver]);
 
-      // Check canvas state size
-      const stateJson = JSON.stringify(state);
-      const canvasStateSize = new Blob([stateJson]).size;
-
-      if (canvasStateSize > MAX_CANVAS_STATE_SIZE) {
-        setSaveStatus("failed");
-        setSaveError("Annotation data is too large. Try simplifying some shapes.");
-        setSizeWarning(null);
-        return;
-      }
-
-      if (canvasStateSize > WARN_CANVAS_STATE_SIZE) {
-        setSizeWarning("Annotation file is getting large. Consider simplifying some shapes.");
-      } else {
-        setSizeWarning(null);
-      }
-
-      setIsSaving(true);
-      setSaveStatus(retryCountRef.current > 0 ? "retrying" : "saving");
-      setSaveError(null);
-
-      try {
-        const body = JSON.stringify({
-          canvasState: state,
-          canvasStateSize,
-          imageAdjustments: adjustments,
-        });
-
-        const res = await fetch(`/api/annotations/${annotationIdRef.current}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body,
-        });
-
-        if (res.ok) {
-          setIsDirty(false);
-          setLastSavedAt(new Date());
-          setSaveStatus("saved");
-          retryCountRef.current = 0;
-        } else {
-          throw new Error(`Save failed with status ${res.status}`);
-        }
-      } catch {
-        retryCountRef.current++;
-
-        if (retryCountRef.current < MAX_RETRIES) {
-          // Auto-retry with exponential backoff
-          setSaveStatus("retrying");
-          setSaveError(`Save failed — retrying... (${retryCountRef.current}/${MAX_RETRIES})`);
-          const delay = Math.pow(2, retryCountRef.current) * 1000; // 2s, 4s
-          setTimeout(() => {
-            if (latestStateRef.current && latestAdjustmentsRef.current) {
-              save(latestStateRef.current, latestAdjustmentsRef.current);
-            }
-          }, delay);
-        } else {
-          setSaveStatus("failed");
-          setSaveError("Unable to save. Check your connection.");
-          retryCountRef.current = 0;
-        }
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [userId]
+  const updateState = useCallback(
+    (state: AnnotationCanvasState, adjustments: ImageAdjustments) => saver.update(state, adjustments),
+    [saver],
   );
 
   const saveNow = useCallback(
-    async (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
-      latestStateRef.current = state;
-      latestAdjustmentsRef.current = adjustments;
-      retryCountRef.current = 0;
-      await save(state, adjustments);
+    (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
+      saver.update(state, adjustments);
+      return saver.flush({ force: true });
     },
-    [save]
+    [saver],
   );
 
   const retrySave = useCallback(() => {
-    if (latestStateRef.current && latestAdjustmentsRef.current) {
-      retryCountRef.current = 0;
-      save(latestStateRef.current, latestAdjustmentsRef.current);
-    }
-  }, [save]);
+    void saver.retry();
+  }, [saver]);
 
-  const markDirty = useCallback(() => {
-    setIsDirty(true);
-  }, []);
-
-  const switchTarget = useCallback((newXrayId: string, newAnnotationId: string | null) => {
-    xrayIdRef.current = newXrayId;
-    annotationIdRef.current = newAnnotationId;
-    retryCountRef.current = 0;
-    setIsDirty(false);
-    setSaveStatus("idle");
-    setSaveError(null);
-    setSizeWarning(null);
-  }, []);
-
-  // Update the latest state refs so debounced/interval saves have current data
-  const updateState = useCallback(
-    (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
-      latestStateRef.current = state;
-      latestAdjustmentsRef.current = adjustments;
+  const switchTarget = useCallback(
+    (newXrayId: string, newAnnotationId: string | null, version: number | null = null) => {
+      void saver.switchTarget({ xrayId: newXrayId, annotationId: newAnnotationId, version });
     },
-    []
+    [saver],
   );
 
-  // Auto-save on interval
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (
-        latestStateRef.current &&
-        latestAdjustmentsRef.current &&
-        isDirty
-      ) {
-        save(latestStateRef.current, latestAdjustmentsRef.current);
-      }
-    }, interval);
+  const adoptIfEditing = useCallback(
+    (annotationId: string, version: number | null) => saver.adoptIfEditing(annotationId, version),
+    [saver],
+  );
 
+  // Safety net: periodic save of anything the debounce missed.
+  useEffect(() => {
+    const timer = setInterval(() => void saver.flush(), interval);
     return () => clearInterval(timer);
-  }, [interval, isDirty, save]);
+  }, [saver, interval]);
 
-  // Debounced save on tool switch (caller triggers markDirty)
+  // Leaving the page: fire the pending edits with sendBeacon (survives the tab
+  // closing) and ask the browser to confirm while anything is unsaved.
   useEffect(() => {
-    if (!isDirty) return;
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      if (latestStateRef.current && latestAdjustmentsRef.current) {
-        save(latestStateRef.current, latestAdjustmentsRef.current);
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      const request = saver.unloadRequest();
+      if (request) {
+        navigator.sendBeacon(request.url, new Blob([request.body], { type: "application/json" }));
       }
-    }, debounceMs);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
+      if (request || saver.isSaving) {
+        event.preventDefault();
+        event.returnValue = "";
       }
     };
-  }, [isDirty, debounceMs, save]);
-
-  // beforeunload — attempt save via sendBeacon
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (annotationIdRef.current && latestStateRef.current && latestAdjustmentsRef.current && isDirty) {
-        const body = JSON.stringify({
-          canvasState: latestStateRef.current,
-          canvasStateSize: new Blob([JSON.stringify(latestStateRef.current)]).size,
-          imageAdjustments: latestAdjustmentsRef.current,
-        });
-        navigator.sendBeacon(
-          `/api/annotations/${annotationIdRef.current}`,
-          new Blob([body], { type: "application/json" })
-        );
-      }
-    };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
+  }, [saver]);
+
+  // In-app navigation (router links) unmounts without beforeunload — flush with keepalive.
+  useEffect(() => {
+    return () => {
+      const request = saver.unloadRequest();
+      if (request) {
+        void fetch(request.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: request.body,
+          keepalive: true,
+        }).catch(() => undefined);
+      }
+      saver.dispose();
+    };
+  }, [saver]);
 
   return {
     isDirty,
-    isSaving,
+    isSaving: saveStatus === "saving" || saveStatus === "retrying",
     lastSavedAt,
     saveStatus,
     saveError,
@@ -262,6 +150,8 @@ export function useAutoSave({
     saveNow,
     retrySave,
     switchTarget,
-    currentAnnotationId: annotationIdRef.current,
+    adoptIfEditing,
+    currentAnnotationId: saver.annotationId,
+    currentVersion: saver.version,
   };
 }

@@ -303,4 +303,24 @@ describe("/api/annotations/[id] — access control", () => {
     const res = await POST(put({ canvasState: { version: 1, shapes: [{ id: "keep" }] } }), ctx());
     expect(res.status).toBe(200);
   });
+
+  it("rejects a save based on a stale version with 409 and leaves the newer copy intact", async () => {
+    mockAuth.mockResolvedValue({ user: { id: ownerId } });
+    const { PUT } = await import("../route");
+    const { version } = await prisma.annotation.findUniqueOrThrow({ where: { id: annotationId }, select: { version: true } });
+
+    const first = await PUT(put({ canvasState: { version: 1, shapes: [{ id: "tab-a" }] }, baseVersion: version }), ctx());
+    expect(first.status).toBe(200);
+    expect((await first.json()).version).toBe(version + 1);
+
+    const stale = await PUT(put({ canvasState: { version: 1, shapes: [{ id: "tab-b" }] }, baseVersion: version }), ctx());
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toMatchObject({ error: "version_conflict", version: version + 1 });
+    const stored = await prisma.annotation.findUnique({ where: { id: annotationId } });
+    expect(stored?.canvasState).toEqual({ version: 1, shapes: [{ id: "tab-a" }] });
+
+    // Explicit overwrite (no baseVersion) wins.
+    const overwrite = await PUT(put({ canvasState: { version: 1, shapes: [{ id: "tab-b" }] } }), ctx());
+    expect(overwrite.status).toBe(200);
+  });
 });
