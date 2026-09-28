@@ -30,6 +30,10 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  // Set once the user zooms or pans; cleared by Fit. A resize (panel toggle,
+  // tablet rotation, window resize) refits only while this is false —
+  // otherwise it keeps the user's zoom and what they were looking at.
+  const userAdjustedRef = useRef(false);
 
   const clampZoom = useCallback((zoom: number) => {
     return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
@@ -41,6 +45,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   // freshest committed state (avoids sticky feel + drift on rapid events).
   const zoomAtPoint = useCallback(
     (newZoom: number, anchorScreenX: number, anchorScreenY: number) => {
+      userAdjustedRef.current = true;
       setTransform((prev) => {
         // Use applyZoomAroundAnchor with factor = newZoom / prev.zoom so the
         // helper handles clamping + the cursor-anchor invariant identically
@@ -57,6 +62,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   // wheel events compose cleanly without drift or stale-base stalling.
   const zoomBy = useCallback(
     (factor: number, anchorScreenX: number, anchorScreenY: number) => {
+      userAdjustedRef.current = true;
       setTransform((prev) =>
         applyZoomAroundAnchor(prev, factor, anchorScreenX, anchorScreenY)
       );
@@ -76,6 +82,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   );
 
   const zoomIn = useCallback(() => {
+    userAdjustedRef.current = true;
     setTransform((prev) => {
       const newZoom = clampZoom(prev.zoom * ZOOM_SHORTCUT_STEP);
       const container = containerRef.current;
@@ -93,6 +100,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   }, [clampZoom]);
 
   const zoomOut = useCallback(() => {
+    userAdjustedRef.current = true;
     setTransform((prev) => {
       const newZoom = clampZoom(prev.zoom / ZOOM_SHORTCUT_STEP);
       const container = containerRef.current;
@@ -124,6 +132,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     const zoom = clampZoom(Math.min(availW / imageWidth, availH / imageHeight));
     const panX = (rect.width - imageWidth * zoom) / 2;
     const panY = (rect.height - imageHeight * zoom) / 2;
+    userAdjustedRef.current = false;
     setTransform({ zoom, panX, panY });
   }, [imageWidth, imageHeight, clampZoom]);
 
@@ -134,6 +143,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     const rect = container.getBoundingClientRect();
     const panX = (rect.width - imageWidth) / 2;
     const panY = (rect.height - imageHeight) / 2;
+    userAdjustedRef.current = true;
     setTransform({ zoom: 1, panX, panY });
   }, [imageWidth, imageHeight]);
 
@@ -159,6 +169,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
 
   // Pan by delta
   const pan = useCallback((deltaX: number, deltaY: number) => {
+    userAdjustedRef.current = true;
     setTransform((prev) => ({
       ...prev,
       panX: prev.panX + deltaX,
@@ -182,6 +193,12 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     [transform]
   );
 
+  // Restoring a saved view (multi-view slot switch) is a deliberate view too.
+  const restoreTransform = useCallback((next: ViewTransform | ((prev: ViewTransform) => ViewTransform)) => {
+    userAdjustedRef.current = true;
+    setTransform(next);
+  }, []);
+
   // Auto-refit when the container box changes (e.g. user switches between
   // single / side-by-side / 2×2, or resizes the window). Without this the
   // viewport's zoom stays computed for the prior cell size, leaving the
@@ -193,8 +210,18 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let last = el.getBoundingClientRect();
     const ro = new ResizeObserver(() => {
-      fitToViewport();
+      const next = el.getBoundingClientRect();
+      if (userAdjustedRef.current) {
+        // Keep the zoom; shift so the point at the old centre stays centred.
+        const dx = (next.width - last.width) / 2;
+        const dy = (next.height - last.height) / 2;
+        setTransform((prev) => ({ ...prev, panX: prev.panX + dx, panY: prev.panY + dy }));
+      } else {
+        fitToViewport();
+      }
+      last = next;
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -202,7 +229,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
 
   return {
     transform,
-    setTransform,
+    setTransform: restoreTransform,
     containerRef,
     zoomIn,
     zoomOut,

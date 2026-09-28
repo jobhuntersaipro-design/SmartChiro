@@ -465,7 +465,11 @@ export function useCanvasInteraction({
         panClearsSelectionRef.current = false;
         panMovedRef.current = false;
         panOriginRef.current = null;
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        try {
+          (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        } catch {
+          // Not captured by this pointer (e.g. a touch gesture ended it)
+        }
       }
       if (dragRef.current) {
         if (dragRef.current.hasMoved) {

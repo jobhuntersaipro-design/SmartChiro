@@ -63,6 +63,7 @@ import { CascadeDeleteDialog } from "./CascadeDeleteDialog";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
 import { useViewerInputs } from "@/hooks/useViewerInputs";
 import { useStableCallbacks } from "@/hooks/useStableCallbacks";
+import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { SeriesStrip, type SeriesXray } from "./SeriesStrip";
 import { ToolIndicatorChip } from "./ToolIndicatorChip";
 import { FirstRunOverlay } from "./FirstRunOverlay";
@@ -1447,10 +1448,21 @@ export function AnnotationCanvas({
   // ─── Pointer Handlers (drawing tools + interaction) ───
   const containerRectRef = useRef<DOMRect | null>(null);
 
+  // Tablet: two-finger pinch/pan, and fingers only pan once a stylus is used.
+  const gestures = useTouchGestures({
+    zoomBy: viewport.zoomBy,
+    pan: viewport.pan,
+    onGestureStart: () => {
+      drawing.cancelDrawing();
+      setRenderTick((n) => n + 1);
+    },
+  });
+
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       containerRectRef.current = rect;
+      if (gestures.onPointerDown(e, rect)) return;
 
       // Drawing tools get first chance
       if (drawing.handlePointerDown(e, rect)) {
@@ -1482,12 +1494,13 @@ export function AnnotationCanvas({
       // Fall through to interaction (select, pan)
       interaction.handlePointerDown(e);
     },
-    [drawing, interaction, pointerTransform, imageWidth, imageHeight]
+    [drawing, interaction, pointerTransform, imageWidth, imageHeight, gestures]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       const rect = containerRectRef.current ?? (e.currentTarget as HTMLElement).getBoundingClientRect();
+      if (gestures.onPointerMove(e, rect)) return;
 
       const previewBefore = drawing.peekDrawingShape();
       drawing.handlePointerMove(e, rect);
@@ -1497,16 +1510,33 @@ export function AnnotationCanvas({
       // nothing, and forcing a render here re-rendered every shape per move.
       if (drawing.peekDrawingShape() !== previewBefore) setRenderTick((n) => n + 1);
     },
-    [drawing, interaction]
+    [drawing, interaction, gestures]
   );
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
-      drawing.handlePointerUp(e);
+      if (gestures.onPointerEnd(e)) {
+        // A touch gesture owned this pointer; just end any pan the first finger began.
+        interaction.handlePointerUp(e);
+      } else {
+        drawing.handlePointerUp(e);
+        interaction.handlePointerUp(e);
+      }
+      setRenderTick((n) => n + 1);
+    },
+    [drawing, interaction, gestures]
+  );
+
+  // The browser took the pointer away (palm rejection, system gesture, lost
+  // stylus): abandon an in-progress stroke instead of committing half of it.
+  const handlePointerCancel = useCallback(
+    (e: React.PointerEvent) => {
+      gestures.onPointerEnd(e);
+      drawing.cancelDrawing();
       interaction.handlePointerUp(e);
       setRenderTick((n) => n + 1);
     },
-    [drawing, interaction]
+    [drawing, interaction, gestures]
   );
 
   const handleDoubleClick = useCallback(
@@ -1711,10 +1741,13 @@ export function AnnotationCanvas({
                 style={{
                   backgroundColor: "#1A1F36",
                   cursor: getCursor(),
+                  // Touch goes to the canvas (draw / pinch), not page scroll/zoom.
+                  touchAction: "none",
                 }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
                 onDoubleClick={handleDoubleClick}
               >
                 <ToolIndicatorChip activeTool={interaction.activeTool} />
@@ -1975,11 +2008,13 @@ export function AnnotationCanvas({
                           border: "2px solid #533afd",
                           borderRadius: 4,
                           cursor: getCursor(),
+                          touchAction: "none",
                         }}
                         onWheel={viewport.handleWheel}
                         onPointerDown={handlePointerDown}
                         onPointerMove={handlePointerMove}
                         onPointerUp={handlePointerUp}
+                        onPointerCancel={handlePointerCancel}
                         onDoubleClick={handleDoubleClick}
                       >
                         {/* Swap this slot's X-ray. Sits above all drawing
