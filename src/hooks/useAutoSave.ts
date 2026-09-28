@@ -28,6 +28,13 @@ interface UseAutoSaveReturn {
   retrySave: () => void;
   /** Switch the target xray and annotation for saves (multi-view). Pending edits are saved to the old target first. */
   switchTarget: (xrayId: string, annotationId: string | null, version?: number | null) => void;
+  /** Save now; resolves with the X-ray + annotation the edits went to (for export). */
+  saveAndGetTarget: (
+    state: AnnotationCanvasState,
+    adjustments: ImageAdjustments,
+  ) => Promise<{ xrayId: string; annotationId: string | null }>;
+  /** Live (not render-time) check, e.g. after awaiting a save before leaving. */
+  hasUnsavedChanges: () => boolean;
   /** See AnnotationSaver.adoptIfEditing. */
   adoptIfEditing: (annotationId: string, version: number | null) => boolean;
   /** Current annotation ID (may be created during save) */
@@ -94,6 +101,17 @@ export function useAutoSave({
     [saver],
   );
 
+  const saveAndGetTarget = useCallback(
+    async (state: AnnotationCanvasState, adjustments: ImageAdjustments) => {
+      saver.update(state, adjustments);
+      await saver.flush({ force: true });
+      return { xrayId: saver.xrayId, annotationId: saver.annotationId };
+    },
+    [saver],
+  );
+
+  const hasUnsavedChanges = useCallback(() => saver.isDirty, [saver]);
+
   const adoptIfEditing = useCallback(
     (annotationId: string, version: number | null) => saver.adoptIfEditing(annotationId, version),
     [saver],
@@ -150,6 +168,8 @@ export function useAutoSave({
     saveNow,
     retrySave,
     switchTarget,
+    saveAndGetTarget,
+    hasUnsavedChanges,
     adoptIfEditing,
     currentAnnotationId: saver.annotationId,
     currentVersion: saver.version,

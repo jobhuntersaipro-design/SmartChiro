@@ -999,6 +999,41 @@ export function AnnotationCanvas({
   );
 
 
+  // ─── Close / Export ───
+  const handleClose = useCallback(async () => {
+    await autoSave.saveNow(buildCanvasState(), imageAdj.adjustments);
+    if (autoSave.hasUnsavedChanges() && !window.confirm("Some changes haven't been saved. Leave anyway?")) return;
+    onClose();
+  }, [autoSave, buildCanvasState, imageAdj.adjustments, onClose]);
+
+  const [exporting, setExporting] = useState<"png" | "pdf" | null>(null);
+  const handleExport = useCallback(
+    async (format: "png" | "pdf") => {
+      setExporting(format);
+      // Open the tab now, inside the click, so popup blockers allow it.
+      const tab = window.open("", "_blank");
+      try {
+        const target = await autoSave.saveAndGetTarget(buildCanvasState(), imageAdj.adjustments);
+        if (!target.annotationId) throw new Error("Draw something first — there's nothing to export yet.");
+        const res = await fetch(`/api/xrays/${target.xrayId}/annotations/${target.annotationId}/export`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ format, includeAdjustments: true }),
+        });
+        const data = (await res.json()) as { downloadUrl?: string; message?: string };
+        if (!res.ok || !data.downloadUrl) throw new Error(data.message ?? "Export failed. Please try again.");
+        if (tab) tab.location.href = data.downloadUrl;
+        else window.open(data.downloadUrl, "_blank", "noopener");
+      } catch (err) {
+        tab?.close();
+        toast.error(err instanceof Error ? err.message : "Export failed. Please try again.");
+      } finally {
+        setExporting(null);
+      }
+    },
+    [autoSave, buildCanvasState, imageAdj.adjustments],
+  );
+
   // Keep auto-save refs current so debounced/interval saves have latest data
   useEffect(() => {
     autoSave.updateState(buildCanvasState(), imageAdj.adjustments);
@@ -1541,7 +1576,9 @@ export function AnnotationCanvas({
         isDirty={autoSave.isDirty}
         isSaving={autoSave.isSaving}
         onSave={() => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments)}
-        onClose={onClose}
+        onClose={handleClose}
+        onExport={handleExport}
+        exporting={exporting}
         adjustments={imageAdj.adjustments}
         onBrightnessChange={adjust.brightness}
         onContrastChange={adjust.contrast}

@@ -33,8 +33,10 @@ function pointsToSvgPath(points: Point[], closed = false): string {
   return parts.join(" ");
 }
 
-function shapeToSvg(shape: BaseShape): string {
+function shapeToSvg(shape: BaseShape, labelSize: number): string {
   if (!shape.visible) return "";
+  const label = (text: string, x: number, y: number, anchor: "start" | "middle" = "start", color = shape.style.strokeColor) =>
+    `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${labelSize}" fill="${color}" stroke="#000" stroke-width="${labelSize / 8}" paint-order="stroke" font-family="Arial, sans-serif">${escapeXml(text)}</text>`;
 
   const stroke = shape.style.strokeColor;
   const strokeWidth = shape.style.strokeWidth;
@@ -50,8 +52,50 @@ function shapeToSvg(shape: BaseShape): string {
   const commonAttrs = `${strokeAttrs} fill="${fill}" fill-opacity="${fillOpacity}"`;
 
   switch (shape.type) {
+    case "point":
+    case "landmark": {
+      if (shape.points.length < 1) return "";
+      const p = shape.points[0];
+      const r = labelSize / 2;
+      let svg = `<circle cx="${p.x}" cy="${p.y}" r="${r}" ${strokeAttrs} fill="${stroke}" fill-opacity="0.35" />`;
+      const name = shape.label ?? (shape.type === "landmark" ? shape.landmarkName?.replace(/_/g, " ") : null);
+      if (name) svg += label(name, p.x + r * 1.6, p.y + r * 0.6);
+      return svg;
+    }
+
+    case "arrow": {
+      if (shape.points.length < 2) return "";
+      const [p1, p2] = shape.points;
+      const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      let svg = `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" ${strokeAttrs} />`;
+      if (len > 0) {
+        const size = shape.arrowSize ?? Math.max(10, strokeWidth * 4);
+        const ux = (p2.x - p1.x) / len;
+        const uy = (p2.y - p1.y) / len;
+        const head = (tip: { x: number; y: number }, dir: number) => {
+          const bx = tip.x - ux * size * dir;
+          const by = tip.y - uy * size * dir;
+          return `<polygon points="${tip.x},${tip.y} ${bx - uy * size * 0.5},${by + ux * size * 0.5} ${bx + uy * size * 0.5},${by - ux * size * 0.5}" fill="${stroke}" fill-opacity="${strokeOpacity}" />`;
+        };
+        if (shape.arrowEnd !== false) svg += head(p2, 1);
+        if (shape.arrowStart) svg += head(p1, -1);
+      }
+      return svg;
+    }
+
+    case "polyline": {
+      if (shape.points.length < 2) return "";
+      let svg = `<path d="${pointsToSvgPath(shape.points, !!shape.closed)}" ${strokeAttrs} fill="none" />`;
+      if (shape.measurement) {
+        const last = shape.points[shape.points.length - 1];
+        svg += label(shape.measurement.label, last.x + labelSize / 2, last.y - labelSize / 2);
+      }
+      return svg;
+    }
+
     case "line":
-    case "ruler": {
+    case "ruler":
+    case "calibration": {
       if (shape.points.length < 2) return "";
       const p1 = shape.points[0];
       const p2 = shape.points[1];
@@ -60,12 +104,12 @@ function shapeToSvg(shape: BaseShape): string {
       // Add measurement label if present
       if (shape.measurement) {
         const mx = (p1.x + p2.x) / 2;
-        const my = (p1.y + p2.y) / 2 - 8;
-        svg += `<text x="${mx}" y="${my}" text-anchor="middle" font-size="12" fill="${stroke}" font-family="Arial, sans-serif">${shape.measurement.label}</text>`;
+        const my = (p1.y + p2.y) / 2 - labelSize / 2;
+        svg += label(shape.measurement.label, mx, my, "middle");
       }
 
-      // End ticks for ruler
-      if (shape.showEndTicks !== false && shape.type === "ruler") {
+      // End ticks for ruler / calibration
+      if (shape.showEndTicks !== false && (shape.type === "ruler" || shape.type === "calibration")) {
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const len = Math.sqrt(dx * dx + dy * dy);
@@ -96,7 +140,7 @@ function shapeToSvg(shape: BaseShape): string {
       let svg = `<path d="${path}" ${strokeAttrs} fill="none" />`;
       if (shape.measurement) {
         const vertex = shape.points[1];
-        svg += `<text x="${vertex.x + 15}" y="${vertex.y - 5}" font-size="12" fill="${stroke}" font-family="Arial, sans-serif">${shape.measurement.label}</text>`;
+        svg += label(shape.measurement.label, vertex.x + labelSize, vertex.y - labelSize / 3);
       }
       return svg;
     }
@@ -116,7 +160,7 @@ function shapeToSvg(shape: BaseShape): string {
         svg += `<line x1="${shape.perpendicular2[0]}" y1="${shape.perpendicular2[1]}" x2="${shape.perpendicular2[2]}" y2="${shape.perpendicular2[3]}" ${commonAttrs} stroke-dasharray="4 4" />`;
       }
       if (shape.measurement && shape.intersection) {
-        svg += `<text x="${shape.intersection[0] + 15}" y="${shape.intersection[1] - 5}" font-size="12" fill="${stroke}" font-family="Arial, sans-serif">${shape.measurement.label}</text>`;
+        svg += label(shape.measurement.label, shape.intersection[0] + labelSize, shape.intersection[1] - labelSize / 3);
       }
       return svg;
     }
@@ -141,7 +185,9 @@ function buildAnnotationSvg(
   height: number
 ): string {
   const sortedShapes = [...shapes].sort((a, b) => a.zIndex - b.zIndex);
-  const shapesSvg = sortedShapes.map(shapeToSvg).join("\n");
+  // Readable on a full-resolution film: ~1/110 of the long side, at least 12px.
+  const labelSize = Math.max(12, Math.round(Math.max(width, height) / 110));
+  const shapesSvg = sortedShapes.map((shape) => shapeToSvg(shape, labelSize)).join("\n");
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
 ${shapesSvg}

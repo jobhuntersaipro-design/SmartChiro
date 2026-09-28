@@ -52,7 +52,9 @@ export function AnnotationPageClient({
       initialCanvasState={initialCanvasState}
       initialAdjustments={initialAdjustments}
       xrayId={xrayId}
-      onClose={() => router.back()}
+      // Always back to the patient's X-rays — the viewer is often opened in a
+      // new tab, where router.back() had no history and went to about:blank.
+      onClose={() => router.push(`/dashboard/patients/${patientId}/details?tab=xrays`)}
       patientSeries={patientSeries}
     />
   );

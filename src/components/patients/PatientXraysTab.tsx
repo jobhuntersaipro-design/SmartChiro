@@ -158,6 +158,10 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
           selectedCount={selected.size}
           onDelete={handleBatchDelete}
           onCancel={() => handleFiltersChange({ ...filters, batchMode: false })}
+          onCompare={() => {
+            // Opens in a new tab, like the viewer links on each card.
+            window.open(`/dashboard/xrays/compare?ids=${Array.from(selected).join(',')}`, '_blank', 'noopener')
+          }}
         />
       )}
 

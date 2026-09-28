@@ -77,6 +77,10 @@ export class AnnotationSaver {
     this.target = { ...target };
   }
 
+  get xrayId(): string {
+    return this.target.xrayId;
+  }
+
   get annotationId(): string | null {
     return this.target.annotationId;
   }

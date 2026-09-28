@@ -15,6 +15,8 @@ import {
   Sun,
   RotateCcw,
   FileText,
+  Download,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import type { ImageAdjustments } from "@/types/annotation";
@@ -49,6 +51,83 @@ interface AnnotationHeaderProps {
   onOpenNotes?: () => void;
   // Shortcuts
   onShowShortcuts?: () => void;
+  // Export (PNG image / PDF report with measurement summary)
+  onExport?: (format: "png" | "pdf") => void;
+  exporting?: "png" | "pdf" | null;
+}
+
+function ExportMenu({
+  onExport,
+  exporting,
+}: {
+  onExport: (format: "png" | "pdf") => void;
+  exporting: "png" | "pdf" | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const items: { format: "png" | "pdf"; label: string; hint: string }[] = [
+    { format: "png", label: "PNG image", hint: "Film with annotations" },
+    { format: "pdf", label: "PDF report", hint: "Printable, with measurement summary" },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        disabled={exporting !== null}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors hover:bg-[#f6f9fc] disabled:opacity-60"
+        style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
+      >
+        {exporting ? (
+          <Loader2 size={14} strokeWidth={1.5} className="animate-spin" />
+        ) : (
+          <Download size={14} strokeWidth={1.5} />
+        )}
+        {exporting ? "Exporting…" : "Export"}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-1 w-60 overflow-hidden bg-white"
+          style={{ border: "1px solid #e5edf5", borderRadius: 6, boxShadow: "0 8px 24px rgba(18,42,66,.12)" }}
+        >
+          {items.map((item) => (
+            <button
+              key={item.format}
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onExport(item.format);
+              }}
+              className="block w-full px-3 py-2 text-left transition-colors hover:bg-[#f6f9fc]"
+            >
+              <span className="block text-sm text-[#061b31]">{item.label}</span>
+              <span className="block text-xs text-[#64748d]">{item.hint}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AdjustmentSlider({
@@ -504,6 +583,8 @@ export function AnnotationHeader({
   notesCount = 0,
   onOpenNotes,
   onShowShortcuts,
+  onExport,
+  exporting = null,
 }: AnnotationHeaderProps) {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const adjustModified =
@@ -589,6 +670,7 @@ export function AnnotationHeader({
             Notes{notesCount > 0 ? ` · ${notesCount}` : ""}
           </button>
         )}
+        {onExport && <ExportMenu onExport={onExport} exporting={exporting} />}
         <SaveButton
           isSaving={isSaving}
           isDirty={isDirty}
@@ -605,7 +687,8 @@ export function AnnotationHeader({
             borderRadius: 4,
             color: "#64748d",
           }}
-          aria-label="Close annotation editor"
+          aria-label="Close and return to the patient"
+          title="Close and return to the patient"
         >
           <X size={18} strokeWidth={1.5} />
         </button>
