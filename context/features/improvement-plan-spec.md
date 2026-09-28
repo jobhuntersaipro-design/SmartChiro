@@ -1,7 +1,7 @@
 # SmartChiro Improvement Plan (UX review + Malaysian competitor gaps)
 
 **Source:** `smartchiro-improvement-report.md` (UX review of smartchiro.org, 28 Sep 2026, Owner role on KLCC / Bangsar / Penang Georgetown).
-**Status:** Phases 1–6 done (2026-09-29); Phase 7 in progress.
+**Status:** Phases 1–7 done (2026-09-29); Phase 8 in progress.
 **Branch:** `claude/zen-goodall-84f7kl` — one commit (or small set) per phase, each phase built, tested and pushed before the next starts.
 
 This file is the master plan. Each phase has a detailed section that is filled in
@@ -281,6 +281,10 @@ Recall is where clinics win back revenue; today only appointment reminders exist
 - `/portal`: sign in with email (one-time 6-digit code by email, 10-minute expiry, 5 attempts, rate-limited); WhatsApp code later when an authentication template exists. A session covers every patient record (across branches) with that verified email.
 - Portal shows upcoming appointments (cancel up to the branch's cutoff, default 24 h; "Book again" links to the booking page), packages with sessions left and expiry, invoices and receipts (PDF download through portal-authorised routes), and contact details (read-only, "ask the clinic to change").
 - Sessions: `PatientPortalSession` (hashed token, patient email, expiry 30 days), httpOnly secure cookie; codes stored hashed. No clinical notes or X-rays in the portal.
+
+### Phase 7 — record (done 2026-09-29)
+- 7.1 online booking: see **Built** above.
+- 7.2 patient portal: migration `20260929080000_patient_portal` (`Branch.portalCancelHours` default 24, `PortalLoginCode`, `PortalSession` — named `PortalSession`, not `PatientPortalSession`). `src/lib/portal/*` (codes are HMAC-SHA256 of email + code keyed from `AUTH_SECRET`; a new code retires older ones; each guess burns an attempt atomically; session token 32 random bytes stored hashed, 30-day sliding at most hourly; patients re-resolved from the email on every request so an email change on the staff side ends access). Limits: 3 codes / 15 min and 10 / day per email (DB), 30 guesses / 15 min per IP (in-memory, per instance). `request-code` always answers 200 and sends after the response; every verify failure is the same 400. POSTs reject a foreign `Origin`. API `/api/portal/{request-code,verify,logout,me,appointments,appointments/[id]/cancel,packages,invoices,invoices/[id]/pdf,invoices/[id]/payments/[paymentId]/receipt}`; staff `GET/PUT /api/branches/[branchId]/portal-settings` (OWNER/ADMIN, 0–336 h) with a "Patient portal" card in Branch Settings and a portal note on the patient Profile tab. Portal cancel reuses the staff steps (audit actor "Patient portal", pending reminders removed, package redemption reversed). Invoices shown: SENT / PARTIALLY_PAID / PAID / OVERDUE. "Book online" appears next to each clinic when its booking page is on. Dev without a Resend key logs the code; production never does.
 
 ## Phase 8 — MyInvois, commissions, T&CM expiry, accounting export
 

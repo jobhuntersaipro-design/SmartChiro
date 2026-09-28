@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — Phases 1–6 done 2026-09-29; building Phases 7–8 on `claude/zen-goodall-84f7kl`.
+In Progress — Phases 1–7 done 2026-09-29; building Phase 8 on `claude/zen-goodall-84f7kl`.
 
 ## Spec
 
@@ -16,7 +16,7 @@ In Progress — Phases 1–6 done 2026-09-29; building Phases 7–8 on `claude/z
 4. Payments, manual invoices, SST, receipts — done
 5. Reports — done
 6. WhatsApp recall + review requests (BM/Chinese templates) — done
-7. Online booking link, then patient portal
+7. Online booking link, then patient portal — done
 8. MyInvois, commissions, T&CM expiry, accounting export
 
 ## Notes
