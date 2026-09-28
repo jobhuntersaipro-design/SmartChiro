@@ -98,6 +98,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         reminderChannel: patient.reminderChannel || "WHATSAPP",
         preferredLanguage: patient.preferredLanguage || "en",
         marketingConsent: patient.marketingConsent ? "true" : "false",
+        passportNumber: patient.passportNumber || "",
       });
       setNationality(patient.nationality ?? undefined);
       setSubmitError(null);
@@ -220,6 +221,15 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                     onChange={setNationality}
                     hint={nationality === undefined && effectiveNationality(undefined, form.icNumber) ? "From MyKad" : null}
                     className="h-8"
+                  />
+                </FormField>
+                <FormField label="Passport no.">
+                  <input
+                    value={form.passportNumber || ""}
+                    onChange={(e) => update("passportNumber", e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                    maxLength={20}
+                    placeholder="For e-invoices (non-Malaysians)"
+                    className={inputClass}
                   />
                 </FormField>
               </div>

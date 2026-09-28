@@ -1,6 +1,7 @@
 import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
 import { formatMYR, type InvoiceLineItem } from "@/lib/invoices";
 import { clinicDateLabel } from "@/lib/clinic-time";
+import { qrcodegen } from "@/lib/vendor/qrcodegen";
 
 export interface PdfPaymentRow {
   receivedAt: Date;
@@ -38,6 +39,8 @@ export interface InvoicePdfData {
   payment?: PdfPaymentRow & { refundReason: string | null; paidToDate: number; balanceAfter: number };
   notes: string | null;
   paymentInstructions: string | null;
+  /** LHDN MyInvois validation (e-invoice VALID): printed as a QR code + UUID. */
+  einvoice?: { uuid: string; validationUrl: string; validatedAt: Date | null };
 }
 
 const INK = rgb(0.04, 0.15, 0.25);
@@ -249,6 +252,37 @@ function singlePayment(c: Cursor, data: InvoicePdfData) {
   ]);
 }
 
+/** The e-invoice validation link as a QR code (square modules) with the UUID beside it. */
+function einvoiceBlock(c: Cursor, e: NonNullable<InvoicePdfData["einvoice"]>) {
+  const qr = qrcodegen.QrCode.encodeText(e.validationUrl, qrcodegen.QrCode.Ecc.MEDIUM);
+  const size = 84;
+  const cell = size / (qr.size + 8);
+  c.y -= 20;
+  c.ensure(size + 10);
+  const top = c.y + 10;
+  for (let y = 0; y < qr.size; y++) {
+    for (let x = 0; x < qr.size; x++) {
+      if (!qr.getModule(x, y)) continue;
+      c.page.drawRectangle({ x: LEFT + (x + 4) * cell, y: top - (y + 5) * cell, width: cell, height: cell, color: INK });
+    }
+  }
+  const textX = LEFT + size + 12;
+  c.y = top - 18;
+  c.text("LHDN e-Invoice (validated)", textX, 9, INK, true);
+  c.y -= 13;
+  c.text(`UUID: ${e.uuid}`, textX, 9, MUTED);
+  c.y -= 12;
+  if (e.validatedAt) {
+    c.text(`Validated: ${date(e.validatedAt)}`, textX, 9, MUTED);
+    c.y -= 12;
+  }
+  for (let i = 0; i < e.validationUrl.length; i += 80) {
+    c.text(e.validationUrl.slice(i, i + 80), textX, 7, MUTED);
+    c.y -= 10;
+  }
+  c.y = Math.min(c.y, top - size - 4);
+}
+
 /** A4 invoice, paid-invoice receipt, or single-payment receipt. */
 export async function renderInvoicePdf(data: InvoicePdfData): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
@@ -289,6 +323,8 @@ export async function renderInvoicePdf(data: InvoicePdfData): Promise<Uint8Array
     c.y -= 13;
     c.paragraph(data.paymentInstructions);
   }
+
+  if (data.einvoice && !data.payment) einvoiceBlock(c, data.einvoice);
 
   const pages = pdf.getPages();
   for (const page of pages) {

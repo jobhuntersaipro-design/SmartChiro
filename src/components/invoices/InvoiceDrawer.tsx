@@ -13,6 +13,7 @@ import type { InvoiceDetail } from "@/types/invoice";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY } from "./form-styles";
+import { EInvoicePanel } from "@/components/einvoice/EInvoicePanel";
 
 interface InvoiceDrawerProps {
   /** The invoice to show; null closes the drawer. */
@@ -268,6 +269,8 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
                   </ul>
                 )}
               </section>
+
+              {access.read && <EInvoicePanel key={`${invoice.id}-${invoice.updatedAt}`} invoiceId={invoice.id} onChanged={onChanged} />}
 
               {(invoice.notes || invoice.branch.paymentInstructions) && (
                 <section className="space-y-3 text-[14px]">

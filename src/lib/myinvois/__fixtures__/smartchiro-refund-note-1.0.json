@@ -1,0 +1,595 @@
+{
+ "_D": "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+ "_A": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+ "_B": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+ "Invoice": [
+  {
+   "ID": [
+    {
+     "_": "RCP-SK-2026-00031"
+    }
+   ],
+   "IssueDate": [
+    {
+     "_": "2026-09-28"
+    }
+   ],
+   "IssueTime": [
+    {
+     "_": "07:05:09Z"
+    }
+   ],
+   "InvoiceTypeCode": [
+    {
+     "_": "04",
+     "listVersionID": "1.0"
+    }
+   ],
+   "DocumentCurrencyCode": [
+    {
+     "_": "MYR"
+    }
+   ],
+   "TaxCurrencyCode": [
+    {
+     "_": "MYR"
+    }
+   ],
+   "BillingReference": [
+    {
+     "InvoiceDocumentReference": [
+      {
+       "ID": [
+        {
+         "_": "INV-SK-2026-00012"
+        }
+       ],
+       "UUID": [
+        {
+         "_": "F9D425P6DS7D8IU0NSY5N1TK10"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "AccountingSupplierParty": [
+    {
+     "Party": [
+      {
+       "IndustryClassificationCode": [
+        {
+         "_": "86909",
+         "name": "Other human health services n.e.c."
+        }
+       ],
+       "PartyIdentification": [
+        {
+         "ID": [
+          {
+           "_": "C25845632020",
+           "schemeID": "TIN"
+          }
+         ]
+        },
+        {
+         "ID": [
+          {
+           "_": "202401012345",
+           "schemeID": "BRN"
+          }
+         ]
+        },
+        {
+         "ID": [
+          {
+           "_": "W10-1808-32000123",
+           "schemeID": "SST"
+          }
+         ]
+        },
+        {
+         "ID": [
+          {
+           "_": "NA",
+           "schemeID": "TTX"
+          }
+         ]
+        }
+       ],
+       "PostalAddress": [
+        {
+         "CityName": [
+          {
+           "_": "Kuala Lumpur"
+          }
+         ],
+         "PostalZone": [
+          {
+           "_": "50088"
+          }
+         ],
+         "CountrySubentityCode": [
+          {
+           "_": "14"
+          }
+         ],
+         "AddressLine": [
+          {
+           "Line": [
+            {
+             "_": "Lot 3.02, Level 3, Menara KLCC"
+            }
+           ]
+          }
+         ],
+         "Country": [
+          {
+           "IdentificationCode": [
+            {
+             "_": "MYS",
+             "listID": "ISO3166-1",
+             "listAgencyID": "6"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "PartyLegalEntity": [
+        {
+         "RegistrationName": [
+          {
+           "_": "SmartChiro Wellness Sdn. Bhd."
+          }
+         ]
+        }
+       ],
+       "Contact": [
+        {
+         "Telephone": [
+          {
+           "_": "+60321410000"
+          }
+         ],
+         "ElectronicMail": [
+          {
+           "_": "klcc@smartchiro.test"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "AccountingCustomerParty": [
+    {
+     "Party": [
+      {
+       "PostalAddress": [
+        {
+         "CityName": [
+          {
+           "_": "Kuala Lumpur"
+          }
+         ],
+         "PostalZone": [
+          {
+           "_": "50450"
+          }
+         ],
+         "CountrySubentityCode": [
+          {
+           "_": "14"
+          }
+         ],
+         "AddressLine": [
+          {
+           "Line": [
+            {
+             "_": "8, Jalan Ampang"
+            }
+           ]
+          }
+         ],
+         "Country": [
+          {
+           "IdentificationCode": [
+            {
+             "_": "MYS",
+             "listID": "ISO3166-1",
+             "listAgencyID": "6"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "PartyLegalEntity": [
+        {
+         "RegistrationName": [
+          {
+           "_": "John Tan"
+          }
+         ]
+        }
+       ],
+       "PartyIdentification": [
+        {
+         "ID": [
+          {
+           "_": "EI00000000020",
+           "schemeID": "TIN"
+          }
+         ]
+        },
+        {
+         "ID": [
+          {
+           "_": "E1234567K",
+           "schemeID": "PASSPORT"
+          }
+         ]
+        },
+        {
+         "ID": [
+          {
+           "_": "NA",
+           "schemeID": "SST"
+          }
+         ]
+        },
+        {
+         "ID": [
+          {
+           "_": "NA",
+           "schemeID": "TTX"
+          }
+         ]
+        }
+       ],
+       "Contact": [
+        {
+         "Telephone": [
+          {
+           "_": "+6591234567"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "TaxTotal": [
+    {
+     "TaxAmount": [
+      {
+       "_": 4.5,
+       "currencyID": "MYR"
+      }
+     ],
+     "TaxSubtotal": [
+      {
+       "TaxableAmount": [
+        {
+         "_": 75,
+         "currencyID": "MYR"
+        }
+       ],
+       "TaxAmount": [
+        {
+         "_": 4.5,
+         "currencyID": "MYR"
+        }
+       ],
+       "TaxCategory": [
+        {
+         "ID": [
+          {
+           "_": "02"
+          }
+         ],
+         "TaxScheme": [
+          {
+           "ID": [
+            {
+             "_": "OTH",
+             "schemeID": "UN/ECE 5153",
+             "schemeAgencyID": "6"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "TaxableAmount": [
+        {
+         "_": 40,
+         "currencyID": "MYR"
+        }
+       ],
+       "TaxAmount": [
+        {
+         "_": 0,
+         "currencyID": "MYR"
+        }
+       ],
+       "TaxCategory": [
+        {
+         "ID": [
+          {
+           "_": "06"
+          }
+         ],
+         "TaxScheme": [
+          {
+           "ID": [
+            {
+             "_": "OTH",
+             "schemeID": "UN/ECE 5153",
+             "schemeAgencyID": "6"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "LegalMonetaryTotal": [
+    {
+     "LineExtensionAmount": [
+      {
+       "_": 115,
+       "currencyID": "MYR"
+      }
+     ],
+     "TaxExclusiveAmount": [
+      {
+       "_": 115,
+       "currencyID": "MYR"
+      }
+     ],
+     "TaxInclusiveAmount": [
+      {
+       "_": 119.5,
+       "currencyID": "MYR"
+      }
+     ],
+     "PayableAmount": [
+      {
+       "_": 119.5,
+       "currencyID": "MYR"
+      }
+     ]
+    }
+   ],
+   "InvoiceLine": [
+    {
+     "ID": [
+      {
+       "_": "1"
+      }
+     ],
+     "InvoicedQuantity": [
+      {
+       "_": 1,
+       "unitCode": "C62"
+      }
+     ],
+     "LineExtensionAmount": [
+      {
+       "_": 75,
+       "currencyID": "MYR"
+      }
+     ],
+     "TaxTotal": [
+      {
+       "TaxAmount": [
+        {
+         "_": 4.5,
+         "currencyID": "MYR"
+        }
+       ],
+       "TaxSubtotal": [
+        {
+         "TaxableAmount": [
+          {
+           "_": 75,
+           "currencyID": "MYR"
+          }
+         ],
+         "TaxAmount": [
+          {
+           "_": 4.5,
+           "currencyID": "MYR"
+          }
+         ],
+         "Percent": [
+          {
+           "_": 6
+          }
+         ],
+         "TaxCategory": [
+          {
+           "ID": [
+            {
+             "_": "02"
+            }
+           ],
+           "TaxScheme": [
+            {
+             "ID": [
+              {
+               "_": "OTH",
+               "schemeID": "UN/ECE 5153",
+               "schemeAgencyID": "6"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "Item": [
+      {
+       "CommodityClassification": [
+        {
+         "ItemClassificationCode": [
+          {
+           "_": "022",
+           "listID": "CLASS"
+          }
+         ]
+        }
+       ],
+       "Description": [
+        {
+         "_": "Refund RCP-SK-2026-00031 for invoice INV-SK-2026-00012 — Pillow returned (SST items)"
+        }
+       ]
+      }
+     ],
+     "Price": [
+      {
+       "PriceAmount": [
+        {
+         "_": 75,
+         "currencyID": "MYR"
+        }
+       ]
+      }
+     ],
+     "ItemPriceExtension": [
+      {
+       "Amount": [
+        {
+         "_": 75,
+         "currencyID": "MYR"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "ID": [
+      {
+       "_": "2"
+      }
+     ],
+     "InvoicedQuantity": [
+      {
+       "_": 1,
+       "unitCode": "C62"
+      }
+     ],
+     "LineExtensionAmount": [
+      {
+       "_": 40,
+       "currencyID": "MYR"
+      }
+     ],
+     "TaxTotal": [
+      {
+       "TaxAmount": [
+        {
+         "_": 0,
+         "currencyID": "MYR"
+        }
+       ],
+       "TaxSubtotal": [
+        {
+         "TaxableAmount": [
+          {
+           "_": 40,
+           "currencyID": "MYR"
+          }
+         ],
+         "TaxAmount": [
+          {
+           "_": 0,
+           "currencyID": "MYR"
+          }
+         ],
+         "Percent": [
+          {
+           "_": 0
+          }
+         ],
+         "TaxCategory": [
+          {
+           "ID": [
+            {
+             "_": "06"
+            }
+           ],
+           "TaxScheme": [
+            {
+             "ID": [
+              {
+               "_": "OTH",
+               "schemeID": "UN/ECE 5153",
+               "schemeAgencyID": "6"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "Item": [
+      {
+       "CommodityClassification": [
+        {
+         "ItemClassificationCode": [
+          {
+           "_": "022",
+           "listID": "CLASS"
+          }
+         ]
+        }
+       ],
+       "Description": [
+        {
+         "_": "Refund RCP-SK-2026-00031 for invoice INV-SK-2026-00012 — Pillow returned (non-SST items)"
+        }
+       ]
+      }
+     ],
+     "Price": [
+      {
+       "PriceAmount": [
+        {
+         "_": 40,
+         "currencyID": "MYR"
+        }
+       ]
+      }
+     ],
+     "ItemPriceExtension": [
+      {
+       "Amount": [
+        {
+         "_": 40,
+         "currencyID": "MYR"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

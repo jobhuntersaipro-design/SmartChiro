@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { parseMoney } from "@/lib/invoice-form";
 import { AccountCodesSection } from "@/components/branches/AccountCodesSection";
 import { ALERT_ERROR, BTN_PRIMARY, FIELD_ERROR, FIELD_INPUT, FIELD_LABEL, FIELD_TEXTAREA, INVALID } from "@/components/invoices/form-styles";
+import { EInvoiceSettingsSection } from "@/components/einvoice/EInvoiceSettingsSection";
 
 interface Props {
   branchId: string;
@@ -232,6 +233,7 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
         )}
 
         <AccountCodesSection branchId={branchId} billing={billing} canEdit={canEdit} onSaved={setBilling} />
+        <EInvoiceSettingsSection branchId={branchId} />
       </div>
     </div>
   );

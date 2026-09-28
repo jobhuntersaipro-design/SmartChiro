@@ -152,6 +152,7 @@ export async function GET(
       postcode: patient.postcode,
       country: patient.country,
       nationality: patient.nationality,
+      passportNumber: patient.passportNumber,
       emergencyName: patient.emergencyName,
       emergencyPhone: patient.emergencyPhone,
       emergencyRelation: patient.emergencyRelation,
@@ -229,7 +230,7 @@ export async function PATCH(
     addressLine1, addressLine2, city, state, postcode, country,
     emergencyName, emergencyPhone, emergencyRelation, status,
     initialTreatmentFee, firstTreatmentFee, standardFollowUpFee,
-    reminderChannel, preferredLanguage, nationality, marketingConsent,
+    reminderChannel, preferredLanguage, nationality, marketingConsent, passportNumber,
   } = body;
 
   const VALID_REMINDER_CHANNELS = ["WHATSAPP", "EMAIL", "BOTH", "NONE"] as const;
@@ -302,6 +303,11 @@ export async function PATCH(
     );
   }
 
+  // Passport no. (non-Malaysian buyer ID on LHDN e-invoices)
+  if (passportNumber !== undefined && passportNumber !== null && (typeof passportNumber !== "string" || !/^[A-Za-z0-9]{0,20}$/.test(passportNumber.trim()))) {
+    return NextResponse.json({ error: "Invalid passport number (letters and digits, up to 20)." }, { status: 400 });
+  }
+
   // Validate blood type
   if (bloodType !== undefined && bloodType && !VALID_BLOOD_TYPES.includes(bloodType)) {
     return NextResponse.json(
@@ -356,6 +362,7 @@ export async function PATCH(
   if (doctorId !== undefined) updateData.doctorId = doctorId;
   // New fields
   if (icNumber !== undefined) updateData.icNumber = icNumber?.trim() || null;
+  if (passportNumber !== undefined) updateData.passportNumber = passportNumber?.trim().toUpperCase() || null;
   if (parsedNationality !== undefined) {
     updateData.nationality = parsedNationality;
   } else if (!patientRef.nationality && isValidMyKad(icNumber)) {
@@ -445,6 +452,7 @@ export async function PATCH(
       postcode: updated.postcode,
       country: updated.country,
       nationality: updated.nationality,
+      passportNumber: updated.passportNumber,
       emergencyName: updated.emergencyName,
       emergencyPhone: updated.emergencyPhone,
       emergencyRelation: updated.emergencyRelation,

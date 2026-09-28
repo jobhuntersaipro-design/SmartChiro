@@ -3,6 +3,7 @@ import { materializePending, dispatchDue } from "@/lib/reminders/dispatcher";
 import { expireOverduePackages } from "@/lib/package-service";
 import { dispatchOutreach, materializeOutreach } from "@/lib/outreach/dispatcher";
 import { sweepCertificateAlerts } from "@/lib/certificate-alerts";
+import { refreshPendingEInvoices } from "@/lib/myinvois/service";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,12 @@ async function handler(req: Request): Promise<Response> {
     console.error("certificate alert sweep failed", e);
     return { error: "certificates_failed" };
   });
-  return NextResponse.json({ ok: true, inserted, processed, expiredPackages, outreach, certificates });
+  // LHDN e-invoices still being validated (fail-soft; skipped without MyInvois credentials).
+  const einvoices = await refreshPendingEInvoices(now).catch((e: unknown) => {
+    console.error("e-invoice status refresh failed", e instanceof Error ? e.message : e);
+    return { error: "einvoice_refresh_failed" };
+  });
+  return NextResponse.json({ ok: true, inserted, processed, expiredPackages, outreach, certificates, einvoices });
 }
 
 async function runOutreach(now: Date) {

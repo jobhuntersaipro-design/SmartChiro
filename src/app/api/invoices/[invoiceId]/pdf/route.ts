@@ -3,6 +3,7 @@ import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { billingAccess } from "@/lib/billing-access";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 import { invoicePdfData, loadInvoiceDetail } from "@/lib/invoice-detail";
+import { validatedEInvoiceForPdf } from "@/lib/myinvois/service";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
@@ -21,7 +22,7 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!billingAccess(role).read) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  const data = invoicePdfData(invoice);
+  const data = { ...invoicePdfData(invoice), einvoice: await validatedEInvoiceForPdf(invoice.id) };
   const bytes = await renderInvoicePdf(data);
   const fileName = `${data.kind === "RECEIPT" ? "receipt" : "invoice"}-${invoice.invoiceNumber}.pdf`;
   return new NextResponse(Buffer.from(bytes), {

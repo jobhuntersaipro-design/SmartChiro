@@ -24,6 +24,8 @@ export interface Patient {
   race: string | null;
   /** ISO 3166-1 alpha-2 (drives SST); null when not recorded. */
   nationality?: string | null;
+  /** Passport no. — buyer ID on LHDN e-invoices for non-Malaysians. */
+  passportNumber?: string | null;
   maritalStatus: string | null;
   bloodType: string | null;
   allergies: string | null;

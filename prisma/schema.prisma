@@ -46,6 +46,7 @@ model User {
   carePlans           CarePlan[]             @relation("CarePlanDoctor")
   appointmentSeries   AppointmentSeries[]    @relation("SeriesDoctor")
   paymentsReceived    Payment[]              @relation("PaymentReceivedBy")
+  einvoiceSubmissions EInvoiceSubmission[]   @relation("EInvoiceSubmittedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -246,7 +247,12 @@ model Branch {
   acctEwallet        String?
   acctPanel          String?
 
-  commissionRules CommissionRule[]
+  commissionRules  CommissionRule[]
+  // LHDN MyInvois e-invoicing (Phase 8.4). Address, phone and email reuse the
+  // fields above; the state code is derived from `state` (+ city/postcode).
+  msicCode         String?
+  businessActivity String?
+  einvoiceEnabled  Boolean          @default(false)
 
   members      BranchMember[]
   patients     Patient[]
@@ -267,6 +273,8 @@ model Branch {
   appointmentSeries AppointmentSeries[]
 
   outreach PatientOutreach[]
+
+  einvoiceSubmissions EInvoiceSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -496,14 +504,16 @@ model Patient {
   standardFollowUpFee Float?
 
   // Address breakdown
-  addressLine1 String?
-  addressLine2 String?
-  city         String?
-  state        String?
-  postcode     String?
-  country      String? @default("Malaysia")
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  state          String?
+  postcode       String?
+  country        String? @default("Malaysia")
   // ISO 3166-1 alpha-2; null with a valid MyKad IC counts as MY (SST)
-  nationality  String?
+  nationality    String?
+  // Non-Malaysian buyer ID on e-invoices (MyInvois PASSPORT scheme)
+  passportNumber String?
 
   // Emergency contact breakdown
   emergencyName     String?
@@ -863,6 +873,13 @@ model Invoice {
   packageSale PatientPackage?
   payments    Payment[]
 
+  // LHDN MyInvois: status of the e-invoice covering this invoice (its own
+  // document, or the monthly consolidated one it was rolled into).
+  einvoiceStatus      EInvoiceStatus       @default(NOT_SUBMITTED)
+  einvoiceSubmissions EInvoiceSubmission[] @relation("EInvoiceSubmissionInvoice")
+  consolidatedIntoId  String?
+  consolidatedInto    EInvoiceSubmission?  @relation("ConsolidatedInvoices", fields: [consolidatedIntoId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -871,6 +888,8 @@ model Invoice {
   @@index([status])
   @@index([invoiceNumber])
   @@index([appointmentId])
+  @@index([branchId, einvoiceStatus, issuedAt])
+  @@index([consolidatedIntoId])
 }
 
 enum PaymentMethod {
@@ -903,6 +922,8 @@ model Payment {
 
   receivedById String?
   receivedBy   User?   @relation("PaymentReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull)
+
+  einvoiceSubmissions EInvoiceSubmission[]
 
   createdAt DateTime @default(now())
 
@@ -937,6 +958,72 @@ model CommissionRule {
   updatedAt DateTime @updatedAt
 
   @@index([branchId, active])
+}
+
+// ─── LHDN MyInvois e-invoicing (Phase 8.4) ───
+
+enum EInvoiceStatus {
+  NOT_SUBMITTED
+  SUBMITTED
+  VALID
+  INVALID
+  CANCELLED
+}
+
+enum EInvoiceKind {
+  INVOICE
+  CREDIT_NOTE
+  REFUND_NOTE
+  CONSOLIDATED
+}
+
+// One document sent (or prepared) for LHDN validation. INVOICE / REFUND_NOTE
+// rows point at their invoice (and refund payment); a CONSOLIDATED row covers
+// the invoices whose `consolidatedIntoId` points at it.
+model EInvoiceSubmission {
+  id              String         @id @default(cuid())
+  kind            EInvoiceKind
+  status          EInvoiceStatus @default(NOT_SUBMITTED)
+  // cbc:ID of the document (invoice number, refund receipt number, CONS-…)
+  codeNumber      String
+  documentVersion String
+  documentHash    String
+  // The exact JSON that was hashed and base64-encoded for submission
+  document        String?        @db.Text
+  submissionUid   String?
+  uuid            String?
+  longId          String?
+  errors          Json?
+  periodStart     DateTime?
+  periodEnd       DateTime?
+  submittedAt     DateTime?
+  validatedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  lastPolledAt    DateTime?
+
+  invoiceId String?
+  invoice   Invoice? @relation("EInvoiceSubmissionInvoice", fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  consolidatedInvoices Invoice[] @relation("ConsolidatedInvoices")
+
+  createdById String?
+  createdBy   User?   @relation("EInvoiceSubmittedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId, createdAt])
+  @@index([branchId, kind, periodStart])
+  @@index([status, lastPolledAt])
+  @@index([submissionUid])
+  @@index([uuid])
 }
 
 // ─── Documents ───
