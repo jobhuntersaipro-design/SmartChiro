@@ -161,8 +161,8 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
     try {
       const res = await fetch("/api/doctors");
       if (!res.ok) return;
-      const data = await res.json();
-      setBranchDoctors(data.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name || "Unknown" })));
+      const data = (await res.json()) as { doctors?: Array<{ id: string; name: string | null }> };
+      setBranchDoctors((data.doctors ?? []).map((d) => ({ id: d.id, name: d.name || "Unknown" })));
     } catch {
       // Non-critical
     }

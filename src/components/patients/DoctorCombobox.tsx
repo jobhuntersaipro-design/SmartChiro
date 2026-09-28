@@ -36,9 +36,9 @@ export function DoctorCombobox({ value, onChange, disabled }: Props) {
       try {
         const res = await fetch("/api/doctors");
         if (!res.ok) return;
-        const data = (await res.json()) as Array<{ id: string; name: string | null }>;
+        const data = (await res.json()) as { doctors?: Array<{ id: string; name: string | null }> };
         if (cancelled) return;
-        setDoctors(data.map((d) => ({ id: d.id, name: d.name ?? "Unknown" })));
+        setDoctors((data.doctors ?? []).map((d) => ({ id: d.id, name: d.name ?? "Unknown" })));
       } finally {
         if (!cancelled) setLoading(false);
       }
