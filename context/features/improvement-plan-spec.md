@@ -283,7 +283,21 @@ Recall is where clinics win back revenue; today only appointment reminders exist
 
 ## Phase 8 — MyInvois, commissions, T&CM expiry, accounting export
 
-_Detailed before build._
+### 8.1 Practising certificates (T&CM Act 2016)
+- Doctor profile: T&CM registration no., Annual Practising Certificate (APC) no. and expiry date (DateInput), shown on the doctor page. OWNER/ADMIN (and the doctor themself) edit.
+- Alerts: dashboard card for OWNER/ADMIN listing certificates expired or expiring within 60 days; badge on the Doctors list; one email to branch owners at 60 / 30 / 7 days and on expiry (daily cron, once per threshold, fail-soft).
+
+### 8.2 Commissions
+- Rules per branch (OWNER/ADMIN): doctor (or all), treatment type (or all), basis `PERCENT_COLLECTED` (share of payments collected on that doctor's appointments), `FIXED_PER_VISIT` (per completed visit) or `PERCENT_PACKAGE_SALE` (share of package sales the doctor sold), rate, effective from. The most specific active rule wins (doctor+treatment > doctor > treatment > all).
+- Report: Reports page **Commissions** card — per doctor: basis amounts, commission, total; CSV export.
+
+### 8.3 Accounting export
+- Invoices page **Export**: invoices CSV, payments CSV, Xero sales-invoice import CSV, and a generic journal CSV (date, account, debit, credit, reference, description) usable for AutoCount / SQL Account imports. Account codes (sales, SST payable, receivables, cash/bank per payment method) live in Billing & tax settings with sensible defaults. Scoped to the branch scope and a date range; OWNER/ADMIN.
+
+### 8.4 LHDN MyInvois e-invoicing
+- Build the e-invoice document (UBL 2.1 JSON, invoice type 01, credit note 02 for refunds) from the invoice, branch billing details (TIN, BRN/SSM, SST no., MSIC code, business activity, address) and the buyer (patient IC or passport; B2C buyers without a TIN use the general public TIN). Monthly consolidated e-invoice for B2C invoices that weren't issued individually.
+- Submission client behind env config (`MYINVOIS_CLIENT_ID`, `MYINVOIS_CLIENT_SECRET`, `MYINVOIS_ENV` = sandbox | production): OAuth client credentials, submit, poll status, store UUID / long ID / status / validation link, show a QR of the validation link on the invoice PDF. Without credentials the UI offers the JSON download only.
+- Document signing (digital certificate) is required for v1.1 documents: the signer is pluggable and the owner must supply the certificate; v1.0 (unsigned) is generated meanwhile. The RM3m threshold / phase dates must be confirmed by the owner (report caveat).
 
 ---
 
