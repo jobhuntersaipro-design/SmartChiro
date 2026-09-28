@@ -1,7 +1,7 @@
 # SmartChiro Improvement Plan (UX review + Malaysian competitor gaps)
 
 **Source:** `smartchiro-improvement-report.md` (UX review of smartchiro.org, 28 Sep 2026, Owner role on KLCC / Bangsar / Penang Georgetown).
-**Status:** Phases 1–2 done (2026-09-29); Phase 3 in progress.
+**Status:** Phases 1–6 done (2026-09-29); Phase 7 in progress.
 **Branch:** `claude/zen-goodall-84f7kl` — one commit (or small set) per phase, each phase built, tested and pushed before the next starts.
 
 This file is the master plan. Each phase has a detailed section that is filled in
@@ -169,6 +169,11 @@ Migration `20260929040000_packages_series`: `PackageTemplate`, `PatientPackage` 
 
 Rules: series weekdays/time are clinic wall-clock; weeks for `intervalWeeks` count from the Monday-start week of `startDate`; `until` is inclusive; past occurrences are skipped and don't count toward `count`; max 104 occurrences. Reversed redemptions stay as history (`reversedAt`), and a reversed appointment can be redeemed again — "one active redemption per appointment" and `sessionsUsed` are kept consistent under row locks (appointment, then package). The dispatch cron marks ACTIVE packages past `expiresAt` as EXPIRED; reads show `effectiveStatus` in between. Role checks carry `TODO(front-desk)` markers for the switch to `src/lib/permissions.ts`.
 
+### Phase 3 — record (done 2026-09-29)
+- Backend + UI shipped as specified. Patient page gets a **Care & packages** tab (front desk sees it as **Packages**, without care plans); Branch Settings gets a Packages catalogue (`package.manage` = OWNER/ADMIN); selling uses the shared invoice path (per-branch numbers, SST). Completing an appointment auto-redeems a matching package session (toast + Undo), manual "Use package session" otherwise. Booking dialog has **Repeat** with a live per-date preview; series edits/cancels/drags ask "This / This and following".
+- Decisions: redemptions keep history (reversed rows stay; one active per appointment enforced in a locked transaction); packages expire at the end of the clinic day `validityDays` after sale; past dates in a series are skipped and don't count; series occurrences are checked before the create transaction (small race window, same as single bookings); when an edit mixes time with notes/room, notes/room apply to this visit only.
+- Known: the patients-page upcoming widget cancels single visits only; week/month calendar views lay out in the device time zone (pre-existing).
+
 ## Phase 4 — Payments, manual invoices, SST, receipts
 
 ### 4.1 Payments
@@ -211,6 +216,11 @@ Reusable server code (`src/lib/invoices.ts`): `createInvoice(tx, { branchId, pat
 
 For the screens: the list's status styles need a `PARTIALLY_PAID` entry ("Partially paid"); "Mark paid" should become "Record payment" (amount defaults to `balance`, method defaults to cash); the patient page and Invoices page get "New invoice"; Branch → Settings gets a Billing & tax card.
 
+### Phase 4 — record (done 2026-09-29)
+- Payments (cash, card, DuitNow QR, FPX, e-wallet, bank transfer, panel), part payments/deposits/instalments/split, refunds (OWNER/ADMIN, reason required; a partial refund reopens the balance), receipts per payment, manual invoices with a line editor and live SST preview, per-branch numbers `INV-<PREFIX>-<YYYY>-<00001>` / `RCP-…`, Billing & tax settings (legal name, SSM, TIN, SST no., rate, prefix, payment instructions) printed on PDFs, patient nationality (MyKad → MY by default).
+- UI: Invoices page drawer (`?invoice=<id>` deep link), Record payment / Refund dialogs, New invoice from the Invoices page and the patient page's **Billing** tab, balance chip on the patient header. Front desk records payments but can't refund; doctors read only.
+- Migration backfills one CASH payment per previously PAID invoice so balances and "paid this month" stay correct. Online collection (DuitNow/FPX gateway) not built — needs a merchant account.
+
 ## Phase 5 — Reports
 
 `/dashboard/reports` for OWNER/ADMIN (new capability `reports.read`), following the sidebar branch scope (one branch or All branches) with a date range: Today, This week, This month (default), Last month, Last 90 days, Custom (DateInput). All ranges are clinic days (Asia/Kuala_Lumpur).
@@ -251,6 +261,11 @@ Recall is where clinics win back revenue; today only appointment reminders exist
 - WhatsApp templates `smartchiro_recall_v1` and `smartchiro_review_v1` (category MARKETING, en / ms / zh) are created with the reminder template on connect and on "Refresh templates"; status is tracked per template and language.
 - Manual actions: "Send recall" on the dashboard's recall signal and on a patient; outreach history on the patient profile and a branch outreach log (last 100) in settings.
 **Done when:** a lapsed consenting patient gets one recall (WhatsApp or email) and not again within the cooldown; a completed visit triggers one review request; a non-consenting patient gets neither.
+
+### Phase 6 — record (done 2026-09-29)
+- Recall and review requests (`PatientOutreach`), Chinese (`zh` / Meta `zh_CN`) for reminders, recall and review, marketing consent with STOP / BERHENTI / 停止 opt-out via the WhatsApp webhook, outreach settings + log in the Reminders card, "Send recall" on the dashboard signal and patient profile. WhatsApp templates `smartchiro_recall_v1` / `smartchiro_review_v1` (MARKETING) are created with the reminder template; `templateStatus` keeps reminder statuses at the top level and others under `templates[name][lang]` (no data migration).
+- Decisions: automatic outreach only goes out 09:00–20:00 clinic time (queued otherwise to 10:00); manual recall skips timing rules but still needs consent, contact and an active patient; the cooldown counts every recall row (incl. skipped/failed) so the cron doesn't re-create rows; without `RESEND_API_KEY` email outreach is SKIPPED.
+- Not built: a booking link inside recall messages (branch phone used until Phase 7), editable outreach email text.
 
 ## Phase 7 — Online booking and patient portal
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — Phases 1–2 done 2026-09-29; building Phases 3–8 in order on `claude/zen-goodall-84f7kl`.
+In Progress — Phases 1–6 done 2026-09-29; building Phases 7–8 on `claude/zen-goodall-84f7kl`.
 
 ## Spec
 
@@ -12,10 +12,10 @@ In Progress — Phases 1–2 done 2026-09-29; building Phases 3–8 in order on 
 
 1. Trust bugs — done
 2. Front desk role, global branch context, dd/mm dates, table/mobile fixes — done
-3. Treatment plans, packages, recurring bookings
-4. Payments, manual invoices, SST, receipts
-5. Reports
-6. WhatsApp recall + review requests (BM/Chinese templates)
+3. Treatment plans, packages, recurring bookings — done
+4. Payments, manual invoices, SST, receipts — done
+5. Reports — done
+6. WhatsApp recall + review requests (BM/Chinese templates) — done
 7. Online booking link, then patient portal
 8. MyInvois, commissions, T&CM expiry, accounting export
 

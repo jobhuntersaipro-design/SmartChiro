@@ -232,7 +232,7 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
             <div className="text-[12px] text-[#64748d]">
               {canOpenInvoices ? (
                 <Link
-                  href={`/dashboard/invoices?search=${encodeURIComponent(pkg.invoice.invoiceNumber)}`}
+                  href={`/dashboard/invoices?invoice=${encodeURIComponent(pkg.invoice.id)}`}
                   className="tabular-nums text-[#533afd] hover:underline"
                 >
                   {pkg.invoice.invoiceNumber}
