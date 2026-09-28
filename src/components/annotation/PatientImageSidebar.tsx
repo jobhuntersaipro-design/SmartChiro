@@ -94,7 +94,7 @@ export function PatientImageSidebar({
     fetchXrays();
   }, [fetchXrays]);
 
-  // Cycle the active X-ray with J/K or arrow keys (single-view mode only).
+  // Cycle the active X-ray with Page Up / Page Down (single-view mode only).
   // Skips when typing in inputs/textareas and ignores meta/ctrl/alt combos.
   useEffect(() => {
     if (!enableKeyboardCycling) return;
@@ -107,10 +107,11 @@ export function PatientImageSidebar({
         target?.isContentEditable
       ) return;
 
-      const key = e.key.toLowerCase();
+      // Page Up / Page Down only: K is Calibrate and the arrow keys nudge the
+      // selected shape, so neither may silently switch to another X-ray.
       let direction = 0;
-      if (key === "k" || e.key === "ArrowUp") direction = -1;
-      else if (key === "j" || e.key === "ArrowDown") direction = 1;
+      if (e.key === "PageUp") direction = -1;
+      else if (e.key === "PageDown") direction = 1;
       if (direction === 0) return;
 
       if (xrays.length === 0) return;

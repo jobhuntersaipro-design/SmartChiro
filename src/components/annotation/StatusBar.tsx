@@ -120,7 +120,7 @@ export function StatusBar({
             onClick={onRedo}
             disabled={!canRedo}
             aria-label="Redo"
-            className="flex items-center justify-center rounded-mdver:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            className="flex items-center justify-center rounded-md hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
             style={{ width: 24, height: 24, color: canRedo ? "#425466" : "#A3ACB9" }}
           >
             <Redo2 size={14} strokeWidth={1.5} />

@@ -19,7 +19,7 @@ export type PointerIntent =
  *   - otherwise → pan (trackpad two-finger drag, mouse wheel scroll on a
  *     zoomed image, etc.)
  *
- * Note: image-cycling lives on J/K (PatientImageSidebar), not on the wheel,
+ * Note: image-cycling lives on Page Up/Down (PatientImageSidebar), not on the wheel,
  * so plain wheel can be reclaimed for the more common "navigate the image"
  * gesture. On a trackpad the user's finger swipe maps directly to image pan
  * via deltaX/deltaY; on a mouse wheel only deltaY is non-zero so panning is

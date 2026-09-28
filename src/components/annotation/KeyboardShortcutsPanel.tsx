@@ -19,8 +19,8 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
       { keys: ["H"], description: "Pan / Hand tool" },
       { keys: ["V"], description: "Select tool (marquee + multi-select)" },
       { keys: ["Space"], description: "Temporary pan (hold)" },
-      { keys: ["J"], description: "Next X-ray" },
-      { keys: ["K"], description: "Previous X-ray" },
+      { keys: ["PgDn"], description: "Next X-ray" },
+      { keys: ["PgUp"], description: "Previous X-ray" },
       { keys: ["\u2318", "0"], description: "Fit to viewport" },
       { keys: ["\u2318", "1"], description: "Zoom to 100%" },
       { keys: ["\u2318", "="], description: "Zoom in" },
@@ -31,18 +31,20 @@ const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
   {
     title: "Drawing Tools",
     shortcuts: [
-      { keys: ["P"], description: "Freehand" },
+      { keys: ["D"], description: "Point (landmark)" },
       { keys: ["L"], description: "Line" },
+      { keys: ["\u21E7", "L"], description: "Polyline" },
+      { keys: ["R"], description: "Arrow" },
       { keys: ["T"], description: "Text" },
-      { keys: ["X"], description: "Eraser" },
     ],
   },
   {
     title: "Measurement Tools",
     shortcuts: [
       { keys: ["M"], description: "Ruler" },
-      { keys: ["\u21E7", "M"], description: "Angle" },
-      { keys: ["\u2318", "\u21E7", "M"], description: "Cobb Angle" },
+      { keys: ["A"], description: "Angle" },
+      { keys: ["\u21E7", "A"], description: "Cobb Angle" },
+      { keys: ["K"], description: "Calibrate" },
     ],
   },
   {

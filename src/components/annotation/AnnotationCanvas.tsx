@@ -741,8 +741,14 @@ export function AnnotationCanvas({
   const handleSelectXrayForSlot = useCallback(
     (xray: { id: string; fileUrl: string; width: number | null; height: number | null; title: string | null }) => {
       if (viewMode === "single") {
-        // In single mode, navigate to that X-ray's annotation page
-        window.location.href = `/dashboard/xrays/${patientId}/${xray.id}/annotate`;
+        // In single mode, navigate to that X-ray's annotation page — after the
+        // current edits are saved, so switching films never drops work.
+        void autoSave
+          .saveNow(buildCanvasState(), imageAdj.adjustments)
+          .catch(() => undefined)
+          .finally(() => {
+            window.location.href = `/dashboard/xrays/${patientId}/${xray.id}/annotate`;
+          });
         return;
       }
 

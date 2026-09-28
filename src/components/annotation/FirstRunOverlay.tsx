@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { MousePointer2, Move, Sun, ScrollText, ZoomIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-const KEY = 'smartchiro:viewer-firstrun-v1'
+const KEY = 'smartchiro:viewer-firstrun-v2'
 
 // Read the dismissed flag once at hook init, lazily, so we can derive the
 // initial `open` state directly instead of cascading via setState in an
@@ -25,9 +25,9 @@ export function FirstRunOverlay() {
   if (!open) return null
 
   const tiles = [
-    { icon: <Move className="w-5 h-5" />,        title: 'Pan',           desc: 'Hold middle-click and drag.' },
+    { icon: <Move className="w-5 h-5" />,        title: 'Pan',           desc: 'Scroll, drag empty space, or middle-click drag.' },
     { icon: <Sun className="w-5 h-5" />,         title: 'Brightness',    desc: 'Hold right-click and drag.' },
-    { icon: <ScrollText className="w-5 h-5" />,  title: 'Switch X-ray',  desc: 'Scroll the wheel — no modifier.' },
+    { icon: <ScrollText className="w-5 h-5" />,  title: 'Switch X-ray',  desc: 'Page Up / Page Down.' },
     { icon: <ZoomIn className="w-5 h-5" />,      title: 'Zoom',          desc: 'Ctrl/⌘ + scroll wheel.' },
   ]
 

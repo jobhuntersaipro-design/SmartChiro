@@ -5,7 +5,7 @@ import { Pencil, Ruler, Hand, X } from "lucide-react";
 
 const hints = [
   { icon: <Hand size={14} strokeWidth={1.5} />, label: "Pan", shortcut: "H" },
-  { icon: <Pencil size={14} strokeWidth={1.5} />, label: "Draw", shortcut: "P" },
+  { icon: <Pencil size={14} strokeWidth={1.5} />, label: "Line", shortcut: "L" },
   { icon: <Ruler size={14} strokeWidth={1.5} />, label: "Measure", shortcut: "M" },
 ];
 
@@ -70,7 +70,7 @@ export function EmptyCanvasHint() {
       </span>
       <button
         onClick={() => setDismissed(true)}
-        className="pointer-events-auto ml-1 flex items-center justify-center rounded-mdansition-colors"
+        className="pointer-events-auto ml-1 flex items-center justify-center rounded-md transition-colors"
         style={{
           width: 20,
           height: 20,
