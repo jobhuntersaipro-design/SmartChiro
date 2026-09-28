@@ -20,7 +20,6 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const plan = await prisma.carePlan.findUnique({ where: { id: carePlanId }, select: { id: true, patientId: true } });
   const access = plan ? await loadPatientAccess(user.id, plan.patientId) : null;
   if (!plan || !access) return NextResponse.json({ error: "not_found", message: "Care plan not found." }, { status: 404 });
-  // TODO(front-desk): FRONT_DESK must get 403 here (care plans are clinical).
   if (!canAccessCarePlans(access)) {
     return NextResponse.json({ error: "forbidden", message: "Only the patient's doctor can change care plans." }, { status: 403 });
   }

@@ -19,7 +19,6 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       patientPackage: { select: { id: true } },
     },
   });
-  // TODO(front-desk): any branch member (incl. FRONT_DESK) may read a series.
   const role = series ? await getUserBranchRole(user.id, series.branchId) : null;
   if (!series || !role) return NextResponse.json({ error: "not_found", message: "Series not found." }, { status: 404 });
 

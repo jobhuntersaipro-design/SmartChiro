@@ -23,7 +23,6 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 
   const access = await loadPatientAccess(user.id, patientId);
   if (!access) return notFound();
-  // TODO(front-desk): FRONT_DESK may view packages.
   if (!canViewPackages(access)) {
     return NextResponse.json({ error: "forbidden", message: "You can't view this patient's packages." }, { status: 403 });
   }
@@ -54,7 +53,6 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const access = await loadPatientAccess(user.id, patientId);
   if (!access) return notFound();
-  // TODO(front-desk): FRONT_DESK may sell packages.
   if (!canSellPackages(access.role)) {
     return NextResponse.json({ error: "forbidden", message: "Only owners and admins sell packages." }, { status: 403 });
   }

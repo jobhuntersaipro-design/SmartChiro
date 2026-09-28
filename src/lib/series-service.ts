@@ -15,6 +15,8 @@ import type {
   SeriesAppointmentJson,
   TreatmentTypeValue,
 } from "@/types/packages";
+import { can } from "@/lib/permissions";
+import { isClinicianRole } from "@/lib/clinician";
 
 /**
  * Database side of recurring appointment series (Phase 3): input schema,
@@ -85,16 +87,18 @@ export async function resolveBookingContext(
     }
     patient = { id: row.id, firstName: row.firstName, lastName: row.lastName };
   }
-  // TODO(front-desk): FRONT_DESK may book series for any doctor (like OWNER/ADMIN).
-  if (role === "DOCTOR" && input.doctorId !== userId) {
+  if (!can(role, "appointment.manageAll") && input.doctorId !== userId) {
     return { ok: false, status: 403, error: "forbidden", message: "Doctors can only book their own appointments." };
   }
   const member = await prisma.branchMember.findUnique({
     where: { userId_branchId: { userId: input.doctorId, branchId: input.branchId } },
-    select: { userId: true },
+    select: { userId: true, role: true },
   });
   if (!member) {
     return { ok: false, status: 422, error: "doctor_not_in_branch", message: "The doctor is not a member of this branch." };
+  }
+  if (!isClinicianRole(member.role)) {
+    return { ok: false, status: 422, error: "not_a_clinician", message: "Appointments must be with a doctor." };
   }
   return { ok: true, ctx: { branchId: input.branchId, doctorId: input.doctorId, role, patient } };
 }
@@ -283,7 +287,6 @@ export async function createSeriesWithAppointments(tx: Tx, input: CreateSeriesIn
     },
   });
   const starts = [...input.starts].sort((a, b) => a.getTime() - b.getTime());
-  // TODO(room): copy `input.room` onto each appointment once Appointment.room merges.
   const appointments = await tx.appointment.createManyAndReturn({
     data: starts.map((dateTime, i) => ({
       patientId: input.patientId,
@@ -294,6 +297,7 @@ export async function createSeriesWithAppointments(tx: Tx, input: CreateSeriesIn
       status: "SCHEDULED" as const,
       notes: input.notes,
       treatmentType: input.treatmentType,
+      room: input.room ?? null,
       seriesId: series.id,
       seriesIndex: i + 1,
     })),

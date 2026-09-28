@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import type { BranchRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 
 /**
- * Role checks for packages, care plans and appointment series (Phase 3).
- *
- * TODO(front-desk): switch to src/lib/permissions.ts once the FRONT_DESK role
- * merges. FRONT_DESK may sell / view packages and book series, but must NOT
- * see care plans. Every call site is marked with the same TODO.
+ * Role checks for packages, care plans and appointment series (Phase 3),
+ * expressed through the shared permission map: front desk may view and sell
+ * packages, redeem sessions and book series, but never sees care plans.
  */
 
 /** OWNER / ADMIN — manage catalogue, sell, cancel. */
@@ -47,19 +46,17 @@ export async function loadPatientAccess(userId: string, patientId: string): Prom
 
 /** Packages: view — managers and the patient's own doctor. */
 export function canViewPackages(access: PatientAccess): boolean {
-  // TODO(front-desk): FRONT_DESK may view packages.
-  return access.isManager || access.isAssignedDoctor;
+  return can(access.role, "patient.readAll") || access.isAssignedDoctor;
 }
 
-/** Packages: sell / cancel — managers. */
+/** Packages: sell — whoever takes payment (OWNER / ADMIN / FRONT_DESK). Cancelling stays with managers. */
 export function canSellPackages(role: BranchRole | null): boolean {
-  // TODO(front-desk): FRONT_DESK may sell packages.
-  return isManagerRole(role);
+  return can(role, "invoice.manage");
 }
 
 /** Care plans are clinical: managers and the patient's own doctor. */
 export function canAccessCarePlans(access: PatientAccess): boolean {
-  // TODO(front-desk): FRONT_DESK must NOT see care plans (keep it excluded).
+  if (!can(access.role, "clinical.read")) return false;
   return access.isManager || access.isAssignedDoctor;
 }
 
@@ -77,8 +74,7 @@ export async function loadRedeemAccess(userId: string, appointmentId: string): P
   if (!appt || !role) {
     return NextResponse.json({ error: "not_found", message: "Appointment not found." }, { status: 404 });
   }
-  // TODO(front-desk): FRONT_DESK completes appointments and takes payment — allow redeem/reverse.
-  if (!isManagerRole(role) && appt.doctorId !== userId) {
+  if (!can(role, "appointment.manageAll") && appt.doctorId !== userId) {
     return NextResponse.json({ error: "forbidden", message: "You can't change this appointment." }, { status: 403 });
   }
   return "ok";

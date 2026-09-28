@@ -31,7 +31,6 @@ async function authorize(patientId: string) {
   if (!user) return { ok: false, res: err({ status: 401, error: "unauthorized", message: "Sign in required." }) } as const;
   const access = await loadPatientAccess(user.id, patientId);
   if (!access) return { ok: false, res: err({ status: 404, error: "not_found", message: "Patient not found." }) } as const;
-  // TODO(front-desk): FRONT_DESK must get 403 here (care plans are clinical).
   if (!canAccessCarePlans(access)) {
     return { ok: false, res: err({ status: 403, error: "forbidden", message: "Only the patient's doctor can see care plans." }) } as const;
   }
@@ -65,7 +64,6 @@ async function prepare(userId: string, access: PatientAccess, d: Body): Promise<
 
   let sale: SaleSource | null = null;
   if (d.packageTemplateId) {
-    // TODO(front-desk): FRONT_DESK may sell, but can't create care plans at all.
     if (!canSellPackages(access.role)) return { status: 403, error: "forbidden_sell", message: "Only owners and admins sell packages." };
     sale = await resolveSaleSource({ templateId: d.packageTemplateId }, patient.branchId);
     if (!sale) return { status: 404, error: "template_not_found", message: "That package is not on sale in this branch." };

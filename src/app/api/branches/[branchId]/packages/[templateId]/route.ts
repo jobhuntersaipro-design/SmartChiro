@@ -16,7 +16,6 @@ async function guard(branchId: string, templateId: string): Promise<Guard> {
   }
   const role = await getUserBranchRole(user.id, branchId);
   if (!role) return { ok: false, res: NextResponse.json({ error: "not_found", message: "Branch not found." }, { status: 404 }) };
-  // TODO(front-desk): catalogue stays OWNER/ADMIN only.
   if (!isManagerRole(role)) {
     return {
       ok: false,

@@ -32,7 +32,6 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   });
   const role = pkg ? await getUserBranchRole(user.id, pkg.branchId) : null;
   if (!pkg || !role) return NextResponse.json({ error: "not_found", message: "Package not found." }, { status: 404 });
-  // TODO(front-desk): cancelling a sold package stays OWNER/ADMIN only.
   if (!isManagerRole(role)) {
     return NextResponse.json({ error: "forbidden", message: "Only owners and admins can change packages." }, { status: 403 });
   }

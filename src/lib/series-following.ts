@@ -2,10 +2,10 @@ import { z } from "zod";
 import type { BranchRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { classifyUpdate, diffSnapshots, logAppointmentEvent, type ActorContext } from "@/lib/appointment-audit";
-import { isManagerRole } from "@/lib/package-access";
 import { reverseRedemption } from "@/lib/package-service";
 import { checkOccurrences, occurrenceToJson, serializeSeriesAppointment, type OccurrenceCheck } from "@/lib/series-service";
 import type { OccurrenceProblem } from "@/types/packages";
+import { can } from "@/lib/permissions";
 
 /**
  * PATCH /api/appointments/[id]?scope=following — "This and following" edits on
@@ -81,8 +81,7 @@ function blockingProblems(problems: OccurrenceProblem[], role: BranchRole, force
   return problems.filter((p) => {
     if (p === "past") return true;
     if (p === "outside_hours" && (force || forceHours)) return false;
-    // TODO(front-desk): FRONT_DESK may force like OWNER/ADMIN (as for single bookings).
-    return !(force && isManagerRole(role));
+    return !(force && can(role, "appointment.manageAll"));
   });
 }
 

@@ -15,7 +15,6 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   const role = await getUserBranchRole(user.id, branchId);
   if (!role) return NextResponse.json({ error: "not_found", message: "Branch not found." }, { status: 404 });
 
-  // TODO(front-desk): FRONT_DESK sees active templates (like DOCTOR) — no change needed.
   const includeInactive = isManagerRole(role) && new URL(req.url).searchParams.get("includeInactive") === "true";
   const templates = await prisma.packageTemplate.findMany({
     where: { branchId, ...(includeInactive ? {} : { isActive: true }) },
@@ -31,7 +30,6 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const role = await getUserBranchRole(user.id, branchId);
   if (!role) return NextResponse.json({ error: "not_found", message: "Branch not found." }, { status: 404 });
-  // TODO(front-desk): catalogue stays OWNER/ADMIN only.
   if (!isManagerRole(role)) {
     return NextResponse.json({ error: "forbidden", message: "Only owners and admins manage packages." }, { status: 403 });
   }
