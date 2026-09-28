@@ -6,8 +6,8 @@ const TEST_PREFIX = "rem-disp-";
 const sendMock = vi.fn();
 const sendEmailMock = vi.fn();
 
-vi.mock("@/lib/wa/worker-client", () => ({
-  sendMessage: (args: unknown) => sendMock(args),
+vi.mock("@/lib/whatsapp/send", () => ({
+  sendReminderTemplate: (args: unknown) => sendMock(args),
 }));
 
 vi.mock("@/lib/email", () => ({

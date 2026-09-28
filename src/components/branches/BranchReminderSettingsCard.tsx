@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { ReminderTemplateEditor } from "./ReminderTemplateEditor";
-import { WaConnectModal } from "./WaConnectModal";
+import { WhatsAppConnectionPanel } from "./WhatsAppConnectionPanel";
 import { ALLOWED_OFFSETS_MIN, type Templates } from "@/types/reminder";
+import { renderTemplatePreview } from "@/lib/whatsapp/template-text";
 
 type Props = {
   branchId: string;
@@ -21,13 +22,11 @@ const OFFSET_LABELS: Record<number, string> = {
 
 type ServerState = {
   settings: { enabled: boolean; offsetsMin: number[]; templates: Templates };
-  waSession: { status: string; phoneNumber: string | null } | null;
 };
 
 export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
   const [state, setState] = useState<ServerState | null>(null);
   const [saving, setSaving] = useState(false);
-  const [waModal, setWaModal] = useState(false);
 
   useEffect(() => {
     fetch(`/api/branches/${branchId}/reminder-settings`)
@@ -65,9 +64,6 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
     setSaving(false);
     if (!r.ok) alert("Failed to save reminder settings");
   }
-
-  const wa = state.waSession;
-  const waStatus = wa?.status ?? "DISCONNECTED";
 
   return (
     <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
@@ -119,12 +115,17 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
       </div>
 
       <div className="mb-5 grid gap-5 md:grid-cols-2">
-        <ReminderTemplateEditor
-          label="WhatsApp message (English)"
-          value={s.templates.whatsapp?.en ?? ""}
-          onChange={canEdit ? (v) => setTemplateField("whatsapp", "en", v) : () => {}}
-          charLimit={400}
-        />
+        <div>
+          <div className="mb-1.5 text-[15px] font-medium text-[#0A2540]">
+            WhatsApp message (Meta-approved template)
+          </div>
+          <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-3 text-[14px] leading-relaxed text-[#425466]">
+            {renderTemplatePreview("en")}
+          </div>
+          <p className="mt-1.5 text-[13px] text-[#697386]">
+            WhatsApp only allows approved templates for reminders, so this text is fixed. Patients who prefer Bahasa Melayu get the Malay version.
+          </p>
+        </div>
         <ReminderTemplateEditor
           label="Email plain-text (English)"
           value={s.templates.email?.en ?? ""}
@@ -136,44 +137,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
         <div className="mb-2 text-[15px] font-medium text-[#0A2540]">
           WhatsApp connection
         </div>
-        <div className="flex items-center justify-between rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] px-4 py-3">
-          <div className="text-[14px] text-[#425466]">
-            Status:{" "}
-            <span className="font-medium text-[#0A2540]">{waStatus}</span>
-            {wa?.phoneNumber && ` (${wa.phoneNumber})`}
-          </div>
-          {canEdit && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setWaModal(true)}
-                className="rounded-md bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB]"
-              >
-                {waStatus === "CONNECTED" ? "Re-pair" : "Connect WhatsApp"}
-              </button>
-              {waStatus === "CONNECTED" && (
-                <button
-                  onClick={async () => {
-                    const r = await fetch(`/api/branches/${branchId}/wa/disconnect`, {
-                      method: "POST",
-                    });
-                    if (r.ok) {
-                      setState((cur) =>
-                        cur
-                          ? { ...cur, waSession: { status: "DISCONNECTED", phoneNumber: null } }
-                          : cur,
-                      );
-                    } else {
-                      alert("Failed to disconnect WhatsApp");
-                    }
-                  }}
-                  className="rounded-md border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
-                >
-                  Disconnect
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        <WhatsAppConnectionPanel branchId={branchId} />
       </div>
 
       {canEdit && (
@@ -187,18 +151,6 @@ export function BranchReminderSettingsCard({ branchId, canEdit }: Props) {
           </button>
         </div>
       )}
-
-      <WaConnectModal
-        branchId={branchId}
-        open={waModal}
-        onClose={() => setWaModal(false)}
-        onConnected={() => {
-          setWaModal(false);
-          fetch(`/api/branches/${branchId}/reminder-settings`)
-            .then((r) => r.json())
-            .then(setState);
-        }}
-      />
     </div>
   );
 }

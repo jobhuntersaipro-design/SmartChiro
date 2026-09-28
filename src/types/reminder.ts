@@ -43,6 +43,12 @@ export type WorkerErrorCode =
   | "rate_limited"
   | "unknown";
 
+/** Failure codes from the WhatsApp Cloud API sender (src/lib/whatsapp/send.ts). */
+export type WhatsAppErrorCode =
+  | WorkerErrorCode
+  | "template_not_approved"
+  | "recipient_not_allowed";
+
 /** Webhook events posted by the worker back to the app. */
 export type WaSessionEvent =
   | { type: "qr"; branchId: string; qrPayload: string }

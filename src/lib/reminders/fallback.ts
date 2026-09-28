@@ -6,6 +6,8 @@ const TERMINAL_WA = new Set([
   "session_disconnected",
   "session_logged_out",
   "invalid_e164",
+  "template_not_approved",
+  "recipient_not_allowed",
 ]);
 const TERMINAL_EMAIL = new Set(["invalid_email", "bounce_hard"]);
 

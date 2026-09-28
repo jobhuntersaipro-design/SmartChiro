@@ -1,6 +1,6 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function normalizePhoneDigits(phone: string): string {
+export function normalizePhoneDigits(phone: string): string {
   const digits = phone.replace(/\D+/g, '')
   if (digits.startsWith('0')) return '60' + digits.slice(1)
   return digits

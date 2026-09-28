@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { sendMessage } from "@/lib/wa/worker-client";
+import { sendReminderTemplate } from "@/lib/whatsapp/send";
+import { reminderTemplateParams } from "@/lib/whatsapp/templates";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 import { sendReminderEmail } from "@/lib/email";
 import { plannedReminders, resolveChannels } from "./materialize";
 import { renderTemplate } from "./templates";
@@ -139,15 +141,12 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
   const lang = (r.appointment.patient.preferredLanguage === "ms" ? "ms" : "en") as "en" | "ms";
 
   const ctx = buildContext(r.appointment, lang);
-  let body: string;
+  // WhatsApp sends the Meta-approved template with `ctx` as parameters; only
+  // email renders the branch's editable text.
+  let body = "";
   let html: string | undefined;
   try {
-    if (r.channel === "WHATSAPP") {
-      body = renderTemplate(
-        templates.whatsapp?.[lang] ?? DEFAULT_TEMPLATES.whatsapp[lang],
-        ctx
-      );
-    } else {
+    if (r.channel === "EMAIL") {
       body = renderTemplate(
         templates.email?.[lang] ?? DEFAULT_TEMPLATES.email[lang],
         ctx
@@ -174,10 +173,11 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
     | { ok: false; code: string; message: string };
 
   if (r.channel === "WHATSAPP") {
-    const wa = await sendMessage({
+    const wa = await sendReminderTemplate({
       branchId: r.appointment.branchId,
       to: r.appointment.patient.phone ?? "",
-      body,
+      lang,
+      params: reminderTemplateParams(ctx),
     });
     result = wa.ok
       ? { ok: true, externalId: wa.msgId }
@@ -285,6 +285,8 @@ function buildContext(
 ): TemplateContext {
   const dt = new Date(appt.dateTime);
   const dateLocale = lang === "ms" ? "ms-MY" : "en-MY";
+  // The server runs in UTC; reminders must show the clinic's wall-clock time.
+  const timeZone = CLINIC_TIME_ZONE;
   return {
     patientName: `${appt.patient.firstName} ${appt.patient.lastName}`.trim(),
     firstName: appt.patient.firstName,
@@ -293,13 +295,15 @@ function buildContext(
       day: "numeric",
       month: "long",
       year: "numeric",
+      timeZone,
     }),
     time: dt.toLocaleTimeString(dateLocale, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
+      timeZone,
     }),
-    dayOfWeek: dt.toLocaleDateString(dateLocale, { weekday: "long" }),
+    dayOfWeek: dt.toLocaleDateString(dateLocale, { weekday: "long", timeZone }),
     doctorName: appt.doctor.name ?? "your doctor",
     branchName: appt.branch.name,
     branchAddress: appt.branch.address ?? "",
