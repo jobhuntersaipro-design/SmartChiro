@@ -52,7 +52,6 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   if (!original) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   // RBAC: OWNER/ADMIN at the invoice's branch only.
-  // TODO(front-desk): decide whether FRONT_DESK may re-issue invoices.
   const role = await getUserBranchRole(user.id, original.branchId);
   if (!billingAccess(role).manage) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });

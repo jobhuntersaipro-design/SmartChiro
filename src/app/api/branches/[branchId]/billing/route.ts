@@ -67,7 +67,6 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const role = await getUserBranchRole(user.id, branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  // TODO(front-desk): FRONT_DESK doesn't need these settings; keep OWNER/ADMIN.
   if (role !== "OWNER" && role !== "ADMIN") return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const branch = await prisma.branch.findUnique({ where: { id: branchId }, select: SELECT });

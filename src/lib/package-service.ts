@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TreatmentType, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAppointmentEvent, type ActorContext } from "@/lib/appointment-audit";
-import { generateInvoiceNumber } from "@/lib/invoices";
+import { createInvoice } from "@/lib/invoices";
 import { effectiveStatus, expiryFor, ineligibilityReason, pickPackageForAppointment, sessionsLeft, unitValue } from "@/lib/packages";
 import type {
   PackageRedemptionJson,
@@ -189,24 +189,21 @@ export interface SellPackageInput {
 export async function sellPackage(tx: Tx, input: SellPackageInput) {
   const now = input.now ?? new Date();
   const due = new Date(now.getTime() + 14 * 86_400_000);
-  const invoice = await tx.invoice.create({
-    data: {
-      invoiceNumber: generateInvoiceNumber(),
-      amount: input.price,
-      currency: "MYR",
-      status: "SENT",
-      dueDate: due,
-      lineItems: [
-        {
-          description: `Package: ${input.name} (${input.sessions} sessions)`,
-          quantity: 1,
-          unitPrice: input.price,
-          total: input.price,
-        },
-      ],
-      patientId: input.patientId,
-      branchId: input.branchId,
-    },
+  // Shared invoice creation: per-branch number, and SST when the branch
+  // charges it and the patient isn't Malaysian.
+  const invoice = await createInvoice(tx, {
+    branchId: input.branchId,
+    patientId: input.patientId,
+    status: "SENT",
+    dueDate: due,
+    issuedAt: now,
+    lines: [
+      {
+        description: `Package: ${input.name} (${input.sessions} sessions)`,
+        quantity: 1,
+        unitPrice: input.price,
+      },
+    ],
   });
   return tx.patientPackage.create({
     data: {

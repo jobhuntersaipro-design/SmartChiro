@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
 
 export interface PatientAccess {
-  patient: { id: string; branchId: string; doctorId: string } | null;
+  patient: { id: string; branchId: string; doctorId: string; nationality: string | null } | null;
   /** The caller's role in the patient's branch (null when not a member). */
   role: BranchRole | null;
   /** May see the patient's demographics / contact details. */

@@ -61,7 +61,7 @@ export function OwnerSignalsCard({ branchParam, refreshKey = 0 }: OwnerSignalsCa
             tone="#15be53"
             label="Revenue today"
             value={signals ? formatMYR(signals.revenueToday) : null}
-            hint={signals ? (signals.paidInvoicesToday === 0 ? "No payments yet" : `${plural(signals.paidInvoicesToday, "invoice")} paid`) : null}
+            hint={signals ? (signals.paymentsToday === 0 ? "No payments yet" : plural(signals.paymentsToday, "payment")) : null}
             href="/dashboard/invoices?status=PAID"
             linkLabel="Invoices"
           />

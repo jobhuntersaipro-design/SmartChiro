@@ -118,8 +118,11 @@ describe("Phase 3 packages API", () => {
     expect(row.invoice).toMatchObject({ status: "SENT", patientId: f.patient.id, branchId: f.branch.id, appointmentId: null });
     expect(Number(row.invoice!.amount)).toBe(1200);
     expect(row.invoice!.lineItems).toEqual([
-      { description: "Package: 12 Adjustments (12 sessions)", quantity: 1, unitPrice: 1200, total: 1200 },
+      { description: "Package: 12 Adjustments (12 sessions)", quantity: 1, unitPrice: 1200, total: 1200, taxable: true },
     ]);
+    // Sold through the shared invoice path: per-branch number, no SST for a Malaysian patient.
+    expect(row.invoice!.invoiceNumber).toMatch(/^INV-[A-Z0-9]+-\d{4}-\d{5}$/);
+    expect(Number(row.invoice!.taxAmount ?? 0)).toBe(0);
 
     // Custom package
     const custom = await sellPackage(

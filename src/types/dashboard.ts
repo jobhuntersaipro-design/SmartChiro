@@ -32,7 +32,7 @@ export interface OwnerStats {
 export interface OwnerSignals {
   /** Sum of invoices marked PAID today (clinic day), in MYR. */
   revenueToday: number;
-  paidInvoicesToday: number;
+  paymentsToday: number;
   noShowsToday: number;
   /** Past appointments still SCHEDULED — never checked in, completed or marked no-show. */
   staleAppointments: number;

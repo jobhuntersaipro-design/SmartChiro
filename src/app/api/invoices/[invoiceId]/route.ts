@@ -25,7 +25,6 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   const invoice = await loadInvoiceDetail(invoiceId);
   if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const role = await getUserBranchRole(user.id, invoice.branchId);
-  // TODO(front-desk): FRONT_DESK reads invoices too.
   if (!billingAccess(role).read) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   return NextResponse.json({ invoice: serializeInvoiceDetail(invoice) });
@@ -56,7 +55,6 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const role = await getUserBranchRole(user.id, invoice.branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  // TODO(front-desk): FRONT_DESK may mark sent / record payment (not cancel a paid one — refunds stay OWNER/ADMIN).
   if (!billingAccess(role).manage) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const parsed = Body.safeParse(await req.json().catch(() => null));

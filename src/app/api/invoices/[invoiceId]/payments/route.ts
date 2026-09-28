@@ -51,7 +51,6 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   }
   const body = parsed.data;
   const isRefund = body.amount < 0;
-  // TODO(front-desk): FRONT_DESK may record payments (manage) but not refunds.
   if (isRefund ? !access.refund : !access.manage) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   if (isRefund && !body.refundReason) return NextResponse.json({ error: "refund_reason_required" }, { status: 422 });
 

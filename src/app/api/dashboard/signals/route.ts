@@ -50,8 +50,10 @@ export async function GET(req: NextRequest) {
   };
 
   const [paid, noShowsToday, staleAppointments, recallDue, recallVisits] = await Promise.all([
-    prisma.invoice.aggregate({
-      where: { ...scope, status: "PAID", paidAt: { gte: cal.dayStart, lt: cal.dayEnd } },
+    // Money actually received today (deposits and part payments included,
+    // refunds netted off), not invoices that happened to reach PAID today.
+    prisma.payment.aggregate({
+      where: { ...scope, receivedAt: { gte: cal.dayStart, lt: cal.dayEnd } },
       _sum: { amount: true },
       _count: { _all: true },
     }),
@@ -77,7 +79,7 @@ export async function GET(req: NextRequest) {
 
   const body: OwnerSignals = {
     revenueToday: Number(paid._sum.amount ?? 0),
-    paidInvoicesToday: paid._count._all,
+    paymentsToday: paid._count._all,
     noShowsToday,
     staleAppointments,
     recallDue,

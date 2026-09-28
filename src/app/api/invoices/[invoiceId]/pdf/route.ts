@@ -19,7 +19,6 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const role = await getUserBranchRole(user.id, invoice.branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  // TODO(front-desk): FRONT_DESK prints invoices too.
   if (!billingAccess(role).read) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const data = invoicePdfData(invoice);

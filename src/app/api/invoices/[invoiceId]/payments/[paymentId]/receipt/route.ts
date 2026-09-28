@@ -14,7 +14,6 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 
   const invoice = await loadInvoiceDetail(invoiceId);
   if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  // TODO(front-desk): FRONT_DESK prints receipts too.
   if (!billingAccess(await getUserBranchRole(user.id, invoice.branchId)).read) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

@@ -183,7 +183,6 @@ export async function POST(req: Request): Promise<Response> {
 
   const role = await getUserBranchRole(user.id, branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  // TODO(front-desk): FRONT_DESK may create invoices.
   if (!billingAccess(role).manage) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   if (patient.branchId !== branchId) return NextResponse.json({ error: "patient_not_in_branch" }, { status: 422 });
 

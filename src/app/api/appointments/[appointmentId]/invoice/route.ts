@@ -54,7 +54,6 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   // RBAC: OWNER/ADMIN at the branch only.
-  // TODO(front-desk): FRONT_DESK may issue invoices.
   const role = await getUserBranchRole(user.id, appt.branchId);
   if (!billingAccess(role).manage) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });

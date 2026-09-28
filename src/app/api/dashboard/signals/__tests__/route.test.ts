@@ -56,20 +56,31 @@ describe("GET /api/dashboard/signals", () => {
     const pB = await patient(branchB, "Other");
     const pF = await patient(foreignBranch, "Foreign");
 
-    // Revenue: paid today counts; paid yesterday, sent today and another org's don't.
-    const inv = (branchId: string, patientId: string, amount: number, status: "PAID" | "SENT", paidAt: Date | null) =>
-      prisma.invoice.create({
+    // Revenue = payments received today: a deposit on a still-open invoice
+    // counts, a payment yesterday, an unpaid invoice and another org's don't.
+    const inv = async (branchId: string, patientId: string, amount: number, paidAt: Date | null) => {
+      const invoice = await prisma.invoice.create({
         data: {
           invoiceNumber: `${PREFIX}-${Math.random().toString(36).slice(2, 10)}`,
-          amount, status, paidAt, branchId, patientId, lineItems: [],
+          amount, status: paidAt ? "PAID" : "SENT", paidAt, amountPaid: paidAt ? amount : 0, branchId, patientId, lineItems: [],
         },
       });
+      if (paidAt) {
+        await prisma.payment.create({
+          data: {
+            invoiceId: invoice.id, branchId, amount, method: "CASH", receivedAt: paidAt,
+            receiptNumber: `${PREFIX}-R-${Math.random().toString(36).slice(2, 10)}`,
+          },
+        });
+      }
+      return invoice;
+    };
     await Promise.all([
-      inv(branchA, pA, 120, "PAID", new Date(cal.dayStart.getTime() + 60_000)),
-      inv(branchB, pB, 80.5, "PAID", new Date(cal.dayStart.getTime() + 120_000)),
-      inv(branchA, pA, 999, "PAID", new Date(cal.dayStart.getTime() - 60_000)),
-      inv(branchA, pA, 50, "SENT", null),
-      inv(foreignBranch, pF, 700, "PAID", new Date(cal.dayStart.getTime() + 60_000)),
+      inv(branchA, pA, 120, new Date(cal.dayStart.getTime() + 60_000)),
+      inv(branchB, pB, 80.5, new Date(cal.dayStart.getTime() + 120_000)),
+      inv(branchA, pA, 999, new Date(cal.dayStart.getTime() - 60_000)),
+      inv(branchA, pA, 50, null),
+      inv(foreignBranch, pF, 700, new Date(cal.dayStart.getTime() + 60_000)),
     ]);
 
     // No-show today, stale (past + SCHEDULED), plus rows that must not count.
@@ -106,6 +117,7 @@ describe("GET /api/dashboard/signals", () => {
 
   afterAll(async () => {
     const branches = { in: [branchA, branchB, foreignBranch] };
+    await prisma.payment.deleteMany({ where: { branchId: branches } });
     await prisma.invoice.deleteMany({ where: { branchId: branches } });
     await prisma.appointment.deleteMany({ where: { branchId: branches } });
     await prisma.visit.deleteMany({ where: { patient: { branchId: branches } } });
@@ -136,7 +148,7 @@ describe("GET /api/dashboard/signals", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.revenueToday).toBeCloseTo(200.5);
-    expect(body.paidInvoicesToday).toBe(2);
+    expect(body.paymentsToday).toBe(2);
     expect(body.noShowsToday).toBe(1);
     expect(body.staleAppointments).toBe(2);
     expect(body.recallDue).toBe(1);
