@@ -1,7 +1,7 @@
 # SmartChiro Improvement Plan (UX review + Malaysian competitor gaps)
 
 **Source:** `smartchiro-improvement-report.md` (UX review of smartchiro.org, 28 Sep 2026, Owner role on KLCC / Bangsar / Penang Georgetown).
-**Status:** Phase 1 done (2026-09-29); Phase 2 next.
+**Status:** Phase 1 done (2026-09-29); Phase 2 in progress.
 **Branch:** `claude/zen-goodall-84f7kl` — one commit (or small set) per phase, each phase built, tested and pushed before the next starts.
 
 This file is the master plan. Each phase has a detailed section that is filled in
@@ -81,7 +81,43 @@ Every count (dashboard stats, dashboard branch cards, branches list, doctors sum
 
 ## Phase 2 — Front desk role, global branch context, dates, tables, mobile
 
-_Detailed before build._
+### 2.1 Front desk role (report §2, §6 #3)
+New `BranchRole.FRONT_DESK` (additive enum migration). Created from Add staff like other roles (no doctor profile, not a clinician, never a calendar column).
+
+| Area | OWNER | ADMIN | DOCTOR | FRONT_DESK |
+|---|---|---|---|---|
+| Patient demographics & contact (list, detail header, profile, create, edit) | ✓ | ✓ | own patients | ✓ (create/edit; no delete) |
+| Patient clinical fields (`medicalHistory`, `notes`), visits / SOAP / questionnaires / vitals / recovery | ✓ | ✓ | own | ✗ (hidden in UI, 403 in API, stripped from patient payloads) |
+| X-rays, annotations, exports, compare | ✓ | ✓ | own | ✗ |
+| Appointments: book, reschedule, check in / start / complete / no-show, cancel | ✓ | ✓ | own | ✓ (no hard delete) |
+| Invoices & payments: issue, mark sent/paid, receipts | ✓ | ✓ | read | ✓ |
+| Branch settings, staff, reminder/WhatsApp settings, audit logs | ✓ | read (as today) | ✗ | ✗ |
+
+Front desk dashboard = today's schedule with check-in actions and counts; no clinical stats. Sidebar hides X-rays/Anatomy/Doctors management for FRONT_DESK. Permission checks live in one helper (`src/lib/permissions.ts`) used by routes and UI.
+**Done when:** a front-desk login can book, check in and take payment, and every clinical API returns 403/404 for it.
+
+### 2.2 One branch context (report §4 navigation)
+The sidebar branch switcher drives every page (patients directory, appointments list/calendar, dashboard, invoices, upcoming-appointments widget). OWNER/ADMIN with more than one branch also get **All branches**. Stored per user (`User.activeBranchId`; "All branches" = new `User.allBranches Boolean @default(false)`), read server-side through `loadBranchContext`. Forms that create records keep an explicit branch field when the scope is "All branches".
+- Branch filter chips/selects show names, never ids; internal ids (`personal-patient-003`) are not shown on profiles.
+- Patients page is a directory first (upcoming-appointments widget moves below / collapses), whole rows clickable.
+- Phone numbers: `tel:` phone icon + separate WhatsApp icon; a cell is never one big WhatsApp link.
+
+### 2.3 Forms (report §4 forms)
+- `DateInput` component: typed `dd/mm/yyyy` with a calendar popover, value stays ISO `YYYY-MM-DD`; replaces `<input type="date">` everywhere users enter dates.
+- Booking form: branch field (defaults to current branch; required when "All branches"), duration defaults per treatment type (editable), optional room.
+- Reminder channel must have a matching contact (WhatsApp/BOTH need a phone, EMAIL/BOTH need an email) — client and API validation; default channel follows what was entered.
+- Website field stays empty until typed (no bare `https://`); clinic type shown in Title Case.
+
+### 2.4 Data display, dashboard, polish (report §4, §5)
+- Money and dates `whitespace-nowrap`; action columns have a min width; tables at 1280px don't clip actions and scroll sideways only inside the table; truncated text has a `title` tooltip; status tabs don't truncate.
+- Doctor names: "Dr." added at display time only once (`displayDoctorName`), fixing "Dr. Dr.".
+- Recovery bars: each metric colours by its own direction (lower pain = better) with a label.
+- "Next appointment" includes later today; plurals ("1 patient", "0 patients" → "No patients") and empty states don't contradict ("All wrapped up" only when nothing remains).
+- Branded `not-found.tsx` with a link back to the dashboard (covers `/dashboard/reports`, `/dashboard/billing` until they exist).
+- Dashboard: "New appointment" primary action at the top; the quote card is replaced by owner signals — today's revenue (paid today), no-shows today, stale appointments (past + still SCHEDULED), patients due for recall (no visit in 30+ days and nothing booked).
+- Reminder preview uses the full branch name; marketing "Get Started" → `/register`.
+- Mobile 390px: headers stack, search placeholder short, "All Branches" button doesn't wrap, no sideways page scroll, cards instead of tables below 640px. (The stale `cursor/mobile-clinic-ux-1187` branch is not merged — it is 30 commits behind `main`; ideas taken from it where still relevant.)
+
 
 ## Phase 3 — Treatment plans, packages, recurring bookings
 
