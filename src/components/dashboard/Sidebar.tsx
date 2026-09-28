@@ -18,6 +18,7 @@ import {
   Stethoscope,
   Bone,
   Check,
+  FileText,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
@@ -32,12 +33,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const navItems: { label: string; href: string; icon: typeof Users; roles?: BranchRole[] }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/dashboard/patients", icon: Users },
   { label: "Branches", href: "/dashboard/branches", icon: Building2 },
   { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope },
   { label: "Appointments", href: "/dashboard/appointments", icon: Calendar },
+  // Billing is the owner's / front desk's job.
+  { label: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["OWNER", "ADMIN"] },
   { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone },
 ];
 
@@ -159,7 +162,9 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 px-3 pt-3">
         <div className="space-y-0.5">
-          {navItems.map((item) => {
+          {navItems
+            .filter((item) => !item.roles || (user.branchRole !== null && item.roles.includes(user.branchRole)))
+            .map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
