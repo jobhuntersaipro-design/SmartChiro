@@ -10,12 +10,23 @@ import type {
   ToolId,
   ViewMode,
   ViewportSlot,
+  ViewTransform,
 } from "@/types/annotation";
 import {
   createEmptyCanvasState,
   DEFAULT_IMAGE_ADJUSTMENTS,
   DEFAULT_SHAPE_STYLE,
+  imageToScreen,
+  screenToImage,
 } from "@/types/annotation";
+import {
+  orientationCss,
+  orientRect,
+  orientShape,
+  unorientVector,
+  type Orientation,
+  type Rotation,
+} from "@/lib/orientation";
 import { useCanvasViewport } from "@/hooks/useCanvasViewport";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
@@ -127,30 +138,6 @@ export function AnnotationCanvas({
   const [currentStyle, setCurrentStyle] = useState<ShapeStyle>({
     ...DEFAULT_SHAPE_STYLE,
   });
-
-  // Image orientation transforms (independent of brightness/contrast/invert)
-  const [flipped, setFlipped] = useState(false);
-  const [flippedV, setFlippedV] = useState(false);
-  const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
-
-  const imageTransform = useMemo(() => {
-    const parts: string[] = [];
-    if (rotation !== 0) parts.push(`rotate(${rotation}deg)`);
-    if (flipped || flippedV) {
-      parts.push(`scale(${flipped ? -1 : 1}, ${flippedV ? -1 : 1})`);
-    }
-    return parts.length > 0 ? parts.join(" ") : undefined;
-  }, [flipped, flippedV, rotation]);
-
-  const resetOrientation = useCallback(() => {
-    setFlipped(false);
-    setFlippedV(false);
-    setRotation(0);
-  }, []);
-
-  const rotate90 = useCallback(() => {
-    setRotation((prev) => ((prev + 90) % 360) as 0 | 90 | 180 | 270);
-  }, []);
 
   // Keyboard shortcuts panel
   const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
@@ -265,10 +252,48 @@ export function AnnotationCanvas({
     onWindowLevel: (dx, dy) => {
       imageAdj.setBrightness(Math.max(-100, Math.min(100, imageAdj.adjustments.brightness + Math.round(dx / 4))));
       imageAdj.setContrast(Math.max(-100, Math.min(100, imageAdj.adjustments.contrast - Math.round(dy / 4))));
+      autoSave.markDirty();
     },
   });
 
   const autoSave = useAutoSave({ annotationId, annotationVersion, xrayId, userId });
+
+  // ─── Orientation (flip / rotate) ───
+  // Stored in imageAdjustments, so it's saved and kept per X-ray. It is a view
+  // transform only: shapes stay in original image space, are oriented at
+  // render time, and pointer input is un-oriented via `pointerTransform`.
+  const flipped = !!imageAdj.adjustments.flipH;
+  const flippedV = !!imageAdj.adjustments.flipV;
+  const rotation = imageAdj.adjustments.rotation ?? 0;
+  const orientation = useMemo<Orientation | undefined>(
+    () =>
+      !flipped && !flippedV && rotation === 0
+        ? undefined
+        : { flipH: flipped, flipV: flippedV, rotation, width: activeImageWidth, height: activeImageHeight },
+    [flipped, flippedV, rotation, activeImageWidth, activeImageHeight],
+  );
+  const imageTransform = orientationCss({ flipH: flipped, flipV: flippedV, rotation });
+  const pointerTransform = useMemo<ViewTransform>(
+    () => (orientation ? { ...viewport.transform, orientation } : viewport.transform),
+    [viewport.transform, orientation],
+  );
+
+  // Adjustment edits are saved like shape edits.
+  const adjust = useMemo(
+    () => ({
+      brightness: (v: number) => { imageAdj.setBrightness(v); autoSave.markDirty(); },
+      contrast: (v: number) => { imageAdj.setContrast(v); autoSave.markDirty(); },
+      invert: (v: boolean) => { imageAdj.setInvert(v); autoSave.markDirty(); },
+      flipH: (v: boolean) => { imageAdj.setOrientation({ flipH: v }); autoSave.markDirty(); },
+      flipV: (v: boolean) => { imageAdj.setOrientation({ flipV: v }); autoSave.markDirty(); },
+      rotate90: () => {
+        imageAdj.setOrientation({ rotation: (((rotation + 90) % 360) as Rotation) });
+        autoSave.markDirty();
+      },
+      reset: () => { imageAdj.reset(); autoSave.markDirty(); },
+    }),
+    [imageAdj, autoSave, rotation],
+  );
   const undoRedo = useUndoRedo({
     shapes,
     setShapes,
@@ -341,7 +366,7 @@ export function AnnotationCanvas({
   );
 
   const interaction = useCanvasInteraction({
-    transform: viewport.transform,
+    transform: pointerTransform,
     pan: viewport.pan,
     shapes,
     containerRef: viewport.containerRef,
@@ -634,7 +659,7 @@ export function AnnotationCanvas({
 
   const drawing = useDrawingTools({
     activeTool: interaction.activeTool,
-    transform: viewport.transform,
+    transform: pointerTransform,
     shapes,
     currentStyle,
     imageWidth,
@@ -1290,6 +1315,8 @@ export function AnnotationCanvas({
         if (e.key === "ArrowDown") dy = step;
         if (e.key === "ArrowLeft") dx = -step;
         if (e.key === "ArrowRight") dx = step;
+        // Arrows move shapes the way they look on screen, even on a flipped/rotated view.
+        if (orientation) ({ x: dx, y: dy } = unorientVector({ x: dx, y: dy }, orientation));
 
         setShapes((prev) =>
           prev.map((s) => {
@@ -1312,7 +1339,7 @@ export function AnnotationCanvas({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction, handleTogglePropertiesPanel]);
+  }, [undoRedo, autoSave, buildCanvasState, imageAdj.adjustments, viewport, drawing, interaction.selectedShapeIds, shapes, interaction, handleTogglePropertiesPanel, orientation]);
 
   // Calibration carry-over offer — after the user picks an X-ray for an
   // empty / changed slot, if the previous active slot had calibration we
@@ -1404,10 +1431,7 @@ export function AnnotationCanvas({
       // mid-build and a stray outside-click shouldn't wipe their work.
       const screenX = e.clientX - rect.left;
       const screenY = e.clientY - rect.top;
-      const imagePos = {
-        x: (screenX - viewport.transform.panX) / viewport.transform.zoom,
-        y: (screenY - viewport.transform.panY) / viewport.transform.zoom,
-      };
+      const imagePos = screenToImage(screenX, screenY, pointerTransform);
       const outsideImage =
         imagePos.x < 0 ||
         imagePos.y < 0 ||
@@ -1422,7 +1446,7 @@ export function AnnotationCanvas({
       // Fall through to interaction (select, pan)
       interaction.handlePointerDown(e);
     },
-    [drawing, interaction, viewport.transform, imageWidth, imageHeight]
+    [drawing, interaction, pointerTransform, imageWidth, imageHeight]
   );
 
   const handlePointerMove = useCallback(
@@ -1481,13 +1505,18 @@ export function AnnotationCanvas({
   // Globally-unique P# labels for every dot on every point/line/polyline shape.
   // Recomputed each render so adding/removing/reordering shapes keeps labels stable.
   const vertexLabelsByShape = computeGlobalPointLabels(allShapesToRender);
+  // What's drawn: shapes and marquee placed on the flipped/rotated view.
+  const displayShapes = orientation
+    ? allShapesToRender.map((s) => orientShape(s, orientation))
+    : allShapesToRender;
+  const displayMarquee =
+    interaction.marqueeRect && orientation
+      ? orientRect(interaction.marqueeRect, orientation)
+      : interaction.marqueeRect;
 
   // Text input screen position
   const textScreenPos = drawing.textInputState.active && drawing.textInputState.position
-    ? {
-        x: drawing.textInputState.position.x * viewport.transform.zoom + viewport.transform.panX,
-        y: drawing.textInputState.position.y * viewport.transform.zoom + viewport.transform.panY,
-      }
+    ? imageToScreen(drawing.textInputState.position.x, drawing.textInputState.position.y, pointerTransform)
     : null;
 
   return (
@@ -1511,18 +1540,18 @@ export function AnnotationCanvas({
         onSave={() => autoSave.saveNow(buildCanvasState(), imageAdj.adjustments)}
         onClose={onClose}
         adjustments={imageAdj.adjustments}
-        onBrightnessChange={imageAdj.setBrightness}
-        onContrastChange={imageAdj.setContrast}
-        onResetAdjustments={() => { imageAdj.reset(); resetOrientation(); }}
+        onBrightnessChange={adjust.brightness}
+        onContrastChange={adjust.contrast}
+        onResetAdjustments={adjust.reset}
         isAdjustmentsModified={imageAdj.isModified}
         flipped={flipped}
-        onFlipChange={setFlipped}
+        onFlipChange={adjust.flipH}
         flippedV={flippedV}
-        onFlipVChange={setFlippedV}
+        onFlipVChange={adjust.flipV}
         rotation={rotation}
-        onRotate90={rotate90}
+        onRotate90={adjust.rotate90}
         inverted={imageAdj.adjustments.invert}
-        onInvertChange={imageAdj.setInvert}
+        onInvertChange={adjust.invert}
         notesCount={notesCount}
         onOpenNotes={() => setNotesOpen(true)}
         onShowShortcuts={() => setShortcutsPanelOpen((prev) => !prev)}
@@ -1616,6 +1645,13 @@ export function AnnotationCanvas({
                       imageRendering: viewport.transform.zoom > 2 ? "pixelated" : "auto",
                       display: "block",
                       transform: imageTransform,
+                      // Exactly image-pixel size, like the SVG layer above it.
+                      // Tailwind preflight's img { max-width: 100% } otherwise
+                      // shrinks wide films to the canvas width, so shapes were
+                      // stored in a screen-dependent scale instead of pixels.
+                      maxWidth: "none",
+                      width: imageWidth,
+                      height: imageHeight,
                     }}
                     onLoad={() => setImageLoaded(true)}
                     draggable={false}
@@ -1638,7 +1674,7 @@ export function AnnotationCanvas({
                     className="absolute inset-0"
                     style={{ overflow: "visible" }}
                   >
-                    {allShapesToRender
+                    {displayShapes
                       .filter((s) => s.visible)
                       .sort((a, b) => {
                         // Landmark dots always render on top of any line /
@@ -1661,12 +1697,12 @@ export function AnnotationCanvas({
                       ))}
                     {/* Rubber-band selection rectangle (image-space). Stroke
                         width is divided by zoom so it stays 1px on screen. */}
-                    {interaction.marqueeRect && (
+                    {displayMarquee && (
                       <rect
-                        x={interaction.marqueeRect.x}
-                        y={interaction.marqueeRect.y}
-                        width={interaction.marqueeRect.width}
-                        height={interaction.marqueeRect.height}
+                        x={displayMarquee.x}
+                        y={displayMarquee.y}
+                        width={displayMarquee.width}
+                        height={displayMarquee.height}
                         fill="rgba(83, 58, 253, 0.10)"
                         stroke="#533afd"
                         strokeWidth={1 / viewport.transform.zoom}
@@ -1681,7 +1717,7 @@ export function AnnotationCanvas({
                 <SelectionOverlay
                   shapes={shapes}
                   selectedShapeIds={interaction.selectedShapeIds}
-                  transform={viewport.transform}
+                  transform={pointerTransform}
                 />
 
                 {/* Inline Text Input */}
@@ -1733,8 +1769,8 @@ export function AnnotationCanvas({
                     1 click Accept doesn't apply yet. */}
                 {drawing.inProgressUndoAnchor && (
                   <RecentCommitUndo
-                    screenX={drawing.inProgressUndoAnchor.x * viewport.transform.zoom + viewport.transform.panX}
-                    screenY={drawing.inProgressUndoAnchor.y * viewport.transform.zoom + viewport.transform.panY}
+                    screenX={imageToScreen(drawing.inProgressUndoAnchor.x, drawing.inProgressUndoAnchor.y, pointerTransform).x}
+                    screenY={imageToScreen(drawing.inProgressUndoAnchor.x, drawing.inProgressUndoAnchor.y, pointerTransform).y}
                     onAccept={drawing.canAcceptInProgress
                       ? () => {
                           drawing.acceptInProgress();
@@ -1893,6 +1929,9 @@ export function AnnotationCanvas({
                               imageRendering: viewport.transform.zoom > 2 ? "pixelated" : "auto",
                               display: "block",
                               transform: imageTransform,
+                              maxWidth: "none",
+                              width: slot.imageWidth,
+                              height: slot.imageHeight,
                             }}
                             onLoad={() => setImageLoaded(true)}
                             draggable={false}
@@ -1913,7 +1952,7 @@ export function AnnotationCanvas({
                             className="absolute inset-0"
                             style={{ overflow: "visible" }}
                           >
-                            {allShapesToRender
+                            {displayShapes
                               .filter((s) => s.visible)
                               .sort((a, b) => {
                         // Landmark dots always render on top of any line /
@@ -1929,7 +1968,7 @@ export function AnnotationCanvas({
                               ))}
                           </svg>
                         </div>
-                        <SelectionOverlay shapes={shapes} selectedShapeIds={interaction.selectedShapeIds} transform={viewport.transform} />
+                        <SelectionOverlay shapes={shapes} selectedShapeIds={interaction.selectedShapeIds} transform={pointerTransform} />
                         {textScreenPos && (
                           <TextInput
                             x={textScreenPos.x}
@@ -1958,8 +1997,8 @@ export function AnnotationCanvas({
                         )}
                         {drawing.inProgressUndoAnchor && (
                           <RecentCommitUndo
-                            screenX={drawing.inProgressUndoAnchor.x * viewport.transform.zoom + viewport.transform.panX}
-                            screenY={drawing.inProgressUndoAnchor.y * viewport.transform.zoom + viewport.transform.panY}
+                            screenX={imageToScreen(drawing.inProgressUndoAnchor.x, drawing.inProgressUndoAnchor.y, pointerTransform).x}
+                            screenY={imageToScreen(drawing.inProgressUndoAnchor.x, drawing.inProgressUndoAnchor.y, pointerTransform).y}
                             onAccept={drawing.canAcceptInProgress
                               ? () => {
                                   drawing.acceptInProgress();
@@ -2031,17 +2070,23 @@ export function AnnotationCanvas({
 
                   // ─── Non-active cell: simple viewer with read-only annotations ───
                   const cached = slot.xrayId ? shapesPerXrayRef.current.get(slot.xrayId) : undefined;
-                  const cachedShapes = cached?.shapes;
+                  const cellAdj = cached?.adjustments;
+                  const cellOrientation: Orientation = {
+                    flipH: !!cellAdj?.flipH,
+                    flipV: !!cellAdj?.flipV,
+                    rotation: cellAdj?.rotation ?? 0,
+                    width: slot.imageWidth,
+                    height: slot.imageHeight,
+                  };
+                  const cachedShapes = cached?.shapes.map((sh) => orientShape(sh, cellOrientation));
                   return (
                     <div key={i} className="relative h-full w-full">
                       <ViewportCell
                         slot={slot}
                         isActive={false}
                         onClick={() => setActiveSlotIndex(i)}
-                        cssFilter={
-                          cached?.adjustments ? adjustmentsToCssFilter(cached.adjustments) : undefined
-                        }
-                        imageTransform={imageTransform}
+                        cssFilter={cellAdj ? adjustmentsToCssFilter(cellAdj) : undefined}
+                        imageTransform={orientationCss(cellOrientation)}
                         viewState={gridViewStates[i] ?? { zoom: 1, panX: 0, panY: 0 }}
                         onViewStateChange={(state) => handleGridViewStateChange(i, state)}
                         shapes={cachedShapes}

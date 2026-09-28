@@ -69,13 +69,14 @@ export function SelectionOverlay({
   }
 
   // Convert to screen space
-  const topLeft = imageToScreen(minX, minY, transform);
-  const bottomRight = imageToScreen(maxX, maxY, transform);
+  // (Corners are re-sorted: a flipped/rotated view can swap them.)
+  const a = imageToScreen(minX, minY, transform);
+  const b = imageToScreen(maxX, maxY, transform);
 
-  const screenX = topLeft.x;
-  const screenY = topLeft.y;
-  const screenW = bottomRight.x - topLeft.x;
-  const screenH = bottomRight.y - topLeft.y;
+  const screenX = Math.min(a.x, b.x);
+  const screenY = Math.min(a.y, b.y);
+  const screenW = Math.abs(b.x - a.x);
+  const screenH = Math.abs(b.y - a.y);
 
   // Handle positions (corners + midpoints)
   const handles = [

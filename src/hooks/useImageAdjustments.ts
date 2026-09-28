@@ -12,6 +12,8 @@ interface UseImageAdjustmentsReturn {
   setContrast: (value: number) => void;
   setInvert: (value: boolean) => void;
   setPixelsPerMm: (value: number | undefined) => void;
+  setOrientation: (value: Pick<ImageAdjustments, "flipH" | "flipV" | "rotation">) => void;
+  /** Back to defaults — calibration is kept (it describes the film, not the view). */
   reset: () => void;
   /** Swap in another X-ray's saved adjustments (multi-view slot switch). */
   replace: (value: ImageAdjustments) => void;
@@ -48,8 +50,15 @@ export function useImageAdjustments(
     setAdjustments((prev) => ({ ...prev, pixelsPerMm: value }));
   }, []);
 
+  const setOrientation = useCallback(
+    (value: Pick<ImageAdjustments, "flipH" | "flipV" | "rotation">) => {
+      setAdjustments((prev) => ({ ...prev, ...value }));
+    },
+    [],
+  );
+
   const reset = useCallback(() => {
-    setAdjustments({ ...DEFAULT_IMAGE_ADJUSTMENTS });
+    setAdjustments((prev) => ({ ...DEFAULT_IMAGE_ADJUSTMENTS, pixelsPerMm: prev.pixelsPerMm }));
   }, []);
 
   const replace = useCallback((value: ImageAdjustments) => {
@@ -62,7 +71,10 @@ export function useImageAdjustments(
     return (
       adjustments.brightness !== 0 ||
       adjustments.contrast !== 0 ||
-      adjustments.invert !== false
+      adjustments.invert !== false ||
+      !!adjustments.flipH ||
+      !!adjustments.flipV ||
+      (adjustments.rotation ?? 0) !== 0
     );
   }, [adjustments]);
 
@@ -72,6 +84,7 @@ export function useImageAdjustments(
     setContrast,
     setInvert,
     setPixelsPerMm,
+    setOrientation,
     reset,
     replace,
     cssFilter,

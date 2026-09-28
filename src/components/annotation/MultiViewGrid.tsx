@@ -306,6 +306,10 @@ export function ViewportCell({
             imageRendering: viewState.zoom > 2 ? "pixelated" : "auto",
             filter: cssFilter || undefined,
             transform: imageTransform,
+            // Image-pixel size, matching the annotation overlay (see AnnotationCanvas).
+            maxWidth: "none",
+            width: slot.imageWidth,
+            height: slot.imageHeight,
           }}
           onLoad={() => setImageLoaded(true)}
           draggable={false}

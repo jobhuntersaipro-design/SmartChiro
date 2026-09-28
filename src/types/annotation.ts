@@ -1,3 +1,5 @@
+import { orientPoint, unorientPoint, type Orientation } from "@/lib/orientation";
+
 // ─── Base Shape System ───
 
 export type ShapeType =
@@ -185,6 +187,10 @@ export interface ImageAdjustments {
    * no Prisma migration needed.
    */
   pixelsPerMm?: number;
+  /** View orientation — annotations stay in original image space (see lib/orientation). */
+  flipH?: boolean;
+  flipV?: boolean;
+  rotation?: 0 | 90 | 180 | 270;
 }
 
 export const DEFAULT_IMAGE_ADJUSTMENTS: ImageAdjustments = {
@@ -275,6 +281,12 @@ export interface ViewTransform {
   zoom: number;
   panX: number;
   panY: number;
+  /**
+   * Flip/rotate of the displayed X-ray. When set, screen↔image conversions go
+   * through it so pointer input lands on the anatomy under the cursor. The
+   * viewport's own pan/zoom transform never carries it.
+   */
+  orientation?: Orientation;
 }
 
 export const ZOOM_MIN = 0.05;  // 5%
@@ -354,10 +366,11 @@ export function screenToImage(
   screenY: number,
   transform: ViewTransform
 ): Point {
-  return {
+  const display = {
     x: (screenX - transform.panX) / transform.zoom,
     y: (screenY - transform.panY) / transform.zoom,
   };
+  return transform.orientation ? unorientPoint(display, transform.orientation) : display;
 }
 
 export function imageToScreen(
@@ -365,9 +378,12 @@ export function imageToScreen(
   imageY: number,
   transform: ViewTransform
 ): Point {
+  const display = transform.orientation
+    ? orientPoint({ x: imageX, y: imageY }, transform.orientation)
+    : { x: imageX, y: imageY };
   return {
-    x: imageX * transform.zoom + transform.panX,
-    y: imageY * transform.zoom + transform.panY,
+    x: display.x * transform.zoom + transform.panX,
+    y: display.y * transform.zoom + transform.panY,
   };
 }
 
