@@ -325,7 +325,10 @@ export function recomputeShapeDerived(shape: BaseShape): BaseShape {
     height: bb.height,
   };
 
-  if (shape.type === "angle" && shape.points.length >= 3 && shape.measurement) {
+  if (shape.type === "ruler" && shape.points.length >= 2 && shape.measurement) {
+    const m = computeRulerMeasurement(shape.points[0], shape.points[1]);
+    next.measurement = { ...shape.measurement, value: m.pixelLength, unit: "px", label: m.label };
+  } else if (shape.type === "angle" && shape.points.length >= 3 && shape.measurement) {
     const m = computeAngleMeasurement(shape.points[0], shape.points[1], shape.points[2]);
     next.measurement = {
       ...shape.measurement,
@@ -349,6 +352,20 @@ export function recomputeShapeDerived(shape: BaseShape): BaseShape {
   }
 
   return next;
+}
+
+/**
+ * The reading to show for a shape, computed from its current points (so it
+ * matches the canvas after drags and linked-vertex moves) and shown in mm
+ * when calibrated. Calibration lines keep their "100 px = 25 mm" label.
+ */
+export function measurementText(shape: BaseShape, pixelsPerMm: number | null | undefined): string | null {
+  if (!shape.measurement) return null;
+  if (shape.type === "calibration") return shape.measurement.label;
+  const m = recomputeShapeDerived(shape).measurement;
+  if (!m) return null;
+  if (shape.type === "cobb_angle") return m.label;
+  return formatMeasurement(m.value, m.unit, pixelsPerMm ?? null);
 }
 
 /**

@@ -9,6 +9,8 @@ import {
   nextMeasurementId,
   findDependentsOfShape,
   buildDependentCounts,
+  recomputeShapeDerived,
+  measurementText,
 } from "@/lib/measurements";
 import type { BaseShape } from "@/types/annotation";
 
@@ -419,5 +421,44 @@ describe("buildDependentCounts", () => {
     const counts = buildDependentCounts(shapes);
     expect(counts.get("P1")).toBe(1);
     expect(counts.get("P2")).toBe(2);
+  });
+});
+
+describe("live readings", () => {
+  const ruler = (x2: number) =>
+    s({
+      id: "R",
+      type: "ruler",
+      points: [{ x: 0, y: 0 }, { x: x2, y: 0 }],
+      measurement: { value: 100, unit: "px", calibrated: false, label: "100 px" },
+    });
+
+  it("recomputes a ruler's length after its end moves", () => {
+    const next = recomputeShapeDerived(ruler(250));
+    expect(next.measurement).toMatchObject({ value: 250, unit: "px", label: "250 px" });
+  });
+
+  it("shows the same reading as the canvas: from the points, in mm when calibrated", () => {
+    expect(measurementText(ruler(250), undefined)).toBe("250 px");
+    expect(measurementText(ruler(250), 10)).toBe("2.5 cm");
+    expect(measurementText(ruler(40), 10)).toBe("4.0 mm");
+  });
+
+  it("keeps a calibration line's own label and recomputes Cobb with its grade", () => {
+    const cal = s({
+      id: "K",
+      type: "calibration",
+      points: [{ x: 0, y: 0 }, { x: 100, y: 0 }],
+      measurement: { value: 100, unit: "px", calibrated: true, label: "100 px = 25 mm" },
+    });
+    expect(measurementText(cal, 4)).toBe("100 px = 25 mm");
+    const cobb = s({
+      id: "C",
+      type: "cobb_angle",
+      points: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 0, y: 100 }, { x: 100, y: 120 }],
+      measurement: { value: 99, unit: "deg", calibrated: false, label: "stale" },
+    });
+    expect(measurementText(cobb, undefined)).toMatch(/^11\.3° — Mild$/);
+    expect(measurementText(s({ id: "T", type: "text" }), 4)).toBeNull();
   });
 });

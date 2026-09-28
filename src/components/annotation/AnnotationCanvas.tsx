@@ -1505,6 +1505,9 @@ export function AnnotationCanvas({
   // Globally-unique P# labels for every dot on every point/line/polyline shape.
   // Recomputed each render so adding/removing/reordering shapes keeps labels stable.
   const vertexLabelsByShape = computeGlobalPointLabels(allShapesToRender);
+  // Committed shapes with linked vertices resolved — the panel's readings then
+  // match what the canvas draws.
+  const panelShapes = shapes.map((s) => resolveShapeRefs(s, shapeById));
   // What's drawn: shapes and marquee placed on the flipped/rotated view.
   const displayShapes = orientation
     ? allShapesToRender.map((s) => orientShape(s, orientation))
@@ -2127,7 +2130,7 @@ export function AnnotationCanvas({
 
         {/* Right Properties Panel */}
         <PropertiesPanel
-          shapes={shapes}
+          shapes={panelShapes}
           selectedShapeIds={interaction.selectedShapeIds}
           onSelectShape={(id) => interaction.setSelectedShapeIds([id])}
           onSetSelectedShapeIds={interaction.setSelectedShapeIds}

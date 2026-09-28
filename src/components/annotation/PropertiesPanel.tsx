@@ -25,8 +25,9 @@ import {
 import type { BaseShape, ShapeStyle, ShapeType } from "@/types/annotation";
 import { ANNOTATION_COLOR_PRESETS, DASH_PATTERN_PRESETS } from "@/types/annotation";
 import {
-  formatMeasurement,
   computeGlobalPointLabels,
+  measurementText,
+  recomputeShapeDerived,
   resolveLandmarkLabelForDisplay,
 } from "@/lib/measurements";
 import {
@@ -708,6 +709,7 @@ export function PropertiesPanel({
             {selectedShape ? (
               <ShapeProperties
                 shape={selectedShape}
+                pixelsPerMm={pixelsPerMm}
                 onUpdate={(updates) => onUpdateShape(selectedShape.id, updates)}
               />
             ) : selectedShapeIds.length > 1 ? (
@@ -749,11 +751,18 @@ export function PropertiesPanel({
 
 function ShapeProperties({
   shape,
+  pixelsPerMm,
   onUpdate,
 }: {
   shape: BaseShape;
+  pixelsPerMm?: number;
   onUpdate: (updates: Partial<BaseShape>) => void;
 }) {
+  // Readings come from the current points, like the canvas — the stored
+  // measurement can lag behind drags and linked-vertex moves.
+  const reading = measurementText(shape, pixelsPerMm);
+  const live = recomputeShapeDerived(shape);
+  const liveValue = live.measurement?.value ?? 0;
   return (
     <div className="space-y-3">
       {/* Label */}
@@ -1064,7 +1073,7 @@ function ShapeProperties({
           {shape.measurement && (
             <PropertyField label="Measurement">
               <p className="text-sm font-medium tabular-nums" style={{ color: "#00D4AA" }}>
-                {shape.measurement.label}
+                {reading}
               </p>
               <span
                 className="inline-block mt-1 px-1.5 py-0.5 text-xs rounded-full"
@@ -1107,12 +1116,12 @@ function ShapeProperties({
         <>
           <PropertyField label="Angle">
             <p className="text-sm font-medium tabular-nums" style={{ color: "#00D4AA" }}>
-              {shape.measurement.label}
+              {reading}
             </p>
           </PropertyField>
           <PropertyField label="Supplementary">
             <p className="text-xs tabular-nums" style={{ color: "#273951" }}>
-              {(180 - shape.measurement.value).toFixed(1)}°
+              {(180 - liveValue).toFixed(1)}°
             </p>
           </PropertyField>
           <PropertyField label="Show supplementary">
@@ -1146,7 +1155,7 @@ function ShapeProperties({
         <>
           <PropertyField label="Cobb angle">
             <p className="text-sm font-medium tabular-nums" style={{ color: "#00D4AA" }}>
-              {shape.measurement.value.toFixed(1)}°
+              {liveValue.toFixed(1)}°
             </p>
           </PropertyField>
           <PropertyField label="Classification">
@@ -1154,18 +1163,18 @@ function ShapeProperties({
               className="inline-block px-2 py-0.5 text-xs rounded-full font-medium"
               style={{
                 backgroundColor:
-                  shape.cobbClassification === "Minimal" ? "#f0f3f7"
-                    : shape.cobbClassification === "Mild" ? "#e6f9f3"
-                      : shape.cobbClassification === "Moderate" ? "#fef9e7"
+                  live.cobbClassification === "Minimal" ? "#f0f3f7"
+                    : live.cobbClassification === "Mild" ? "#e6f9f3"
+                      : live.cobbClassification === "Moderate" ? "#fef9e7"
                         : "#fde8ec",
                 color:
-                  shape.cobbClassification === "Minimal" ? "#425466"
-                    : shape.cobbClassification === "Mild" ? "#30B130"
-                      : shape.cobbClassification === "Moderate" ? "#F5A623"
+                  live.cobbClassification === "Minimal" ? "#425466"
+                    : live.cobbClassification === "Mild" ? "#30B130"
+                      : live.cobbClassification === "Moderate" ? "#F5A623"
                         : "#DF1B41",
               }}
             >
-              {shape.cobbClassification}
+              {live.cobbClassification}
             </span>
           </PropertyField>
           <PropertyField label="Perpendiculars">
@@ -1196,7 +1205,7 @@ function ShapeProperties({
         && shape.type !== "cobb_angle" && (
         <PropertyField label="Measurement">
           <p className="text-sm font-medium tabular-nums" style={{ color: "#533afd" }}>
-            {shape.measurement.label}
+            {reading}
           </p>
         </PropertyField>
       )}
@@ -1372,9 +1381,7 @@ function MeasurementSummary({
                       label verbatim — they're the source of the px↔mm mapping
                       and showing both is more informative than a converted
                       single value. */}
-                  {s.type === "calibration"
-                    ? s.measurement!.label
-                    : formatMeasurement(s.measurement!.value, s.measurement!.unit, pixelsPerMm ?? null)}
+                  {measurementText(s, pixelsPerMm)}
                 </span>
                 {s.type === "calibration" && onEditCalibration && (
                   <button

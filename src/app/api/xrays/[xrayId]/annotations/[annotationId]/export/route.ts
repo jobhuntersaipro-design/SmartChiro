@@ -77,9 +77,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
     const canvasState = annotation.canvasState as unknown as AnnotationCanvasState;
-    const adjustments = includeAdjustments
-      ? (annotation.imageAdjustments as unknown as ImageAdjustments | null)
-      : null;
+    // Always passed: calibration labels lengths in mm even when the visual
+    // adjustments (brightness etc.) are left out of the export.
+    const adjustments = annotation.imageAdjustments as unknown as ImageAdjustments | null;
     const imageWidth = xray.width ?? 1024;
     const imageHeight = xray.height ?? 768;
 

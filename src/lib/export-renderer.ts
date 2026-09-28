@@ -6,6 +6,20 @@ import type {
   BaseShape,
   Point,
 } from "@/types/annotation";
+import { measurementText, recomputeShapeDerived, resolveShapeRefs } from "@/lib/measurements";
+
+/**
+ * Shapes as the viewer shows them: linked vertices resolved, readings
+ * recomputed from the points, and lengths in mm when the film is calibrated.
+ */
+export function shapesForExport(shapes: BaseShape[], pixelsPerMm: number | null | undefined): BaseShape[] {
+  const byId = new Map(shapes.map((s) => [s.id, s]));
+  return shapes.map((original) => {
+    const shape = recomputeShapeDerived(resolveShapeRefs(original, byId));
+    const text = measurementText(shape, pixelsPerMm);
+    return shape.measurement && text ? { ...shape, measurement: { ...shape.measurement, label: text } } : shape;
+  });
+}
 
 // ─── SVG Rendering Helpers ───
 
@@ -182,7 +196,7 @@ export async function renderAnnotatedPng(
   pipeline = pipeline.png();
 
   // Render annotations as SVG overlay
-  const visibleShapes = canvasState.shapes.filter((s) => s.visible);
+  const visibleShapes = shapesForExport(canvasState.shapes, adjustments?.pixelsPerMm).filter((s) => s.visible);
   if (visibleShapes.length > 0) {
     const svgOverlay = buildAnnotationSvg(visibleShapes, imageWidth, imageHeight);
     const svgBuffer = Buffer.from(svgOverlay);
@@ -286,7 +300,7 @@ export async function renderAnnotatedPdf(
   });
 
   // Page 2: Measurement summary (if measurements exist)
-  const measurements = canvasState.shapes.filter(
+  const measurements = shapesForExport(canvasState.shapes, adjustments?.pixelsPerMm).filter(
     (s) => s.visible && s.measurement && ["ruler", "angle", "cobb_angle"].includes(s.type)
   );
 

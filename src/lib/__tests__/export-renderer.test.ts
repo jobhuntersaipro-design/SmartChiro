@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import sharp from "sharp";
-import { renderAnnotatedPng, renderAnnotatedPdf } from "../export-renderer";
+import { renderAnnotatedPng, renderAnnotatedPdf, shapesForExport } from "../export-renderer";
 import type { AnnotationCanvasState, BaseShape } from "@/types/annotation";
 import {
   DEFAULT_SHAPE_STYLE,
@@ -395,5 +395,22 @@ describe("renderAnnotatedPdf", () => {
     // Both should be valid PDFs
     expect(lowDpi.toString("ascii", 0, 5)).toBe("%PDF-");
     expect(highDpi.toString("ascii", 0, 5)).toBe("%PDF-");
+  });
+});
+
+describe("shapesForExport", () => {
+  it("labels rulers from their current points, in mm when calibrated, following linked vertices", () => {
+    const point = makeShape({ id: "P", type: "point", points: [{ x: 300, y: 0 }] });
+    const ruler = makeShape({
+      id: "R",
+      type: "ruler",
+      points: [{ x: 0, y: 0 }, { x: 100, y: 0 }],
+      pointRefs: [null, { shapeId: "P", vertexIndex: 0 }],
+      measurement: { value: 100, unit: "px", calibrated: false, label: "100 px" },
+    });
+    const [, out] = shapesForExport([point, ruler], 10);
+    expect(out.points[1]).toEqual({ x: 300, y: 0 });
+    expect(out.measurement?.label).toBe("3.0 cm");
+    expect(shapesForExport([point, ruler], undefined)[1].measurement?.label).toBe("300 px");
   });
 });
