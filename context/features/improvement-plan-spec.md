@@ -213,7 +213,21 @@ For the screens: the list's status styles need a `PARTIALLY_PAID` entry ("Partia
 
 ## Phase 5 — Reports
 
-_Detailed before build._
+`/dashboard/reports` for OWNER/ADMIN (new capability `reports.read`), following the sidebar branch scope (one branch or All branches) with a date range: Today, This week, This month (default), Last month, Last 90 days, Custom (DateInput). All ranges are clinic days (Asia/Kuala_Lumpur).
+
+| Section | Metrics |
+|---|---|
+| Revenue | Collected (payments net of refunds) and invoiced (issued, excluding cancelled) with a daily/weekly trend; split by branch, by doctor (the appointment's doctor; manual invoices → "No appointment", package sales → "Package sales") and by treatment type |
+| Receivables | Open balance, overdue balance, oldest overdue invoices |
+| Appointments | Booked, completed, cancelled, no-show; no-show rate = no-show ÷ (completed + no-show); cancellation rate; per doctor |
+| Utilisation | Booked minutes ÷ available minutes per doctor. Available = doctor weekly schedule (falls back to branch hours) minus breaks and time off over the range |
+| Packages | Active packages, sessions outstanding, liability = sessions left × unit value, packages expiring in 30 days, sold in range |
+| Patients | New patients in range, returning patients (visit in range and an earlier visit), lapsed (active, last visit 60+ days ago, nothing booked) |
+
+- One endpoint per section under `/api/reports/*` (so each card loads independently), all scoped with `loadBranchContext` and `reports.read`.
+- Every table has **Export CSV**. Charts are plain SVG (no new chart library), readable in light mode, with numbers labelled.
+- Sidebar gets a **Reports** link for OWNER/ADMIN (the report's 404 goes away).
+**Done when:** an owner can answer "how much did we collect this month, per doctor, and what do we still owe in package sessions" from one page, and the CSV totals match the cards.
 
 ## Phase 6 — WhatsApp recall and review requests
 
