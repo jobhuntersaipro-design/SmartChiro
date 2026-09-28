@@ -49,6 +49,7 @@ const FIELD_LABELS: Record<string, string> = {
   notes: "Notes",
   doctorId: "Doctor",
   treatmentType: "Treatment",
+  room: "Room",
 };
 
 function formatValue(field: string, value: unknown): string {

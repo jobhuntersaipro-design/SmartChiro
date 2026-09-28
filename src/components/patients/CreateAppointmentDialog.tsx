@@ -9,10 +9,13 @@ import { formatAppointmentDateTime } from "@/lib/format";
 import {
   TREATMENT_OPTIONS,
   treatmentLabelFor,
+  defaultDurationFor,
+  DEFAULT_APPOINTMENT_DURATION_MIN,
 } from "@/lib/treatment-colors";
 import type { TreatmentType } from "@/types/appointment";
 import { defaultStart } from "@/lib/appointment-defaults";
-import { clinicInstantFromInputs } from "@/lib/clinic-time";
+import { clinicDateKey, clinicInstantFromInputs, clinicUtcOffsetLabel } from "@/lib/clinic-time";
+import { DateInput } from "@/components/ui/date-input";
 
 interface Props {
   open: boolean;
@@ -24,8 +27,12 @@ interface Props {
     lastName: string;
     email?: string | null;
     phone?: string | null;
+    /** The patient's branch — the booking is made there. */
+    branchId?: string | null;
   } | null;
   prefilledDoctor?: { id: string; name: string } | null;
+  /** Branch the page is showing; the form starts there when no patient is prefilled. */
+  defaultBranchId?: string | null;
   /** ISO start time, e.g. from clicking an empty calendar slot. */
   prefilledDateTime?: string | null;
   onClose: () => void;
@@ -46,6 +53,26 @@ interface PatientOption {
   email: string | null;
   phone: string | null;
 }
+
+/** A branch from GET /api/branches (basic list). */
+interface BranchOption {
+  id: string;
+  name: string;
+  userRole: string;
+  treatmentRooms: number | null;
+  isActive?: boolean;
+}
+
+/** Patient's branch, else the page's branch, else the user's active branch, else the first. */
+function pickBranch(list: BranchOption[], preferred: (string | null | undefined)[]): string {
+  for (const id of preferred) {
+    if (id && list.some((b) => b.id === id)) return id;
+  }
+  return list.find((b) => b.isActive)?.id ?? list[0]?.id ?? "";
+}
+
+const FIELD_CLASS =
+  "w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]";
 
 /** Confirmation gates the user has accepted — sent as bypass flags on retry. */
 interface SubmitOpts {
@@ -68,6 +95,7 @@ export function CreateAppointmentDialog({
   prefilledPatient,
   prefilledDoctor,
   prefilledDateTime,
+  defaultBranchId,
   onClose,
   onCreated,
 }: Props) {
@@ -75,9 +103,14 @@ export function CreateAppointmentDialog({
   const [doctor, setDoctor] = useState<{ id: string; name: string } | null>(null);
   const [date, setDate] = useState(() => defaultStart(prefilledDateTime).date);
   const [time, setTime] = useState(() => defaultStart(prefilledDateTime).time);
-  const [duration, setDuration] = useState(30);
+  const [duration, setDuration] = useState(DEFAULT_APPOINTMENT_DURATION_MIN);
+  // Once the user types a duration, picking a treatment no longer overwrites it
+  const [durationTouched, setDurationTouched] = useState(false);
   const [notes, setNotes] = useState("");
+  const [room, setRoom] = useState("");
   const [treatmentType, setTreatmentType] = useState<TreatmentType | "">("");
+  const [branches, setBranches] = useState<BranchOption[]>([]);
+  const [branchId, setBranchId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
@@ -103,22 +136,46 @@ export function CreateAppointmentDialog({
     const start = defaultStart(prefilledDateTime);
     setDate(start.date);
     setTime(start.time);
-    setDuration(30);
+    setDuration(DEFAULT_APPOINTMENT_DURATION_MIN);
+    setDurationTouched(false);
     setNotes("");
+    setRoom("");
     setTreatmentType("");
+    setBranchId(prefilledPatient?.branchId ?? defaultBranchId ?? "");
     setError(null);
     setConflicts([]);
     setBreakConfirm(null);
     setHoursConfirm(null);
-  }, [open, prefilledPatient, prefilledDoctor, prefilledDateTime]);
+  }, [open, prefilledPatient, prefilledDoctor, prefilledDateTime, defaultBranchId]);
 
-  // Doctors who are not admins can only book for themselves — auto-pin
+  // The user's branches — for the branch field, room suggestions and per-branch role
   useEffect(() => {
-    if (!isAdmin && open && currentUserId && !doctor) {
-      // Without admin rights, the user must be the doctor themselves.
+    if (!open) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch("/api/branches");
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as { branches?: BranchOption[] };
+      if (cancelled) return;
+      const list = data.branches ?? [];
+      setBranches(list);
+      setBranchId((prev) => pickBranch(list, [prefilledPatient?.branchId, prev, defaultBranchId]));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, prefilledPatient, defaultBranchId]);
+
+  const branch = branches.find((b) => b.id === branchId);
+  // A DOCTOR books only for themselves (the API enforces the same rule per branch)
+  const canPickDoctor = branch ? branch.userRole !== "DOCTOR" : isAdmin;
+
+  // Doctors who can't pick a doctor book for themselves — auto-pin
+  useEffect(() => {
+    if (!canPickDoctor && open && currentUserId && !doctor) {
       setDoctor({ id: currentUserId, name: "Me" });
     }
-  }, [isAdmin, open, currentUserId, doctor]);
+  }, [canPickDoctor, open, currentUserId, doctor]);
 
   // Live conflict preview
   useEffect(() => {
@@ -141,6 +198,21 @@ export function CreateAppointmentDialog({
 
   if (!open) return null;
 
+  function changeBranch(id: string) {
+    setBranchId(id);
+    // Patients and doctors belong to a branch — pick again for the new one
+    if (!prefilledPatient) setPatient(null);
+    const next = branches.find((b) => b.id === id);
+    setDoctor(next && next.userRole === "DOCTOR" ? { id: currentUserId, name: "Me" } : null);
+    setRoom("");
+  }
+
+  function changeTreatment(t: TreatmentType | "") {
+    setTreatmentType(t);
+    if (!durationTouched) setDuration(defaultDurationFor(t));
+  }
+
+  const roomCount = branch?.treatmentRooms ?? 0;
   const iso = inputsToIso(date, time);
   const isPast = iso ? new Date(iso).getTime() < Date.now() : false;
   const canSave =
@@ -161,6 +233,8 @@ export function CreateAppointmentDialog({
           duration,
           notes: notes.trim() || undefined,
           treatmentType: treatmentType || undefined,
+          room: room.trim() || undefined,
+          branchId: branchId || undefined,
           forceBookOnBreak: opts.forceBookOnBreak,
           forceOutsideHours: opts.forceOutsideHours,
         }),
@@ -180,6 +254,8 @@ export function CreateAppointmentDialog({
           setError("This time conflicts with an existing appointment.");
         } else if (res.status === 422 && data?.error === "past_datetime") {
           setError("Cannot schedule for a time in the past.");
+        } else if (res.status === 422 && data?.error === "patient_not_in_branch") {
+          setError("This patient belongs to another branch.");
         } else {
           setError(data?.error ?? `Create failed (${res.status})`);
         }
@@ -192,7 +268,6 @@ export function CreateAppointmentDialog({
     }
   }
 
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
     <div
@@ -209,66 +284,79 @@ export function CreateAppointmentDialog({
       >
         <h2 id="create-appointment-title" className="text-[18px] font-medium text-[#0A2540] mb-4">Schedule appointment</h2>
 
+        {branches.length > 1 && (
+          <div className="mb-3">
+            <label htmlFor="create-appointment-branch" className="block text-[12px] font-medium text-[#425466] mb-1">
+              Branch
+            </label>
+            <select
+              id="create-appointment-branch"
+              value={branchId}
+              onChange={(e) => changeBranch(e.target.value)}
+              disabled={!!prefilledPatient?.branchId}
+              className={`${FIELD_CLASS} disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            {prefilledPatient?.branchId && (
+              <p className="text-[11px] text-[#697386] mt-1">Booked at the patient&apos;s branch.</p>
+            )}
+          </div>
+        )}
+
         <div className="mb-3">
           <label className="block text-[12px] font-medium text-[#425466] mb-1">Patient</label>
           <PatientCombobox
             value={patient}
             onChange={setPatient}
             disabled={!!prefilledPatient}
+            branchId={branchId || undefined}
           />
         </div>
 
-        {isAdmin && (
+        {canPickDoctor && (
           <div className="mb-3">
             <label className="block text-[12px] font-medium text-[#425466] mb-1">Doctor</label>
-            <DoctorCombobox value={doctor} onChange={setDoctor} />
+            <DoctorCombobox value={doctor} onChange={setDoctor} branchId={branchId || undefined} />
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
-            <input
-              type="date"
+            <label htmlFor="create-appointment-date" className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
+            <DateInput
+              id="create-appointment-date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              onChange={setDate}
+              min={clinicDateKey()}
+              inputClassName={FIELD_CLASS}
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#425466] mb-1">Time</label>
+            <label htmlFor="create-appointment-time" className="block text-[12px] font-medium text-[#425466] mb-1">Time</label>
             <input
+              id="create-appointment-time"
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className={FIELD_CLASS}
             />
           </div>
         </div>
 
         <div className="mb-3">
-          <label className="block text-[12px] font-medium text-[#425466] mb-1">
-            Duration (minutes)
-          </label>
-          <input
-            type="number"
-            min={15}
-            max={180}
-            step={15}
-            value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value || "30", 10))}
-            className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="block text-[12px] font-medium text-[#425466] mb-1">
+          <label htmlFor="create-appointment-treatment" className="block text-[12px] font-medium text-[#425466] mb-1">
             Treatment type (optional)
           </label>
           <select
+            id="create-appointment-treatment"
             value={treatmentType}
-            onChange={(e) => setTreatmentType(e.target.value as TreatmentType | "")}
-            className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            onChange={(e) => changeTreatment(e.target.value as TreatmentType | "")}
+            className={FIELD_CLASS}
           >
             <option value="">— Select —</option>
             {TREATMENT_OPTIONS.map((t) => (
@@ -277,6 +365,49 @@ export function CreateAppointmentDialog({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label htmlFor="create-appointment-duration" className="block text-[12px] font-medium text-[#425466] mb-1">
+              Duration (minutes)
+            </label>
+            <input
+              id="create-appointment-duration"
+              type="number"
+              min={5}
+              max={180}
+              step={5}
+              value={duration}
+              onChange={(e) => {
+                setDurationTouched(true);
+                setDuration(parseInt(e.target.value || String(DEFAULT_APPOINTMENT_DURATION_MIN), 10));
+              }}
+              className={FIELD_CLASS}
+            />
+          </div>
+          <div>
+            <label htmlFor="create-appointment-room" className="block text-[12px] font-medium text-[#425466] mb-1">
+              Room (optional)
+            </label>
+            <input
+              id="create-appointment-room"
+              type="text"
+              value={room}
+              maxLength={60}
+              onChange={(e) => setRoom(e.target.value)}
+              list={roomCount > 0 ? "create-appointment-rooms" : undefined}
+              placeholder={roomCount > 0 ? `Room 1–${roomCount}` : "e.g. Room 2"}
+              className={FIELD_CLASS}
+            />
+            {roomCount > 0 && (
+              <datalist id="create-appointment-rooms">
+                {Array.from({ length: roomCount }, (_, i) => (
+                  <option key={i} value={`Room ${i + 1}`} />
+                ))}
+              </datalist>
+            )}
+          </div>
         </div>
 
         <div className="mb-4">
@@ -322,7 +453,7 @@ export function CreateAppointmentDialog({
           </div>
         )}
 
-        <p className="text-[11px] text-[#94a3b8] mb-3">Your local time · {tz}</p>
+        <p className="text-[11px] text-[#94a3b8] mb-3">Clinic time (GMT{clinicUtcOffsetLabel()})</p>
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">

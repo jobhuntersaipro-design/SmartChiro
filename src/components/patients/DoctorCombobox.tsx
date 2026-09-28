@@ -12,11 +12,15 @@ interface Props {
   value: DoctorOption | null;
   onChange: (d: DoctorOption | null) => void;
   disabled?: boolean;
+  /** Only list clinicians of this branch. */
+  branchId?: string;
 }
 
-export function DoctorCombobox({ value, onChange, disabled }: Props) {
+export function DoctorCombobox({ value, onChange, disabled, branchId }: Props) {
   const [open, setOpen] = useState(false);
   const [doctors, setDoctors] = useState<DoctorOption[]>([]);
+  // Which branch the loaded list belongs to ("" = all of the caller's branches)
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,16 +33,19 @@ export function DoctorCombobox({ value, onChange, disabled }: Props) {
   }, [open]);
 
   useEffect(() => {
-    if (!open || doctors.length > 0) return;
+    const scope = branchId ?? "";
+    if (!open || loadedFor === scope) return;
     let cancelled = false;
     void (async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/doctors?clinical=1");
+        const qs = branchId ? `&branchId=${encodeURIComponent(branchId)}` : "";
+        const res = await fetch(`/api/doctors?clinical=1${qs}`);
         if (!res.ok) return;
         const data = (await res.json()) as { doctors?: Array<{ id: string; name: string | null }> };
         if (cancelled) return;
         setDoctors((data.doctors ?? []).map((d) => ({ id: d.id, name: d.name ?? "Unknown" })));
+        setLoadedFor(scope);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -46,7 +53,7 @@ export function DoctorCombobox({ value, onChange, disabled }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [open, doctors.length]);
+  }, [open, branchId, loadedFor]);
 
   const label = value?.name ?? "Select doctor…";
 

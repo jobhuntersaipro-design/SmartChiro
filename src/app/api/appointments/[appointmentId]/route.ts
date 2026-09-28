@@ -21,6 +21,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       duration: true,
       status: true,
       notes: true,
+      room: true,
+      treatmentType: true,
       branchId: true,
       patient: { select: { id: true, firstName: true, lastName: true } },
       doctor: { select: { id: true, name: true } },
@@ -38,6 +40,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       duration: appt.duration,
       status: appt.status,
       notes: appt.notes,
+      room: appt.room,
+      treatmentType: appt.treatmentType,
       branchId: appt.branchId,
       patient: appt.patient,
       doctor: appt.doctor,
@@ -75,6 +79,8 @@ const Body = z
       ])
       .nullable()
       .optional(),
+    /** Free-text treatment room; "" or null clears it. */
+    room: z.string().trim().max(60).nullable().optional(),
     /** Bypass the outside-opening-hours confirmation on a reschedule. */
     forceOutsideHours: z.boolean().optional(),
   })
@@ -95,6 +101,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
       status: true,
       notes: true,
       treatmentType: true,
+      room: true,
       patient: { select: { firstName: true, lastName: true } },
     },
   });
@@ -196,6 +203,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
   if (parsed.data.doctorId !== undefined) updateData.doctorId = parsed.data.doctorId;
   if (parsed.data.treatmentType !== undefined) updateData.treatmentType = parsed.data.treatmentType;
+  if (parsed.data.room !== undefined) updateData.room = parsed.data.room || null;
 
   const updated = await prisma.appointment.update({
     where: { id: appointmentId },
@@ -210,6 +218,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     notes: appt.notes,
     doctorId: appt.doctorId,
     treatmentType: appt.treatmentType,
+    room: appt.room,
   });
   const after = snapshotOf({
     dateTime: updated.dateTime,
@@ -218,6 +227,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     notes: updated.notes,
     doctorId: updated.doctorId,
     treatmentType: updated.treatmentType,
+    room: updated.room,
   });
   // Normalize Date → ISO string for diff comparison
   const beforeForDiff = {

@@ -125,6 +125,12 @@ export function AppointmentEventPopover({
           >
             {appointment.branch.name}
           </Link>
+          {appointment.room && (
+            <>
+              <span className="text-[#cbd5e1]">·</span>
+              <span className="text-[#425466]">{appointment.room}</span>
+            </>
+          )}
         </div>
         {appointment.notes && (
           <p className="text-[13px] text-[#425466] whitespace-pre-wrap break-words">

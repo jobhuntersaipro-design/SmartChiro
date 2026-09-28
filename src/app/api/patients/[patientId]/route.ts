@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { reminderChannelError } from "@/lib/reminder-channel";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
@@ -276,6 +277,23 @@ export async function PATCH(
   }
   if (email !== undefined && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+  }
+
+  // Reminder channel vs contact details, judged on the record as it will be after this update
+  if (reminderChannel !== undefined || phone !== undefined || email !== undefined) {
+    const current = await prisma.patient.findUnique({
+      where: { id: patientId },
+      select: { reminderChannel: true, phone: true, email: true },
+    });
+    const merged = {
+      channel: reminderChannel ?? current?.reminderChannel,
+      phone: phone !== undefined ? phone : current?.phone,
+      email: email !== undefined ? email : current?.email,
+    };
+    const channelError = reminderChannelError(merged.channel, merged);
+    if (channelError) {
+      return NextResponse.json({ error: channelError, code: "reminder_channel_contact" }, { status: 422 });
+    }
   }
 
   // Validate IC number

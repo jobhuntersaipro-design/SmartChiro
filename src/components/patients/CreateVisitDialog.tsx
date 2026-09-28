@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { CreateVisitData } from "@/types/visit";
 import { DISCARD_CHANGES_PROMPT, todayLocalISODate } from "@/lib/format";
+import { DateInput } from "@/components/ui/date-input";
 
 interface CreateVisitDialogProps {
   open: boolean;
@@ -307,12 +308,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   <label htmlFor="create-visit-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                     Visit Date
                   </label>
-                  <input
+                  <DateInput
                     id="create-visit-visit-date"
-                    type="date"
                     value={form.visitDate || ""}
-                    onChange={(e) => updateField("visitDate", e.target.value)}
-                    className={inputClass}
+                    onChange={(iso) => updateField("visitDate", iso)}
+                    inputClassName={inputClass}
                   />
                 </div>
                 <div>
@@ -696,13 +696,12 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 <label htmlFor="create-visit-next-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">
                   Next Visit Date
                 </label>
-                <input
+                <DateInput
                   id="create-visit-next-visit-date"
-                  type="date"
                   value={nextVisitDate}
-                  min={new Date().toISOString().slice(0, 10)}
-                  onChange={(e) => setNextVisitDate(e.target.value)}
-                  className={inputClass}
+                  min={todayLocalISODate()}
+                  onChange={setNextVisitDate}
+                  inputClassName={inputClass}
                 />
                 {nextVisitDate && (
                   <p className="mt-1 text-[12px] text-[#64748d]">

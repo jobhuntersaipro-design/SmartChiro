@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { DoctorDetail } from "@/types/doctor";
+import { DateInput } from "@/components/ui/date-input";
+import { clinicDateLabel, clinicDayBounds, clinicInstantFromInputs } from "@/lib/clinic-time";
 
 interface Props {
   doctorId: string;
@@ -118,15 +120,16 @@ function TimeOffSection({
   }, [doctorId]);
 
   async function add() {
-    if (!draft.startDate || !draft.endDate) return;
+    if (!draft.startDate || !draft.endDate || draft.endDate < draft.startDate) return;
     setSubmitting(true);
     const res = await fetch(`/api/doctors/${doctorId}/time-off`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         type: draft.type,
-        startDate: new Date(draft.startDate + "T00:00:00").toISOString(),
-        endDate: new Date(draft.endDate + "T23:59:59").toISOString(),
+        // Whole clinic days: 00:00 on the first day to 23:59:59 on the last
+        startDate: clinicInstantFromInputs(draft.startDate, "00:00").toISOString(),
+        endDate: new Date(clinicDayBounds(draft.endDate).end.getTime() - 1000).toISOString(),
         branchId: draft.branchId || null,
         notes: draft.notes || null,
       }),
@@ -220,20 +223,21 @@ function TimeOffSection({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-medium text-[#425466] mb-1">From</label>
-              <input
-                type="date"
+              <DateInput
+                aria-label="From"
                 value={draft.startDate}
-                onChange={(e) => setDraft({ ...draft, startDate: e.target.value })}
-                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
+                onChange={(iso) => setDraft((d) => ({ ...d, startDate: iso }))}
+                inputClassName="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
               />
             </div>
             <div>
               <label className="block text-[12px] font-medium text-[#425466] mb-1">To</label>
-              <input
-                type="date"
+              <DateInput
+                aria-label="To"
                 value={draft.endDate}
-                onChange={(e) => setDraft({ ...draft, endDate: e.target.value })}
-                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
+                min={draft.startDate || undefined}
+                onChange={(iso) => setDraft((d) => ({ ...d, endDate: iso }))}
+                inputClassName="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
               />
             </div>
           </div>
@@ -261,7 +265,7 @@ function TimeOffSection({
             <Button
               size="sm"
               onClick={add}
-              disabled={submitting || !draft.startDate || !draft.endDate}
+              disabled={submitting || !draft.startDate || !draft.endDate || draft.endDate < draft.startDate}
               className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
             >
               {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
@@ -297,7 +301,7 @@ function TimeOffSection({
                     )}
                   </p>
                   <p className="text-[12px] text-[#425466] tabular-nums">
-                    {start.toLocaleDateString()} → {end.toLocaleDateString()}
+                    {clinicDateLabel(start, "numeric")} → {clinicDateLabel(end, "numeric")}
                   </p>
                   {r.notes && (
                     <p className="text-[12px] text-[#697386] mt-0.5">{r.notes}</p>

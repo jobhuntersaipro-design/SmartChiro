@@ -710,6 +710,7 @@ model Appointment {
   status        AppointmentStatus @default(SCHEDULED)
   notes         String?
   treatmentType TreatmentType?
+  room          String? // free text, e.g. "Room 2"
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)

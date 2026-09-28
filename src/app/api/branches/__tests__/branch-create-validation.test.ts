@@ -204,4 +204,23 @@ describe('POST /api/branches — validation', () => {
     await prisma.branchMember.deleteMany({ where: { branchId: data.branch.id } })
     await prisma.branch.delete({ where: { id: data.branch.id } })
   })
+
+  it('adds https:// to a website typed without a scheme, and keeps empty as null', async () => {
+    const base = {
+      phone: '+60123456789', email: 'w@test.com',
+      address: '1 Jalan W', city: 'KL', state: 'WP', zip: '50000',
+    }
+    const typed = await POST(createRequest({ ...base, name: `${TEST_PREFIX} Web`, website: 'www.klchiro.my' }))
+    expect(typed.status).toBe(201)
+    const empty = await POST(createRequest({ ...base, name: `${TEST_PREFIX} NoWeb`, website: '' }))
+    expect(empty.status).toBe(201)
+
+    const ids = [(await typed.json()).branch.id, (await empty.json()).branch.id]
+    const [withSite, withoutSite] = await Promise.all(ids.map((id) => prisma.branch.findUnique({ where: { id } })))
+    expect(withSite!.website).toBe('https://www.klchiro.my')
+    expect(withoutSite!.website).toBeNull()
+
+    await prisma.branchMember.deleteMany({ where: { branchId: { in: ids } } })
+    await prisma.branch.deleteMany({ where: { id: { in: ids } } })
+  })
 })

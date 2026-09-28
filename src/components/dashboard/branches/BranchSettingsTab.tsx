@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { BranchDetail, OperatingHoursMap, DayHours } from "@/types/branch";
 import { parseOperatingHours, hasAnyHours } from "@/lib/operating-hours";
+import { CLINIC_TYPE_OPTIONS, formatClinicType, normalizeWebsite } from "@/lib/branch-fields";
 import { DeleteBranchDialog } from "./DeleteBranchDialog";
 import { BranchActivityLog } from "./BranchActivityLog";
 import { BranchReminderSettingsCard } from "@/components/branches/BranchReminderSettingsCard";
@@ -84,6 +85,11 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       setError(`${DAY_LABELS[badDay]}: opening time must be before closing time`);
       return;
     }
+    const website = normalizeWebsite(form.website);
+    if (!website.ok) {
+      setError(website.error);
+      return;
+    }
     setSaving(true);
     setError("");
     setSuccess(false);
@@ -94,6 +100,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          website: website.value ?? "",
           treatmentRooms: form.treatmentRooms ? parseInt(form.treatmentRooms, 10) : null,
           operatingHours: JSON.stringify(hours),
         }),
@@ -136,7 +143,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
           <Input type="email" value={form.email} onChange={(e) => updateField("email", e.target.value)} className="settings-input" />
         </FieldRow>
         <FieldRow label="Website">
-          <Input value={form.website} onChange={(e) => updateField("website", e.target.value)} placeholder="https://" className="settings-input" />
+          <Input value={form.website} onChange={(e) => updateField("website", e.target.value)} placeholder="www.yourclinic.com" className="settings-input" />
         </FieldRow>
       </Section>
 
@@ -222,7 +229,19 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
             <Input type="number" min="0" value={form.treatmentRooms} onChange={(e) => updateField("treatmentRooms", e.target.value)} className="settings-input" />
           </FieldRow>
           <FieldRow label="Clinic Type">
-            <Input value={form.clinicType} onChange={(e) => updateField("clinicType", e.target.value)} placeholder="e.g. Solo, Group" className="settings-input" />
+            <select
+              aria-label="Clinic Type"
+              value={form.clinicType}
+              onChange={(e) => updateField("clinicType", e.target.value)}
+              className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
+            >
+              <option value="">Not set</option>
+              {[...CLINIC_TYPE_OPTIONS, ...(form.clinicType && !(CLINIC_TYPE_OPTIONS as readonly string[]).includes(form.clinicType) ? [form.clinicType] : [])].map((t) => (
+                <option key={t} value={t}>
+                  {formatClinicType(t)}
+                </option>
+              ))}
+            </select>
           </FieldRow>
         </div>
         <FieldRow label="License Number">

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { CreateVisitData, Visit } from "@/types/visit";
 import { DISCARD_CHANGES_PROMPT } from "@/lib/format";
+import { DateInput } from "@/components/ui/date-input";
 
 interface EditVisitDialogProps {
   open: boolean;
@@ -338,12 +339,11 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="edit-visit-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">Visit Date</label>
-                  <input
+                  <DateInput
                     id="edit-visit-visit-date"
-                    type="date"
                     value={form.visitDate || ""}
-                    onChange={(e) => updateField("visitDate", e.target.value)}
-                    className={inputClass}
+                    onChange={(iso) => updateField("visitDate", iso)}
+                    inputClassName={inputClass}
                   />
                 </div>
                 <div>
@@ -670,12 +670,11 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
               </div>
               <div>
                 <label htmlFor="edit-visit-next-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">Next Visit Date</label>
-                <input
+                <DateInput
                   id="edit-visit-next-visit-date"
-                  type="date"
                   value={nextVisitDate}
-                  onChange={(e) => setNextVisitDate(e.target.value)}
-                  className={inputClass}
+                  onChange={setNextVisitDate}
+                  inputClassName={inputClass}
                 />
                 {nextVisitDate && (
                   <p className="mt-1 text-[12px] text-[#64748d]">

@@ -5,6 +5,9 @@ import {
   TREATMENT_OPTIONS,
   treatmentTokensFor,
   treatmentLabelFor,
+  DEFAULT_DURATION_MIN,
+  DEFAULT_APPOINTMENT_DURATION_MIN,
+  defaultDurationFor,
 } from "../treatment-colors";
 
 describe("treatment-colors", () => {
@@ -34,5 +37,25 @@ describe("treatment-colors", () => {
     const a = TREATMENT_COLORS.ADJUSTMENT.accent;
     const c = TREATMENT_COLORS.INITIAL_CONSULT.accent;
     expect(a).not.toEqual(c);
+  });
+});
+
+describe("default durations", () => {
+  it("has a positive duration in 5-minute steps for every treatment", () => {
+    for (const t of TREATMENT_OPTIONS) {
+      expect(DEFAULT_DURATION_MIN[t]).toBeGreaterThan(0);
+      expect(DEFAULT_DURATION_MIN[t] % 5).toBe(0);
+    }
+  });
+
+  it("gives an initial consult a long slot and an X-ray a short one", () => {
+    expect(defaultDurationFor("INITIAL_CONSULT")).toBe(60);
+    expect(defaultDurationFor("ADJUSTMENT")).toBe(30);
+    expect(defaultDurationFor("X_RAY")).toBe(20);
+  });
+
+  it("falls back to the standard slot with no treatment chosen", () => {
+    expect(defaultDurationFor("")).toBe(DEFAULT_APPOINTMENT_DURATION_MIN);
+    expect(defaultDurationFor(null)).toBe(30);
   });
 });

@@ -125,6 +125,7 @@ export async function GET(req: Request): Promise<Response> {
       status: true,
       notes: true,
       treatmentType: true,
+      room: true,
       patient: {
         select: { id: true, firstName: true, lastName: true, phone: true },
       },
@@ -148,6 +149,7 @@ export async function GET(req: Request): Promise<Response> {
       status: a.status,
       notes: a.notes,
       treatmentType: a.treatmentType,
+      room: a.room,
       hasUnpaidInvoice: a.invoices.length > 0,
       patient: a.patient,
       doctor: a.doctor,
@@ -163,6 +165,10 @@ const Body = z.object({
   duration: z.number().int().positive().max(480).optional(),
   notes: z.string().optional(),
   treatmentType: z.enum(TREATMENT_TYPES).optional(),
+  /** Free-text treatment room, e.g. "Room 2". */
+  room: z.string().trim().max(60).nullable().optional(),
+  /** Branch chosen in the booking form. Optional — the patient's branch is used; when sent it must match it. */
+  branchId: z.string().min(1).optional(),
   /** Bypass the break-time confirmation gate. Frontend sets this on retry after the user clicks "Book on break" in the dialog. */
   forceBookOnBreak: z.boolean().optional(),
   /** Bypass the outside-opening-hours confirmation. Set on retry after the user clicks "Book anyway". */
@@ -187,6 +193,8 @@ export async function POST(req: Request): Promise<Response> {
     duration = 30,
     notes,
     treatmentType,
+    room,
+    branchId: requestedBranchId,
     forceBookOnBreak,
     forceOutsideHours,
   } = parsed.data;
@@ -204,6 +212,11 @@ export async function POST(req: Request): Promise<Response> {
   });
   if (!patient) {
     return NextResponse.json({ error: "patient_not_found" }, { status: 404 });
+  }
+
+  // A patient belongs to one branch; the form's branch field only scopes the pickers.
+  if (requestedBranchId && requestedBranchId !== patient.branchId) {
+    return NextResponse.json({ error: "patient_not_in_branch" }, { status: 422 });
   }
 
   // RBAC: must be a member of the patient's branch
@@ -283,6 +296,7 @@ export async function POST(req: Request): Promise<Response> {
       status: "SCHEDULED",
       notes: notes ?? null,
       treatmentType: treatmentType ?? null,
+      room: room || null,
     },
   });
 
@@ -317,6 +331,7 @@ export async function POST(req: Request): Promise<Response> {
       duration: { from: null, to: created.duration },
       status: { from: null, to: created.status },
       treatmentType: { from: null, to: created.treatmentType ?? null },
+      room: { from: null, to: created.room ?? null },
       notes: { from: null, to: created.notes ?? null },
     },
   });
@@ -345,6 +360,7 @@ export async function POST(req: Request): Promise<Response> {
         status: created.status,
         notes: created.notes,
         treatmentType: created.treatmentType,
+        room: created.room,
         patientId: created.patientId,
         doctorId: created.doctorId,
         branchId: created.branchId,

@@ -31,6 +31,8 @@ export interface CalendarAppointment {
   status: AppointmentStatus;
   notes: string | null;
   treatmentType?: TreatmentType | null;
+  /** Free-text treatment room, e.g. "Room 2". */
+  room?: string | null;
   /** Whether this appointment has at least one DRAFT/SENT/OVERDUE invoice */
   hasUnpaidInvoice?: boolean;
   patient: {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DoctorCombobox } from "@/components/patients/DoctorCombobox";
 import { formatAppointmentDateTime } from "@/lib/format";
 import { clinicDateKey, clinicInstantFromInputs, clinicTimeInput } from "@/lib/clinic-time";
+import { DateInput } from "@/components/ui/date-input";
 
 interface Props {
   appointmentId: string | null;
@@ -20,6 +21,7 @@ interface AppointmentDetail {
   duration: number;
   status: string;
   notes: string | null;
+  room?: string | null;
   patient: { id: string; firstName: string; lastName: string };
   doctor: { id: string; name: string };
   branchId: string;
@@ -67,6 +69,7 @@ export function EditAppointmentDialog({
   const [doctor, setDoctor] = useState<{ id: string; name: string } | null>(null);
   const [status, setStatus] = useState<string>("SCHEDULED");
   const [notes, setNotes] = useState("");
+  const [room, setRoom] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
@@ -90,6 +93,7 @@ export function EditAppointmentDialog({
         setDoctor(a.doctor);
         setStatus(a.status);
         setNotes(a.notes ?? "");
+        setRoom(a.room ?? "");
       })
       .finally(() => setLoading(false));
   }, [appointmentId]);
@@ -139,6 +143,7 @@ export function EditAppointmentDialog({
       if (isAdmin && doctor && appt && doctor.id !== appt.doctor.id) body.doctorId = doctor.id;
       if (isAdmin && appt && status !== appt.status) body.status = status;
       if (appt && (notes ?? "") !== (appt.notes ?? "")) body.notes = notes;
+      if (appt && room.trim() !== (appt.room ?? "")) body.room = room.trim() || null;
 
       if (Object.keys(body).length === 0) {
         onClose();
@@ -212,12 +217,11 @@ export function EditAppointmentDialog({
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
                 <label htmlFor="edit-appointment-date" className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
-                <input
+                <DateInput
                   id="edit-appointment-date"
-                  type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  onChange={setDate}
+                  inputClassName="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
                 />
               </div>
               <div>
@@ -251,7 +255,7 @@ export function EditAppointmentDialog({
             {isAdmin && (
               <div className="mb-4">
                 <label className="block text-[12px] font-medium text-[#425466] mb-1">Doctor</label>
-                <DoctorCombobox value={doctor} onChange={setDoctor} />
+                <DoctorCombobox value={doctor} onChange={setDoctor} branchId={appt.branchId} />
               </div>
             )}
 
@@ -275,6 +279,19 @@ export function EditAppointmentDialog({
                 </p>
               </div>
             )}
+
+            <div className="mb-4">
+              <label htmlFor="edit-appointment-room" className="block text-[12px] font-medium text-[#425466] mb-1">Room (optional)</label>
+              <input
+                id="edit-appointment-room"
+                type="text"
+                value={room}
+                maxLength={60}
+                onChange={(e) => setRoom(e.target.value)}
+                placeholder="e.g. Room 2"
+                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              />
+            </div>
 
             <div className="mb-4">
               <label htmlFor="edit-appointment-notes" className="block text-[12px] font-medium text-[#425466] mb-1">Notes</label>

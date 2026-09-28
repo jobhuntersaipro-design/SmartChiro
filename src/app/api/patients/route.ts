@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import type { Prisma } from '@prisma/client'
 import { loadBranchContext } from '@/lib/branch-context'
 import { narrowScope, scopedWhere } from '@/lib/branch-scope'
+import { defaultReminderChannel, reminderChannelError } from '@/lib/reminder-channel'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -236,6 +237,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    // Without an explicit choice the channel follows the contact details given;
+    // an explicit one must have the matching contact.
+    const resolvedReminderChannel = reminderChannel || defaultReminderChannel({ phone, email })
+    const channelError = reminderChannelError(resolvedReminderChannel, { phone, email })
+    if (channelError) {
+      return NextResponse.json({ error: channelError, code: 'reminder_channel_contact' }, { status: 422 })
+    }
 
     if (!firstName?.trim() || !lastName?.trim()) {
       return NextResponse.json(
@@ -390,7 +398,7 @@ export async function POST(request: NextRequest) {
         firstTreatmentFee: typeof firstTreatmentFee === 'number' ? firstTreatmentFee : null,
         standardFollowUpFee: typeof standardFollowUpFee === 'number' ? standardFollowUpFee : null,
         status: 'active',
-        reminderChannel: reminderChannel ?? 'WHATSAPP',
+        reminderChannel: resolvedReminderChannel,
         preferredLanguage: preferredLanguage ?? 'en',
         branchId,
         doctorId: assignedDoctorId,

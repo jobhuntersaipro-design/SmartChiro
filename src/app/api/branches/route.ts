@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { cliniciansByBranch } from "@/lib/stats-scope";
 import { snapshotOf } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
+import { normalizeWebsite } from "@/lib/branch-fields";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -16,17 +17,20 @@ export async function GET(req: NextRequest) {
 
   if (!includeStats) {
     // Basic list — backwards compatible
-    const memberships = await prisma.branchMember.findMany({
-      where: { userId: session.user.id },
-      include: {
-        branch: {
-          include: {
-            _count: { select: { members: true, patients: true } },
+    const [memberships, me] = await Promise.all([
+      prisma.branchMember.findMany({
+        where: { userId: session.user.id },
+        include: {
+          branch: {
+            include: {
+              _count: { select: { members: true, patients: true } },
+            },
           },
         },
-      },
-      orderBy: { branch: { name: "asc" } },
-    });
+        orderBy: { branch: { name: "asc" } },
+      }),
+      prisma.user.findUnique({ where: { id: session.user.id }, select: { activeBranchId: true } }),
+    ]);
 
     const branches = memberships.map((m) => ({
       id: m.branch.id,
@@ -36,6 +40,8 @@ export async function GET(req: NextRequest) {
       email: m.branch.email,
       memberCount: m.branch._count.members,
       patientCount: m.branch._count.patients,
+      treatmentRooms: m.branch.treatmentRooms,
+      isActive: m.branch.id === me?.activeBranchId,
       userRole: m.role,
       createdAt: m.branch.createdAt.toISOString(),
     }));
@@ -173,8 +179,10 @@ export async function POST(req: NextRequest) {
   if (billingContactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billingContactEmail)) {
     return NextResponse.json({ error: "Invalid billing contact email format" }, { status: 400 });
   }
-  if (website && !/^https?:\/\/.+/.test(website)) {
-    return NextResponse.json({ error: "Website must start with http:// or https://" }, { status: 400 });
+  // A host typed without a scheme gets https://; empty stays null
+  const websiteResult = normalizeWebsite(typeof website === "string" ? website : null);
+  if (!websiteResult.ok) {
+    return NextResponse.json({ error: websiteResult.error }, { status: 400 });
   }
   if (treatmentRooms !== undefined && treatmentRooms !== null && treatmentRooms !== "") {
     const rooms = typeof treatmentRooms === "string" ? parseInt(treatmentRooms, 10) : treatmentRooms;
@@ -210,7 +218,7 @@ export async function POST(req: NextRequest) {
         ownerName: sessionUser?.name || null,
         operatingHours: operatingHours?.trim() || null,
         treatmentRooms: treatmentRooms ? (typeof treatmentRooms === "string" ? parseInt(treatmentRooms, 10) || null : treatmentRooms) : null,
-        website: website?.trim() || null,
+        website: websiteResult.value,
         billingContactName: billingContactName?.trim() || null,
         billingContactEmail: billingContactEmail?.trim() || null,
         billingContactPhone: billingContactPhone?.trim() || null,

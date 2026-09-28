@@ -78,6 +78,7 @@ export const AUDITED_APPOINTMENT_FIELDS = [
   "notes",
   "doctorId",
   "treatmentType",
+  "room",
 ] as const;
 export type AuditedAppointmentField = (typeof AUDITED_APPOINTMENT_FIELDS)[number];
 

@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Building2, MapPin, Stethoscope, CreditCard, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import type { CreateBranchData, OperatingHoursMap, DayHours } from "@/types/branch";
+import { normalizeWebsite } from "@/lib/branch-fields";
 
 interface CreateBranchDialogProps {
   open: boolean;
@@ -138,7 +139,8 @@ export function CreateBranchDialog({
       else if (data.phone.replace(/[^\d]/g, "").length < 7) newErrors.phone = "Must have at least 7 digits";
       if (!data.email.trim()) newErrors.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) newErrors.email = "Invalid email format";
-      if (data.website && !/^https?:\/\/.+/.test(data.website)) newErrors.website = "Must start with http:// or https://";
+      const website = normalizeWebsite(data.website);
+      if (!website.ok) newErrors.website = website.error;
     }
     if (step === 2) {
       if (!data.address.trim()) newErrors.address = "Street address is required";
@@ -308,7 +310,7 @@ export function CreateBranchDialog({
                 <Input
                   value={data.website}
                   onChange={(e) => update("website", e.target.value)}
-                  placeholder="https://www.smartchiro.com"
+                  placeholder="www.yourclinic.com"
                   className={errors.website ? inputErrorClass : inputClass}
                 />
                 <FieldError message={errors.website} />

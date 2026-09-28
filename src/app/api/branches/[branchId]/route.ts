@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { normalizeWebsite } from "@/lib/branch-fields";
 import { snapshotOf, diffSnapshots } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
 
@@ -188,8 +189,13 @@ export async function PATCH(
   if (body.billingContactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.billingContactEmail)) {
     return NextResponse.json({ error: "Invalid billing contact email format" }, { status: 400 });
   }
-  if (body.website && !/^https?:\/\/.+/.test(body.website)) {
-    return NextResponse.json({ error: "Website must start with http:// or https://" }, { status: 400 });
+  // A host typed without a scheme gets https://; empty stays null
+  if (body.website !== undefined) {
+    const websiteResult = normalizeWebsite(typeof body.website === "string" ? body.website : null);
+    if (!websiteResult.ok) {
+      return NextResponse.json({ error: websiteResult.error }, { status: 400 });
+    }
+    body.website = websiteResult.value ?? "";
   }
 
   // Build update object — string fields

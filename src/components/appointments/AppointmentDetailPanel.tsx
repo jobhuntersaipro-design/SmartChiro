@@ -265,6 +265,12 @@ export function AppointmentDetailPanel({
             <dd className="text-[#061b31] tabular-nums">
               {appointment.duration} minutes
             </dd>
+            {appointment.room && (
+              <>
+                <dt className="text-[#697386]">Room</dt>
+                <dd className="text-[#061b31]">{appointment.room}</dd>
+              </>
+            )}
             <dt className="text-[#697386]">Doctor</dt>
             <dd>
               <Link

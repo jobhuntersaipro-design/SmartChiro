@@ -19,6 +19,7 @@ import {
   Check,
 } from "lucide-react";
 import type { OperatingHoursMap, DayHours, BranchWithStats } from "@/types/branch";
+import { normalizeWebsite } from "@/lib/branch-fields";
 import {
   branchToFormData,
   computePatchPayload,
@@ -145,8 +146,8 @@ export function EditBranchDialog({
       if (!data.email.trim()) newErrors.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
         newErrors.email = "Invalid email format";
-      if (data.website && !/^https?:\/\/.+/.test(data.website))
-        newErrors.website = "Must start with http:// or https://";
+      const website = normalizeWebsite(data.website);
+      if (!website.ok) newErrors.website = website.error;
     }
     if (step === 2) {
       if (!data.address.trim()) newErrors.address = "Street address is required";
@@ -315,7 +316,7 @@ export function EditBranchDialog({
                 <Input
                   value={data.website}
                   onChange={(e) => update("website", e.target.value)}
-                  placeholder="https://www.smartchiro.com"
+                  placeholder="www.yourclinic.com"
                   className={errors.website ? inputErrorClass : inputClass}
                 />
                 <FieldError message={errors.website} />

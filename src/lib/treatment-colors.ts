@@ -98,3 +98,32 @@ export const TREATMENT_OPTIONS: TreatmentType[] = [
   "SPORTS_REHAB",
   "OTHER",
 ];
+
+/** Fallback length when no treatment type is chosen (and the schema default). */
+export const DEFAULT_APPOINTMENT_DURATION_MIN = 30;
+
+/** Typical slot length per treatment, in minutes — the booking form's starting duration. */
+export const DEFAULT_DURATION_MIN: Record<TreatmentType, number> = {
+  INITIAL_CONSULT: 60,
+  ADJUSTMENT: 30,
+  GONSTEAD: 30,
+  DIVERSIFIED: 30,
+  ACTIVATOR: 20,
+  DROP_TABLE: 30,
+  SOFT_TISSUE: 45,
+  SPINAL_DECOMPRESSION: 30,
+  REHAB_EXERCISE: 45,
+  X_RAY: 20,
+  FOLLOW_UP: 30,
+  WELLNESS_CHECK: 30,
+  PEDIATRIC: 30,
+  PRENATAL: 45,
+  SPORTS_REHAB: 45,
+  OTHER: 30,
+};
+
+/** Starting duration for a treatment choice ("" = none chosen). */
+export function defaultDurationFor(type: TreatmentType | "" | null | undefined): number {
+  if (!type) return DEFAULT_APPOINTMENT_DURATION_MIN;
+  return DEFAULT_DURATION_MIN[type] ?? DEFAULT_APPOINTMENT_DURATION_MIN;
+}

@@ -680,6 +680,7 @@ export function AppointmentsCalendarView({
         isAdmin={isAdmin}
         currentUserId={currentUserId}
         prefilledPatient={null}
+        defaultBranchId={branchId || null}
         prefilledDateTime={createPrefill?.dateTime ?? null}
         prefilledDoctor={
           createPrefill?.doctorId

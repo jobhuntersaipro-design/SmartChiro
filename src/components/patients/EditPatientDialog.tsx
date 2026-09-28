@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
 import { Patient } from "@/types/patient";
+import { DateInput } from "@/components/ui/date-input";
+import { todayLocalISODate } from "@/lib/format";
+import { reminderChannelError } from "@/lib/reminder-channel";
 
 interface EditPatientDialogProps {
   patient: Patient | null;
@@ -14,11 +17,16 @@ interface EditPatientDialogProps {
   isAdmin?: boolean;
 }
 
-function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+function FormField({ label, error, children }: { label: string; error?: string | null; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-[13px] font-medium text-[#273951] mb-1">{label}</label>
       {children}
+      {error && (
+        <p className="text-[12px] text-[#DF1B41] mt-1" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -46,6 +54,8 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
   const [form, setForm] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Validation message from the DOB field's typed text (null when empty or valid)
+  const [dobError, setDobError] = useState<string | null>(null);
 
   useEffect(() => {
     if (patient && open) {
@@ -81,6 +91,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         preferredLanguage: patient.preferredLanguage || "en",
       });
       setSubmitError(null);
+      setDobError(null);
     }
   }, [patient, open]);
 
@@ -99,9 +110,12 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  const channelError = reminderChannelError(form.reminderChannel, form);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.firstName?.trim() || !form.lastName?.trim()) return;
+    if (dobError || channelError) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -164,7 +178,15 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                   <input type="text" value={form.icNumber || ""} onChange={(e) => update("icNumber", e.target.value)} className={inputClass} />
                 </FormField>
                 <FormField label="Date of Birth">
-                  <input type="date" value={form.dateOfBirth || ""} onChange={(e) => update("dateOfBirth", e.target.value)} className={inputClass} />
+                  <DateInput
+                    aria-label="Date of Birth"
+                    value={form.dateOfBirth || ""}
+                    onChange={(iso) => update("dateOfBirth", iso)}
+                    onErrorChange={setDobError}
+                    min="1900-01-01"
+                    max={todayLocalISODate()}
+                    inputClassName={inputClass}
+                  />
                 </FormField>
                 <FormField label="Gender">
                   <select value={form.gender || ""} onChange={(e) => update("gender", e.target.value)} className={selectClass}>
@@ -282,8 +304,13 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                 <textarea value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} rows={2} className={textareaClass} />
               </FormField>
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="Reminder Channel">
-                  <select value={form.reminderChannel || "WHATSAPP"} onChange={(e) => update("reminderChannel", e.target.value)} className={selectClass}>
+                <FormField label="Reminder Channel" error={channelError}>
+                  <select
+                    aria-label="Reminder Channel"
+                    value={form.reminderChannel || "WHATSAPP"}
+                    onChange={(e) => update("reminderChannel", e.target.value)}
+                    className={`${selectClass} ${channelError ? "border-[#DF1B41]/50 focus:ring-[#DF1B41] focus:border-[#DF1B41]" : ""}`}
+                  >
                     <option value="WHATSAPP">WhatsApp</option>
                     <option value="EMAIL">Email</option>
                     <option value="BOTH">Both</option>
@@ -325,7 +352,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-8 px-3 text-[15px] font-medium rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]">
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting} className="h-8 px-3 text-[15px] font-medium rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+              <Button type="submit" disabled={submitting || !!dobError || !!channelError} className="h-8 px-3 text-[15px] font-medium rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
                 Save Changes
               </Button>

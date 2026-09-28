@@ -242,6 +242,7 @@ export function AppointmentsPageShell({
         currentUserId={currentUserId}
         prefilledPatient={null}
         prefilledDoctor={null}
+        defaultBranchId={branchId || null}
         onClose={() => setCreateOpen(false)}
         onCreated={() => {
           setCreateOpen(false);

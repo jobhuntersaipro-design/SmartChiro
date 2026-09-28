@@ -3,14 +3,20 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  X, Loader2, User, CreditCard, Calendar, Users, Heart,
+  X, Loader2, User, CreditCard, Users, Heart,
   Droplets, Briefcase, Megaphone, Mail, Phone, MapPin,
   Building2, Hash, ShieldAlert, Stethoscope, FileText,
   StickyNote, ChevronRight, ChevronLeft, Check, UserPlus,
   Banknote,
 } from "lucide-react";
 import { CreatePatientData } from "@/types/patient";
-import { DISCARD_CHANGES_PROMPT } from "@/lib/format";
+import { DISCARD_CHANGES_PROMPT, todayLocalISODate } from "@/lib/format";
+import { DateInput } from "@/components/ui/date-input";
+import {
+  defaultReminderChannel,
+  reminderChannelError,
+  type ReminderChannelValue,
+} from "@/lib/reminder-channel";
 
 interface AddPatientDialogProps {
   open: boolean;
@@ -110,6 +116,12 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
   // `submitting` state re-renders the button as disabled.
   const submittingRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Validation message from the DOB field's typed text (null when empty or valid)
+  const [dobError, setDobError] = useState<string | null>(null);
+
+  // Until the user picks one, the reminder channel follows the contact details entered
+  const reminderChannel: ReminderChannelValue = form.reminderChannel ?? defaultReminderChannel(form);
+  const channelError = reminderChannelError(reminderChannel, form);
 
   const updateField = useCallback(<K extends keyof CreatePatientData>(key: K, value: CreatePatientData[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -123,6 +135,15 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
     });
   }, []);
 
+  function clearError(key: string) {
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
   // ─── Validation per step ───
 
   function validateStep(stepNum: number): boolean {
@@ -134,6 +155,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
       if (form.icNumber && !/^\d{6}-?\d{2}-?\d{4}$/.test(form.icNumber)) {
         newErrors.icNumber = "Expected 12 digits: YYMMDD-SS-XXXX";
       }
+      if (dobError) newErrors.dateOfBirth = dobError;
     }
 
     if (stepNum === 2) {
@@ -149,7 +171,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
     }
 
     if (stepNum === 3) {
-      // No required fields in step 3 — all optional
+      if (channelError) newErrors.reminderChannel = channelError;
     }
 
     setErrors(newErrors);
@@ -178,9 +200,10 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onAdd(form);
+      await onAdd({ ...form, reminderChannel });
       // Reset
       setForm({ firstName: "", lastName: "" });
+      setDobError(null);
       setErrors({});
       setTouched({});
       setStep(1);
@@ -218,6 +241,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
   function handleClose() {
     setForm({ firstName: "", lastName: "" });
+    setDobError(null);
     setErrors({});
     setTouched({});
     setStep(1);
@@ -352,15 +376,20 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                       />
                     </IconInput>
                   </FormField>
-                  <FormField label="Date of Birth">
-                    <IconInput icon={Calendar}>
-                      <input
-                        type="date"
-                        value={form.dateOfBirth || ""}
-                        onChange={(e) => updateField("dateOfBirth", e.target.value)}
-                        className={inputClass}
-                      />
-                    </IconInput>
+                  <FormField label="Date of Birth" error={errors.dateOfBirth}>
+                    <DateInput
+                      aria-label="Date of Birth"
+                      value={form.dateOfBirth || ""}
+                      onChange={(iso) => updateField("dateOfBirth", iso)}
+                      onErrorChange={(msg) => {
+                        setDobError(msg);
+                        if (!msg) clearError("dateOfBirth");
+                      }}
+                      min="1900-01-01"
+                      max={todayLocalISODate()}
+                      showError={!errors.dateOfBirth}
+                      inputClassName={`${inputNoIconClass} ${errors.dateOfBirth ? errorInputClass : ""}`}
+                    />
                   </FormField>
                   <FormField label="Gender">
                     <IconInput icon={Users}>
@@ -554,11 +583,12 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   <div className="flex-1 h-px bg-[#e5edf5]" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Reminder channel">
+                  <FormField label="Reminder channel" error={channelError ?? undefined}>
                     <select
-                      value={form.reminderChannel ?? "WHATSAPP"}
-                      onChange={(e) => updateField("reminderChannel", e.target.value as "WHATSAPP" | "EMAIL" | "BOTH" | "NONE")}
-                      className={selectClass}
+                      aria-label="Reminder channel"
+                      value={reminderChannel}
+                      onChange={(e) => updateField("reminderChannel", e.target.value as ReminderChannelValue)}
+                      className={`${selectClass} ${channelError ? errorInputClass : ""}`}
                     >
                       <option value="WHATSAPP">WhatsApp</option>
                       <option value="EMAIL">Email</option>

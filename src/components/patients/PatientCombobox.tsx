@@ -15,9 +15,11 @@ interface Props {
   value: PatientOption | null;
   onChange: (p: PatientOption | null) => void;
   disabled?: boolean;
+  /** Only search this branch's patients. */
+  branchId?: string;
 }
 
-export function PatientCombobox({ value, onChange, disabled }: Props) {
+export function PatientCombobox({ value, onChange, disabled, branchId }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PatientOption[]>([]);
@@ -37,10 +39,10 @@ export function PatientCombobox({ value, onChange, disabled }: Props) {
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const url = query.trim()
-          ? `/api/patients?picker=1&search=${encodeURIComponent(query.trim())}`
-          : "/api/patients?picker=1";
-        const res = await fetch(url);
+        const params = new URLSearchParams({ picker: "1" });
+        if (query.trim()) params.set("search", query.trim());
+        if (branchId) params.set("branchId", branchId);
+        const res = await fetch(`/api/patients?${params.toString()}`);
         if (!res.ok) {
           setResults([]);
           return;
@@ -60,7 +62,7 @@ export function PatientCombobox({ value, onChange, disabled }: Props) {
       }
     }, 250);
     return () => clearTimeout(t);
-  }, [query, open]);
+  }, [query, open, branchId]);
 
   const label = value ? `${value.firstName} ${value.lastName}` : "Select patient…";
 

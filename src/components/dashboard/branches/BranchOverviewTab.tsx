@@ -5,6 +5,7 @@ import { Clock, Building2, Stethoscope, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { BranchDetail, BranchStats } from "@/types/branch";
 import { parseOperatingHours, hasAnyHours, formatDayHours } from "@/lib/operating-hours";
+import { formatClinicType } from "@/lib/branch-fields";
 import { ScheduleTable } from "../shared/ScheduleTable";
 import type { ScheduleAppointment as DashScheduleAppointment } from "../shared/ScheduleTable";
 
@@ -165,7 +166,7 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
             {branch.clinicType && (
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-[#64748d]">Clinic Type</span>
-                <span className="text-[#273951] capitalize">{branch.clinicType}</span>
+                <span className="text-[#273951]">{formatClinicType(branch.clinicType)}</span>
               </div>
             )}
             {branch.licenseNumber && (

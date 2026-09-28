@@ -443,6 +443,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
           lastName: patient.lastName,
           email: patient.email,
           phone: patient.phone,
+          branchId: patient.branchId,
         } : null}
         onClose={() => setCreateAppointmentOpen(false)}
         onCreated={() => {
