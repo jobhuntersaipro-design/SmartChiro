@@ -1,5 +1,6 @@
 import type { PaymentMethod } from "@prisma/client";
 import type { AnyInvoiceStatus, InvoiceLineItem } from "@/lib/invoices";
+import type { AccountCodeKey, AccountCodes } from "@/lib/accounting-export";
 
 /** A row of GET /api/invoices. */
 export interface InvoiceListRow {
@@ -87,6 +88,10 @@ export interface InvoiceDetail {
 /** GET/PUT /api/branches/[id]/billing → `billing`. */
 export interface BranchBillingSettings {
   branchId: string;
+  /** Accounting export codes set on the branch (null = the default is used). */
+  accountCodes: Record<AccountCodeKey, string | null>;
+  /** The codes exports actually use. */
+  effectiveAccountCodes: AccountCodes;
   legalName: string | null;
   ssmRegNo: string | null;
   tin: string | null;

@@ -25,6 +25,7 @@ import { SkeletonTable } from "./shared/SkeletonTable";
 
 import { QuickActionsPanel } from "./owner/QuickActionsPanel";
 import { OwnerSignalsCard } from "./owner/OwnerSignalsCard";
+import { CertificateAlertsCard } from "@/components/certificates/CertificateAlertsCard";
 import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
 
 import { RecentPatientsCard } from "./doctor/RecentPatientsCard";
@@ -239,6 +240,9 @@ export function DashboardView({
 
       {/* Owner / front desk: what needs attention today */}
       {canManage && <OwnerSignalsCard branchParam={branchParam} refreshKey={signalsKey} />}
+
+      {/* Owner / admin: practising certificates expired or due within 60 days */}
+      {canManage && <CertificateAlertsCard branchParam={branchParam} />}
 
       {/* Owner / front desk: Quick Actions */}
       {canManage && (

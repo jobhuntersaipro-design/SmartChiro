@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { loadBranchContext } from "@/lib/branch-context";
-import { can } from "@/lib/permissions";
+import { can, type Capability } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { parseRange, type ReportRange } from "@/lib/reports/range";
 import type { ReportRangeJson, ReportScopeJson } from "@/types/reports";
@@ -21,8 +21,8 @@ const error = (status: number, code: string, message: string) =>
   NextResponse.json({ error: code, message }, { status });
 
 /**
- * Shared front half of every /api/reports/* route: session, `reports.read`
- * scope and the date range.
+ * Shared front half of every /api/reports/* (and /api/exports/*) route:
+ * session, capability scope (`reports.read` unless given) and the date range.
  *
  * `?branchId=all` covers every branch where the caller may read reports
  * (403 when there are none); a single branch must be one the caller belongs
@@ -30,7 +30,10 @@ const error = (status: number, code: string, message: string) =>
  * (403). Without `branchId` the sidebar scope applies. `?from=&to=` are clinic
  * days, `to` inclusive, default this month.
  */
-export async function resolveReportRequest(req: Request): Promise<ReportRequest | NextResponse> {
+export async function resolveReportRequest(
+  req: Request,
+  capability: Capability = "reports.read",
+): Promise<ReportRequest | NextResponse> {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return error(401, "unauthorized", "Sign in to view reports.");
@@ -42,12 +45,12 @@ export async function resolveReportRequest(req: Request): Promise<ReportRequest 
 
   let branchIds: string[];
   if (param === "all") {
-    branchIds = context.branches.filter((b) => can(b.role, "reports.read")).map((b) => b.id);
+    branchIds = context.branches.filter((b) => can(b.role, capability)).map((b) => b.id);
     if (branchIds.length === 0) return error(403, "forbidden", "Reports are for branch owners and admins.");
   } else {
     const role = context.roles[param];
     if (!role) return error(404, "not_found", "Branch not found.");
-    if (!can(role, "reports.read")) return error(403, "forbidden", "Reports are for branch owners and admins.");
+    if (!can(role, capability)) return error(403, "forbidden", "Reports are for branch owners and admins.");
     branchIds = [param];
   }
 

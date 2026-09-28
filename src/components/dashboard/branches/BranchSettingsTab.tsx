@@ -15,6 +15,7 @@ import { can } from "@/lib/permissions";
 import { BranchBillingSettingsCard } from "@/components/branches/BranchBillingSettingsCard";
 import { OnlineBookingCard } from "@/components/branches/OnlineBookingCard";
 import { BranchPortalSettingsCard } from "@/components/branches/BranchPortalSettingsCard";
+import { CommissionRulesCard } from "@/components/commissions/CommissionRulesCard";
 import { useRouter } from "next/navigation";
 
 interface BranchSettingsTabProps {
@@ -307,6 +308,8 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       {/* Online booking link — OWNER + ADMIN */}
       {(isOwner || branch.userRole === "ADMIN") && <OnlineBookingCard branchId={branch.id} />}
       {(isOwner || branch.userRole === "ADMIN") && <BranchPortalSettingsCard branchId={branch.id} />}
+      {/* Commission rules (Phase 8.2) — OWNER / ADMIN */}
+      {can(branch.userRole, "commissions.manage") && <CommissionRulesCard branchId={branch.id} />}
 
       {/* Activity Log — visible to OWNER + ADMIN per 2026-05-05 RBAC */}
       {(isOwner || branch.userRole === "ADMIN") && (

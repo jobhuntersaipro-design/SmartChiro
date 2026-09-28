@@ -4,7 +4,9 @@
  * are ISO strings.
  */
 
-export type ReportSection = "revenue" | "receivables" | "appointments" | "utilisation" | "packages" | "patients";
+import type { CommissionsReport } from "@/types/commissions";
+
+export type ReportSection = "revenue" | "receivables" | "appointments" | "utilisation" | "packages" | "patients" | "commissions";
 
 export interface ReportRangeJson {
   /** First clinic day, inclusive. */
@@ -175,4 +177,5 @@ export type ReportPayload = {
   utilisation: UtilisationReport;
   packages: PackagesReport;
   patients: PatientsReport;
+  commissions: CommissionsReport;
 };

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { materializePending, dispatchDue } from "@/lib/reminders/dispatcher";
 import { expireOverduePackages } from "@/lib/package-service";
 import { dispatchOutreach, materializeOutreach } from "@/lib/outreach/dispatcher";
+import { sweepCertificateAlerts } from "@/lib/certificate-alerts";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,12 @@ async function handler(req: Request): Promise<Response> {
   });
   // Recall + review requests run after reminders and never block them.
   const outreach = await runOutreach(now);
-  return NextResponse.json({ ok: true, inserted, processed, expiredPackages, outreach });
+  // Practising-certificate alerts to branch owners (fail-soft).
+  const certificates = await sweepCertificateAlerts(now).catch((e: unknown) => {
+    console.error("certificate alert sweep failed", e);
+    return { error: "certificates_failed" };
+  });
+  return NextResponse.json({ ok: true, inserted, processed, expiredPackages, outreach, certificates });
 }
 
 async function runOutreach(now: Date) {

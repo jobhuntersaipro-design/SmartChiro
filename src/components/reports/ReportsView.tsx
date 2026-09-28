@@ -12,6 +12,7 @@ import { AppointmentsCard } from "@/components/reports/AppointmentsCard";
 import { UtilisationCard } from "@/components/reports/UtilisationCard";
 import { PackagesCard } from "@/components/reports/PackagesCard";
 import { PatientsCard } from "@/components/reports/PatientsCard";
+import { CommissionsCard } from "@/components/reports/CommissionsCard";
 
 interface ReportsViewProps {
   /** A branch id, or "all" for every branch the user may report on. */
@@ -69,6 +70,7 @@ export function ReportsView({ branchId, scopeLabel, branchCount }: ReportsViewPr
         <UtilisationCard query={query} />
       </div>
       <PatientsCard query={query} multiBranch={multiBranch} />
+      <CommissionsCard query={query} />
     </div>
   );
 }

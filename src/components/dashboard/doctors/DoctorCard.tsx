@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { DoctorListItem } from "@/types/doctor";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 
 interface DoctorCardProps {
   doctor: DoctorListItem;
@@ -73,6 +74,7 @@ export function DoctorCard({
               >
                 {doctor.isActive ? "Active" : "Inactive"}
               </span>
+              <CertificateBadge expiresOn={doctor.apcExpiresOn} />
             </div>
             <div className="text-[13px] text-[#64748d] truncate">
               {doctor.email}

@@ -16,6 +16,7 @@ import { DoctorScheduleTab } from "./DoctorScheduleTab";
 import { DoctorProfessionalTab } from "./DoctorProfessionalTab";
 import { DoctorAvailabilityTab } from "./DoctorAvailabilityTab";
 import { replaceUrl } from "@/lib/url-state";
+import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 
 interface DoctorDetailViewProps {
   doctorId: string;
@@ -152,6 +153,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
                 >
                   {doctor.profile?.isActive !== false ? "Active" : "Inactive"}
                 </span>
+                <CertificateBadge expiresOn={doctor.profile?.apcExpiresOn ?? null} />
               </div>
               <div className="flex items-center gap-4 mt-1 text-[14px] text-[#64748d]">
                 {doctor.email && (
@@ -254,7 +256,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
         />
       )}
       {activeTab === "professional" && (
-        <DoctorProfessionalTab doctor={doctor} />
+        <DoctorProfessionalTab doctor={doctor} canEdit={isAdminLike} onDoctorChange={setDoctor} />
       )}
     </div>
   );

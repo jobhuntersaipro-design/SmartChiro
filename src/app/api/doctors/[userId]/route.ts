@@ -5,6 +5,16 @@ import { can } from "@/lib/permissions";
 import type { DoctorDetail, DoctorProfile } from "@/types/doctor";
 import { normalizeWorkingSchedule } from "@/lib/operating-hours";
 import type { BranchRole } from "@prisma/client";
+import { expiryChanged, expiryKey, parseCertificateInput } from "@/lib/certificates";
+
+/** Certificate fields of the profile JSON. */
+function certificateJson(p: { tcmRegistrationNo: string | null; apcNumber: string | null; apcExpiresAt: Date | null }) {
+  return {
+    tcmRegistrationNo: p.tcmRegistrationNo,
+    apcNumber: p.apcNumber,
+    apcExpiresOn: p.apcExpiresAt ? expiryKey(p.apcExpiresAt) : null,
+  };
+}
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -106,6 +116,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         languages: user.doctorProfile.languages,
         insurancePlans: user.doctorProfile.insurancePlans,
         isActive: user.doctorProfile.isActive,
+        ...certificateJson(user.doctorProfile),
       }
     : null;
 
@@ -351,9 +362,19 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     }
   }
 
+  const certificates = parseCertificateInput(body);
+  if (!certificates.ok) {
+    return NextResponse.json({ error: certificates.error }, { status: 400 });
+  }
+
   try {
     // Build profile data (only include fields that were sent)
-    const profileData: Record<string, unknown> = {};
+    const profileData: Record<string, unknown> = { ...certificates.data };
+    if (certificates.data.apcExpiresAt !== undefined) {
+      const current = await prisma.doctorProfile.findUnique({ where: { userId }, select: { apcExpiresAt: true } });
+      // A new expiry date (renewal) re-arms the 60 / 30 / 7 / 0-day alerts.
+      if (expiryChanged(current?.apcExpiresAt, certificates.data.apcExpiresAt)) profileData.apcAlertStage = null;
+    }
     const profileFields = [
       "licenseNumber",
       "specialties",
@@ -427,6 +448,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
           languages: updatedUser!.doctorProfile.languages,
           insurancePlans: updatedUser!.doctorProfile.insurancePlans,
           isActive: updatedUser!.doctorProfile.isActive,
+          ...certificateJson(updatedUser!.doctorProfile),
         }
       : null;
 

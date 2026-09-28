@@ -15,6 +15,8 @@ import { InvoiceDrawer } from "./InvoiceDrawer";
 import { NewInvoiceDialog } from "./NewInvoiceDialog";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
 import { BTN_PRIMARY } from "./form-styles";
+import { AccountingExportButton } from "./AccountingExportButton";
+import { can } from "@/lib/permissions";
 
 type Filter = "all" | AnyInvoiceStatus;
 
@@ -72,6 +74,9 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
   const roles: Record<string, string> = Object.fromEntries(branches.map((b) => [b.id, b.role]));
   const roleFor = (id: string) => roles[id];
   const manageBranches = branches.filter((b) => billingAccess(b.role).manage);
+  // Accounting exports (OWNER / ADMIN): any exportable branch in "All branches", else this one.
+  const canExport =
+    branchId === "all" ? branches.some((b) => can(b.role, "accounting.export")) : can(roleFor(branchId), "accounting.export");
 
   // Debounce typing into the search box.
   useEffect(() => {
@@ -138,12 +143,15 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
           <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">Invoices</h1>
           <p className="text-[15px] text-[#64748d]">{branchName ?? "Your branch"} · invoices, payments and receipts</p>
         </div>
-        {manageBranches.length > 0 && (
-          <button type="button" className={BTN_PRIMARY} onClick={() => setNewOpen(true)}>
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            New invoice
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {canExport && <AccountingExportButton branchId={branchId} scopeLabel={branchName ?? "Your branch"} />}
+          {manageBranches.length > 0 && (
+            <button type="button" className={BTN_PRIMARY} onClick={() => setNewOpen(true)}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              New invoice
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

@@ -34,14 +34,14 @@ model User {
   doctorProfile DoctorProfile?
 
   // As doctor
-  assignedPatients Patient[]         @relation("PatientDoctor")
-  visits           Visit[]           @relation("VisitDoctor")
-  appointments     Appointment[]     @relation("AppointmentDoctor")
-  uploadedXrays    Xray[]            @relation("XrayUploader")
-  annotations      Annotation[]      @relation("AnnotationCreator")
-  xrayNotes        XrayNote[]        @relation("XrayNoteAuthor")
-  timeOff          DoctorTimeOff[]   @relation("DoctorTimeOff")
-  breakTimes       DoctorBreakTime[] @relation("DoctorBreakTime")
+  assignedPatients    Patient[]              @relation("PatientDoctor")
+  visits              Visit[]                @relation("VisitDoctor")
+  appointments        Appointment[]          @relation("AppointmentDoctor")
+  uploadedXrays       Xray[]                 @relation("XrayUploader")
+  annotations         Annotation[]           @relation("AnnotationCreator")
+  xrayNotes           XrayNote[]             @relation("XrayNoteAuthor")
+  timeOff             DoctorTimeOff[]        @relation("DoctorTimeOff")
+  breakTimes          DoctorBreakTime[]      @relation("DoctorBreakTime")
   landmarkCorrections AiLandmarkCorrection[] @relation("AiLandmarkCorrectionUser")
   carePlans           CarePlan[]             @relation("CarePlanDoctor")
   appointmentSeries   AppointmentSeries[]    @relation("SeriesDoctor")
@@ -235,7 +235,18 @@ model Branch {
   bookingDoctorIds   String[]
   bookingNote        String?
   // Patient portal (Phase 7.2): patients may cancel online up to this many hours before the start.
-  portalCancelHours Int @default(24)
+  portalCancelHours  Int             @default(24)
+  // Accounting export (Phase 8.3) — chart-of-account codes; null = default in src/lib/accounting-export.ts
+  acctSales          String?
+  acctSst            String?
+  acctReceivable     String?
+  acctCash           String?
+  acctBank           String?
+  acctCard           String?
+  acctEwallet        String?
+  acctPanel          String?
+
+  commissionRules CommissionRule[]
 
   members      BranchMember[]
   patients     Patient[]
@@ -439,6 +450,14 @@ model DoctorProfile {
   bio            String?
   languages      String[]
   insurancePlans String[]
+
+  // Practising certificates (T&CM Act 2016, Phase 8.1). apcExpiresAt is a
+  // calendar date stored at 00:00 UTC; apcAlertStage is the last alert
+  // threshold emailed (60 / 30 / 7 / 0), cleared when the expiry changes.
+  tcmRegistrationNo String?
+  apcNumber         String?
+  apcExpiresAt      DateTime?
+  apcAlertStage     Int?
 
   // System
   isActive Boolean @default(true)
@@ -717,7 +736,7 @@ model AiLandmarkCorrection {
   // "top_of_femoral_head_1". Stable across schema revisions of the prompt.
   landmarkName String
   // Human-readable label as shown on the canvas at correction time.
-  displayName String
+  displayName  String
 
   // Claude's original placement at the time of detection. Frozen — never
   // overwritten across re-corrections, since the goal is to learn the
@@ -786,7 +805,7 @@ model Appointment {
 
   // Recurring series (Phase 3). Occurrences keep their row when the series is deleted.
   seriesId    String?
-  series      AppointmentSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  series      AppointmentSeries?  @relation(fields: [seriesId], references: [id], onDelete: SetNull)
   seriesIndex Int?
   redemptions PackageRedemption[]
 
@@ -842,7 +861,7 @@ model Invoice {
 
   // Set when this invoice is the sale of a prepaid package (Phase 3).
   packageSale PatientPackage?
-  payments Payment[]
+  payments    Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -891,6 +910,35 @@ model Payment {
   @@index([branchId, receivedAt])
 }
 
+// ─── Commissions (Phase 8.2) ───
+
+enum CommissionBasis {
+  PERCENT_COLLECTED
+  FIXED_PER_VISIT
+  PERCENT_PACKAGE_SALE
+}
+
+/// Per-branch commission rule. doctorId / treatmentType null = all. `rate` is a
+/// percent for the PERCENT_* bases and MYR per visit for FIXED_PER_VISIT. The
+/// most specific active rule effective at the event date wins (src/lib/commissions.ts).
+model CommissionRule {
+  id            String          @id @default(cuid())
+  branchId      String
+  branch        Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  doctorId      String?
+  treatmentType TreatmentType?
+  basis         CommissionBasis
+  rate          Decimal         @db.Decimal(10, 2)
+  effectiveFrom DateTime
+  active        Boolean         @default(true)
+  createdById   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId, active])
+}
+
 // ─── Documents ───
 
 model PatientDocument {
@@ -916,10 +964,10 @@ model PatientDocument {
 // ─── Appointment Reminders ───
 
 model BranchReminderSettings {
-  id         String   @id @default(cuid())
-  branchId   String   @unique
-  branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  enabled    Boolean  @default(false)
+  id         String  @id @default(cuid())
+  branchId   String  @unique
+  branch     Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  enabled    Boolean @default(false)
   offsetsMin Int[]
   templates  Json
 

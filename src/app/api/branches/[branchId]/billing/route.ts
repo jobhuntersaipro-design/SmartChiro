@@ -4,12 +4,21 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { documentPrefix, formatDocumentNumber } from "@/lib/invoices";
 import { clinicParts } from "@/lib/clinic-time";
+import {
+  ACCOUNT_CODE_FIELDS,
+  ACCOUNT_CODE_RE,
+  ACCOUNT_CODE_SELECT,
+  accountCodesJson,
+  accountCodesOf,
+  type BranchAccountColumns,
+} from "@/lib/accounting-export";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
 const SELECT = {
   id: true,
   name: true,
+  ...ACCOUNT_CODE_SELECT,
   legalName: true,
   ssmRegNo: true,
   tin: true,
@@ -22,7 +31,7 @@ const SELECT = {
   receiptSeq: true,
 } as const;
 
-type BillingRow = {
+type BillingRow = BranchAccountColumns & {
   id: string;
   name: string;
   legalName: string | null;
@@ -43,6 +52,9 @@ function serialize(b: BillingRow, role: string) {
   return {
     billing: {
       branchId: b.id,
+      // Accounting export codes (Phase 8.3): the branch's own (null = default) and what exports use.
+      accountCodes: accountCodesJson(b),
+      effectiveAccountCodes: accountCodesOf(b),
       legalName: b.legalName,
       ssmRegNo: b.ssmRegNo,
       tin: b.tin,
@@ -83,8 +95,19 @@ const optionalText = (max: number) =>
     .optional()
     .transform((v) => (v === undefined ? undefined : v || null));
 
+/** Chart-of-account code: letters, digits and . - / (blank = default). */
+const accountCode = z
+  .string()
+  .trim()
+  .max(20)
+  .refine((v) => v === "" || ACCOUNT_CODE_RE.test(v), "letters, digits, . - /")
+  .nullable()
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v || null));
+
 const Body = z
   .object({
+    ...(Object.fromEntries(ACCOUNT_CODE_FIELDS.map((f) => [f.column, accountCode])) as Record<keyof BranchAccountColumns, typeof accountCode>),
     legalName: optionalText(200),
     ssmRegNo: optionalText(50),
     tin: optionalText(30),

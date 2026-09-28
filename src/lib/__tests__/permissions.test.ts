@@ -35,6 +35,8 @@ const MATRIX: Record<Capability, [boolean, boolean, boolean, boolean]> = {
   "dashboard.clinicalStats": [true, true, true, false],
   "reports.read": [true, true, false, false],
   "package.manage": [true, true, false, false],
+  "commissions.manage": [true, true, false, false],
+  "accounting.export": [true, true, false, false],
 };
 
 describe("permissions matrix", () => {

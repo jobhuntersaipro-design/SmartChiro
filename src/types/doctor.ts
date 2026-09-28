@@ -27,6 +27,10 @@ export interface DoctorProfile {
   languages: string[];
   insurancePlans: string[];
   isActive: boolean;
+  /** T&CM registration and Annual Practising Certificate (expiry "YYYY-MM-DD"). */
+  tcmRegistrationNo: string | null;
+  apcNumber: string | null;
+  apcExpiresOn: string | null;
 }
 
 export interface DoctorDetail {
@@ -64,6 +68,10 @@ export interface UpdateDoctorData {
   languages?: string[];
   insurancePlans?: string[];
   isActive?: boolean;
+  tcmRegistrationNo?: string | null;
+  apcNumber?: string | null;
+  /** "YYYY-MM-DD", or null / "" to clear. */
+  apcExpiresAt?: string | null;
 }
 
 export interface DoctorListItem {
@@ -74,6 +82,8 @@ export interface DoctorListItem {
   image: string | null;
   isActive: boolean;
   specialties: string[];
+  /** APC expiry "YYYY-MM-DD", or null when not recorded. */
+  apcExpiresOn: string | null;
   branches: {
     id: string;
     name: string;

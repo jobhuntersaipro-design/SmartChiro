@@ -6,25 +6,36 @@ import {
 import Link from "next/link";
 import type { DoctorDetail } from "@/types/doctor";
 import { roleLabel } from "@/lib/permissions";
+import { PractisingCertificateCard } from "@/components/certificates/PractisingCertificateCard";
 
 interface DoctorProfessionalTabProps {
   doctor: DoctorDetail;
+  /** May edit the practising certificate (OWNER / ADMIN or the doctor). */
+  canEdit?: boolean;
+  onDoctorChange?: (doctor: DoctorDetail) => void;
 }
 
-export function DoctorProfessionalTab({ doctor }: DoctorProfessionalTabProps) {
+export function DoctorProfessionalTab({ doctor, canEdit = false, onDoctorChange }: DoctorProfessionalTabProps) {
   const profile = doctor.profile;
+  const certificate = (
+    <PractisingCertificateCard doctor={doctor} canEdit={canEdit} onSaved={(d) => onDoctorChange?.(d)} />
+  );
 
   if (!profile) {
     return (
-      <div className="py-12 text-center">
-        <Award className="h-10 w-10 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
-        <p className="text-[15px] text-[#64748d]">No professional profile has been set up yet.</p>
+      <div className="space-y-6">
+        {certificate}
+        <div className="py-12 text-center">
+          <Award className="h-10 w-10 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
+          <p className="text-[15px] text-[#64748d]">No professional profile has been set up yet.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {certificate}
       {/* Bio */}
       {profile.bio && (
         <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">

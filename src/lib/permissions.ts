@@ -43,7 +43,11 @@ export type Capability =
   /** Revenue, receivables, utilisation, packages and retention reports. */
   | "reports.read"
   /** Package catalogue, cancelling sold packages (selling is `invoice.manage`). */
-  | "package.manage";
+  | "package.manage"
+  /** Commission rules and the commissions report. */
+  | "commissions.manage"
+  /** Invoices / payments / Xero / journal CSV exports and account codes. */
+  | "accounting.export";
 
 const ALL: readonly Capability[] = [
   "patient.readAll",
@@ -66,6 +70,8 @@ const ALL: readonly Capability[] = [
   "dashboard.clinicalStats",
   "reports.read",
   "package.manage",
+  "commissions.manage",
+  "accounting.export",
 ];
 
 export const ROLE_CAPABILITIES: Record<BranchRole, readonly Capability[]> = {

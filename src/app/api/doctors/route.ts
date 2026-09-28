@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import type { DoctorListItem } from "@/types/doctor";
 import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
+import { expiryKey } from "@/lib/certificates";
 
 // ─── GET /api/doctors ─── List all doctors across caller's branches
 export async function GET(req: NextRequest) {
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       user: {
         include: {
           doctorProfile: {
-            select: { specialties: true, isActive: true },
+            select: { specialties: true, isActive: true, apcExpiresAt: true },
           },
         },
       },
@@ -151,6 +152,7 @@ export async function GET(req: NextRequest) {
     image: e.user.image,
     isActive: e.user.doctorProfile?.isActive !== false,
     specialties: e.user.doctorProfile?.specialties ?? [],
+    apcExpiresOn: e.user.doctorProfile?.apcExpiresAt ? expiryKey(e.user.doctorProfile.apcExpiresAt) : null,
     branches: e.branches.map((b) => ({
       id: b.id,
       name: b.name,
@@ -318,6 +320,8 @@ async function buildDoctorListItem(userId: string): Promise<DoctorListItem> {
     image: user.image,
     isActive: user.doctorProfile?.isActive !== false,
     specialties: user.doctorProfile?.specialties ?? [],
+    // A new account has no practising certificate recorded yet.
+    apcExpiresOn: null,
     branches: user.branchMemberships.map((m) => ({
       id: m.branch.id,
       name: m.branch.name,

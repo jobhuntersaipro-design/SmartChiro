@@ -11,6 +11,7 @@ import { DoctorCard } from "./DoctorCard";
 import { CreateDoctorDialog } from "./CreateDoctorDialog";
 import { RemoveDoctorDialog } from "./RemoveDoctorDialog";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { CertificateBadge } from "@/components/certificates/CertificateBadge";
 
 interface DoctorListViewProps {
   userId: string;
@@ -466,6 +467,7 @@ function DoctorTable({
                 >
                   {d.isActive ? "Active" : "Inactive"}
                 </span>
+                <CertificateBadge expiresOn={d.apcExpiresOn} className="ml-1.5" />
               </td>
               <td className="px-4 py-3 text-right">
                 <span

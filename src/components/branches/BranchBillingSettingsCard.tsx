@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { BranchBillingSettings } from "@/types/invoice";
 import { cn } from "@/lib/utils";
 import { parseMoney } from "@/lib/invoice-form";
+import { AccountCodesSection } from "@/components/branches/AccountCodesSection";
 import { ALERT_ERROR, BTN_PRIMARY, FIELD_ERROR, FIELD_INPUT, FIELD_LABEL, FIELD_TEXTAREA, INVALID } from "@/components/invoices/form-styles";
 
 interface Props {
@@ -229,6 +230,8 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
         ) : (
           <p className="text-[13px] text-[#64748d]">Only the branch owner can change billing &amp; tax settings.</p>
         )}
+
+        <AccountCodesSection branchId={branchId} billing={billing} canEdit={canEdit} onSaved={setBilling} />
       </div>
     </div>
   );
