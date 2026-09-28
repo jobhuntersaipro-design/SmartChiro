@@ -20,6 +20,7 @@ import { AppointmentAuditLog } from "@/components/appointments/AppointmentAuditL
 import { buildWhatsAppUrl, buildMailtoUrl, formatDobWithAge } from "@/lib/format";
 import { STATUS_TOKENS } from "@/lib/appointment-tabs";
 import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
+import { OnlineBookingBadge } from "@/components/appointments/OnlineBookingBadge";
 import type { CalendarAppointment } from "@/types/appointment";
 import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 import { AppointmentPackageInfo } from "@/components/packages/AppointmentPackageInfo";
@@ -207,6 +208,7 @@ export function AppointmentDetailPanel({
                   )}
                   {tokens.label}
                 </span>
+                {appointment.source === "ONLINE" && <OnlineBookingBadge />}
               </div>
               {patientDetail?.dateOfBirth && (
                 <p className="text-[12px] text-[#697386] mt-0.5">

@@ -6,6 +6,7 @@ import { Pencil, X, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { doctorColor } from "./doctor-color";
 import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
+import { OnlineBookingBadge } from "@/components/appointments/OnlineBookingBadge";
 import { nextStatusActions } from "@/lib/appointment-status-actions";
 import type { CalendarAppointment } from "@/types/appointment";
 import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
@@ -80,11 +81,14 @@ export function AppointmentEventPopover({
     >
       <div className="px-4 pt-3 pb-2 border-b border-[#e5edf5]">
         <div className="flex items-center justify-between gap-2">
-          <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-medium"
-            style={{ backgroundColor: status.bg, color: status.text }}
-          >
-            {status.label}
+          <span className="flex items-center gap-1.5">
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-medium"
+              style={{ backgroundColor: status.bg, color: status.text }}
+            >
+              {status.label}
+            </span>
+            {appointment.source === "ONLINE" && <OnlineBookingBadge />}
           </span>
           <button
             onClick={onClose}

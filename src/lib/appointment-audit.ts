@@ -2,7 +2,8 @@ import type { AppointmentAuditAction, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export interface ActorContext {
-  id: string;
+  /** Null for system actors such as the public online booking page. */
+  id: string | null;
   email: string;
   name: string | null;
 }

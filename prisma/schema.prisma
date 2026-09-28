@@ -123,6 +123,12 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+/// Who created the appointment: clinic staff, or the patient via the public booking link.
+enum AppointmentSource {
+  STAFF
+  ONLINE
+}
+
 enum InvoiceStatus {
   DRAFT
   SENT
@@ -217,6 +223,17 @@ model Branch {
   // Per-branch number sequences, bumped atomically (UPDATE ... RETURNING)
   invoiceSeq          Int     @default(0)
   receiptSeq          Int     @default(0)
+
+  // Online booking (Phase 7.1) — public page /book/[bookingSlug]
+  bookingEnabled     Boolean         @default(false)
+  bookingSlug        String?         @unique
+  bookingLeadMinutes Int             @default(120)
+  bookingHorizonDays Int             @default(30)
+  bookingSlotMinutes Int             @default(15)
+  // Empty = the default treatment set / every clinician of the branch
+  bookingTreatments  TreatmentType[]
+  bookingDoctorIds   String[]
+  bookingNote        String?
 
   members      BranchMember[]
   patients     Patient[]
@@ -749,6 +766,7 @@ model Appointment {
   notes         String?
   treatmentType TreatmentType?
   room          String? // free text, e.g. "Room 2"
+  source        AppointmentSource @default(STAFF)
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)

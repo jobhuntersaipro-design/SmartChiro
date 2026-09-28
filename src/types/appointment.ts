@@ -33,6 +33,8 @@ export interface CalendarAppointment {
   treatmentType?: TreatmentType | null;
   /** Free-text treatment room, e.g. "Room 2". */
   room?: string | null;
+  /** STAFF, or ONLINE when booked from the public booking page. */
+  source?: "STAFF" | "ONLINE";
   /** Whether this appointment has at least one DRAFT/SENT/OVERDUE invoice */
   hasUnpaidInvoice?: boolean;
   /** Recurring series this visit belongs to (1-based `seriesIndex` in date order). */

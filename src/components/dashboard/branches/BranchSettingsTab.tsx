@@ -13,6 +13,7 @@ import { BranchReminderSettingsCard } from "@/components/branches/BranchReminder
 import { PackageCatalogCard } from "@/components/packages/PackageCatalogCard";
 import { can } from "@/lib/permissions";
 import { BranchBillingSettingsCard } from "@/components/branches/BranchBillingSettingsCard";
+import { OnlineBookingCard } from "@/components/branches/OnlineBookingCard";
 import { useRouter } from "next/navigation";
 
 interface BranchSettingsTabProps {
@@ -302,6 +303,8 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       <PackageCatalogCard branchId={branch.id} canManage={can(branch.userRole, "package.manage")} />
       {/* Billing & tax — OWNER edits, ADMIN reads */}
       {(isOwner || branch.userRole === "ADMIN") && <BranchBillingSettingsCard branchId={branch.id} />}
+      {/* Online booking link — OWNER + ADMIN */}
+      {(isOwner || branch.userRole === "ADMIN") && <OnlineBookingCard branchId={branch.id} />}
 
       {/* Activity Log — visible to OWNER + ADMIN per 2026-05-05 RBAC */}
       {(isOwner || branch.userRole === "ADMIN") && (
