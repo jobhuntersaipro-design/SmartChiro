@@ -1,7 +1,7 @@
 # SmartChiro Improvement Plan (UX review + Malaysian competitor gaps)
 
 **Source:** `smartchiro-improvement-report.md` (UX review of smartchiro.org, 28 Sep 2026, Owner role on KLCC / Bangsar / Penang Georgetown).
-**Status:** Phases 1–7 done (2026-09-29); Phase 8 in progress.
+**Status:** All 8 phases done (2026-09-29).
 **Branch:** `claude/zen-goodall-84f7kl` — one commit (or small set) per phase, each phase built, tested and pushed before the next starts.
 
 This file is the master plan. Each phase has a detailed section that is filled in
@@ -338,10 +338,19 @@ Assumed / ambiguous (configurable constants in `src/lib/myinvois/codes.ts`, comm
 - Secondary: [farhan-syah/myinvois-client](https://github.com/farhan-syah/myinvois-client) (TypeScript SDK — base URLs, token caching, response shapes); the mirror's `12-cookbook` (community production notes: general-TIN classification, empty-string rejection Aug 2026, curl reference incl. portal hosts).
 - QR encoder: [nayuki/QR-Code-generator](https://github.com/nayuki/QR-Code-generator) (MIT).
 
+### Phase 8 — record (done 2026-09-29)
+- 8.1–8.3 migration `20260929090000_certs_commissions_accounting`: `DoctorProfile.tcmRegistrationNo / apcNumber / apcExpiresAt / apcAlertStage`, `Branch.acct*` account codes (sales, SST, receivable, cash, bank, card, e-wallet, panel), enum `CommissionBasis`, `CommissionRule`. Capabilities `commissions.manage` and `accounting.export` (OWNER/ADMIN).
+- 8.1 certificates: card on the doctor's Professional tab (OWNER/ADMIN or the doctor edit), "APC Nd" / "Expired" badge on the doctor header and Doctors list, dashboard "Practising certificates" card (hidden when empty), `GET /api/dashboard/certificates`. The dispatch cron runs `sweepCertificateAlerts` (60 / 30 / 7 days and expiry day, once per stage; changing the expiry resets the stage; nothing is recorded while Resend isn't configured, and a stage whose every email failed is retried). Expiry is a clinic calendar date; "Expired" from the day after.
+- 8.2 commissions: rules card in Branch → Settings, `/api/branches/[id]/commission-rules` CRUD, Reports → Commissions card + CSV (`GET /api/reports/commissions`). Per doctor, treatment and date only the most specific active rule applies (doctor beats all, treatment beats all, latest `effectiveFrom` among equals), so a doctor's fixed-per-visit rule replaces an all-doctors percent rule. Collected = payments on that doctor's appointment invoices (same attribution as the revenue report). Package-sale commission = money collected on package-sale invoices net of refunds, credited to the seller; package rules can't name a treatment. Completed visits = Visit rows + COMPLETED appointments without one.
+- 8.3 accounting export: Invoices page **Export** dialog → `GET /api/exports/{invoices,payments,xero-invoices,journal}.csv` (RFC 4180, formula-guarded; BOM only on the two plain CSVs). Account codes under Billing & tax (defaults in `src/lib/accounting-export.ts`). DuitNow QR / FPX / bank transfer post to the bank account. Cancelled invoices are left out of the journal; an invoice cancelled after it was exported gets no reversing line — post that by hand.
+- 8.4 MyInvois: see the build notes above. Refunds go as refund notes (04). Nothing has been sent to LHDN yet — no credentials here; the client is tested against mocked responses.
+- Merge: the dispatch cron now returns `certificates` and `einvoices` next to reminders/outreach; both are fail-soft.
+
 ---
 
 ## Owner actions carried from the report
 
 - Delete test data created by the wizard bug: two `TEST UX Patient` records (`cmul4q8i1000004i9hqqvd9zl` with one visit + one appointment on 28 Sep 7:00 PM with Dr. Suresh Menon, and duplicate `cmul4rnmn000004l0k507qdyd`). Not done from code — production data.
-- Verify the LHDN e-invoice RM3m threshold (Guideline v4.8) before Phase 8.
+- Verify the LHDN e-invoice RM3m threshold (Guideline v4.8) and the 8.4 assumptions (tax type 06 vs E, classification 022) with the tax agent; register the ERP in the MyInvois sandbox and set `MYINVOIS_*` (see 8.4 owner actions).
+- Enter each doctor's APC expiry so certificate alerts start; set account codes to match the clinic's chart of accounts before the first export.
 - Create Doctor and Admin test logins to re-test role views after Phase 2.
