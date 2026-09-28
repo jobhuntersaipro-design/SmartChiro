@@ -119,13 +119,15 @@ describe("computeAngleMeasurement", () => {
 // ─── computeCobbAngle ───
 
 describe("computeCobbAngle", () => {
+  const tilted = (deg: number) => Math.tan((deg * Math.PI) / 180) * 100;
+
   it("computes 0° for parallel horizontal lines", () => {
     const result = computeCobbAngle(
       { x: 0, y: 0 }, { x: 100, y: 0 },     // line 1 — horizontal
       { x: 0, y: 200 }, { x: 100, y: 200 }   // line 2 — also horizontal
     );
     expect(result.degrees).toBeCloseTo(0, 1);
-    expect(result.classification).toBe("Mild");
+    expect(result.classification).toBe("Minimal");
   });
 
   it("computes 90° for perpendicular lines", () => {
@@ -137,34 +139,44 @@ describe("computeCobbAngle", () => {
     expect(result.classification).toBe("Severe");
   });
 
-  it("classifies mild (<10°)", () => {
-    const tilt = Math.tan(5 * Math.PI / 180) * 100;
-    const result = computeCobbAngle(
+  it("gives the same acute angle whichever direction each line is clicked", () => {
+    const forward = computeCobbAngle(
       { x: 0, y: 0 }, { x: 100, y: 0 },
-      { x: 0, y: 200 }, { x: 100, y: 200 + tilt }
+      { x: 0, y: 200 }, { x: 100, y: 200 + tilted(12) }
     );
-    expect(result.degrees).toBeCloseTo(5, 0);
-    expect(result.classification).toBe("Mild");
+    const reversed = computeCobbAngle(
+      { x: 0, y: 0 }, { x: 100, y: 0 },
+      { x: 100, y: 200 + tilted(12) }, { x: 0, y: 200 }
+    );
+    expect(forward.degrees).toBeCloseTo(12, 1);
+    expect(reversed.degrees).toBeCloseTo(12, 1);
+    expect(reversed.classification).toBe("Mild");
   });
 
-  it("classifies moderate (10-25°)", () => {
-    const tilt = Math.tan(18 * Math.PI / 180) * 100;
+  it("reproduces the live-test case: opposite click order no longer reads ~174°", () => {
     const result = computeCobbAngle(
-      { x: 0, y: 0 }, { x: 100, y: 0 },
-      { x: 0, y: 200 }, { x: 100, y: 200 + tilt }
+      { x: 450, y: 450 }, { x: 650, y: 470 },
+      { x: 650, y: 640 }, { x: 450, y: 600 }
     );
-    expect(result.degrees).toBeCloseTo(18, 0);
-    expect(result.classification).toBe("Moderate");
+    expect(result.degrees).toBeLessThan(10);
+    expect(result.classification).toBe("Minimal");
   });
 
-  it("classifies severe (>25°)", () => {
-    const tilt = Math.tan(35 * Math.PI / 180) * 100;
+  it.each([
+    [5, "Minimal"],
+    [10.5, "Mild"],
+    [18, "Mild"],
+    [25, "Mild"],
+    [30, "Moderate"],
+    [39, "Moderate"],
+    [45, "Severe"],
+  ] as const)("grades %s° as %s (SRS)", (deg, grade) => {
     const result = computeCobbAngle(
       { x: 0, y: 0 }, { x: 100, y: 0 },
-      { x: 0, y: 200 }, { x: 100, y: 200 + tilt }
+      { x: 0, y: 200 }, { x: 100, y: 200 + tilted(deg) }
     );
-    expect(result.degrees).toBeCloseTo(35, 0);
-    expect(result.classification).toBe("Severe");
+    expect(result.degrees).toBeCloseTo(deg, 0);
+    expect(result.classification).toBe(grade);
   });
 
   it("returns perpendicular lines from midpoints to intersection", () => {
@@ -176,24 +188,6 @@ describe("computeCobbAngle", () => {
     expect(result.perp1[1]).toBe(0);
     expect(result.perp2[0]).toBe(50);
     expect(result.perp2[1]).toBe(200);
-  });
-
-  it("boundary: just above 10° is Moderate", () => {
-    const tilt = Math.tan(10.5 * Math.PI / 180) * 100;
-    const result = computeCobbAngle(
-      { x: 0, y: 0 }, { x: 100, y: 0 },
-      { x: 0, y: 200 }, { x: 100, y: 200 + tilt }
-    );
-    expect(result.classification).toBe("Moderate");
-  });
-
-  it("boundary: exactly 25° is Moderate", () => {
-    const tilt = Math.tan(25 * Math.PI / 180) * 100;
-    const result = computeCobbAngle(
-      { x: 0, y: 0 }, { x: 100, y: 0 },
-      { x: 0, y: 200 }, { x: 100, y: 200 + tilt }
-    );
-    expect(result.classification).toBe("Moderate");
   });
 });
 

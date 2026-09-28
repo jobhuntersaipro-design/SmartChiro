@@ -72,15 +72,29 @@ export function computeCobbAngle(
   const mag1 = Math.hypot(perp1Dir.x, perp1Dir.y);
   const mag2 = Math.hypot(perp2Dir.x, perp2Dir.y);
   const cosAngle = Math.max(-1, Math.min(1, dot / (mag1 * mag2)));
-  const degrees = Math.acos(cosAngle) * (180 / Math.PI);
+  // Lines have no direction: clicking an endplate right-to-left must give the
+  // same result as left-to-right, so fold into the acute angle.
+  const rawDegrees = Math.acos(cosAngle) * (180 / Math.PI);
+  const degrees = Math.min(rawDegrees, 180 - rawDegrees);
 
-  const classification = degrees < 10 ? "Mild" : degrees <= 25 ? "Moderate" : "Severe";
+  const classification = classifyCobb(degrees);
 
   // Perpendicular lines for rendering (from midpoint to intersection)
   const perp1Line: [number, number, number, number] = [mid1.x, mid1.y, intersectionPt[0], intersectionPt[1]];
   const perp2Line: [number, number, number, number] = [mid2.x, mid2.y, intersectionPt[0], intersectionPt[1]];
 
   return { degrees, classification, perp1: perp1Line, perp2: perp2Line, intersection: intersectionPt };
+}
+
+/**
+ * Scoliosis Research Society grading: under 10° is spinal asymmetry rather than
+ * scoliosis; 10–25° mild, 25–40° moderate, over 40° severe.
+ */
+export function classifyCobb(degrees: number): "Minimal" | "Mild" | "Moderate" | "Severe" {
+  if (degrees < 10) return "Minimal";
+  if (degrees <= 25) return "Mild";
+  if (degrees <= 40) return "Moderate";
+  return "Severe";
 }
 
 /**

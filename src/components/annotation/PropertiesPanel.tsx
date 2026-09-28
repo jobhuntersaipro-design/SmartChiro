@@ -1154,13 +1154,15 @@ function ShapeProperties({
               className="inline-block px-2 py-0.5 text-xs rounded-full font-medium"
               style={{
                 backgroundColor:
-                  shape.cobbClassification === "Mild" ? "#e6f9f3"
-                    : shape.cobbClassification === "Moderate" ? "#fef9e7"
-                      : "#fde8ec",
+                  shape.cobbClassification === "Minimal" ? "#f0f3f7"
+                    : shape.cobbClassification === "Mild" ? "#e6f9f3"
+                      : shape.cobbClassification === "Moderate" ? "#fef9e7"
+                        : "#fde8ec",
                 color:
-                  shape.cobbClassification === "Mild" ? "#30B130"
-                    : shape.cobbClassification === "Moderate" ? "#F5A623"
-                      : "#DF1B41",
+                  shape.cobbClassification === "Minimal" ? "#425466"
+                    : shape.cobbClassification === "Mild" ? "#30B130"
+                      : shape.cobbClassification === "Moderate" ? "#F5A623"
+                        : "#DF1B41",
               }}
             >
               {shape.cobbClassification}
