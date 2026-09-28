@@ -6,6 +6,9 @@ import { can } from "@/lib/permissions";
 import { findConflictingAppointments } from "@/lib/appointments";
 import { logAppointmentEvent, diffSnapshots, snapshotOf, classifyUpdate } from "@/lib/appointment-audit";
 import { outsideHoursSummary } from "@/lib/operating-hours";
+import { activeRedemptionFor, redeemAppointment, reverseRedemption } from "@/lib/package-service";
+import { editFollowing } from "@/lib/series-following";
+import type { RedemptionSummaryJson } from "@/types/packages";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -25,6 +28,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       room: true,
       treatmentType: true,
       branchId: true,
+      seriesId: true,
+      seriesIndex: true,
       patient: { select: { id: true, firstName: true, lastName: true } },
       doctor: { select: { id: true, name: true } },
     },
@@ -46,6 +51,9 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       branchId: appt.branchId,
       patient: appt.patient,
       doctor: appt.doctor,
+      seriesId: appt.seriesId,
+      seriesIndex: appt.seriesIndex,
+      redemption: await activeRedemptionFor(appt.id),
     },
   });
 }
@@ -113,6 +121,19 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const managesAll = can(role, "appointment.manageAll");
   if (!managesAll && appt.doctorId !== user.id) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const actor = { id: user.id, email: user.email ?? "unknown", name: user.name ?? null };
+
+  // "This and following" on a recurring series.
+  if (new URL(req.url).searchParams.get("scope") === "following") {
+    const result = await editFollowing({
+      appointmentId,
+      input: await req.json().catch(() => null),
+      actor,
+      role: role ?? "DOCTOR",
+    });
+    return NextResponse.json(result.body, { status: result.status });
   }
 
   const isPast = appt.dateTime.getTime() < Date.now();
@@ -284,7 +305,17 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     });
   }
 
-  return NextResponse.json({ appointment: updated });
+  // Packages: completing a visit uses a session of a matching package (unless
+  // it is invoiced or already redeemed); cancelling gives the session back.
+  let redemption: RedemptionSummaryJson | null = null;
+  if (parsed.data.status === "COMPLETED" && appt.status !== "COMPLETED") {
+    const result = await redeemAppointment({ appointmentId, actor });
+    redemption = result.ok ? result.redemption : await activeRedemptionFor(appointmentId);
+  } else if (parsed.data.status === "CANCELLED" && appt.status !== "CANCELLED") {
+    await reverseRedemption({ appointmentId, actor });
+  }
+
+  return NextResponse.json({ appointment: updated, redemption });
 }
 
 export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
@@ -322,6 +353,13 @@ export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
     actor: { id: user.id, email: user.email ?? "unknown", name: user.name ?? null },
     snapshot: { patientName, dateTime: appt.dateTime },
     changes: {},
+  });
+
+  // A package session used by this appointment goes back to the package
+  // before the redemption row cascades away with it.
+  await reverseRedemption({
+    appointmentId,
+    actor: { id: user.id, email: user.email ?? "unknown", name: user.name ?? null },
   });
 
   // Cascades to AppointmentReminder via Prisma onDelete: Cascade.

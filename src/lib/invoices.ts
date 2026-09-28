@@ -52,3 +52,10 @@ export function parseLineItems(value: unknown): InvoiceLineItem[] {
       total: Number(row.total ?? Number(row.quantity ?? 1) * Number(row.unitPrice ?? 0)),
     }));
 }
+
+/** Unique invoice number ("INV-<time36>-<rand>"), same format as the appointment invoice route. */
+export function generateInvoiceNumber(): string {
+  const ts = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `INV-${ts}-${rand}`;
+}

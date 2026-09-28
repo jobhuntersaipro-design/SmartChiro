@@ -127,6 +127,8 @@ export async function GET(req: Request): Promise<Response> {
       notes: true,
       treatmentType: true,
       room: true,
+      seriesId: true,
+      seriesIndex: true,
       patient: {
         select: { id: true, firstName: true, lastName: true, phone: true },
       },
@@ -152,6 +154,8 @@ export async function GET(req: Request): Promise<Response> {
       treatmentType: a.treatmentType,
       room: a.room,
       hasUnpaidInvoice: a.invoices.length > 0,
+      seriesId: a.seriesId,
+      seriesIndex: a.seriesIndex,
       patient: a.patient,
       doctor: a.doctor,
       branch: a.branch,

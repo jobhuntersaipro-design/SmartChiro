@@ -43,6 +43,8 @@ model User {
   timeOff          DoctorTimeOff[]   @relation("DoctorTimeOff")
   breakTimes       DoctorBreakTime[] @relation("DoctorBreakTime")
   landmarkCorrections AiLandmarkCorrection[] @relation("AiLandmarkCorrectionUser")
+  carePlans           CarePlan[]             @relation("CarePlanDoctor")
+  appointmentSeries   AppointmentSeries[]    @relation("SeriesDoctor")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -212,6 +214,11 @@ model Branch {
   reminderSettings BranchReminderSettings?
   waSession        WaSession?
   whatsAppAccount  WhatsAppAccount?
+
+  packageTemplates  PackageTemplate[]
+  patientPackages   PatientPackage[]
+  carePlans         CarePlan[]
+  appointmentSeries AppointmentSeries[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -464,6 +471,10 @@ model Patient {
   appointments Appointment[]
   invoices     Invoice[]
   documents    PatientDocument[]
+
+  packages          PatientPackage[]
+  carePlans         CarePlan[]
+  appointmentSeries AppointmentSeries[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -726,6 +737,12 @@ model Appointment {
   invoices  Invoice[]
   reminders AppointmentReminder[]
 
+  // Recurring series (Phase 3). Occurrences keep their row when the series is deleted.
+  seriesId    String?
+  series      AppointmentSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  seriesIndex Int?
+  redemptions PackageRedemption[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -742,6 +759,7 @@ model Appointment {
   // owner column and sort/range on dateTime.
   @@index([doctorId, dateTime])
   @@index([patientId, dateTime])
+  @@index([seriesId])
 }
 
 // ─── Billing ───
@@ -765,6 +783,9 @@ model Invoice {
 
   appointmentId String?
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  // Set when this invoice is the sale of a prepaid package (Phase 3).
+  packageSale PatientPackage?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -878,4 +899,156 @@ model AppointmentReminder {
   @@unique([appointmentId, channel, offsetMin, isFallback])
   @@index([scheduledFor, status])
   @@index([appointmentId])
+}
+
+// ─── Packages, care plans, recurring series (Phase 3) ───
+
+enum PackageStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum CarePlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+/// Branch catalogue entry — what a package costs and which treatments redeem it.
+model PackageTemplate {
+  id             String          @id @default(cuid())
+  branchId       String
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  sessions       Int
+  price          Decimal         @db.Decimal(10, 2)
+  validityDays   Int?
+  /// Empty = any treatment type redeems it.
+  treatmentTypes TreatmentType[]
+  isActive       Boolean         @default(true)
+
+  patientPackages PatientPackage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId, isActive])
+}
+
+/// A package sold to a patient. Name / sessions / price are a snapshot at sale.
+model PatientPackage {
+  id             String           @id @default(cuid())
+  patientId      String
+  patient        Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  branchId       String
+  branch         Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  templateId     String?
+  template       PackageTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  name           String
+  sessionsTotal  Int
+  sessionsUsed   Int              @default(0)
+  price          Decimal          @db.Decimal(10, 2)
+  treatmentTypes TreatmentType[]
+  purchasedAt    DateTime         @default(now())
+  expiresAt      DateTime?
+  status         PackageStatus    @default(ACTIVE)
+  soldById       String?
+  /// Sale invoice (one line: the package).
+  invoiceId      String?          @unique
+  invoice        Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  notes          String?
+  cancelledAt    DateTime?
+  cancelReason   String?
+
+  redemptions PackageRedemption[]
+  carePlans   CarePlan[]
+  series      AppointmentSeries[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId, status])
+  @@index([branchId, status])
+}
+
+/// One session of a package used by an appointment. Reversed rows are kept as
+/// history; at most one non-reversed row per appointment (enforced in
+/// src/lib/package-service.ts under a row lock on the appointment).
+model PackageRedemption {
+  id               String         @id @default(cuid())
+  patientPackageId String
+  patientPackage   PatientPackage @relation(fields: [patientPackageId], references: [id], onDelete: Cascade)
+  appointmentId    String
+  appointment      Appointment    @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  redeemedAt       DateTime       @default(now())
+  redeemedById     String?
+  reversedAt       DateTime?
+  reversedById     String?
+
+  @@index([appointmentId, reversedAt])
+  @@index([patientPackageId])
+}
+
+/// Clinical treatment plan (not visible to front desk).
+model CarePlan {
+  id               String          @id @default(cuid())
+  patientId        String
+  patient          Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  branchId         String
+  branch           Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  doctorId         String
+  doctor           User            @relation("CarePlanDoctor", fields: [doctorId], references: [id])
+  title            String
+  visitsPerWeek    Int
+  totalVisits      Int
+  startDate        DateTime
+  goals            String?
+  status           CarePlanStatus  @default(ACTIVE)
+  patientPackageId String?
+  patientPackage   PatientPackage? @relation(fields: [patientPackageId], references: [id], onDelete: SetNull)
+
+  series AppointmentSeries[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId, status])
+  @@index([branchId])
+}
+
+/// Recurrence rule behind a set of appointments. Weekdays (0 = Sunday) and
+/// startTime ("HH:MM") are clinic wall-clock time.
+model AppointmentSeries {
+  id               String          @id @default(cuid())
+  patientId        String
+  patient          Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  branchId         String
+  branch           Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  doctorId         String
+  doctor           User            @relation("SeriesDoctor", fields: [doctorId], references: [id])
+  treatmentType    TreatmentType?
+  duration         Int
+  room             String?
+  weekdays         Int[]
+  startTime        String
+  intervalWeeks    Int             @default(1)
+  count            Int?
+  until            DateTime?
+  startDate        DateTime
+  carePlanId       String?
+  carePlan         CarePlan?       @relation(fields: [carePlanId], references: [id], onDelete: SetNull)
+  patientPackageId String?
+  patientPackage   PatientPackage? @relation(fields: [patientPackageId], references: [id], onDelete: SetNull)
+  createdById      String?
+
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId])
+  @@index([branchId])
+  @@index([carePlanId])
 }

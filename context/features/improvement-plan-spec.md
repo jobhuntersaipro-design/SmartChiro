@@ -144,6 +144,31 @@ Malaysian chiro clinics sell care as prepaid packages (e.g. 12 adjustments) and 
 - Reminders: existing per-appointment reminders already cover series occurrences.
 **Done when:** a 12-visit, 3×/week plan can be sold and booked in one flow; completing each visit decrements the package; moving "this and following" shifts the rest.
 
+### 3.3 API (backend built; UI pending)
+Migration `20260929040000_packages_series`: `PackageTemplate`, `PatientPackage` (+ `cancelledAt`, `cancelReason`), `PackageRedemption`, `CarePlan`, `AppointmentSeries` (+ `room`), enums `PackageStatus`, `CarePlanStatus`; `Appointment.seriesId` / `seriesIndex` (1-based, date order). Payload types in `src/types/packages.ts`. Errors are `{ error, message }` (+ `details` on 422 validation); cross-branch ids answer 404. Money = number (MYR, 2 dp); calendar days = `"YYYY-MM-DD"` clinic time; instants = ISO.
+
+| Endpoint | Who | Body → response |
+|---|---|---|
+| `GET /api/branches/[branchId]/packages[?includeInactive=true]` | any member (inactive: OWNER/ADMIN) | → `{ templates: PackageTemplateJson[] }` |
+| `POST /api/branches/[branchId]/packages` | OWNER/ADMIN | `{ name, sessions, price, description?, validityDays?, treatmentTypes? (empty = any), isActive? }` → 201 `{ template }` |
+| `PATCH / DELETE /api/branches/[branchId]/packages/[templateId]` | OWNER/ADMIN | partial template / soft delete (`isActive=false`) → `{ template }` |
+| `GET /api/patients/[patientId]/packages` | OWNER/ADMIN, assigned doctor | → `{ packages: PatientPackageJson[] (with redemptions, newest first), summary: { activeCount, sessionsLeft } }` |
+| `POST /api/patients/[patientId]/packages` | OWNER/ADMIN | `{ templateId, notes? }` or `{ name, sessions, price, validityDays?, treatmentTypes?, notes? }` → 201 `{ package }`; creates a SENT sale invoice (one line "Package: <name> (N sessions)"), expiry = end of the clinic day `validityDays` later |
+| `PATCH /api/patient-packages/[packageId]` | OWNER/ADMIN | `{ status: "CANCELLED", reason, cancelInvoice? }` and/or `{ notes }` → `{ package }` (422 `invoice_already_paid` when cancelling a paid sale invoice) |
+| `POST /api/appointments/[id]/redeem` | OWNER/ADMIN, appointment's doctor | `{ patientPackageId? }` → 201 `{ redemption: RedemptionSummaryJson }`; 409 `no_package` / `already_redeemed` / `appointment_invoiced`, 422 `package_not_eligible` (+ `reason`) |
+| `POST /api/appointments/[id]/redeem/reverse` | same | → `{ reversed }` (session restored); 404 `not_redeemed` |
+| `PATCH /api/appointments/[id]` | unchanged | status → COMPLETED auto-redeems (series package first, else earliest-expiring matching); → CANCELLED gives the session back; response adds `redemption` (or null). `DELETE` reverses first. |
+| `GET /api/appointments/[id]` | unchanged | adds `seriesId`, `seriesIndex`, `redemption`. `GET /api/appointments` adds `seriesId`, `seriesIndex`. |
+| `POST /api/appointment-series/preview` | any member; DOCTOR only self | `{ branchId, doctorId, patientId?, weekdays (0=Sun), startTime "HH:MM", intervalWeeks=1, startDate, count? \| until?, duration=30, treatmentType? }` → `{ occurrences: [{ dateTime, ok, problems: ('conflict'\|'break'\|'outside_hours'\|'past'\|'time_off')[], conflicts?, breakLabel?, hours? }], summary: { total, ok, withProblems }, capped }` |
+| `POST /api/appointment-series` | as preview | preview body + `patientId`, `room?`, `notes?`, `skipProblemDates=false`, `carePlanId?`, `patientPackageId?` → 201 `{ series, created: SeriesAppointmentJson[], skipped: occurrence[] }`; with problems and `skipProblemDates=false` → 409 `series_problems` + `occurrences` (nothing written) |
+| `GET /api/appointment-series/[seriesId]` | any member | → `{ series (with appointments[] incl. `redeemed`), counts: { STATUS: n }, package: { id, name, sessionsTotal, sessionsUsed, sessionsLeft, status, expiresAt } \| null }` |
+| `PATCH /api/appointments/[id]?scope=following` | as single PATCH | `{ dateTime?, doctorId?, duration?, status?: "CANCELLED", force?, forceOutsideHours? }` → `{ appointment, updated[], count }`. Applies to this + later occurrences still SCHEDULED/CHECKED_IN and in the future (same time delta). Every moved one is re-checked; any problem → 409 `series_problems` with `occurrences: [{ appointmentId, seriesIndex, dateTime, problems, … }]` and nothing changes. `force` (OWNER/ADMIN) overrides; a DOCTOR's `force` only overrides opening hours; `past` never. |
+| `GET /api/patients/[patientId]/care-plans` | OWNER/ADMIN, assigned doctor (never front desk) | → `{ carePlans: CarePlanJson[] }` with `progress: { completed, upcoming, cancelled, noShow, planned }` and package summary |
+| `POST /api/patients/[patientId]/care-plans` | same | `{ title, visitsPerWeek, totalVisits, startDate, goals?, doctorId? (default: patient's doctor; DOCTOR = self), packageTemplateId? (OWNER/ADMIN) \| patientPackageId?, series?: { weekdays, startTime, intervalWeeks?, startDate? (= plan), count? (= totalVisits) \| until?, duration?, treatmentType? (default: the package's first type), room?, notes?, skipProblemDates? } }` → 201 `{ carePlan, package \| null, series: { series, created, skipped } \| null }` — one transaction |
+| `PATCH /api/care-plans/[carePlanId]` | same | `{ title?, goals?, visitsPerWeek?, totalVisits?, doctorId?, status?, patientPackageId?, cancelRemaining? }` → `{ carePlan, cancelledAppointments }` |
+
+Rules: series weekdays/time are clinic wall-clock; weeks for `intervalWeeks` count from the Monday-start week of `startDate`; `until` is inclusive; past occurrences are skipped and don't count toward `count`; max 104 occurrences. Reversed redemptions stay as history (`reversedAt`), and a reversed appointment can be redeemed again — "one active redemption per appointment" and `sessionsUsed` are kept consistent under row locks (appointment, then package). The dispatch cron marks ACTIVE packages past `expiresAt` as EXPIRED; reads show `effectiveStatus` in between. Role checks carry `TODO(front-desk)` markers for the switch to `src/lib/permissions.ts`.
+
 ## Phase 4 — Payments, manual invoices, SST, receipts
 
 ### 4.1 Payments

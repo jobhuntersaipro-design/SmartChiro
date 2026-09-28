@@ -55,3 +55,40 @@ export async function findConflictingAppointments(args: {
     return aStartMs < endMs && aEndMs > startMs;
   });
 }
+
+/**
+ * Batch form of {@link findConflictingAppointments} for many windows of one
+ * doctor (recurring series): one query, same overlap rule and statuses.
+ * Returns the conflicts of each window, in input order.
+ */
+export async function findConflictsForWindows(args: {
+  doctorId: string;
+  windows: { start: Date; end: Date }[];
+  excludeIds?: string[];
+}): Promise<AppointmentConflict[][]> {
+  const { doctorId, windows, excludeIds } = args;
+  if (windows.length === 0) return [];
+  const minStart = Math.min(...windows.map((w) => w.start.getTime()));
+  const maxEnd = Math.max(...windows.map((w) => w.end.getTime()));
+  const candidates = await prisma.appointment.findMany({
+    where: {
+      doctorId,
+      status: { in: ["SCHEDULED", "CHECKED_IN"] },
+      dateTime: { gte: new Date(minStart - 8 * 60 * 60 * 1000), lt: new Date(maxEnd) },
+      ...(excludeIds && excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+    },
+    select: {
+      id: true,
+      dateTime: true,
+      duration: true,
+      patient: { select: { firstName: true, lastName: true } },
+    },
+  });
+  return windows.map(({ start, end }) =>
+    candidates.filter((a) => {
+      const aStartMs = a.dateTime.getTime();
+      const aEndMs = aStartMs + a.duration * 60_000;
+      return aStartMs < end.getTime() && aEndMs > start.getTime();
+    }),
+  );
+}
