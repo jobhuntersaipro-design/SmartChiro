@@ -53,6 +53,8 @@ interface PatientProfileTabProps {
     createdAt: string;
     updatedAt?: string;
   };
+  /** Medical history / notes — false for front desk. */
+  showClinical?: boolean;
 }
 
 function formatDateTime(dateStr: string): string {
@@ -157,7 +159,7 @@ function Section({
   );
 }
 
-export function PatientProfileTab({ patient }: PatientProfileTabProps) {
+export function PatientProfileTab({ patient, showClinical = true }: PatientProfileTabProps) {
   const dobDisplay = formatDobWithAge(patient.dateOfBirth);
   const hasAllergies = !!patient.allergies && patient.allergies.trim().length > 0;
   const fullAddress = buildFullAddress(patient);
@@ -223,12 +225,16 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
             }
           />
           <DetailRow label="Referral Source" value={patient.referralSource} />
-          <div className="col-span-2">
-            <DetailRow label="Medical History" value={patient.medicalHistory} />
-          </div>
-          <div className="col-span-2">
-            <DetailRow label="Notes" value={patient.notes} />
-          </div>
+          {showClinical && (
+            <>
+              <div className="col-span-2">
+                <DetailRow label="Medical History" value={patient.medicalHistory} />
+              </div>
+              <div className="col-span-2">
+                <DetailRow label="Notes" value={patient.notes} />
+              </div>
+            </>
+          )}
         </div>
       </Section>
 

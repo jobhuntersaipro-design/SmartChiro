@@ -2,35 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { reminderChannelError } from "@/lib/reminder-channel";
+import { getPatientAccess } from "@/lib/auth/patient-access";
+import { can } from "@/lib/permissions";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
 const VALID_BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 const VALID_MARITAL_STATUSES = ["Single", "Married", "Divorced", "Widowed"];
 const IC_REGEX = /^\d{6}-?\d{2}-?\d{4}$/;
-
-async function checkPatientAccess(userId: string, patientId: string) {
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-    select: { id: true, branchId: true, doctorId: true },
-  });
-
-  if (!patient) return { patient: null, allowed: false };
-
-  // Assigned doctor always has access
-  if (patient.doctorId === userId) return { patient, allowed: true };
-
-  // OWNER or ADMIN of the patient's branch has access
-  const membership = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId, branchId: patient.branchId } },
-  });
-
-  if (membership && (membership.role === "OWNER" || membership.role === "ADMIN")) {
-    return { patient, allowed: true };
-  }
-
-  return { patient, allowed: false };
-}
 
 export async function GET(
   req: NextRequest,
@@ -42,7 +21,7 @@ export async function GET(
   }
 
   const { patientId } = await params;
-  const { patient: patientRef, allowed } = await checkPatientAccess(session.user.id, patientId);
+  const { patient: patientRef, allowed, clinical } = await getPatientAccess(session.user.id, patientId);
 
   if (!patientRef) {
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });
@@ -63,10 +42,11 @@ export async function GET(
         doctor: { select: { id: true, name: true } },
         branch: { select: { id: true, name: true } },
         _count: { select: { visits: true, xrays: true, appointments: true, documents: true } },
+        // Front desk never receives visit notes or X-rays.
         visits: {
           select: { id: true, visitDate: true, subjective: true, visitType: true, appointmentId: true },
           orderBy: { visitDate: "desc" },
-          take: 5,
+          take: clinical ? 5 : 0,
         },
         xrays: {
           select: {
@@ -81,11 +61,12 @@ export async function GET(
           },
           where: { status: { in: ["READY", "ARCHIVED"] } },
           orderBy: { createdAt: "desc" },
+          take: clinical ? undefined : 0,
         },
       },
     }),
     // Recovery trend: average overallImprovement from last 5 questionnaires
-    includeDetail
+    includeDetail && clinical
       ? prisma.visitQuestionnaire.findMany({
           where: { visit: { patientId } },
           orderBy: { visit: { visitDate: "desc" } },
@@ -107,7 +88,7 @@ export async function GET(
       : null,
     // Visit counts by type — let Postgres aggregate instead of loading every
     // visit row into Node.
-    includeDetail
+    includeDetail && clinical
       ? prisma.visit.groupBy({
           by: ["visitType"],
           where: { patientId },
@@ -173,8 +154,7 @@ export async function GET(
       emergencyRelation: patient.emergencyRelation,
       address: patient.address,
       emergencyContact: patient.emergencyContact,
-      medicalHistory: patient.medicalHistory,
-      notes: patient.notes,
+      ...(clinical && { medicalHistory: patient.medicalHistory, notes: patient.notes }),
       status: patient.status ?? "active",
       reminderChannel: patient.reminderChannel,
       preferredLanguage: patient.preferredLanguage,
@@ -208,9 +188,8 @@ export async function GET(
       createdAt: patient.createdAt.toISOString(),
       updatedAt: patient.updatedAt.toISOString(),
       ...(includeDetail && {
-        recoveryTrend,
         nextAppointment,
-        visitsByType,
+        ...(clinical && { recoveryTrend, visitsByType }),
       }),
     },
   });
@@ -226,7 +205,9 @@ export async function PATCH(
   }
 
   const { patientId } = await params;
-  const { patient: patientRef, allowed } = await checkPatientAccess(session.user.id, patientId);
+  const {
+    patient: patientRef, allowed, clinical, role: callerRole,
+  } = await getPatientAccess(session.user.id, patientId);
 
   if (!patientRef) {
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });
@@ -320,24 +301,22 @@ export async function PATCH(
     );
   }
 
-  // Validate doctorId if changing — reassignment requires OWNER/ADMIN in the
-  // patient's branch. A DOCTOR who happens to be the patient's currently
+  // Validate doctorId if changing — reassignment requires OWNER/ADMIN/FRONT_DESK
+  // in the patient's branch. A DOCTOR who happens to be the patient's currently
   // assigned doctor should not be able to hand them off to anyone else.
   if (doctorId !== undefined) {
-    const callerMembership = await prisma.branchMember.findUnique({
-      where: { userId_branchId: { userId: session.user.id, branchId: patientRef.branchId } },
-      select: { role: true },
-    });
-    if (callerMembership?.role !== "OWNER" && callerMembership?.role !== "ADMIN") {
+    if (!can(callerRole, "patient.assignDoctor")) {
       return NextResponse.json(
-        { error: "Only OWNER or ADMIN can reassign the patient's doctor" },
+        { error: "Only OWNER, ADMIN or front desk can reassign the patient's doctor" },
         { status: 403 }
       );
     }
     const isMember = await prisma.branchMember.findUnique({
       where: { userId_branchId: { userId: doctorId, branchId: patientRef.branchId } },
+      select: { role: true },
     });
-    if (!isMember) {
+    // Front desk staff don't treat patients, so they can't be the assigned doctor.
+    if (!isMember || !can(isMember.role, "clinical.read")) {
       return NextResponse.json(
         { error: "Doctor must be a member of the patient's branch" },
         { status: 400 }
@@ -354,8 +333,9 @@ export async function PATCH(
   if (gender !== undefined) updateData.gender = gender || null;
   if (address !== undefined) updateData.address = address?.trim() || null;
   if (emergencyContact !== undefined) updateData.emergencyContact = emergencyContact?.trim() || null;
-  if (medicalHistory !== undefined) updateData.medicalHistory = medicalHistory || null;
-  if (notes !== undefined) updateData.notes = notes || null;
+  // Clinical fields are ignored for roles that can't see them (front desk).
+  if (clinical && medicalHistory !== undefined) updateData.medicalHistory = medicalHistory || null;
+  if (clinical && notes !== undefined) updateData.notes = notes || null;
   if (doctorId !== undefined) updateData.doctorId = doctorId;
   // New fields
   if (icNumber !== undefined) updateData.icNumber = icNumber?.trim() || null;
@@ -439,8 +419,7 @@ export async function PATCH(
       emergencyRelation: updated.emergencyRelation,
       address: updated.address,
       emergencyContact: updated.emergencyContact,
-      medicalHistory: updated.medicalHistory,
-      notes: updated.notes,
+      ...(clinical && { medicalHistory: updated.medicalHistory, notes: updated.notes }),
       status: updated.status ?? "active",
       reminderChannel: updated.reminderChannel,
       preferredLanguage: updated.preferredLanguage,
@@ -464,7 +443,7 @@ export async function DELETE(
   }
 
   const { patientId } = await params;
-  const { patient, allowed } = await checkPatientAccess(session.user.id, patientId);
+  const { patient, allowed, role } = await getPatientAccess(session.user.id, patientId);
 
   if (!patient) {
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });
@@ -474,12 +453,8 @@ export async function DELETE(
   }
 
   // Deleting cascades to visits, X-rays, annotations and invoices — only the
-  // branch's OWNER/ADMIN may do it, not the assigned doctor.
-  const membership = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId: session.user.id, branchId: patient.branchId } },
-    select: { role: true },
-  });
-  if (membership?.role !== "OWNER" && membership?.role !== "ADMIN") {
+  // branch's OWNER/ADMIN may do it, not the assigned doctor or front desk.
+  if (!can(role, "patient.delete")) {
     return NextResponse.json({ error: "Only the branch owner or an admin can delete patients" }, { status: 403 });
   }
 

@@ -9,7 +9,7 @@ type RouteCtx = { params: Promise<{ branchId: string }> };
 
 export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
-  const access = await branchAccess(branchId, false);
+  const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const account = await prisma.whatsAppAccount.findUnique({ where: { branchId } });
@@ -22,7 +22,7 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 
 export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
-  const access = await branchAccess(branchId, true);
+  const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const account = await prisma.whatsAppAccount.findUnique({ where: { branchId } });

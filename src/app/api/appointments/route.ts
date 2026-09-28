@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { branchIdsForParam } from "@/lib/branch-context";
+import { can } from "@/lib/permissions";
 import { findConflictingAppointments } from "@/lib/appointments";
 import { findOverlappingBreak } from "@/lib/availability";
 import { outsideHoursSummary } from "@/lib/operating-hours";
@@ -223,17 +224,21 @@ export async function POST(req: Request): Promise<Response> {
   const role = await getUserBranchRole(user.id, patient.branchId);
   if (!role) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  // DOCTOR can only book for themselves
-  if (role === "DOCTOR" && doctorId !== user.id) {
+  // DOCTOR can only book for themselves; OWNER/ADMIN/FRONT_DESK book for anyone
+  if (!can(role, "appointment.write")) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+  if (!can(role, "appointment.manageAll") && doctorId !== user.id) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  // Doctor must also be a member of the same branch
+  // Doctor must also be a member of the same branch who treats patients
+  // (front desk is never bookable).
   const doctorMembership = await prisma.branchMember.findUnique({
     where: { userId_branchId: { userId: doctorId, branchId: patient.branchId } },
-    select: { userId: true },
+    select: { userId: true, role: true },
   });
-  if (!doctorMembership) {
+  if (!doctorMembership || !can(doctorMembership.role, "clinical.read")) {
     return NextResponse.json({ error: "doctor_not_in_branch" }, { status: 422 });
   }
 
@@ -261,8 +266,8 @@ export async function POST(req: Request): Promise<Response> {
 
   // Break-time confirmation gate. If the chosen slot overlaps the doctor's break,
   // require the client to retry with `forceBookOnBreak: true` after showing a confirm dialog.
-  // Only OWNER/ADMIN can use the bypass — a DOCTOR sending the flag is treated as if absent.
-  const canBypassBreak = forceBookOnBreak === true && role !== "DOCTOR";
+  // Only OWNER/ADMIN/FRONT_DESK can use the bypass — a DOCTOR sending the flag is treated as if absent.
+  const canBypassBreak = forceBookOnBreak === true && can(role, "appointment.manageAll");
   if (!canBypassBreak) {
     const docBreaks = await prisma.doctorBreakTime.findMany({
       where: { userId: doctorId, branchId: patient.branchId },

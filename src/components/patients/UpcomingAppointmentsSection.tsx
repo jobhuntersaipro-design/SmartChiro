@@ -204,12 +204,15 @@ interface UpcomingAppointmentsSectionProps {
   isAdmin?: boolean;
   /** Changes when the sidebar branch switcher changes scope; refetch then. */
   scopeKey?: string;
+  /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
+  canDelete?: boolean;
 }
 
 export function UpcomingAppointmentsSection({
   currentUserId,
   isAdmin = false,
   scopeKey,
+  canDelete = isAdmin,
 }: UpcomingAppointmentsSectionProps = {}) {
   const [range, setRange] = useState<Range>("week");
   const [appointments, setAppointments] = useState<UpcomingAppointment[]>([]);
@@ -503,7 +506,7 @@ export function UpcomingAppointmentsSection({
                     )}
                     <AppointmentActionsMenu
                       canEdit={isAdmin || a.doctor.id === currentUserId}
-                      canDelete={isAdmin}
+                      canDelete={canDelete}
                       onEdit={() => setEditId(a.id)}
                       onCancel={() => setCancelTarget(a)}
                       onDelete={() => setDeleteTarget(a)}

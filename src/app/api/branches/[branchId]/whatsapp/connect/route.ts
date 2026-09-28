@@ -16,7 +16,7 @@ const Body = z.object({
 /** Completes Embedded Signup: the browser posts the code + session info. */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
-  const access = await branchAccess(branchId, true);
+  const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
   if (!signupConfig()) {
     return NextResponse.json(

@@ -32,16 +32,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ROLE_LABELS } from "@/lib/permissions";
 
 const navItems: { label: string; href: string; icon: typeof Users; roles?: BranchRole[] }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/dashboard/patients", icon: Users },
   { label: "Branches", href: "/dashboard/branches", icon: Building2 },
-  { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope },
+  // Staff management and clinical tools aren't front desk's job.
+  { label: "Doctors", href: "/dashboard/doctors", icon: Stethoscope, roles: ["OWNER", "ADMIN", "DOCTOR"] },
   { label: "Appointments", href: "/dashboard/appointments", icon: Calendar },
   // Billing is the owner's / front desk's job.
-  { label: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["OWNER", "ADMIN"] },
-  { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone },
+  { label: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["OWNER", "ADMIN", "FRONT_DESK"] },
+  { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone, roles: ["OWNER", "ADMIN", "DOCTOR"] },
 ];
 
 interface SidebarUser {
@@ -57,7 +59,7 @@ interface SidebarUser {
   canUseAllBranches?: boolean;
 }
 
-const ROLE_LABEL: Record<BranchRole, string> = { OWNER: "Owner", ADMIN: "Admin", DOCTOR: "Doctor" };
+const ROLE_LABEL = ROLE_LABELS;
 
 /** Which branch the dashboard works in; switching changes the role shown too. */
 function BranchSwitcher({ user }: { user: SidebarUser }) {

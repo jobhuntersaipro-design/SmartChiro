@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizeWebsite } from "@/lib/branch-fields";
+import { can } from "@/lib/permissions";
 import { snapshotOf, diffSnapshots } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
 
@@ -167,7 +168,7 @@ export async function PATCH(
     where: { userId_branchId: { userId: session.user.id, branchId } },
   });
 
-  if (!membership || membership.role !== "OWNER") {
+  if (!membership || !can(membership.role, "branch.manage")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -309,7 +310,7 @@ export async function DELETE(
     where: { userId_branchId: { userId: session.user.id, branchId } },
   });
 
-  if (!membership || membership.role !== "OWNER") {
+  if (!membership || !can(membership.role, "branch.manage")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

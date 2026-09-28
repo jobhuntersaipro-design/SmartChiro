@@ -9,6 +9,7 @@ import type { DoctorDetail } from "@/types/doctor";
 import { normalizeWorkingSchedule, DAY_KEYS_BY_WEEKDAY } from "@/lib/operating-hours";
 import { clinicParts } from "@/lib/clinic-time";
 import { formatMYR } from "@/lib/invoices";
+import { roleLabel } from "@/lib/permissions";
 
 interface DoctorOverviewTabProps {
   doctorId: string;
@@ -275,7 +276,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                     <ChevronRight className="h-3 w-3 text-[#c1c9d2]" strokeWidth={1.5} />
                   </Link>
                   <span className="text-[12px] text-[#533afd] bg-[#ededfc] rounded-full px-2 py-0.5">
-                    {b.role}
+                    {roleLabel(b.role)}
                   </span>
                 </div>
               ))}

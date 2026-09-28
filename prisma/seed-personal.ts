@@ -330,6 +330,25 @@ async function main() {
     console.log(`Seeded doctor: ${d.name} (${d.role} @ ${branches[d.branchIdx].name})`)
   }
 
+  // ─── Front desk (books, checks in, takes payment; no clinical access) ───
+  const frontDesk = await prisma.user.upsert({
+    where: { email: 'frontdesk@smartchiro.test' },
+    update: { password: hashedPassword, emailVerified: new Date() },
+    create: {
+      email: 'frontdesk@smartchiro.test',
+      name: 'Siti Front Desk',
+      password: hashedPassword,
+      emailVerified: new Date(),
+      activeBranchId: branches[0].id,
+    },
+  })
+  await prisma.branchMember.upsert({
+    where: { userId_branchId: { userId: frontDesk.id, branchId: branches[0].id } },
+    update: { role: 'FRONT_DESK' },
+    create: { userId: frontDesk.id, branchId: branches[0].id, role: 'FRONT_DESK' },
+  })
+  console.log(`Seeded front desk: ${frontDesk.email} (FRONT_DESK @ ${branches[0].name})`)
+
   // Owner counts as a doctor too — assigned to first branch
   const allDoctors = [
     { id: owner.id, name: owner.name ?? 'Job Hunter', branchIdx: 0 },

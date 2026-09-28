@@ -15,6 +15,8 @@ interface EditPatientDialogProps {
   onSave: (patientId: string, data: Record<string, unknown>) => Promise<void>;
   branchDoctors?: { id: string; name: string }[];
   isAdmin?: boolean;
+  /** Medical history / notes fields — false for front desk. */
+  showClinical?: boolean;
 }
 
 function FormField({ label, error, children }: { label: string; error?: string | null; children: React.ReactNode }) {
@@ -50,7 +52,7 @@ const MALAYSIAN_STATES = [
   "Wilayah Persekutuan Labuan",
 ];
 
-export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchDoctors, isAdmin }: EditPatientDialogProps) {
+export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchDoctors, isAdmin, showClinical = true }: EditPatientDialogProps) {
   const [form, setForm] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -297,12 +299,16 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
               <FormField label="Allergies">
                 <input type="text" value={form.allergies || ""} onChange={(e) => update("allergies", e.target.value)} className={inputClass} />
               </FormField>
-              <FormField label="Medical History">
-                <textarea value={form.medicalHistory || ""} onChange={(e) => update("medicalHistory", e.target.value)} rows={3} className={textareaClass} />
-              </FormField>
-              <FormField label="Notes">
-                <textarea value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} rows={2} className={textareaClass} />
-              </FormField>
+              {showClinical && (
+                <>
+                  <FormField label="Medical History">
+                    <textarea value={form.medicalHistory || ""} onChange={(e) => update("medicalHistory", e.target.value)} rows={3} className={textareaClass} />
+                  </FormField>
+                  <FormField label="Notes">
+                    <textarea value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} rows={2} className={textareaClass} />
+                  </FormField>
+                </>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <FormField label="Reminder Channel" error={channelError}>
                   <select

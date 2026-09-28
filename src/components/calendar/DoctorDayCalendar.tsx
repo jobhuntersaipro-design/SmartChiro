@@ -28,6 +28,8 @@ interface Props {
   availability: AvailabilitySlot[];
   loading?: boolean;
   isAdmin: boolean;
+  /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
+  canDelete?: boolean;
   currentUserId: string;
   /** Inclusive start hour (0-23). Defaults to 8 (8am). */
   startHour?: number;
@@ -58,6 +60,7 @@ export function DoctorDayCalendar({
   availability,
   loading = false,
   isAdmin,
+  canDelete = isAdmin,
   currentUserId,
   startHour = DEFAULT_START,
   endHour = DEFAULT_END,
@@ -336,6 +339,7 @@ export function DoctorDayCalendar({
                     top={pxFromMinutes(start)}
                     height={Math.max(36, pxFromMinutes(end - start))}
                     isAdmin={isAdmin}
+                    canDelete={canDelete}
                     currentUserId={currentUserId}
                     onSelectEvent={() => onSelectEvent(a)}
                     onEdit={() => onEdit(a)}
@@ -395,6 +399,7 @@ function AppointmentBlock({
   top,
   height,
   isAdmin,
+  canDelete,
   currentUserId,
   onSelectEvent,
   onEdit,
@@ -405,6 +410,7 @@ function AppointmentBlock({
   top: number;
   height: number;
   isAdmin: boolean;
+  canDelete: boolean;
   currentUserId: string;
   onSelectEvent: () => void;
   onEdit: () => void;
@@ -416,7 +422,6 @@ function AppointmentBlock({
   const start = new Date(appointment.dateTime);
   const end = new Date(start.getTime() + appointment.duration * 60_000);
   const canEdit = isAdmin || appointment.doctor.id === currentUserId;
-  const canDelete = isAdmin;
 
   const struck =
     appointment.status === "CANCELLED" || appointment.status === "NO_SHOW";

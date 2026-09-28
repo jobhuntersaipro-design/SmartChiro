@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/permissions";
 
 type RouteContext = { params: Promise<{ patientId: string; visitId: string }> };
 
@@ -14,19 +15,20 @@ async function checkVisitAccess(userId: string, patientId: string, visitId: stri
 
   if (!visit || visit.patientId !== patientId) return { visit: null, allowed: false };
 
+  const membership = await prisma.branchMember.findUnique({
+    where: { userId_branchId: { userId, branchId: visit.patient.branchId } },
+    select: { role: true },
+  });
+  const role = membership?.role ?? null;
+
+  // Visits are clinical — front desk never gets them.
+  if (role && !can(role, "clinical.read")) return { visit, allowed: false };
+
   // Visit's doctor always has access
   if (visit.doctorId === userId) return { visit, allowed: true };
 
   // OWNER or ADMIN of patient's branch has access
-  const membership = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId, branchId: visit.patient.branchId } },
-  });
-
-  if (membership && (membership.role === "OWNER" || membership.role === "ADMIN")) {
-    return { visit, allowed: true };
-  }
-
-  return { visit, allowed: false };
+  return { visit, allowed: can(role, "patient.readAll") };
 }
 
 function validateScore(value: unknown, name: string): string | null {

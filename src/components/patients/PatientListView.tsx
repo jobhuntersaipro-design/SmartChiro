@@ -13,6 +13,7 @@ import { UpcomingAppointmentsSection } from "@/components/patients/UpcomingAppoi
 import { AddPatientDialog } from "@/components/patients/AddPatientDialog";
 import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
 import { DeletePatientDialog } from "@/components/patients/DeletePatientDialog";
+import { can } from "@/lib/permissions";
 
 interface PatientListViewProps {
   userId: string;
@@ -121,7 +122,8 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
   const [toast, setToast] = useState<string | null>(null);
   const [branchDoctors, setBranchDoctors] = useState<{ id: string; name: string }[]>([]);
 
-  const isAdmin = branchRole === "OWNER" || branchRole === "ADMIN";
+  // OWNER / ADMIN / FRONT_DESK work across every patient and pick doctors.
+  const isAdmin = can(branchRole, "patient.assignDoctor");
 
   function handleSortChange(key: SortKey) {
     setSortKey((prev) => {
@@ -382,7 +384,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         <PatientTable
           patients={filtered}
           onEdit={(p) => setEditPatient(p)}
-          onDelete={isAdmin ? (p) => setDeletePatient(p) : undefined}
+          onDelete={can(branchRole, "patient.delete") ? (p) => setDeletePatient(p) : undefined}
           sortKey={sortKey}
           sortDir={sortDir}
           onSortChange={handleSortChange}
@@ -402,7 +404,8 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
       <div className="mt-6">
         <UpcomingAppointmentsSection
           currentUserId={userId}
-          isAdmin={isAdmin}
+          isAdmin={can(branchRole, "appointment.manageAll")}
+          canDelete={can(branchRole, "appointment.delete")}
           scopeKey={scopeKey}
         />
       </div>
@@ -414,6 +417,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         onAdd={handleAddPatient}
         branchDoctors={branchDoctors}
         isAdmin={isAdmin}
+        showClinical={can(branchRole, "clinical.write")}
       />
 
       {/* Edit patient dialog */}
@@ -424,6 +428,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         onSave={handleEditPatient}
         branchDoctors={branchDoctors}
         isAdmin={isAdmin}
+        showClinical={can(branchRole, "clinical.write")}
       />
 
       {/* Delete patient dialog */}

@@ -10,6 +10,8 @@ interface Props {
   appointments: CalendarAppointment[];
   selectedId: string | null;
   isAdmin: boolean;
+  /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
+  canDelete?: boolean;
   currentUserId: string;
   activeTab: AppointmentTabId;
   emptyAction?: React.ReactNode;
@@ -31,6 +33,7 @@ export function AppointmentCardList({
   appointments,
   selectedId,
   isAdmin,
+  canDelete = isAdmin,
   currentUserId,
   activeTab,
   emptyAction,
@@ -66,6 +69,7 @@ export function AppointmentCardList({
             appointment={a}
             selected={a.id === selectedId}
             isAdmin={isAdmin}
+            canDelete={canDelete}
             currentUserId={currentUserId}
             onSelect={() => onSelect(a.id)}
             onEdit={() => onEdit(a)}
@@ -110,6 +114,7 @@ export function AppointmentCardList({
               appointment={a}
               selected={a.id === selectedId}
               isAdmin={isAdmin}
+              canDelete={canDelete}
               currentUserId={currentUserId}
               onSelect={() => onSelect(a.id)}
               onEdit={() => onEdit(a)}

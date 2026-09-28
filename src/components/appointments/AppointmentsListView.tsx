@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { can } from "@/lib/permissions";
 
 import { EditAppointmentDialog } from "@/components/patients/EditAppointmentDialog";
 import { CancelAppointmentDialog } from "@/components/patients/CancelAppointmentDialog";
@@ -126,8 +127,18 @@ export function AppointmentsListView({
     return memberBranches.length > 0 ? [all, ...memberBranches] : memberBranches;
   }, [allowAllBranches, memberBranches]);
 
+  // OWNER / ADMIN / FRONT_DESK manage every appointment; only OWNER / ADMIN
+  // hard-delete, and front desk never creates visits (clinical).
   const isAdmin = useMemo(
-    () => memberBranches.some((b) => b.role === "OWNER" || b.role === "ADMIN"),
+    () => memberBranches.some((b) => can(b.role, "appointment.manageAll")),
+    [memberBranches]
+  );
+  const canDelete = useMemo(
+    () => memberBranches.some((b) => can(b.role, "appointment.delete")),
+    [memberBranches]
+  );
+  const canCreateVisit = useMemo(
+    () => memberBranches.some((b) => can(b.role, "clinical.write")),
     [memberBranches]
   );
 
@@ -297,6 +308,7 @@ export function AppointmentsListView({
             appointments={filteredAppointments}
             selectedId={selectedAppointmentId}
             isAdmin={isAdmin}
+            canDelete={canDelete}
             currentUserId={currentUserId}
             activeTab={activeTab}
             emptyAction={
@@ -323,6 +335,8 @@ export function AppointmentsListView({
         <AppointmentDetailPanel
           appointment={selectedAppointment}
           isAdmin={isAdmin}
+          canDelete={canDelete}
+          canCreateVisit={canCreateVisit}
           currentUserId={currentUserId}
           onClose={() => onSelectedAppointmentIdChange(null)}
           onEdit={() => setEditId(selectedAppointment.id)}

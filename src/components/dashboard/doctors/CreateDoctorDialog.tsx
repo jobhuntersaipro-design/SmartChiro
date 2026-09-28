@@ -11,6 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ASSIGNABLE_STAFF_ROLES, ROLE_LABELS } from "@/lib/permissions";
+import type { CreateDoctorData } from "@/types/doctor";
+
+type StaffRole = NonNullable<CreateDoctorData["role"]>;
 
 interface Branch {
   id: string;
@@ -41,7 +45,7 @@ export function CreateDoctorDialog({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [branchId, setBranchId] = useState(branches[0]?.id ?? "");
-  const [role, setRole] = useState<"DOCTOR" | "ADMIN">("DOCTOR");
+  const [role, setRole] = useState<StaffRole>("DOCTOR");
 
   // Professional fields
   const [licenseNumber, setLicenseNumber] = useState("");
@@ -134,7 +138,7 @@ export function CreateDoctorDialog({
       <DialogContent className="max-w-140 rounded-2xl p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="text-[18px] font-light text-[#061b31]">
-            Add New Doctor
+            Add Staff Member
           </DialogTitle>
         </DialogHeader>
 
@@ -275,19 +279,23 @@ export function CreateDoctorDialog({
                   <select
                     value={role}
                     onChange={(e) =>
-                      setRole(e.target.value as "DOCTOR" | "ADMIN")
+                      setRole(e.target.value as StaffRole)
                     }
                     className="flex h-9 w-full rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
                   >
-                    <option value="DOCTOR">Doctor</option>
-                    <option value="ADMIN">Admin</option>
+                    {ASSIGNABLE_STAFF_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Professional section */}
+          {/* Professional section (not for front desk — no doctor profile) */}
+          {role !== "FRONT_DESK" && (
           <div className="mt-5">
             <h3 className="text-[14px] font-medium text-[#273951] mb-3">
               Professional (Optional)
@@ -347,6 +355,7 @@ export function CreateDoctorDialog({
               </div>
             </div>
           </div>
+          )}
 
           <DialogFooter className="mt-6 flex items-center justify-between gap-3 sm:justify-between">
             <p className="text-[13px] text-[#64748d]">

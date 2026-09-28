@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { DoctorDetail } from "@/types/doctor";
+import { roleLabel } from "@/lib/permissions";
 
 interface DoctorProfessionalTabProps {
   doctor: DoctorDetail;
@@ -135,7 +136,7 @@ export function DoctorProfessionalTab({ doctor }: DoctorProfessionalTabProps) {
                   <ChevronRight className="h-3 w-3 text-[#c1c9d2]" strokeWidth={1.5} />
                 </Link>
                 <span className="text-[12px] text-[#533afd] bg-[#ededfc] rounded-full px-2 py-0.5">
-                  {b.role}
+                  {roleLabel(b.role)}
                 </span>
               </div>
             ))}

@@ -6,6 +6,7 @@ import type { BranchRole } from "@prisma/client";
 import { PatientVisitsTab } from "@/components/patients/PatientVisitsTab";
 import { PastAppointmentsTab } from "@/components/patients/PastAppointmentsTab";
 import { replaceUrl } from "@/lib/url-state";
+import { can } from "@/lib/permissions";
 
 interface PatientHistoryTabProps {
   patientId: string;
@@ -24,11 +25,14 @@ export function PatientHistoryTab({
   branchRole,
 }: PatientHistoryTabProps) {
   const searchParams = useSearchParams();
+  // Front desk sees appointments only — visits are clinical.
+  const showVisits = can(branchRole, "clinical.read");
+  const subTabs = showVisits ? SUB_TABS : SUB_TABS.filter((t) => t.id !== "visits");
 
   const activeSub: SubTab = useMemo(() => {
     const raw = searchParams.get("sub");
-    return raw === "appointments" ? "appointments" : "visits";
-  }, [searchParams]);
+    return raw === "appointments" || !showVisits ? "appointments" : "visits";
+  }, [searchParams, showVisits]);
 
   const setSub = useCallback(
     (sub: SubTab) => {
@@ -54,7 +58,7 @@ export function PatientHistoryTab({
         className="flex items-center gap-3 text-[14px]"
         aria-label="History sub-tab"
       >
-        {SUB_TABS.map((t, i) => (
+        {subTabs.map((t, i) => (
           <span key={t.id} className="flex items-center gap-3">
             {i > 0 && (
               <span className="text-[#cbd5e1]" aria-hidden>

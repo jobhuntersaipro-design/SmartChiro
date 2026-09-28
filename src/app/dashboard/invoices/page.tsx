@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { loadBranchContext } from "@/lib/branch-context";
+import { can } from "@/lib/permissions";
 import { InvoiceListView } from "@/components/invoices/InvoiceListView";
 
 export default async function InvoicesPage() {
@@ -14,12 +15,12 @@ export default async function InvoicesPage() {
 
   if (allBranches) return <InvoiceListView branchId="all" branchName="All branches" />;
 
-  if (!activeBranchId || (branchRole !== "OWNER" && branchRole !== "ADMIN")) {
+  if (!activeBranchId || !can(branchRole, "invoice.manage")) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
         <h1 className="text-[23px] font-light text-[#061b31]">Invoices</h1>
         <p className="mt-2 text-[15px] text-[#64748d]">
-          Billing is handled by the branch owner and admins. Ask them if you need an invoice for a patient.
+          Billing is handled by the branch owner, admins and front desk. Ask them if you need an invoice for a patient.
         </p>
       </div>
     );

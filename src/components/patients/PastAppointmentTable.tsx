@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { BranchRole } from "@prisma/client";
+import { can } from "@/lib/permissions";
 import {
   formatAppointmentTime,
   formatAppointmentDateOnly,
@@ -143,7 +144,7 @@ function InvoiceCell({
   branchRole: BranchRole | null;
   onIssueInvoice: (r: PastAppointment) => void;
 }) {
-  const canManage = branchRole === "OWNER" || branchRole === "ADMIN";
+  const canManage = can(branchRole, "invoice.manage");
   if (row.invoices.length === 0) {
     if (row.status === "COMPLETED" && canManage) {
       return (
@@ -207,7 +208,11 @@ function VisitCell({
   branchRole: BranchRole | null;
   onCreateVisit: (r: PastAppointment) => void;
 }) {
-  const canManage = branchRole === "OWNER" || branchRole === "ADMIN";
+  // Visits are clinical: creating one is OWNER/ADMIN, and front desk never sees them.
+  const canManage = can(branchRole, "clinical.write") && can(branchRole, "patient.readAll");
+  if (!can(branchRole, "clinical.read")) {
+    return <span className="text-[13px] text-[#cbd5e1]">—</span>;
+  }
   if (row.visit) {
     return (
       <Link
@@ -279,7 +284,7 @@ function RowActions({
   onRegenerateInvoice: (invoiceId: string) => void;
   patientId: string;
 }) {
-  const canManage = branchRole === "OWNER" || branchRole === "ADMIN";
+  const canManage = can(branchRole, "appointment.manageAll");
   if (!canManage) return null;
   // Pick the first non-PAID invoice as the regenerate target — paid invoices
   // are immutable for revenue accuracy (spec §5.5).
@@ -298,7 +303,7 @@ function RowActions({
           <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
           Edit notes/status
         </DropdownMenuItem>
-        {regenTarget && (
+        {regenTarget && can(branchRole, "invoice.manage") && (
           <DropdownMenuItem
             onClick={() => onRegenerateInvoice(regenTarget.id)}
           >
@@ -306,7 +311,7 @@ function RowActions({
             Regenerate invoice
           </DropdownMenuItem>
         )}
-        {row.visit && (
+        {row.visit && can(branchRole, "clinical.read") && (
           <DropdownMenuItem
             render={
               <Link

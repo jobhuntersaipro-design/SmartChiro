@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
+import type { BranchRole } from "@prisma/client";
 
 type RouteCtx = { params: Promise<{ userId: string; timeOffId: string }> };
 
-async function authorizeDoctorAccess(callerId: string, doctorId: string): Promise<"OWNER" | "ADMIN" | "DOCTOR" | null> {
+async function authorizeDoctorAccess(callerId: string, doctorId: string): Promise<BranchRole | null> {
   if (callerId === doctorId) return "DOCTOR";
   const sharedBranches = await prisma.branchMember.findMany({
     where: { userId: doctorId },

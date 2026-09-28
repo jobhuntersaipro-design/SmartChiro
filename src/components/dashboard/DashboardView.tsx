@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { BranchRole } from "@prisma/client";
+import { can } from "@/lib/permissions";
 import type {
   BranchSummary,
   OwnerStats,
@@ -45,6 +46,9 @@ export function DashboardView({
 }: DashboardViewProps) {
   const isDoctor = branchRole === "DOCTOR";
   const isOwner = branchRole === "OWNER";
+  // Front desk gets the owner layout (today's schedule with check-in actions,
+  // patient / appointment counts) minus clinical stats.
+  const showClinicalStats = can(branchRole, "dashboard.clinicalStats");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -220,7 +224,7 @@ export function DashboardView({
           branchName={branchList[0]?.name ?? "Branch"}
         />
       ) : ownerStats ? (
-        <OwnerStatCards stats={ownerStats} branchLabel={branchLabel} />
+        <OwnerStatCards stats={ownerStats} branchLabel={branchLabel} showClinical={showClinicalStats} />
       ) : null}
 
       {/* Owner / front desk: Quick Actions */}

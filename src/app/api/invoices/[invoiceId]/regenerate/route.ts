@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 import type { Prisma } from "@prisma/client";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
@@ -47,9 +48,9 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   });
   if (!original) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  // RBAC: OWNER/ADMIN at the invoice's branch only.
+  // RBAC: OWNER/ADMIN/FRONT_DESK at the invoice's branch only.
   const role = await getUserBranchRole(user.id, original.branchId);
-  if (role !== "OWNER" && role !== "ADMIN") {
+  if (!can(role, "invoice.manage")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

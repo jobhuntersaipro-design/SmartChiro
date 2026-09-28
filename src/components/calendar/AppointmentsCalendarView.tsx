@@ -19,6 +19,7 @@ import { differenceInMinutes } from "date-fns/differenceInMinutes";
 import { enUS } from "date-fns/locale/en-US";
 
 import { Button } from "@/components/ui/button";
+import { can } from "@/lib/permissions";
 import { toast } from "sonner";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -139,11 +140,14 @@ export function AppointmentsCalendarView({
 }: Props) {
   const searchParams = useSearchParams();
 
+  // OWNER / ADMIN / FRONT_DESK book and move appointments for any doctor;
+  // only OWNER / ADMIN hard-delete.
   const isAdmin = useMemo(
-    () =>
-      branches.some(
-        (b) => b.role === "OWNER" || b.role === "ADMIN"
-      ),
+    () => branches.some((b) => can(b.role, "appointment.manageAll")),
+    [branches]
+  );
+  const canDelete = useMemo(
+    () => branches.some((b) => can(b.role, "appointment.delete")),
     [branches]
   );
 
@@ -564,6 +568,7 @@ export function AppointmentsCalendarView({
             availability={availability}
             loading={loading}
             isAdmin={isAdmin}
+            canDelete={canDelete}
             currentUserId={currentUserId}
             onSelectEvent={(a) => {
               setPopoverEvent(a);
@@ -649,6 +654,7 @@ export function AppointmentsCalendarView({
           appointment={popoverEvent}
           anchor={popoverAnchor}
           isAdmin={isAdmin}
+          canDelete={canDelete}
           currentUserId={currentUserId}
           onClose={() => {
             setPopoverEvent(null);

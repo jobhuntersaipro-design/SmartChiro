@@ -24,6 +24,8 @@ interface AddPatientDialogProps {
   onAdd: (patient: CreatePatientData) => Promise<void>;
   branchDoctors?: { id: string; name: string }[];
   isAdmin?: boolean;
+  /** Medical history / notes fields — false for front desk. */
+  showClinical?: boolean;
 }
 
 // ─── Shared Styles ───
@@ -106,7 +108,7 @@ const MALAYSIAN_STATES = [
 
 // ─── Main Component ───
 
-export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isAdmin }: AddPatientDialogProps) {
+export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isAdmin, showClinical = true }: AddPatientDialogProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<CreatePatientData>({ firstName: "", lastName: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -621,17 +623,21 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   </IconInput>
                 </FormField>
 
-                <FormField label="Medical History">
-                  <IconTextarea icon={FileText}>
-                    <textarea value={form.medicalHistory || ""} onChange={(e) => updateField("medicalHistory", e.target.value)} placeholder="Chronic lower back pain since 2018, previous surgery on L4-L5..." rows={3} className={textareaClass} />
-                  </IconTextarea>
-                </FormField>
+                {showClinical && (
+                  <>
+                    <FormField label="Medical History">
+                      <IconTextarea icon={FileText}>
+                        <textarea value={form.medicalHistory || ""} onChange={(e) => updateField("medicalHistory", e.target.value)} placeholder="Chronic lower back pain since 2018, previous surgery on L4-L5..." rows={3} className={textareaClass} />
+                      </IconTextarea>
+                    </FormField>
 
-                <FormField label="Notes">
-                  <IconTextarea icon={StickyNote}>
-                    <textarea value={form.notes || ""} onChange={(e) => updateField("notes", e.target.value)} placeholder="Patient prefers morning appointments, needs wheelchair access..." rows={2} className={textareaClass} />
-                  </IconTextarea>
-                </FormField>
+                    <FormField label="Notes">
+                      <IconTextarea icon={StickyNote}>
+                        <textarea value={form.notes || ""} onChange={(e) => updateField("notes", e.target.value)} placeholder="Patient prefers morning appointments, needs wheelchair access..." rows={2} className={textareaClass} />
+                      </IconTextarea>
+                    </FormField>
+                  </>
+                )}
 
                 {/* Pricing section */}
                 <div className="flex items-center gap-2 pt-1">
@@ -693,7 +699,8 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                     <FormField label="Assigned Doctor">
                       <IconInput icon={Stethoscope}>
                         <select value={form.doctorId || ""} onChange={(e) => updateField("doctorId", e.target.value)} className={selectClass}>
-                          <option value="">Current user (default)</option>
+                          {/* Front desk doesn't treat patients, so they must pick a doctor. */}
+                          <option value="">{showClinical ? "Current user (default)" : "Choose a doctor"}</option>
                           {branchDoctors.map((d) => (
                             <option key={d.id} value={d.id}>{d.name}</option>
                           ))}

@@ -10,7 +10,7 @@ type RouteCtx = { params: Promise<{ branchId: string }> };
 /** Creates any missing reminder template language and refreshes approval status. */
 export async function POST(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
-  const access = await branchAccess(branchId, true);
+  const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const account = await prisma.whatsAppAccount.findUnique({ where: { branchId } });

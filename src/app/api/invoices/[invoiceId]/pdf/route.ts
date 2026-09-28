@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 import { effectiveInvoiceStatus, parseLineItems, type InvoiceStatus } from "@/lib/invoices";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
 
@@ -14,7 +15,7 @@ const STATUS_LABEL: Record<InvoiceStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
-/** Printable invoice PDF, or a receipt once the invoice is paid. OWNER/ADMIN of its branch. */
+/** Printable invoice PDF, or a receipt once the invoice is paid. OWNER/ADMIN/FRONT_DESK of its branch. */
 export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { invoiceId } = await ctx.params;
   const user = await getCurrentUser();
@@ -30,7 +31,7 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const role = await getUserBranchRole(user.id, invoice.branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (role !== "OWNER" && role !== "ADMIN") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!can(role, "invoice.manage")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const status = effectiveInvoiceStatus(invoice.status as InvoiceStatus, invoice.dueDate);
   const kind = status === "PAID" ? "RECEIPT" : "INVOICE";

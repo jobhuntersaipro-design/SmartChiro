@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus, List, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { can } from "@/lib/permissions";
 import { CreateAppointmentDialog } from "@/components/patients/CreateAppointmentDialog";
 import { AppointmentsCalendarView } from "@/components/calendar/AppointmentsCalendarView";
 import { AppointmentsListView } from "./AppointmentsListView";
@@ -238,7 +239,7 @@ export function AppointmentsPageShell({
       {/* Top-level create dialog (mounted once, reachable from any view) */}
       <CreateAppointmentDialog
         open={createOpen}
-        isAdmin={branches.some((b) => b.role === "OWNER" || b.role === "ADMIN")}
+        isAdmin={branches.some((b) => can(b.role, "appointment.manageAll"))}
         currentUserId={currentUserId}
         prefilledPatient={null}
         prefilledDoctor={null}

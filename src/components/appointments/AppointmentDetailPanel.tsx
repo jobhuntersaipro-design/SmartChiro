@@ -26,6 +26,10 @@ import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 interface Props {
   appointment: CalendarAppointment | null;
   isAdmin: boolean;
+  /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
+  canDelete?: boolean;
+  /** Visits are clinical — false for front desk. */
+  canCreateVisit?: boolean;
   currentUserId: string;
   onClose: () => void;
   onEdit: () => void;
@@ -50,6 +54,8 @@ interface VisitLink {
 export function AppointmentDetailPanel({
   appointment,
   isAdmin,
+  canDelete = isAdmin,
+  canCreateVisit = true,
   currentUserId,
   onClose,
   onEdit,
@@ -120,7 +126,6 @@ export function AppointmentDetailPanel({
   const tokens = STATUS_TOKENS[appointment.status];
   const dt = new Date(appointment.dateTime);
   const canEdit = isAdmin || appointment.doctor.id === currentUserId;
-  const canDelete = isAdmin;
 
   async function handleCreateVisit() {
     setCreatingVisit(true);
@@ -378,7 +383,8 @@ export function AppointmentDetailPanel({
             </Link>
           ) : (
             appointment.status === "COMPLETED" &&
-            canEdit && (
+            canEdit &&
+            canCreateVisit && (
               <Button
                 variant="outline"
                 size="sm"

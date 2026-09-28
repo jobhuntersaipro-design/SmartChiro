@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { countClinicians } from "@/lib/stats-scope";
 import { clinicCalendar } from "@/lib/clinic-time";
+import { can } from "@/lib/permissions";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -102,6 +103,8 @@ export async function GET(req: NextRequest) {
       ? { branchId }
       : { branchId: { in: userBranchIds } };
 
+  // X-ray counts are clinical stats — front desk gets zeros.
+  const clinical = can(branchRole, "dashboard.clinicalStats");
   const [totalPatients, todayAppts, xraysThisWeek, xraysLastWeek, activeDoctors] =
     await Promise.all([
       prisma.patient.count({ where: scopedBranchFilter }),
@@ -112,18 +115,22 @@ export async function GET(req: NextRequest) {
         },
         select: { status: true },
       }),
-      prisma.xray.count({
-        where: {
-          patient: scopedBranchFilter,
-          createdAt: { gte: weekStart },
-        },
-      }),
-      prisma.xray.count({
-        where: {
-          patient: scopedBranchFilter,
-          createdAt: { gte: lastWeekStart, lt: weekStart },
-        },
-      }),
+      clinical
+        ? prisma.xray.count({
+            where: {
+              patient: scopedBranchFilter,
+              createdAt: { gte: weekStart },
+            },
+          })
+        : 0,
+      clinical
+        ? prisma.xray.count({
+            where: {
+              patient: scopedBranchFilter,
+              createdAt: { gte: lastWeekStart, lt: weekStart },
+            },
+          })
+        : 0,
       countClinicians(branchId && branchId !== "all" ? [branchId] : userBranchIds),
     ]);
 

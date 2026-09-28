@@ -10,6 +10,8 @@ interface Props {
   appointment: CalendarAppointment;
   selected: boolean;
   isAdmin: boolean;
+  /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
+  canDelete?: boolean;
   currentUserId: string;
   onSelect: () => void;
   onEdit: () => void;
@@ -25,6 +27,7 @@ export function AppointmentCard({
   appointment,
   selected,
   isAdmin,
+  canDelete = isAdmin,
   currentUserId,
   onSelect,
   onEdit,
@@ -33,7 +36,6 @@ export function AppointmentCard({
 }: Props) {
   const tokens = STATUS_TOKENS[appointment.status];
   const canEdit = isAdmin || appointment.doctor.id === currentUserId;
-  const canDelete = isAdmin;
 
   const dt = new Date(appointment.dateTime);
   const time = clinicTimeLabel(dt);

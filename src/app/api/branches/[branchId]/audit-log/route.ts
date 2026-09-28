@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/permissions";
 
 type RouteContext = { params: Promise<{ branchId: string }> };
 
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     // Match existing pattern: cross-branch leak returns 404, not 403
     return NextResponse.json({ error: "Branch not found" }, { status: 404 });
   }
-  if (membership.role === "DOCTOR") {
+  if (!can(membership.role, "audit.read")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

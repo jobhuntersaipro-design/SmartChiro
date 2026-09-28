@@ -9,6 +9,7 @@ import type { BranchMemberDetail } from "@/types/branch";
 import type { BranchRole } from "@prisma/client";
 import { ManageDoctorsSheet } from "../owner/ManageDoctorsSheet";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { roleLabel } from "@/lib/permissions";
 
 interface BranchDoctorsTabProps {
   branchId: string;
@@ -121,7 +122,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                               : "bg-[#F0F3F7] text-[#64748d]"
                           }`}
                         >
-                          {member.role}
+                          {roleLabel(member.role)}
                         </span>
                       </div>
                       <p className="text-[13px] text-[#64748d]">{member.email}</p>

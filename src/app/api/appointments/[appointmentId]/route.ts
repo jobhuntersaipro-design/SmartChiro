@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 import { findConflictingAppointments } from "@/lib/appointments";
 import { logAppointmentEvent, diffSnapshots, snapshotOf, classifyUpdate } from "@/lib/appointment-audit";
 import { outsideHoursSummary } from "@/lib/operating-hours";
@@ -108,7 +109,9 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const role = await getUserBranchRole(user.id, appt.branchId);
-  if (role !== "OWNER" && role !== "ADMIN" && appt.doctorId !== user.id) {
+  // OWNER/ADMIN/FRONT_DESK edit any appointment in the branch; a DOCTOR only their own.
+  const managesAll = can(role, "appointment.manageAll");
+  if (!managesAll && appt.doctorId !== user.id) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -122,11 +125,11 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     );
   }
 
-  // Once the start time has passed, a DOCTOR (not OWNER/ADMIN) may still move
+  // Once the start time has passed, a DOCTOR (not OWNER/ADMIN/FRONT_DESK) may still move
   // their own appointment through the day — check in a late patient, start,
   // complete, mark no-show — but can't edit anything else on it.
   const statusOnly = Object.keys(parsed.data).every((k) => k === "status");
-  if (isPast && role !== "OWNER" && role !== "ADMIN" && !statusOnly) {
+  if (isPast && !managesAll && !statusOnly) {
     return NextResponse.json({ error: "forbidden_past_edit" }, { status: 403 });
   }
 
@@ -155,6 +158,21 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     parsed.data.duration !== undefined && parsed.data.duration !== appt.duration;
   const doctorWillChange =
     parsed.data.doctorId !== undefined && parsed.data.doctorId !== appt.doctorId;
+
+  // Reassigning: only roles that book for any doctor, and only to a clinician
+  // in this branch (front desk is never bookable).
+  if (doctorWillChange) {
+    if (!managesAll) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    const newDoctor = await prisma.branchMember.findUnique({
+      where: { userId_branchId: { userId: parsed.data.doctorId!, branchId: appt.branchId } },
+      select: { role: true },
+    });
+    if (!newDoctor || !can(newDoctor.role, "clinical.read")) {
+      return NextResponse.json({ error: "doctor_not_in_branch" }, { status: 422 });
+    }
+  }
 
   if (dateTimeWillChange || durationWillChange || doctorWillChange) {
     const newStart = parsed.data.dateTime ? new Date(parsed.data.dateTime) : appt.dateTime;
@@ -285,7 +303,8 @@ export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const role = await getUserBranchRole(user.id, appt.branchId);
-  if (role !== "OWNER" && role !== "ADMIN") {
+  // Hard delete is OWNER/ADMIN only — doctors and front desk cancel instead.
+  if (!can(role, "appointment.delete")) {
     return NextResponse.json(
       { error: "doctors_must_cancel_not_delete" },
       { status: 403 }

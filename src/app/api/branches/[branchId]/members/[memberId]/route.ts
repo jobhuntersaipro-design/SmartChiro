@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
 
 type RouteContext = { params: Promise<{ branchId: string; memberId: string }> };
 
@@ -72,7 +73,7 @@ export async function DELETE(
     where: { userId_branchId: { userId: session.user.id, branchId } },
   });
 
-  if (!callerMembership || callerMembership.role === "DOCTOR") {
+  if (!callerMembership || !can(callerMembership.role, "staff.manage")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -121,7 +122,7 @@ export async function PATCH(
   const body = await req.json();
   const { role } = body;
 
-  const validRoles = ["DOCTOR", "ADMIN", "OWNER"];
+  const validRoles = [...ASSIGNABLE_STAFF_ROLES, "OWNER"];
   if (!validRoles.includes(role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }

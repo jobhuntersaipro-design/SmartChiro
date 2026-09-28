@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 import { loadBranchContext } from "@/lib/branch-context";
-import { isBranchManager } from "@/lib/branch-scope";
 import { effectiveInvoiceStatus, type InvoiceStatus } from "@/lib/invoices";
 
 const PAGE_SIZE = 20;
@@ -25,8 +25,8 @@ function statusWhere(filter: Filter, now: Date): Prisma.InvoiceWhereInput {
 
 /**
  * Invoices for one branch (the sidebar branch unless ?branchId=), for its
- * OWNER/ADMIN. `branchId=all` (the default in "All branches") covers every
- * branch the caller owns or administers. Filters: ?status= (all | DRAFT | SENT | OVERDUE | PAID |
+ * OWNER/ADMIN/FRONT_DESK. `branchId=all` (the default in "All branches") covers
+ * every branch where the caller manages invoices. Filters: ?status= (all | DRAFT | SENT | OVERDUE | PAID |
  * CANCELLED — overdue is derived from the due date), ?search= (invoice number
  * or patient name), ?page=. Summary figures cover the whole branch.
  */
@@ -40,12 +40,12 @@ export async function GET(req: Request): Promise<Response> {
   if (!branchParam) return NextResponse.json({ error: "no_branch" }, { status: 404 });
   let branchIds: string[];
   if (branchParam === "all") {
-    branchIds = context.branches.filter((b) => isBranchManager(b.role)).map((b) => b.id);
+    branchIds = context.branches.filter((b) => can(b.role, "invoice.manage")).map((b) => b.id);
     if (branchIds.length === 0) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   } else {
     const role = await getUserBranchRole(user.id, branchParam);
     if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-    if (role !== "OWNER" && role !== "ADMIN") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    if (!can(role, "invoice.manage")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
     branchIds = [branchParam];
   }
   const branchId = { in: branchIds };

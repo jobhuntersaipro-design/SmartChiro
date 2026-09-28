@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 import { ALLOWED_OFFSETS_MIN, type Templates } from "@/types/reminder";
 import { DEFAULT_TEMPLATES } from "@/lib/reminders/default-templates";
 import { validateTemplate } from "@/lib/reminders/templates";
@@ -34,7 +35,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const role = await getUserBranchRole(user.id, branchId);
-  if (!role) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  // Branch settings: OWNER/ADMIN only.
+  if (!can(role, "reminders.manage")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const [settings, waSession] = await Promise.all([
     prisma.branchReminderSettings.findUnique({ where: { branchId } }),
@@ -60,7 +62,7 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const role = await getUserBranchRole(user.id, branchId);
-  if (role !== "OWNER" && role !== "ADMIN") {
+  if (!can(role, "reminders.manage")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

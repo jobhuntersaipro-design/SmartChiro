@@ -17,6 +17,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { BranchRole } from "@prisma/client";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { roleLabel } from "@/lib/permissions";
 
 interface SettingsUser {
   id: string;
@@ -320,11 +321,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                       variant="secondary"
                       className="rounded-full bg-[#ededfc] text-[#533afd] text-[12px] font-medium border-0 hover:bg-[#ededfc]"
                     >
-                      {b.role === "OWNER"
-                        ? "Owner"
-                        : b.role === "ADMIN"
-                          ? "Admin"
-                          : "Doctor"}{" "}
+                      {roleLabel(b.role)}{" "}
                       — {b.name}
                     </Badge>
                   ))}

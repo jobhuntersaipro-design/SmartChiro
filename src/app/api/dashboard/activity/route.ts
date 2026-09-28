@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/permissions";
 import type { ActivityItem } from "@/components/dashboard/shared/ActivityFeed";
 
 export async function GET(req: NextRequest) {
@@ -41,6 +42,8 @@ export async function GET(req: NextRequest) {
   // Three independent lookups, run together. Each selects only what the feed
   // shows — the annotation query used to load full canvasState JSON.
   const patientRef = { select: { firstName: true, lastName: true, branch: { select: { name: true } } } } as const;
+  // X-ray and annotation events are clinical — front desk only sees new patients.
+  const clinical = can(branchRole, "dashboard.clinicalStats");
   const [annotations, patients, xrays] = await Promise.all([
     prisma.annotation.findMany({
       // Only annotations with something drawn — an empty row is not "annotated".
@@ -52,7 +55,7 @@ export async function GET(req: NextRequest) {
         xray: { select: { patient: patientRef } },
       },
       orderBy: { updatedAt: "desc" },
-      take: limit,
+      take: clinical ? limit : 0,
     }),
     prisma.patient.findMany({
       where: { branchId: { in: branchIds } },
@@ -64,7 +67,7 @@ export async function GET(req: NextRequest) {
       where: { patient: { branchId: { in: branchIds } }, status: "READY" },
       select: { id: true, createdAt: true, patient: patientRef },
       orderBy: { createdAt: "desc" },
-      take: limit,
+      take: clinical ? limit : 0,
     }),
   ]);
 

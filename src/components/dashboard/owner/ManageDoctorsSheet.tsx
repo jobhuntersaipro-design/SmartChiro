@@ -13,6 +13,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { BranchRole } from "@prisma/client";
+import { ASSIGNABLE_STAFF_ROLES, ROLE_LABELS } from "@/lib/permissions";
 
 interface DoctorMember {
   id: string;
@@ -101,8 +102,9 @@ export function ManageDoctorsSheet({
                   onChange={(e) => setAddRole(e.target.value as BranchRole)}
                   className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] cursor-pointer"
                 >
-                  <option value="DOCTOR">Doctor</option>
-                  <option value="ADMIN">Admin</option>
+                  {ASSIGNABLE_STAFF_ROLES.map((r) => (
+                    <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                  ))}
                 </select>
                 <Button
                   onClick={handleAdd}
@@ -174,8 +176,9 @@ export function ManageDoctorsSheet({
                         }
                         className="h-7 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px] text-[#273951] cursor-pointer"
                       >
-                        <option value="DOCTOR">Doctor</option>
-                        <option value="ADMIN">Admin</option>
+                        {ASSIGNABLE_STAFF_ROLES.map((r) => (
+                          <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                        ))}
                       </select>
                     ) : (
                       <span className="inline-flex items-center rounded-full bg-[#ededfc] px-2 py-0.5 text-[12px] font-medium text-[#533afd]">

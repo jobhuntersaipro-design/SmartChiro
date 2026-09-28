@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import type { DoctorListItem } from "@/types/doctor";
+import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
 
 // ─── GET /api/doctors ─── List all doctors across caller's branches
 export async function GET(req: NextRequest) {
@@ -107,8 +108,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 6. Get stats for all doctors in one batch
+  // 6. Get stats for all doctors in one batch. Visit / X-ray counts are
+  // clinical stats — front desk gets zeros.
   const userIds = entries.map((e) => e.user.id);
+  const showClinicalStats = callerMemberships.some(
+    (m) => targetBranchIds.includes(m.branchId) && can(m.role, "dashboard.clinicalStats")
+  );
 
   const [patientCounts, visitCounts, xrayCounts] = await Promise.all([
     // Scoped to the same branches as the list so totals match other pages.
@@ -117,16 +122,20 @@ export async function GET(req: NextRequest) {
       where: { doctorId: { in: userIds }, branchId: { in: targetBranchIds } },
       _count: { id: true },
     }),
-    prisma.visit.groupBy({
-      by: ["doctorId"],
-      where: { doctorId: { in: userIds }, patient: { branchId: { in: targetBranchIds } } },
-      _count: { id: true },
-    }),
-    prisma.xray.groupBy({
-      by: ["uploadedById"],
-      where: { uploadedById: { in: userIds }, patient: { branchId: { in: targetBranchIds } } },
-      _count: { id: true },
-    }),
+    showClinicalStats
+      ? prisma.visit.groupBy({
+          by: ["doctorId"],
+          where: { doctorId: { in: userIds }, patient: { branchId: { in: targetBranchIds } } },
+          _count: { id: true },
+        })
+      : [],
+    showClinicalStats
+      ? prisma.xray.groupBy({
+          by: ["uploadedById"],
+          where: { uploadedById: { in: userIds }, patient: { branchId: { in: targetBranchIds } } },
+          _count: { id: true },
+        })
+      : [],
   ]);
 
   const patientMap = new Map(patientCounts.map((p) => [p.doctorId, p._count.id]));
@@ -159,7 +168,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ doctors, total: doctors.length }, { status: 200 });
 }
 
-// ─── POST /api/doctors ─── Create doctor account
+// ─── POST /api/doctors ─── Create staff account (doctor / admin / front desk)
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -188,8 +197,8 @@ export async function POST(req: NextRequest) {
 
   // Validate role
   const role = body.role ?? "DOCTOR";
-  if (!["DOCTOR", "ADMIN"].includes(role)) {
-    return NextResponse.json({ error: "Role must be DOCTOR or ADMIN" }, { status: 400 });
+  if (!ASSIGNABLE_STAFF_ROLES.includes(role)) {
+    return NextResponse.json({ error: "Role must be DOCTOR, ADMIN or FRONT_DESK" }, { status: 400 });
   }
 
   // Caller must be OWNER or ADMIN of the specified branch
@@ -197,7 +206,7 @@ export async function POST(req: NextRequest) {
     where: { userId_branchId: { userId: session.user.id, branchId: body.branchId } },
   });
 
-  if (!callerMembership || (callerMembership.role !== "OWNER" && callerMembership.role !== "ADMIN")) {
+  if (!callerMembership || !can(callerMembership.role, "staff.manage")) {
     return NextResponse.json({ error: "Forbidden: must be branch owner or admin" }, { status: 403 });
   }
 
@@ -252,9 +261,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Create DoctorProfile if any profile fields provided
+      // Create DoctorProfile if any profile fields provided (front desk
+      // staff don't treat patients, so they never get one)
       const hasProfileFields =
-        body.licenseNumber || body.specialties?.length || body.education || body.yearsExperience;
+        role !== "FRONT_DESK" &&
+        (body.licenseNumber || body.specialties?.length || body.education || body.yearsExperience);
 
       if (hasProfileFields) {
         await tx.doctorProfile.create({

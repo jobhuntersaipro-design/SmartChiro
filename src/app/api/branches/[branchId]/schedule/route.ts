@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/permissions";
 
 const DOCTOR_COLORS = [
   "#533afd", "#0570DE", "#30B130", "#DF1B41", "#F5A623",
@@ -77,8 +78,8 @@ export async function GET(
     orderBy: { dateTime: "asc" },
   });
 
-  // Assign colors to doctors
-  const doctors = members.map((m, i) => ({
+  // Assign colors to doctors (front desk is never a calendar column)
+  const doctors = members.filter((m) => can(m.role, "clinical.read")).map((m, i) => ({
     id: m.user.id,
     name: m.user.name,
     image: m.user.image,

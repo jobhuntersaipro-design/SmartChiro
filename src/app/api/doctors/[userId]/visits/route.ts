@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/permissions";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -24,18 +25,22 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Caller must share at least one branch with target
+  // Caller must share at least one branch with target, in a role that sees
+  // clinical notes (visits carry SOAP text — never front desk).
   if (session.user.id !== userId) {
     const callerBranches = await prisma.branchMember.findMany({
       where: { userId: session.user.id },
-      select: { branchId: true },
+      select: { branchId: true, role: true },
     });
-    const callerBranchIds = new Set(callerBranches.map((m) => m.branchId));
-    const shared = targetUser.branchMemberships.some((m) =>
-      callerBranchIds.has(m.branchId)
-    );
-    if (!shared) {
+    const targetBranchIds = new Set(targetUser.branchMemberships.map((m) => m.branchId));
+    const sharedRoles = callerBranches
+      .filter((m) => targetBranchIds.has(m.branchId))
+      .map((m) => m.role);
+    if (sharedRoles.length === 0) {
       return NextResponse.json({ error: "Forbidden: no shared branch" }, { status: 403 });
+    }
+    if (!sharedRoles.some((role) => can(role, "clinical.read"))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
 

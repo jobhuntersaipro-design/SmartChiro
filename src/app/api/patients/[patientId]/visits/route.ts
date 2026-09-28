@@ -1,30 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getPatientAccess } from "@/lib/auth/patient-access";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
 const VALID_VISIT_TYPES = ["initial", "follow_up", "emergency", "reassessment", "discharge"];
 
+// Visits are clinical: assigned doctor or OWNER/ADMIN. Front desk → 403.
 async function checkPatientAccess(userId: string, patientId: string) {
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-    select: { id: true, branchId: true, doctorId: true },
-  });
-
-  if (!patient) return { patient: null, allowed: false };
-
-  if (patient.doctorId === userId) return { patient, allowed: true };
-
-  const membership = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId, branchId: patient.branchId } },
-  });
-
-  if (membership && (membership.role === "OWNER" || membership.role === "ADMIN")) {
-    return { patient, allowed: true };
-  }
-
-  return { patient, allowed: false };
+  const { patient, clinical } = await getPatientAccess(userId, patientId);
+  return { patient, allowed: clinical };
 }
 
 export async function GET(req: NextRequest, { params }: RouteContext) {

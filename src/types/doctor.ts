@@ -93,7 +93,7 @@ export interface CreateDoctorData {
   email: string;
   password: string;
   branchId: string;
-  role?: "DOCTOR" | "ADMIN";
+  role?: "DOCTOR" | "ADMIN" | "FRONT_DESK";
   phone?: string;
   licenseNumber?: string;
   specialties?: string[];

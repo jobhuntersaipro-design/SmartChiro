@@ -5,6 +5,7 @@ import type { Prisma } from '@prisma/client'
 import { loadBranchContext } from '@/lib/branch-context'
 import { narrowScope, scopedWhere } from '@/lib/branch-scope'
 import { defaultReminderChannel, reminderChannelError } from '@/lib/reminder-channel'
+import { can, redactClinicalFields } from '@/lib/permissions'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -196,7 +197,13 @@ export async function GET(request: NextRequest) {
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
     })
 
-    const result = patients.map(mapPatientToResponse)
+    // Front desk gets demographics only — judged per patient's branch, since
+    // "All branches" can mix roles.
+    const result = patients.map((p) => {
+      const row = mapPatientToResponse(p)
+      const role = scope.roles[p.branchId]
+      return role && !can(role, 'clinical.read') ? redactClinicalFields(role, row) : row
+    })
 
     return NextResponse.json(result)
   } catch (error) {
@@ -320,17 +327,26 @@ export async function POST(request: NextRequest) {
 
     // Resolve the caller's role within THIS branch (not branchMemberships[0]).
     const membershipInBranch = user?.branchMemberships.find((m) => m.branchId === branchId)
-    const isOwnerOrAdmin =
-      membershipInBranch?.role === 'OWNER' || membershipInBranch?.role === 'ADMIN'
+    // A brand-new branch was just created with the caller as OWNER.
+    const callerRole = membershipInBranch?.role ?? 'OWNER'
+    const clinical = can(callerRole, 'clinical.read')
 
-    // Resolve assigned doctor
+    // Resolve assigned doctor. Front desk doesn't treat patients, so they must
+    // pick one.
     let assignedDoctorId = session.user.id
-    if (doctorId && isOwnerOrAdmin) {
-      // Verify doctorId is a branch member
+    if (!clinical && !doctorId) {
+      return NextResponse.json(
+        { error: 'Choose the doctor for this patient.' },
+        { status: 400 }
+      )
+    }
+    if (doctorId && can(callerRole, 'patient.assignDoctor')) {
+      // Verify doctorId is a branch member who treats patients
       const isMember = await prisma.branchMember.findUnique({
         where: { userId_branchId: { userId: doctorId, branchId } },
+        select: { role: true },
       })
-      if (!isMember) {
+      if (!isMember || !can(isMember.role, 'clinical.read')) {
         return NextResponse.json(
           { error: 'Assigned doctor must be a member of the branch.' },
           { status: 400 }
@@ -392,8 +408,9 @@ export async function POST(request: NextRequest) {
         emergencyName: emergencyName?.trim() || null,
         emergencyPhone: emergencyPhone?.trim() || null,
         emergencyRelation: emergencyRelation || null,
-        medicalHistory: medicalHistory || null,
-        notes: notes || null,
+        // Clinical fields are ignored for front desk.
+        medicalHistory: clinical ? medicalHistory || null : null,
+        notes: clinical ? notes || null : null,
         initialTreatmentFee: typeof initialTreatmentFee === 'number' ? initialTreatmentFee : null,
         firstTreatmentFee: typeof firstTreatmentFee === 'number' ? firstTreatmentFee : null,
         standardFollowUpFee: typeof standardFollowUpFee === 'number' ? standardFollowUpFee : null,
@@ -430,7 +447,10 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(mapPatientToResponse(patient), { status: 201 })
+    return NextResponse.json(
+      redactClinicalFields(callerRole, mapPatientToResponse(patient)),
+      { status: 201 }
+    )
   } catch (error) {
     console.error('POST /api/patients error:', error)
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {

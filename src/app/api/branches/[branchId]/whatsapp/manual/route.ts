@@ -14,7 +14,7 @@ const Body = z.object({
 /** Connects with IDs + a token from Meta's dashboard (test number, BSP, etc.). */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
-  const access = await branchAccess(branchId, true);
+  const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const parsed = Body.safeParse(await req.json().catch(() => null));

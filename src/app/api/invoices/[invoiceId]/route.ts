@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 import { canTransitionInvoice, effectiveInvoiceStatus, type InvoiceStatus } from "@/lib/invoices";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
 const Body = z.object({ status: z.enum(["SENT", "PAID", "CANCELLED"]) });
 
-/** Mark an invoice sent, paid (stamps paidAt) or cancelled. OWNER/ADMIN of its branch. */
+/** Mark an invoice sent, paid (stamps paidAt) or cancelled. OWNER/ADMIN/FRONT_DESK of its branch. */
 export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const { invoiceId } = await ctx.params;
   const user = await getCurrentUser();
@@ -22,7 +23,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const role = await getUserBranchRole(user.id, invoice.branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (role !== "OWNER" && role !== "ADMIN") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!can(role, "invoice.manage")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "validation" }, { status: 422 });

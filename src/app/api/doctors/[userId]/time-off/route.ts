@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
+import type { BranchRole } from "@prisma/client";
 
 type RouteCtx = { params: Promise<{ userId: string }> };
 
@@ -27,7 +28,7 @@ const PostBody = z.object({
  * RBAC: caller must be the doctor themselves OR an OWNER/ADMIN of any branch the
  * doctor is a member of. Cross-branch peek (caller has no shared membership) → 404.
  */
-async function authorizeDoctorAccess(callerId: string, doctorId: string): Promise<"OWNER" | "ADMIN" | "DOCTOR" | null> {
+async function authorizeDoctorAccess(callerId: string, doctorId: string): Promise<BranchRole | null> {
   if (callerId === doctorId) return "DOCTOR";
   const sharedBranches = await prisma.branchMember.findMany({
     where: { userId: doctorId },

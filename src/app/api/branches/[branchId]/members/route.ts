@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
 
 // GET: List members of a branch
 export async function GET(
@@ -45,7 +46,7 @@ export async function GET(
   });
 }
 
-// POST: Add a doctor to a branch by email
+// POST: Add a staff member (doctor / admin / front desk) to a branch by email
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ branchId: string }> }
@@ -64,7 +65,7 @@ export async function POST(
     },
   });
 
-  if (!callerMembership || callerMembership.role === "DOCTOR") {
+  if (!callerMembership || !can(callerMembership.role, "staff.manage")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -75,8 +76,7 @@ export async function POST(
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
-  const validRoles = ["DOCTOR", "ADMIN"];
-  if (!validRoles.includes(role)) {
+  if (!ASSIGNABLE_STAFF_ROLES.includes(role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -31,9 +32,9 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  // RBAC: OWNER/ADMIN at the branch only.
+  // RBAC: OWNER/ADMIN at the branch only (visits are clinical — never front desk).
   const role = await getUserBranchRole(user.id, appt.branchId);
-  if (role !== "OWNER" && role !== "ADMIN") {
+  if (!can(role, "clinical.write") || !can(role, "patient.readAll")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

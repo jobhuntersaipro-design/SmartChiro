@@ -108,6 +108,7 @@ enum BranchRole {
   OWNER
   ADMIN
   DOCTOR
+  FRONT_DESK
 }
 
 enum AppointmentStatus {

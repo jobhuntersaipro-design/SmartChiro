@@ -37,6 +37,7 @@ import {
   formatAppointmentDateTime,
 } from "@/lib/format";
 import { replaceUrl } from "@/lib/url-state";
+import { can } from "@/lib/permissions";
 
 interface PatientDetailPageProps {
   patientId: string;
@@ -104,7 +105,12 @@ function StatusBadge({ status }: { status: string }) {
 export function PatientDetailPage({ patientId, branchRole, currentUserId }: PatientDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab: TabId = resolveInitialTab(searchParams.get("tab"));
+  // Front desk sees demographics and appointments only (no visits / X-rays).
+  const clinical = can(branchRole, "clinical.read");
+  const requestedTab: TabId = resolveInitialTab(searchParams.get("tab"));
+  const initialTab: TabId =
+    clinical || requestedTab === "history" || requestedTab === "profile" ? requestedTab : "history";
+  const visibleTabs = clinical ? TABS : TABS.filter((t) => t.id === "history" || t.id === "profile");
 
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,7 +229,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   const isActive = patient.status.toLowerCase() === "active";
   const mailtoHref = buildMailtoUrl(patient.email);
 
-  const statCards = [
+  const allStatCards = [
     { label: "Total Visits", value: patient.totalVisits, icon: Users, color: "#533afd" },
     { label: "X-Rays", value: patient.totalXrays, icon: ImageIcon, color: "#0570DE" },
     {
@@ -241,6 +247,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       color: "#F5A623",
     },
   ];
+  const statCards = clinical
+    ? allStatCards
+    : allStatCards.filter((c) => c.label !== "X-Rays" && c.label !== "Recovery Trend");
 
   return (
     <div className="space-y-6">
@@ -348,7 +357,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
               Edit
             </Button>
-            {(branchRole === "OWNER" || branchRole === "ADMIN") && (
+            {can(branchRole, "patient.delete") && (
               <Button
                 variant="outline"
                 className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
@@ -386,7 +395,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       {/* Tab navigation */}
       <div className="border-b border-[#e5edf5]">
         <div className="flex gap-0">
-          {TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
@@ -403,13 +412,13 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       </div>
 
       {/* Tab content */}
-      {activeTab === "overview" && (
+      {activeTab === "overview" && clinical && (
         <PatientOverviewTab patientId={patientId} patient={patient} />
       )}
       {activeTab === "history" && (
         <PatientHistoryTab patientId={patientId} branchRole={branchRole} />
       )}
-      {activeTab === "xrays" && (
+      {activeTab === "xrays" && clinical && (
         <PatientXraysTab
           patientId={patientId}
           xrays={patient.xrays ?? []}
@@ -417,7 +426,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         />
       )}
       {activeTab === "profile" && (
-        <PatientProfileTab patient={patient} />
+        <PatientProfileTab patient={patient} showClinical={clinical} />
       )}
 
       {/* Dialogs */}
@@ -426,6 +435,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         open={editOpen}
         onOpenChange={setEditOpen}
         onSave={handleSave}
+        showClinical={clinical}
       />
       <DeletePatientDialog
         patient={patient}
@@ -435,7 +445,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       />
       <CreateAppointmentDialog
         open={createAppointmentOpen}
-        isAdmin={branchRole === "OWNER" || branchRole === "ADMIN"}
+        isAdmin={can(branchRole, "appointment.manageAll")}
         currentUserId={currentUserId}
         prefilledPatient={patient ? {
           id: patient.id,

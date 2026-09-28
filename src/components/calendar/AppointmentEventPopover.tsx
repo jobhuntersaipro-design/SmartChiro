@@ -14,6 +14,8 @@ interface Props {
   appointment: CalendarAppointment;
   anchor: DOMRect;
   isAdmin: boolean;
+  /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
+  canDelete?: boolean;
   currentUserId: string;
   onClose: () => void;
   onEdit: () => void;
@@ -36,6 +38,7 @@ export function AppointmentEventPopover({
   appointment,
   anchor,
   isAdmin,
+  canDelete = isAdmin,
   currentUserId,
   onClose,
   onEdit,
@@ -66,7 +69,6 @@ export function AppointmentEventPopover({
   const left = Math.min(anchor.left, window.innerWidth - 340);
   const status = STATUS_COLORS[appointment.status] ?? STATUS_COLORS.SCHEDULED;
   const canEdit = isAdmin || appointment.doctor.id === currentUserId;
-  const canDelete = isAdmin;
   const dotColor = doctorColor(appointment.doctor.id);
 
   return (

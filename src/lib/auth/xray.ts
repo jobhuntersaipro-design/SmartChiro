@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { can } from '@/lib/permissions'
 
 export type XrayCapability = 'read' | 'manage'
 
@@ -9,16 +10,18 @@ interface PatientScope {
 
 /**
  * Mirrors the patient routes' access rule: the patient's assigned doctor, or an
- * OWNER/ADMIN of the patient's branch. Other doctors in the branch — and anyone
- * outside it — get nothing.
+ * OWNER/ADMIN of the patient's branch. Other doctors in the branch, front desk
+ * (X-rays are clinical) and anyone outside the branch get nothing.
  */
 async function canAccessPatientScope(userId: string, patient: PatientScope): Promise<boolean> {
-  if (patient.doctorId === userId) return true
   const member = await prisma.branchMember.findUnique({
     where: { userId_branchId: { userId, branchId: patient.branchId } },
     select: { role: true },
   })
-  return member?.role === 'OWNER' || member?.role === 'ADMIN'
+  const role = member?.role ?? null
+  if (role && !can(role, 'xray.read')) return false
+  if (patient.doctorId === userId) return true
+  return can(role, 'patient.readAll')
 }
 
 /**
