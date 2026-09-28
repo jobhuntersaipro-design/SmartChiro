@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { DateInput } from "@/components/ui/date-input";
+import { NationalitySelect } from "@/components/patients/NationalitySelect";
+import { effectiveNationality } from "@/lib/nationality";
 import { todayLocalISODate } from "@/lib/format";
 import { reminderChannelError } from "@/lib/reminder-channel";
 import { PATIENT_LANGUAGES } from "@/lib/outreach/consent";
@@ -60,6 +62,8 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Validation message from the DOB field's typed text (null when empty or valid)
   const [dobError, setDobError] = useState<string | null>(null);
+  // undefined until touched: a MyKad then fills in Malaysia, as the API does.
+  const [nationality, setNationality] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     if (patient && open) {
@@ -95,6 +99,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         preferredLanguage: patient.preferredLanguage || "en",
         marketingConsent: patient.marketingConsent ? "true" : "false",
       });
+      setNationality(patient.nationality ?? undefined);
       setSubmitError(null);
       setDobError(null);
     }
@@ -124,7 +129,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const payload: Record<string, unknown> = { ...form };
+      const payload: Record<string, unknown> = { ...form, nationality: effectiveNationality(nationality, form.icNumber) };
       // Convert pricing strings to numbers (or null if empty)
       for (const key of ["initialTreatmentFee", "firstTreatmentFee", "standardFollowUpFee"] as const) {
         const val = form[key];
@@ -206,6 +211,16 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
+                </FormField>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <FormField label="Nationality">
+                  <NationalitySelect
+                    value={effectiveNationality(nationality, form.icNumber)}
+                    onChange={setNationality}
+                    hint={nationality === undefined && effectiveNationality(undefined, form.icNumber) ? "From MyKad" : null}
+                    className="h-8"
+                  />
                 </FormField>
               </div>
               <div className="grid grid-cols-3 gap-3">

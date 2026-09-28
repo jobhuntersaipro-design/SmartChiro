@@ -12,8 +12,9 @@ export default async function InvoicesPage() {
   // user owns or administers.
   const { activeBranchId, branchRole, branches, allBranches } = await loadBranchContext(session.user.id);
   const branchName = branches.find((b) => b.id === activeBranchId)?.name ?? null;
+  const roles = branches.map(({ id, name, role }) => ({ id, name, role }));
 
-  if (allBranches) return <InvoiceListView branchId="all" branchName="All branches" />;
+  if (allBranches) return <InvoiceListView branchId="all" branchName="All branches" branches={roles} />;
 
   if (!activeBranchId || !can(branchRole, "invoice.manage")) {
     return (
@@ -26,5 +27,5 @@ export default async function InvoicesPage() {
     );
   }
 
-  return <InvoiceListView branchId={activeBranchId} branchName={branchName} />;
+  return <InvoiceListView branchId={activeBranchId} branchName={branchName} branches={roles} />;
 }

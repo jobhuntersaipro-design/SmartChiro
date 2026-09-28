@@ -4,55 +4,37 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { FileText, Loader2, Search } from "lucide-react";
-import { allowedInvoiceTransitions, formatMYR, type InvoiceStatus } from "@/lib/invoices";
+import { FileText, Loader2, Plus, Search } from "lucide-react";
+import { formatMYR, type AnyInvoiceStatus } from "@/lib/invoices";
+import { billingAccess } from "@/lib/billing-access";
 import { replaceUrl } from "@/lib/url-state";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import type { InvoiceListRow as InvoiceRow, InvoiceListSummary as Summary } from "@/types/invoice";
+import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
+import { InvoiceDrawer } from "./InvoiceDrawer";
+import { NewInvoiceDialog } from "./NewInvoiceDialog";
+import { RecordPaymentDialog } from "./RecordPaymentDialog";
+import { BTN_PRIMARY } from "./form-styles";
 
-interface InvoiceRow {
-  id: string;
-  invoiceNumber: string;
-  amount: number;
-  status: InvoiceStatus;
-  dueDate: string | null;
-  paidAt: string | null;
-  createdAt: string;
-  patient: { id: string; firstName: string; lastName: string };
-  branch?: { name: string };
+type Filter = "all" | AnyInvoiceStatus;
+
+interface InvoiceListViewProps {
+  /** A branch id, or "all" for every branch the user bills for. */
+  branchId: string;
+  branchName: string | null;
+  /** The user's branches and role in each (action visibility, New invoice branch picker). */
+  branches: { id: string; name: string; role: string }[];
 }
-
-interface Summary {
-  outstanding: number;
-  overdue: number;
-  overdueCount: number;
-  paidThisMonth: number;
-  draftCount: number;
-}
-
-type Filter = "all" | InvoiceStatus;
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "DRAFT", label: "Draft" },
   { id: "SENT", label: "Sent" },
   { id: "OVERDUE", label: "Overdue" },
+  { id: "PARTIALLY_PAID", label: "Part paid" },
   { id: "PAID", label: "Paid" },
   { id: "CANCELLED", label: "Cancelled" },
 ];
-
-const STATUS_STYLE: Record<InvoiceStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Draft", className: "bg-[#f0f3f7] text-[#425466]" },
-  SENT: { label: "Sent", className: "bg-[#e6f0fc] text-[#0570DE]" },
-  OVERDUE: { label: "Overdue", className: "bg-[#fef3e2] text-[#9b6829]" },
-  PAID: { label: "Paid", className: "bg-[#e6f9ee] text-[#108c3d]" },
-  CANCELLED: { label: "Cancelled", className: "bg-[#fdecef] text-[#b41a36]" },
-};
-
-const ACTION_LABEL: Partial<Record<InvoiceStatus, string>> = {
-  SENT: "Mark sent",
-  PAID: "Mark paid",
-  CANCELLED: "Cancel",
-};
 
 const dateMY = (iso: string) =>
   new Date(iso).toLocaleDateString("en-MY", { timeZone: CLINIC_TIME_ZONE, day: "2-digit", month: "short", year: "numeric" });
@@ -67,7 +49,7 @@ function SummaryCard({ label, value, hint }: { label: string; value: string; hin
   );
 }
 
-export function InvoiceListView({ branchId, branchName }: { branchId: string; branchName: string | null }) {
+export function InvoiceListView({ branchId, branchName, branches }: InvoiceListViewProps) {
   const searchParams = useSearchParams();
   const initialFilter = searchParams.get("status");
   const [filter, setFilter] = useState<Filter>(
@@ -82,6 +64,14 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // ?invoice=<id> deep link (e.g. a package sale) opens the drawer.
+  const [openInvoiceId, setOpenInvoiceId] = useState<string | null>(searchParams.get("invoice"));
+  const [payRow, setPayRow] = useState<InvoiceRow | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+
+  const roles: Record<string, string> = Object.fromEntries(branches.map((b) => [b.id, b.role]));
+  const roleFor = (id: string) => roles[id];
+  const manageBranches = branches.filter((b) => billingAccess(b.role).manage);
 
   // Debounce typing into the search box.
   useEffect(() => {
@@ -111,25 +101,26 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  useEffect(() => {
     const params = new URLSearchParams();
     if (filter !== "all") params.set("status", filter);
     if (query) params.set("search", query);
+    if (openInvoiceId) params.set("invoice", openInvoiceId);
     replaceUrl(`/dashboard/invoices${params.size ? `?${params}` : ""}`);
-  }, [load, filter, query]);
+  }, [filter, query, openInvoiceId]);
 
-  async function changeStatus(row: InvoiceRow, next: InvoiceStatus) {
-    if (next === "CANCELLED" && !window.confirm(`Cancel invoice ${row.invoiceNumber}? This can't be undone.`)) return;
+  async function markSent(row: InvoiceRow) {
     setBusyId(row.id);
     try {
       const res = await fetch(`/api/invoices/${row.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: next }),
+        body: JSON.stringify({ status: "SENT" }),
       });
       if (!res.ok) throw new Error();
-      toast.success(
-        next === "PAID" ? `${row.invoiceNumber} marked paid — receipt ready` : `${row.invoiceNumber} ${next === "SENT" ? "marked sent" : "cancelled"}`,
-      );
+      toast.success(`${row.invoiceNumber} marked sent`);
       await load();
     } catch {
       toast.error("Couldn't update the invoice.");
@@ -142,13 +133,21 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">Invoices</h1>
-        <p className="text-[15px] text-[#64748d]">{branchName ?? "Your branch"} · issue from a completed appointment</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">Invoices</h1>
+          <p className="text-[15px] text-[#64748d]">{branchName ?? "Your branch"} · invoices, payments and receipts</p>
+        </div>
+        {manageBranches.length > 0 && (
+          <button type="button" className={BTN_PRIMARY} onClick={() => setNewOpen(true)}>
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            New invoice
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <SummaryCard label="Outstanding" value={summary ? formatMYR(summary.outstanding) : "—"} hint="Sent, not yet paid" />
+        <SummaryCard label="Outstanding" value={summary ? formatMYR(summary.outstanding) : "—"} hint="Unpaid balances" />
         <SummaryCard
           label="Overdue"
           value={summary ? formatMYR(summary.overdue) : "—"}
@@ -191,46 +190,63 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
       </div>
 
       <div className="relative overflow-x-auto rounded-[6px] border border-[#e5edf5] bg-white shadow-(--shadow-card)">
-        <table className="w-full min-w-180">
+        <table className="w-full min-w-230">
           <thead>
             <tr className="border-b border-[#e5edf5] text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d] whitespace-nowrap">
-              <th className="px-4 py-2.5">Invoice</th>
-              <th className="px-4 py-2.5">Patient</th>
-              <th className="px-4 py-2.5">Issued</th>
-              <th className="px-4 py-2.5">Due</th>
-              <th className="px-4 py-2.5 text-right">Amount</th>
-              <th className="px-4 py-2.5">Status</th>
-              <th className="px-4 py-2.5 min-w-56"><span className="sr-only">Actions</span></th>
+              <th className="py-2.5 pl-4 pr-3">Invoice</th>
+              <th className="px-3 py-2.5">Patient</th>
+              <th className="px-3 py-2.5">Issued</th>
+              <th className="px-3 py-2.5 text-right">Total</th>
+              <th className="px-3 py-2.5 text-right">Paid</th>
+              <th className="px-3 py-2.5 text-right">Balance</th>
+              <th className="px-3 py-2.5">Status</th>
+              <th className="px-3 py-2.5"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-[#64748d]">
+                <td colSpan={8} className="px-4 py-10 text-center text-[#64748d]">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" strokeWidth={1.5} />
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center">
+                <td colSpan={8} className="px-4 py-12 text-center">
                   <FileText className="mx-auto mb-2 h-7 w-7 text-[#c1c9d2]" strokeWidth={1.25} />
                   <p className="text-[15px] text-[#425466]">No invoices {filter === "all" && !query ? "yet" : "match"}</p>
                   {filter === "all" && !query && (
                     <p className="mt-1 text-[14px] text-[#64748d]">
-                      Issue one from a patient&apos;s History → Appointments tab once a visit is completed.
+                      Create one with New invoice, or issue one from a patient&apos;s History → Appointments tab.
                     </p>
                   )}
                 </td>
               </tr>
             ) : (
               rows.map((row) => {
-                const style = STATUS_STYLE[row.status];
+                const payable = row.status !== "CANCELLED" && row.status !== "DRAFT" && row.balance > 0;
+                const open = row.status !== "CANCELLED" && row.status !== "PAID";
                 return (
-                  <tr key={row.id} className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc]">
-                    <td className="px-4 py-3 font-mono text-[14px] text-[#061b31] whitespace-nowrap">{row.invoiceNumber}</td>
-                    <td className="px-4 py-3 text-[15px] whitespace-nowrap">
+                  <tr
+                    key={row.id}
+                    onClick={(e) => {
+                      // Row click opens the drawer; links and buttons inside keep their own action.
+                      if (!(e.target as HTMLElement).closest("a,button")) setOpenInvoiceId(row.id);
+                    }}
+                    className="cursor-pointer border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc]"
+                  >
+                    <td className="py-3 pl-4 pr-3 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => setOpenInvoiceId(row.id)}
+                        className="font-mono text-[14px] text-[#061b31] hover:text-[#533afd] hover:underline"
+                      >
+                        {row.invoiceNumber}
+                      </button>
+                    </td>
+                    <td className="px-3 py-3 text-[15px] whitespace-nowrap">
                       <Link
-                        href={`/dashboard/patients/${row.patient.id}/details?tab=history&sub=appointments`}
+                        href={`/dashboard/patients/${row.patient.id}/details?tab=billing`}
                         className="text-[#273951] hover:text-[#533afd] hover:underline"
                       >
                         {row.patient.firstName} {row.patient.lastName}
@@ -239,39 +255,47 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
                         <span className="block text-[13px] text-[#64748d]">{row.branch.name}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466] whitespace-nowrap">{dateMY(row.createdAt)}</td>
-                    <td className="px-4 py-3 text-[14px] tabular-nums text-[#425466] whitespace-nowrap">
-                      {row.status === "PAID" && row.paidAt ? `Paid ${dateMY(row.paidAt)}` : row.dueDate ? dateMY(row.dueDate) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-right text-[15px] tabular-nums text-[#061b31] whitespace-nowrap">{formatMYR(row.amount)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[13px] font-medium ${style.className}`}>
-                        {style.label}
+                    <td className="px-3 py-3 text-[14px] tabular-nums text-[#425466] whitespace-nowrap">
+                      {dateMY(row.createdAt)}
+                      <span className="block text-[13px] text-[#64748d]">
+                        {row.status === "PAID" && row.paidAt ? `Paid ${dateMY(row.paidAt)}` : row.dueDate && open ? `Due ${dateMY(row.dueDate)}` : "\u00a0"}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                    <td className="px-3 py-3 text-right text-[15px] tabular-nums text-[#061b31] whitespace-nowrap">{formatMYR(row.amount)}</td>
+                    <td className="px-3 py-3 text-right text-[15px] tabular-nums text-[#425466] whitespace-nowrap">
+                      {row.amountPaid ? formatMYR(row.amountPaid) : "—"}
+                    </td>
+                    <td
+                      className={`px-3 py-3 text-right text-[15px] tabular-nums whitespace-nowrap ${
+                        open && row.balance > 0 ? "font-medium text-[#061b31]" : "text-[#64748d]"
+                      }`}
+                    >
+                      {open ? formatMYR(row.balance) : "—"}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <InvoiceStatusBadge status={row.status} />
+                    </td>
+                    <td className="py-2 pl-3 pr-4 text-right whitespace-nowrap">
                       <span className="inline-flex items-center gap-1.5">
-                        {allowedInvoiceTransitions(row.status).map((next) => (
+                        {row.status === "DRAFT" && (
                           <button
-                            key={next}
                             type="button"
                             disabled={busyId === row.id}
-                            onClick={() => void changeStatus(row, next)}
-                            className={`h-7 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px] font-medium transition-colors disabled:opacity-60 ${
-                              next === "CANCELLED" ? "text-[#DF1B41] hover:bg-[#fff0f3]" : next === "PAID" ? "text-[#108c3d] hover:bg-[#ecfbf0]" : "text-[#533afd] hover:bg-[#f0eeff]"
-                            }`}
+                            onClick={() => void markSent(row)}
+                            className="h-7 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[13px] font-medium text-[#533afd] transition-colors hover:bg-[#f0eeff] disabled:opacity-60"
                           >
-                            {ACTION_LABEL[next]}
+                            Mark sent
                           </button>
-                        ))}
-                        <a
-                          href={`/api/invoices/${row.id}/pdf`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="h-7 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px] font-medium leading-7 text-[#425466] hover:bg-[#f6f9fc]"
-                        >
-                          {row.status === "PAID" ? "Receipt" : "PDF"}
-                        </a>
+                        )}
+                        {payable && (
+                          <button
+                            type="button"
+                            onClick={() => setPayRow(row)}
+                            className="h-7 rounded-[4px] border border-[#e5edf5] bg-white px-2 text-[13px] font-medium text-[#108c3d] transition-colors hover:bg-[#ecfbf0]"
+                          >
+                            Record payment
+                          </button>
+                        )}
                       </span>
                     </td>
                   </tr>
@@ -308,6 +332,33 @@ export function InvoiceListView({ branchId, branchName }: { branchId: string; br
           </span>
         </div>
       )}
+
+      <InvoiceDrawer
+        invoiceId={openInvoiceId}
+        onClose={() => setOpenInvoiceId(null)}
+        roleFor={roleFor}
+        onChanged={() => void load()}
+      />
+      {payRow && (
+        <RecordPaymentDialog
+          mode="payment"
+          open
+          invoice={{ id: payRow.id, invoiceNumber: payRow.invoiceNumber, balance: payRow.balance, amountPaid: payRow.amountPaid }}
+          onOpenChange={(o) => !o && setPayRow(null)}
+          onRecorded={() => void load()}
+        />
+      )}
+      <NewInvoiceDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        branches={manageBranches}
+        defaultBranchId={branchId === "all" ? null : branchId}
+        onCreated={(invoice) => {
+          toast.success(`${invoice.invoiceNumber} created`);
+          void load();
+          setOpenInvoiceId(invoice.id);
+        }}
+      />
     </div>
   );
 }

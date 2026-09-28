@@ -83,6 +83,32 @@ describe("invoices API", () => {
     expect(search.total).toBe(1);
   });
 
+  it("narrows list and summary to one patient with ?patientId=", async () => {
+    const other = await prisma.patient.create({ data: { firstName: "Other", lastName: PREFIX, branchId, doctorId: userId } });
+    const inv = await prisma.invoice.create({
+      data: {
+        invoiceNumber: `${PREFIX}-other`,
+        amount: 500,
+        status: "SENT",
+        lineItems: [{ description: "Package", quantity: 1, unitPrice: 500, total: 500 }],
+        patientId: other.id,
+        branchId,
+      },
+    });
+    try {
+      as("OWNER");
+      const data = await (await list(`status=all&patientId=${other.id}`)).json();
+      expect(data.invoices.map((i: { id: string }) => i.id)).toEqual([inv.id]);
+      expect(data.summary).toMatchObject({ outstanding: 500, overdue: 0, paidThisMonth: 0, draftCount: 0 });
+      const mine = await (await list(`status=all&patientId=${patientId}`)).json();
+      expect(mine.total).toBe(4);
+      expect(mine.summary.outstanding).toBe(350);
+    } finally {
+      await prisma.invoice.delete({ where: { id: inv.id } });
+      await prisma.patient.delete({ where: { id: other.id } });
+    }
+  });
+
   it("keeps billing away from doctors and outsiders", async () => {
     as("DOCTOR");
     expect((await list("")).status).toBe(403);

@@ -249,6 +249,23 @@ describe('Patient CRUD', () => {
 
       await prisma.patient.deleteMany({ where: { lastName: { in: ['Ng', 'Yusof'] }, branchId } })
     })
+
+    it('picker rows carry branch, nationality and SST residency without the IC', async () => {
+      const [foreign, local] = await Promise.all([
+        prisma.patient.create({ data: { firstName: 'Pick', lastName: `${TEST_PREFIX}-sg`, nationality: 'SG', branchId, doctorId } }),
+        prisma.patient.create({ data: { firstName: 'Pick', lastName: `${TEST_PREFIX}-my`, icNumber: '850315-08-5234', branchId, doctorId } }),
+      ])
+      mockAuth.mockResolvedValue({ user: { id: ownerId } })
+      const { GET } = await import('../route')
+      const res = await GET(createRequest('GET', `/api/patients?picker=1&branchId=${branchId}&search=${TEST_PREFIX}`))
+      expect(res.status).toBe(200)
+      const rows = (await res.json()) as Array<Record<string, unknown>>
+      const byId = Object.fromEntries(rows.map((r) => [r.id, r]))
+      expect(byId[foreign.id]).toMatchObject({ branchId, nationality: 'SG', isMalaysian: false })
+      expect(byId[local.id]).toMatchObject({ nationality: null, isMalaysian: true })
+      expect(byId[local.id]).not.toHaveProperty('icNumber')
+      await prisma.patient.deleteMany({ where: { id: { in: [foreign.id, local.id] } } })
+    }, 15_000)
   })
 
   // ─── GET /api/patients/[patientId] ───

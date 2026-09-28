@@ -37,6 +37,7 @@ const balanceOf = (sum: MoneySum) => fromSen(toSen(Number(sum.amount ?? 0)) - to
  * every branch where the caller manages invoices. Filters: ?status= (all |
  * DRAFT | SENT | OVERDUE | PARTIALLY_PAID | PAID | CANCELLED — overdue is
  * derived from the due date), ?search= (invoice number or patient name),
+ * ?patientId= (one patient's invoices; the summary then covers only them),
  * ?page=. Summary figures cover the scoped branches: outstanding is the
  * unpaid balance of open invoices, and "paid this month" counts payments
  * received this clinic month, net of refunds.
@@ -60,6 +61,9 @@ export async function GET(req: Request): Promise<Response> {
     branchIds = [branchParam];
   }
   const branchId = { in: branchIds };
+  // One patient's invoices (patient page): list and summary both narrow to them.
+  const patientId = url.searchParams.get("patientId")?.trim() || undefined;
+  const scope: Prisma.InvoiceWhereInput = { branchId, ...(patientId ? { patientId } : {}) };
 
   const rawFilter = url.searchParams.get("status") ?? "all";
   const filter: Filter = (FILTERS as readonly string[]).includes(rawFilter) ? (rawFilter as Filter) : "all";
@@ -69,7 +73,7 @@ export async function GET(req: Request): Promise<Response> {
   const monthStart = clinicCalendar(now).monthStart;
 
   const where: Prisma.InvoiceWhereInput = {
-    branchId,
+    ...scope,
     ...statusWhere(filter, now),
     ...(search
       ? {
@@ -108,14 +112,17 @@ export async function GET(req: Request): Promise<Response> {
       },
     }),
     prisma.invoice.count({ where }),
-    prisma.invoice.aggregate({ where: { branchId, status: { in: OPEN_STATUSES } }, _sum: { amount: true, amountPaid: true } }),
+    prisma.invoice.aggregate({ where: { ...scope, status: { in: OPEN_STATUSES } }, _sum: { amount: true, amountPaid: true } }),
     prisma.invoice.aggregate({
-      where: { branchId, status: { in: ["SENT", "OVERDUE"] }, dueDate: { lt: now } },
+      where: { ...scope, status: { in: ["SENT", "OVERDUE"] }, dueDate: { lt: now } },
       _sum: { amount: true, amountPaid: true },
       _count: { _all: true },
     }),
-    prisma.payment.aggregate({ where: { branchId, receivedAt: { gte: monthStart } }, _sum: { amount: true } }),
-    prisma.invoice.count({ where: { branchId, status: "DRAFT" } }),
+    prisma.payment.aggregate({
+      where: { branchId, receivedAt: { gte: monthStart }, ...(patientId ? { invoice: { patientId } } : {}) },
+      _sum: { amount: true },
+    }),
+    prisma.invoice.count({ where: { ...scope, status: "DRAFT" } }),
   ]);
 
   return NextResponse.json({

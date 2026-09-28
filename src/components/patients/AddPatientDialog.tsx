@@ -12,6 +12,8 @@ import {
 import { CreatePatientData } from "@/types/patient";
 import { DISCARD_CHANGES_PROMPT, todayLocalISODate } from "@/lib/format";
 import { DateInput } from "@/components/ui/date-input";
+import { NationalitySelect } from "@/components/patients/NationalitySelect";
+import { effectiveNationality } from "@/lib/nationality";
 import {
   defaultReminderChannel,
   reminderChannelError,
@@ -204,7 +206,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await onAdd({ ...form, reminderChannel });
+      await onAdd({ ...form, reminderChannel, nationality: effectiveNationality(form.nationality, form.icNumber) });
       // Reset
       setForm({ firstName: "", lastName: "" });
       setDobError(null);
@@ -408,6 +410,17 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                         <option value="Other">Other</option>
                       </select>
                     </IconInput>
+                  </FormField>
+                </div>
+
+                {/* Nationality — defaults to Malaysia for a MyKad; SST applies to non-Malaysians */}
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField label="Nationality">
+                    <NationalitySelect
+                      value={effectiveNationality(form.nationality, form.icNumber)}
+                      onChange={(code) => updateField("nationality", code)}
+                      hint={form.nationality === undefined && effectiveNationality(undefined, form.icNumber) ? "From MyKad" : null}
+                    />
                   </FormField>
                 </div>
 

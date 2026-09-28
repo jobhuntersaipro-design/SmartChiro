@@ -15,6 +15,7 @@ import {
   Trash2,
   ToggleLeft,
   ToggleRight,
+  Receipt,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,10 @@ import {
 } from "@/lib/format";
 import { replaceUrl } from "@/lib/url-state";
 import { can } from "@/lib/permissions";
+import { billingAccess } from "@/lib/billing-access";
+import { isMalaysianPatient } from "@/lib/invoices";
+import { PatientInvoicesPanel } from "@/components/invoices/PatientInvoicesPanel";
+import { PatientBalanceChip } from "@/components/invoices/PatientBalanceChip";
 
 interface PatientDetailPageProps {
   patientId: string;
@@ -59,6 +64,7 @@ const TABS = [
   { id: "xrays", label: "X-Rays" },
   { id: "care", label: "Care & packages" },
   { id: "profile", label: "Profile" },
+  { id: "billing", label: "Billing" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -68,7 +74,7 @@ type TabId = (typeof TABS)[number]["id"];
 // the right place.
 function resolveInitialTab(raw: string | null): TabId {
   if (raw === "visits") return "history";
-  if (raw === "history" || raw === "overview" || raw === "xrays" || raw === "profile" || raw === "care") {
+  if (raw === "history" || raw === "overview" || raw === "xrays" || raw === "profile" || raw === "care" || raw === "billing") {
     return raw;
   }
   return "overview";
@@ -109,10 +115,14 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   const searchParams = useSearchParams();
   // Front desk sees demographics and appointments only (no visits / X-rays).
   const clinical = can(branchRole, "clinical.read");
+  // Billing tab: whoever issues invoices and takes payment in the patient's branch.
+  const canBill = billingAccess(branchRole).manage;
   const requestedTab: TabId = resolveInitialTab(searchParams.get("tab"));
-  // Front desk also sees packages (no care plans — those are clinical).
-  const nonClinicalTabs: readonly TabId[] = ["history", "care", "profile"];
-  const initialTab: TabId = clinical || nonClinicalTabs.includes(requestedTab) ? requestedTab : "history";
+  // Front desk also sees packages (no care plans — those are clinical) and
+  // billing; billing needs invoice.manage.
+  const nonClinicalTabs: readonly TabId[] = ["history", "care", "profile", "billing"];
+  const tabAllowed = (id: TabId) => (clinical || nonClinicalTabs.includes(id)) && (id !== "billing" || canBill);
+  const initialTab: TabId = tabAllowed(requestedTab) ? requestedTab : clinical ? "overview" : "history";
 
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,6 +133,10 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   const [createAppointmentOpen, setCreateAppointmentOpen] = useState(false);
   // Bumped after booking so the tabs re-fetch (a full reload would drop the booking toast).
   const [bookingVersion, setBookingVersion] = useState(0);
+  // Header balance refresh + header "New invoice" → Billing tab's dialog.
+  const [billingKey, setBillingKey] = useState(0);
+  const [newInvoiceRequested, setNewInvoiceRequested] = useState(false);
+  const handleNewInvoiceRequest = useCallback(() => setNewInvoiceRequested(false), []);
 
   const fetchPatient = useCallback(async () => {
     try {
@@ -228,7 +242,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
 
   const showCareTab = canViewPatientPackages(branchRole, patient.doctorId, currentUserId);
   const visibleTabs = TABS.filter(
-    (t) => (clinical || nonClinicalTabs.includes(t.id)) && (t.id !== "care" || showCareTab),
+    (t) => tabAllowed(t.id) && (t.id !== "care" || showCareTab),
   ).map((t) => (t.id === "care" && !clinical ? { ...t, label: "Packages" } : t));
   const initials = getInitials(patient.firstName, patient.lastName);
   const fullName = `${patient.firstName} ${patient.lastName}`;
@@ -332,6 +346,14 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
                     </ExternalLink>
                   </span>
                 )}
+                {canBill && (
+                  <PatientBalanceChip
+                    patientId={patient.id}
+                    branchId={patient.branchId}
+                    refreshKey={billingKey}
+                    onClick={() => handleTabChange("billing")}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -357,6 +379,19 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
               <CalendarCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
               New Appointment
             </Button>
+            {canBill && (
+              <Button
+                variant="outline"
+                className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+                onClick={() => {
+                  handleTabChange("billing");
+                  setNewInvoiceRequested(true);
+                }}
+              >
+                <Receipt className="h-3.5 w-3.5" strokeWidth={1.5} />
+                New invoice
+              </Button>
+            )}
             <Button
               variant="outline"
               className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
@@ -438,6 +473,16 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       )}
       {activeTab === "profile" && (
         <PatientProfileTab patient={patient} showClinical={clinical} onPatientChange={fetchPatient} />
+      )}
+      {activeTab === "billing" && canBill && (
+        <PatientInvoicesPanel
+          patient={{ ...patient, isMalaysian: isMalaysianPatient(patient) }}
+          branchName={patient.branchName}
+          branchRole={branchRole}
+          newInvoiceRequested={newInvoiceRequested}
+          onNewInvoiceRequestHandled={handleNewInvoiceRequest}
+          onChanged={() => setBillingKey((k) => k + 1)}
+        />
       )}
 
       {/* Dialogs */}

@@ -167,6 +167,8 @@ function InvoiceCell({
       switch (inv.status) {
         case "PAID":
           return { bg: "#e6f8ed", text: "#108c3d", label: "Paid" };
+        case "PARTIALLY_PAID":
+          return { bg: "#fef3e2", text: "#9b6829", label: "Part paid" };
         case "SENT":
           return { bg: "#e6f1fb", text: "#0570DE", label: "Sent" };
         case "OVERDUE":

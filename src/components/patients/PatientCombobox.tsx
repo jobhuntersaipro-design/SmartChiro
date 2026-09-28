@@ -9,6 +9,10 @@ interface PatientOption {
   lastName: string;
   email: string | null;
   phone: string | null;
+  /** Picker extras (invoice dialog): home branch, nationality and SST residency. */
+  branchId?: string;
+  nationality?: string | null;
+  isMalaysian?: boolean;
 }
 
 interface Props {
@@ -55,6 +59,9 @@ export function PatientCombobox({ value, onChange, disabled, branchId }: Props) 
             lastName: p.lastName,
             email: p.email,
             phone: p.phone,
+            branchId: p.branchId,
+            nationality: p.nationality,
+            isMalaysian: p.isMalaysian,
           })),
         );
       } finally {

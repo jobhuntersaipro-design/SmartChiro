@@ -12,6 +12,7 @@ import { BranchActivityLog } from "./BranchActivityLog";
 import { BranchReminderSettingsCard } from "@/components/branches/BranchReminderSettingsCard";
 import { PackageCatalogCard } from "@/components/packages/PackageCatalogCard";
 import { can } from "@/lib/permissions";
+import { BranchBillingSettingsCard } from "@/components/branches/BranchBillingSettingsCard";
 import { useRouter } from "next/navigation";
 
 interface BranchSettingsTabProps {
@@ -299,6 +300,8 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
 
       {/* Packages catalogue (Phase 3) */}
       <PackageCatalogCard branchId={branch.id} canManage={can(branch.userRole, "package.manage")} />
+      {/* Billing & tax — OWNER edits, ADMIN reads */}
+      {(isOwner || branch.userRole === "ADMIN") && <BranchBillingSettingsCard branchId={branch.id} />}
 
       {/* Activity Log — visible to OWNER + ADMIN per 2026-05-05 RBAC */}
       {(isOwner || branch.userRole === "ADMIN") && (

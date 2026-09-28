@@ -1,8 +1,9 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, type Prisma } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
 import { clinicInstant, clinicParts } from '../src/lib/clinic-time'
+import { computeTotals } from '../src/lib/invoices'
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) throw new Error('DATABASE_URL is not set')
@@ -104,6 +105,30 @@ async function main() {
     branches.push({ id: branch.id, name: branch.name })
     console.log(`Seeded branch: ${branch.name}`)
   }
+
+  // Billing & tax details printed on invoices and receipts (fake registration numbers).
+  // SST is charged at KLCC only, where most foreign patients are seen.
+  const billingByBranch: Record<string, { invoicePrefix: string; sstEnabled: boolean; bank: string }> = {
+    'personal-branch-001': { invoicePrefix: 'KL', sstEnabled: true, bank: 'Maybank 5140 1234 5678' },
+    'personal-branch-002': { invoicePrefix: 'BS', sstEnabled: false, bank: 'CIMB 8001 234 567' },
+    'personal-branch-003': { invoicePrefix: 'PG', sstEnabled: false, bank: 'Public Bank 3-1234567-89' },
+  }
+  for (const [id, b] of Object.entries(billingByBranch)) {
+    await prisma.branch.update({
+      where: { id },
+      data: {
+        legalName: 'SmartChiro Wellness Sdn. Bhd.',
+        ssmRegNo: '202401012345 (1234567-A)',
+        tin: 'C2584563200',
+        sstRegNo: 'W10-1808-32000123',
+        sstEnabled: b.sstEnabled,
+        sstRate: 6,
+        invoicePrefix: b.invoicePrefix,
+        paymentInstructions: `${b.bank} (SmartChiro Wellness Sdn. Bhd.) · DuitNow ID 202401012345`,
+      },
+    })
+  }
+  console.log('Seeded branch billing settings (SST on at KLCC)')
 
   // Owner is OWNER of both branches; activeBranch = first one
   for (const b of branches) {
@@ -448,6 +473,18 @@ async function main() {
   }
   console.log(`Seeded ${patientCount} patients`)
 
+  // Two expat patients at KLCC: not Malaysian, so SST applies; no MyKad on file.
+  const foreignPatients = [
+    { idx: 8, nationality: 'AU' }, // Ian McKenzie
+    { idx: 14, nationality: 'SG' }, // Oliver Tan
+  ]
+  for (const f of foreignPatients) {
+    await prisma.patient.update({
+      where: { id: `personal-patient-${String(f.idx + 1).padStart(3, '0')}` },
+      data: { nationality: f.nationality, icNumber: null },
+    })
+  }
+
   // ─── Visits ───
   // Cleared first to make re-runs idempotent (visits don't have natural unique keys)
   await prisma.visit.deleteMany({
@@ -715,6 +752,54 @@ async function main() {
               },
             }
           : {}),
+      },
+    })
+    invCount++
+  }
+
+  // Part-paid invoice with SST for a foreign patient: cash deposit, then a DuitNow instalment.
+  {
+    const patientIdx = 8 // Ian McKenzie (AU) at KLCC
+    const branchId = branches[patientsData[patientIdx].branchIdx].id
+    const totals = computeTotals(
+      [
+        { description: 'Initial consultation + Gonstead adjustment', quantity: 1, unitPrice: 280, taxable: true },
+        { description: 'Posture assessment report', quantity: 1, unitPrice: 80, taxable: true },
+      ],
+      { sstEnabled: true, sstRate: 6, patientIsMalaysian: false },
+    )
+    const issued = new Date(now.getTime() - 3 * 86_400_000)
+    const payments = [
+      { amount: 150, method: 'CASH' as const, reference: null, receivedAt: issued },
+      { amount: 100, method: 'DUITNOW_QR' as const, reference: 'DN20260927KL0042', receivedAt: new Date(now.getTime() - 86_400_000) },
+    ]
+    const seq = String(invCount + 1).padStart(4, '0')
+    await prisma.invoice.create({
+      data: {
+        invoiceNumber: `JH-INV-${seq}`,
+        amount: totals.total,
+        subtotal: totals.subtotal,
+        taxRate: totals.taxRate,
+        taxAmount: totals.taxAmount,
+        taxLabel: totals.taxLabel,
+        currency: 'MYR',
+        status: 'PARTIALLY_PAID',
+        amountPaid: payments.reduce((sum, p) => sum + p.amount, 0),
+        issuedAt: issued,
+        dueDate: new Date(issued.getTime() + 14 * 86_400_000),
+        lineItems: totals.lines as unknown as Prisma.InputJsonValue,
+        notes: 'Balance payable at the next visit.',
+        patientId: `personal-patient-${String(patientIdx + 1).padStart(3, '0')}`,
+        branchId,
+        createdAt: issued,
+        payments: {
+          create: payments.map((p, i) => ({
+            ...p,
+            receiptNumber: `JH-RCP-${seq}-${i + 1}`,
+            branchId,
+            receivedById: owner.id,
+          })),
+        },
       },
     })
     invCount++

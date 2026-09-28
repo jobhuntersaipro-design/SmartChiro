@@ -7,7 +7,7 @@ import { narrowScope, scopedWhere } from '@/lib/branch-scope'
 import { defaultReminderChannel, reminderChannelError } from '@/lib/reminder-channel'
 import { PATIENT_LANGUAGE_VALUES, consentFields } from '@/lib/outreach/consent'
 import { can, redactClinicalFields } from '@/lib/permissions'
-import { isValidMyKad, parseNationality } from '@/lib/invoices'
+import { isMalaysianPatient, isValidMyKad, parseNationality } from '@/lib/invoices'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -173,11 +173,18 @@ export async function GET(request: NextRequest) {
     if (pickerMode) {
       const options = await prisma.patient.findMany({
         where,
-        select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+        select: {
+          id: true, firstName: true, lastName: true, email: true, phone: true,
+          branchId: true, nationality: true, icNumber: true,
+        },
         orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
         take: 20,
       })
-      return NextResponse.json(options)
+      // Nationality + whether SST treats them as Malaysian (for the invoice
+      // preview); the IC itself stays out of the picker payload.
+      return NextResponse.json(
+        options.map(({ icNumber, ...p }) => ({ ...p, isMalaysian: isMalaysianPatient({ nationality: p.nationality, icNumber }) })),
+      )
     }
 
     const now = new Date()

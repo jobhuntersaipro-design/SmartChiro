@@ -11,6 +11,7 @@ import {
   buildBranchHref,
 } from "@/lib/format";
 import { formatMYR } from "@/lib/invoices";
+import { nationalityLabel } from "@/lib/nationality";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 import { languageLabel } from "@/lib/outreach/consent";
 import { PatientOutreachSection } from "@/components/patients/PatientOutreachSection";
@@ -25,6 +26,7 @@ interface PatientProfileTabProps {
     gender: string | null;
     occupation: string | null;
     race: string | null;
+    nationality?: string | null;
     maritalStatus: string | null;
     bloodType: string | null;
     email: string | null;
@@ -186,6 +188,7 @@ export function PatientProfileTab({ patient, showClinical = true, onPatientChang
           <DetailRow label="Date of Birth" value={dobDisplay} />
           <DetailRow label="Gender" value={patient.gender ? formatStatus(patient.gender) : null} />
           <DetailRow label="Occupation" value={patient.occupation} />
+          <DetailRow label="Nationality" value={nationalityLabel(patient.nationality)} />
           <DetailRow label="Race" value={patient.race} />
           <DetailRow label="Marital Status" value={patient.maritalStatus ? formatStatus(patient.maritalStatus) : null} />
           <DetailRow label="Blood Type" value={patient.bloodType} />

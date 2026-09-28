@@ -22,6 +22,8 @@ export interface Patient {
   gender: string | null;
   occupation: string | null;
   race: string | null;
+  /** ISO 3166-1 alpha-2 (drives SST); null when not recorded. */
+  nationality?: string | null;
   maritalStatus: string | null;
   bloodType: string | null;
   allergies: string | null;
@@ -89,6 +91,7 @@ export type AppointmentStatusValue =
 export type InvoiceStatusValue =
   | 'DRAFT'
   | 'SENT'
+  | 'PARTIALLY_PAID'
   | 'PAID'
   | 'OVERDUE'
   | 'CANCELLED';
@@ -141,6 +144,8 @@ export interface CreatePatientData {
   gender?: string;
   occupation?: string;
   race?: string;
+  /** ISO 3166-1 alpha-2; null = deliberately not recorded. */
+  nationality?: string | null;
   maritalStatus?: string;
   bloodType?: string;
   allergies?: string;
