@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Building2, MoreHorizontal, Pencil, Trash2, Stethoscope, Users, CalendarDays, Clock, MapPin } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { BranchWithStats, OperatingHoursMap } from "@/types/branch";
+import { parseOperatingHours, hoursForDay, summarizeOperatingHours } from "@/lib/operating-hours";
+import { clinicParts } from "@/lib/clinic-time";
 
 interface BranchCardProps {
   branch: BranchWithStats;
@@ -13,49 +16,9 @@ interface BranchCardProps {
   onDelete: (branchId: string) => void;
 }
 
-function getOperatingHoursSummary(hoursJson: string | null): string {
-  if (!hoursJson) return "No hours set";
-  try {
-    const hours: OperatingHoursMap = JSON.parse(hoursJson);
-    const days = Object.keys(hours) as (keyof OperatingHoursMap)[];
-    if (days.length === 0) return "No hours set";
-
-    const dayNames: Record<string, string> = {
-      mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
-    };
-    const orderedDays = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
-    const activeDays = orderedDays.filter((d) => hours[d]);
-
-    if (activeDays.length === 0) return "No hours set";
-
-    // Check if all days have same hours
-    const firstHours = hours[activeDays[0]];
-    const allSame = activeDays.every((d) => hours[d]?.open === firstHours?.open && hours[d]?.close === firstHours?.close);
-
-    if (allSame && firstHours) {
-      // Find consecutive ranges
-      const start = dayNames[activeDays[0]];
-      const end = dayNames[activeDays[activeDays.length - 1]];
-      const range = activeDays.length === 1 ? start : `${start}-${end}`;
-      return `${range} ${firstHours.open}-${firstHours.close}`;
-    }
-
-    return `${activeDays.length} days/week`;
-  } catch {
-    return "No hours set";
-  }
-}
-
-function isOpenToday(hoursJson: string | null): boolean {
-  if (!hoursJson) return false;
-  try {
-    const hours: OperatingHoursMap = JSON.parse(hoursJson);
-    const dayMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
-    const today = dayMap[new Date().getDay()];
-    return !!hours[today];
-  } catch {
-    return false;
-  }
+/** Open on today's clinic day (clinic time zone, not the device's). */
+function isOpenToday(hours: OperatingHoursMap): boolean {
+  return hoursForDay(hours, clinicParts(new Date()).weekday) !== null;
 }
 
 function getFullAddress(branch: BranchWithStats): string {
@@ -67,7 +30,10 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const isOwner = userRole === "OWNER";
-  const open = isOpenToday(branch.operatingHours);
+  const hours = parseOperatingHours(branch.operatingHours);
+  const hoursSummary = summarizeOperatingHours(hours);
+  const open = isOpenToday(hours);
+  const canEditHours = userRole === "OWNER" || userRole === "ADMIN";
 
   return (
     <div
@@ -173,20 +139,38 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-5 py-3 border-t border-[#e5edf5]">
-        <div className="flex items-center gap-1.5 text-[13px] text-[#64748d]">
-          <Clock className="h-3 w-3" strokeWidth={1.5} />
-          <span>{getOperatingHoursSummary(branch.operatingHours)}</span>
-        </div>
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-medium ${
-            open
-              ? "bg-[#ECFDF5] text-[#15be53]"
-              : "bg-[#FEF2F4] text-[#DF1B41]"
-          }`}
-        >
-          {open ? "Open" : "Closed Today"}
-        </span>
+      <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-[#e5edf5]">
+        {hoursSummary ? (
+          <div className="flex min-w-0 items-center gap-1.5 text-[13px] text-[#64748d]" title={hoursSummary}>
+            <Clock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
+            <span className="truncate">{hoursSummary}</span>
+          </div>
+        ) : canEditHours ? (
+          <Link
+            href={`/dashboard/branches/${branch.id}?tab=settings`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 text-[13px] font-medium text-[#8A5A00] hover:underline"
+          >
+            <Clock className="h-3 w-3" strokeWidth={1.5} />
+            Set hours
+          </Link>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[13px] text-[#64748d]">
+            <Clock className="h-3 w-3" strokeWidth={1.5} />
+            <span>No hours set</span>
+          </div>
+        )}
+        {hoursSummary && (
+          <span
+            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[12px] font-medium ${
+              open
+                ? "bg-[#ECFDF5] text-[#15be53]"
+                : "bg-[#FEF2F4] text-[#DF1B41]"
+            }`}
+          >
+            {open ? "Open" : "Closed Today"}
+          </span>
+        )}
       </div>
     </div>
   );

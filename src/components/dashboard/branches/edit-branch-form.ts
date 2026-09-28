@@ -1,4 +1,5 @@
 import type { OperatingHoursMap } from "@/types/branch";
+import { parseOperatingHours } from "@/lib/operating-hours";
 
 export interface EditBranchFormData {
   name: string;
@@ -72,17 +73,9 @@ export function computePatchPayload(
   return payload;
 }
 
+/** Branch hours for the edit form — JSON or legacy free text ("Mon-Fri 9am-6pm"). */
 export function parseOperatingHoursJson(
   hoursJson: string | null
 ): OperatingHoursMap {
-  if (!hoursJson) return {};
-  try {
-    const parsed = JSON.parse(hoursJson);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return parsed as OperatingHoursMap;
-    }
-    return {};
-  } catch {
-    return {};
-  }
+  return parseOperatingHours(hoursJson);
 }

@@ -5,7 +5,9 @@ import Link from "next/link";
 import {
   Clock, User, CalendarDays, FileText, ChevronRight,
 } from "lucide-react";
-import type { DoctorDetail, WorkingSchedule } from "@/types/doctor";
+import type { DoctorDetail } from "@/types/doctor";
+import { normalizeWorkingSchedule, DAY_KEYS_BY_WEEKDAY } from "@/lib/operating-hours";
+import { clinicParts } from "@/lib/clinic-time";
 import { formatMYR } from "@/lib/invoices";
 
 interface DoctorOverviewTabProps {
@@ -44,8 +46,7 @@ const dayLabels: Record<string, string> = {
 const dayKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 function getTodayDayKey(): string {
-  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  return days[new Date().getDay()];
+  return DAY_KEYS_BY_WEEKDAY[clinicParts(new Date()).weekday];
 }
 
 const statusColors: Record<string, { bg: string; text: string }> = {
@@ -92,7 +93,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
       .finally(() => setLoadingVisits(false));
   }, [doctorId]);
 
-  const schedule = (doctor.profile?.workingSchedule ?? null) as WorkingSchedule | null;
+  const schedule = normalizeWorkingSchedule(doctor.profile?.workingSchedule);
   const todayKey = getTodayDayKey();
 
   return (

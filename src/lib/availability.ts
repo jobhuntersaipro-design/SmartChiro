@@ -1,4 +1,5 @@
 import type { LeaveType } from "@prisma/client";
+import { clinicInstant, clinicParts } from "@/lib/clinic-time";
 
 export type AvailabilityKind = "TIME_OFF" | "BREAK_TIME";
 
@@ -33,14 +34,18 @@ export interface TimeOffRow {
   notes: string | null;
 }
 
+/** The instant a break's minute-of-day falls on, for a clinic calendar day (month 1–12). */
+function breakInstant(year: number, month: number, day: number, minuteOfDay: number): Date {
+  return clinicInstant(year, month, day, Math.floor(minuteOfDay / 60), minuteOfDay % 60);
+}
+
 /**
  * Expand recurring weekly break rows into concrete time slots that fall inside
  * the [windowStart, windowEnd) range. Each occurrence becomes one AvailabilitySlot.
  *
- * The math is timezone-naive: the dayOfWeek + minute-of-day pair is interpreted in
- * the *local* timezone of whatever Date arithmetic the consumer does. That matches
- * how clinics think about working hours ("Mon-Fri 12-1pm local") and avoids the
- * UTC-vs-local confusion DST otherwise creates for recurring schedules.
+ * `dayOfWeek` + minute-of-day are clinic wall-clock time ("Mon-Fri 12-1pm" in the
+ * clinic's zone), resolved with the clinic-time helpers so the result doesn't
+ * depend on the server's time zone (UTC on Vercel).
  */
 export function expandBreakTimes(
   breaks: BreakRow[],
@@ -51,19 +56,16 @@ export function expandBreakTimes(
 
   const out: AvailabilitySlot[] = [];
 
-  // Iterate each calendar day in the window
-  const cursor = new Date(windowStart);
-  cursor.setHours(0, 0, 0, 0);
-  const stop = new Date(windowEnd);
-
-  while (cursor.getTime() < stop.getTime()) {
-    const dow = cursor.getDay();
+  // Iterate each clinic calendar day in the window
+  const first = clinicParts(windowStart);
+  for (let offset = 0; ; offset++) {
+    const dayStart = clinicInstant(first.year, first.month, first.day + offset);
+    if (dayStart.getTime() >= windowEnd.getTime()) break;
+    const { year, month, day, weekday } = clinicParts(dayStart);
     for (const b of breaks) {
-      if (b.dayOfWeek !== dow) continue;
-      const startTime = new Date(cursor);
-      startTime.setHours(Math.floor(b.startMinute / 60), b.startMinute % 60, 0, 0);
-      const endTime = new Date(cursor);
-      endTime.setHours(Math.floor(b.endMinute / 60), b.endMinute % 60, 0, 0);
+      if (b.dayOfWeek !== weekday) continue;
+      const startTime = breakInstant(year, month, day, b.startMinute);
+      const endTime = breakInstant(year, month, day, b.endMinute);
       // Clip to window bounds
       if (endTime.getTime() <= windowStart.getTime()) continue;
       if (startTime.getTime() >= windowEnd.getTime()) continue;
@@ -75,7 +77,6 @@ export function expandBreakTimes(
         label: b.label ?? undefined,
       });
     }
-    cursor.setDate(cursor.getDate() + 1);
   }
 
   return out;
@@ -107,33 +108,37 @@ export function expandTimeOff(
 }
 
 /**
- * Returns true if [apptStart, apptEnd) overlaps any of the doctor's break-time
- * occurrences inside the window. Used by POST /api/appointments to decide whether
- * to require the booking-on-break confirmation.
+ * The doctor's break that [apptStart, apptEnd) overlaps on the appointment's
+ * clinic day, or null. Used by POST /api/appointments to decide whether to
+ * require the booking-on-break confirmation.
  */
+export function findOverlappingBreak(
+  doctorId: string,
+  apptStart: Date,
+  apptEnd: Date,
+  breaks: BreakRow[]
+): BreakRow | null {
+  const { year, month, day, weekday } = clinicParts(apptStart);
+  for (const b of breaks) {
+    if (b.userId !== doctorId || b.dayOfWeek !== weekday) continue;
+    const breakStart = breakInstant(year, month, day, b.startMinute);
+    const breakEnd = breakInstant(year, month, day, b.endMinute);
+    // Half-open overlap: a < B && b > A
+    if (apptStart.getTime() < breakEnd.getTime() && apptEnd.getTime() > breakStart.getTime()) {
+      return b;
+    }
+  }
+  return null;
+}
+
+/** True if [apptStart, apptEnd) overlaps one of the doctor's breaks (clinic time). */
 export function overlapsBreak(
   doctorId: string,
   apptStart: Date,
   apptEnd: Date,
   breaks: BreakRow[]
 ): boolean {
-  const docBreaks = breaks.filter((b) => b.userId === doctorId);
-  if (docBreaks.length === 0) return false;
-  // Day-of-week of the appointment start
-  const dow = apptStart.getDay();
-  for (const b of docBreaks) {
-    if (b.dayOfWeek !== dow) continue;
-    // Build break window for this specific day
-    const breakStart = new Date(apptStart);
-    breakStart.setHours(Math.floor(b.startMinute / 60), b.startMinute % 60, 0, 0);
-    const breakEnd = new Date(apptStart);
-    breakEnd.setHours(Math.floor(b.endMinute / 60), b.endMinute % 60, 0, 0);
-    // Half-open overlap: a < B && b > A
-    if (apptStart.getTime() < breakEnd.getTime() && apptEnd.getTime() > breakStart.getTime()) {
-      return true;
-    }
-  }
-  return false;
+  return findOverlappingBreak(doctorId, apptStart, apptEnd, breaks) !== null;
 }
 
 /**

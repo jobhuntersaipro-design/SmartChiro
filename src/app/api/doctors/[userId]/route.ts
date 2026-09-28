@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { DoctorDetail, DoctorProfile, WorkingSchedule } from "@/types/doctor";
+import type { DoctorDetail, DoctorProfile } from "@/types/doctor";
+import { normalizeWorkingSchedule } from "@/lib/operating-hours";
 import type { BranchRole } from "@prisma/client";
 
 type RouteContext = { params: Promise<{ userId: string }> };
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
         specialties: user.doctorProfile.specialties,
         yearsExperience: user.doctorProfile.yearsExperience,
         education: user.doctorProfile.education,
-        workingSchedule: user.doctorProfile.workingSchedule as WorkingSchedule | null,
+        workingSchedule: normalizeWorkingSchedule(user.doctorProfile.workingSchedule),
         treatmentRoom: user.doctorProfile.treatmentRoom,
         consultationFee: user.doctorProfile.consultationFee
           ? Number(user.doctorProfile.consultationFee)
@@ -410,7 +411,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
           specialties: updatedUser!.doctorProfile.specialties,
           yearsExperience: updatedUser!.doctorProfile.yearsExperience,
           education: updatedUser!.doctorProfile.education,
-          workingSchedule: updatedUser!.doctorProfile.workingSchedule as WorkingSchedule | null,
+          workingSchedule: normalizeWorkingSchedule(updatedUser!.doctorProfile.workingSchedule),
           treatmentRoom: updatedUser!.doctorProfile.treatmentRoom,
           consultationFee: updatedUser!.doctorProfile.consultationFee
             ? Number(updatedUser!.doctorProfile.consultationFee)

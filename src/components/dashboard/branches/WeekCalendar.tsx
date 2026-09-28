@@ -1,6 +1,7 @@
 "use client";
 
 import type { ScheduleAppointment, ScheduleDoctor, OperatingHoursMap } from "@/types/branch";
+import { parseOperatingHours, hasAnyHours } from "@/lib/operating-hours";
 
 interface WeekCalendarProps {
   weekStart: Date;
@@ -36,10 +37,7 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
   const timeSlots = generateTimeSlots();
   const doctorColorMap = new Map(doctors.map((d) => [d.id, d.color]));
 
-  let hours: OperatingHoursMap = {};
-  try {
-    if (operatingHours) hours = JSON.parse(operatingHours);
-  } catch { /* ignore */ }
+  const hours: OperatingHoursMap = parseOperatingHours(operatingHours);
 
   // Build 7 day columns
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -69,7 +67,8 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
 
   function isDayOpen(dayIndex: number): boolean {
     const key = DAY_KEYS[dayIndex];
-    return !!hours[key];
+    // No hours set → don't grey every day out as closed
+    return !hasAnyHours(hours) || !!hours[key];
   }
 
   return (

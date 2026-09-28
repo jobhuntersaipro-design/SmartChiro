@@ -5,6 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { BranchDetail, OperatingHoursMap, DayHours } from "@/types/branch";
+import { parseOperatingHours, hasAnyHours } from "@/lib/operating-hours";
 import { DeleteBranchDialog } from "./DeleteBranchDialog";
 import { BranchActivityLog } from "./BranchActivityLog";
 import { BranchReminderSettingsCard } from "@/components/branches/BranchReminderSettingsCard";
@@ -46,11 +47,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
   });
 
   // Operating hours
-  let initialHours: OperatingHoursMap = {};
-  try {
-    if (branch.operatingHours) initialHours = JSON.parse(branch.operatingHours);
-  } catch { /* ignore */ }
-  const [hours, setHours] = useState<OperatingHoursMap>(initialHours);
+  const [hours, setHours] = useState<OperatingHoursMap>(() => parseOperatingHours(branch.operatingHours));
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -82,6 +79,11 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
   }
 
   async function handleSave() {
+    const badDay = DAY_ORDER.find((d) => hours[d] && hours[d]!.open >= hours[d]!.close);
+    if (badDay) {
+      setError(`${DAY_LABELS[badDay]}: opening time must be before closing time`);
+      return;
+    }
     setSaving(true);
     setError("");
     setSuccess(false);
@@ -158,6 +160,11 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
 
       {/* Operating Hours */}
       <Section title="Operating Hours">
+        {!hasAnyHours(hours) && (
+          <p className="mb-3 rounded-[4px] border border-[#F5D9A8] bg-[#FFF8EB] px-3 py-2 text-[13px] text-[#8A5A00]">
+            Opening hours aren&apos;t set — bookings can&apos;t be checked against them. Set the days this branch is open.
+          </p>
+        )}
         <div className="space-y-2">
           {DAY_ORDER.map((day) => {
             const isOpen = !!hours[day];

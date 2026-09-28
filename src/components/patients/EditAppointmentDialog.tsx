@@ -145,11 +145,21 @@ export function EditAppointmentDialog({
         return;
       }
 
-      const res = await fetch(`/api/appointments/${appointmentId}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const patch = (extra: Record<string, unknown> = {}) =>
+        fetch(`/api/appointments/${appointmentId}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ...body, ...extra }),
+        });
+      let res = await patch();
+      if (res.status === 409) {
+        const data = await res.clone().json().catch(() => ({}));
+        if (data?.error === "outside_hours_confirm_required") {
+          const hours = data.hours ? ` (${data.hours})` : "";
+          if (!window.confirm(`This time is outside the branch's opening hours${hours}. Save anyway?`)) return;
+          res = await patch({ forceOutsideHours: true });
+        }
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (res.status === 409 && data?.conflicts) {

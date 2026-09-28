@@ -119,8 +119,19 @@ describe('parseOperatingHoursJson', () => {
     })
   })
 
-  it('returns an empty map for malformed JSON (legacy free-text)', () => {
-    expect(parseOperatingHoursJson('Mon-Fri 9-6')).toEqual({})
+  it('reads legacy free-text hours', () => {
+    const nineToSix = { open: '09:00', close: '18:00' }
+    expect(parseOperatingHoursJson('Mon-Fri 9-6')).toEqual({
+      mon: nineToSix,
+      tue: nineToSix,
+      wed: nineToSix,
+      thu: nineToSix,
+      fri: nineToSix,
+    })
+  })
+
+  it('returns an empty map for malformed JSON', () => {
+    expect(parseOperatingHoursJson('{"mon":')).toEqual({})
   })
 })
 

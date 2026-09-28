@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { POST } from "../route";
+import { clinicCalendar, clinicInstant, clinicParts } from "@/lib/clinic-time";
 
 const TEST_PREFIX = "appt-post-";
 
@@ -56,6 +57,12 @@ async function buildFixture() {
 }
 
 const futureIso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
+
+/** Tomorrow at a clinic wall-clock time (the server may run in UTC). */
+function clinicTomorrowAt(hour: number, minute: number): Date {
+  const p = clinicParts(clinicCalendar().addDays(1));
+  return clinicInstant(p.year, p.month, p.day, hour, minute);
+}
 
 describe("POST /api/appointments", () => {
   beforeEach(async () => {
@@ -267,10 +274,8 @@ describe("POST /api/appointments", () => {
     vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
     vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
 
-    // Pick tomorrow at 12:30 PM in local time
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(12, 30, 0, 0);
+    // Tomorrow at 12:30 PM clinic time
+    const tomorrow = clinicTomorrowAt(12, 30);
 
     const res = await POST(
       new Request("http://x", {
@@ -291,11 +296,12 @@ describe("POST /api/appointments", () => {
 
   it("forceBookOnBreak: true bypasses the break-time gate", async () => {
     const { owner, doctor, branch, patient } = await buildFixture();
+    const tomorrow = clinicTomorrowAt(12, 30);
     await prisma.doctorBreakTime.create({
       data: {
         userId: doctor.id,
         branchId: branch.id,
-        dayOfWeek: new Date(Date.now() + 86_400_000).getDay(),
+        dayOfWeek: clinicParts(tomorrow).weekday,
         startMinute: 12 * 60,
         endMinute: 13 * 60,
         label: "Lunch",
@@ -303,10 +309,6 @@ describe("POST /api/appointments", () => {
     });
     vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
     vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
-
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(12, 30, 0, 0);
 
     const res = await POST(
       new Request("http://x", {
@@ -317,6 +319,56 @@ describe("POST /api/appointments", () => {
           dateTime: tomorrow.toISOString(),
           duration: 30,
           forceBookOnBreak: true,
+        }),
+      })
+    );
+    expect(res.status).toBe(201);
+  });
+
+  it("returns 409 outside_hours_confirm_required outside the branch's opening hours", async () => {
+    const { owner, doctor, branch, patient } = await buildFixture();
+    const tomorrow = clinicTomorrowAt(21, 0);
+    await prisma.branch.update({
+      where: { id: branch.id },
+      data: { operatingHours: "Daily 9am-6pm" },
+    });
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+
+    const body = {
+      patientId: patient.id,
+      doctorId: doctor.id,
+      dateTime: tomorrow.toISOString(),
+      duration: 30,
+    };
+    const res = await POST(new Request("http://x", { method: "POST", body: JSON.stringify(body) }));
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.error).toBe("outside_hours_confirm_required");
+    expect(json.hours).toMatch(/9:00 AM–6:00 PM$/);
+
+    const forced = await POST(
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({ ...body, forceOutsideHours: true }),
+      })
+    );
+    expect(forced.status).toBe(201);
+  });
+
+  it("skips the opening-hours gate when the branch has no hours", async () => {
+    const { owner, doctor, patient } = await buildFixture();
+    vi.mocked(getCurrentUser).mockResolvedValue({ id: owner.id } as never);
+    vi.mocked(getUserBranchRole).mockResolvedValue("OWNER");
+
+    const res = await POST(
+      new Request("http://x", {
+        method: "POST",
+        body: JSON.stringify({
+          patientId: patient.id,
+          doctorId: doctor.id,
+          dateTime: clinicTomorrowAt(22, 0).toISOString(),
+          duration: 30,
         }),
       })
     );

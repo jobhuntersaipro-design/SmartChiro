@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { findConflictingAppointments } from "@/lib/appointments";
 import { logAppointmentEvent, diffSnapshots, snapshotOf, classifyUpdate } from "@/lib/appointment-audit";
+import { outsideHoursSummary } from "@/lib/operating-hours";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -74,6 +75,8 @@ const Body = z
       ])
       .nullable()
       .optional(),
+    /** Bypass the outside-opening-hours confirmation on a reschedule. */
+    forceOutsideHours: z.boolean().optional(),
   })
   .refine((d) => Object.keys(d).length > 0, "at least one field required");
 
@@ -170,6 +173,19 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
         },
         { status: 409 }
       );
+    }
+
+    // Opening-hours confirmation gate on a reschedule / duration change —
+    // skipped when the branch has no hours set.
+    if ((dateTimeWillChange || durationWillChange) && parsed.data.forceOutsideHours !== true) {
+      const branch = await prisma.branch.findUnique({
+        where: { id: appt.branchId },
+        select: { operatingHours: true },
+      });
+      const hours = outsideHoursSummary(branch?.operatingHours, newStart, newDuration);
+      if (hours) {
+        return NextResponse.json({ error: "outside_hours_confirm_required", hours }, { status: 409 });
+      }
     }
   }
 

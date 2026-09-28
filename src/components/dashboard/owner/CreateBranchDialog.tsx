@@ -102,7 +102,14 @@ export function CreateBranchDialog({
     }
   }
 
+  function clearHoursError() {
+    if (errors.operatingHours) {
+      setErrors((prev) => { const n = { ...prev }; delete n.operatingHours; return n; });
+    }
+  }
+
   function toggleDay(day: string) {
+    clearHoursError();
     setHours((prev) => {
       const next = { ...prev };
       if (next[day as keyof OperatingHoursMap]) {
@@ -115,6 +122,7 @@ export function CreateBranchDialog({
   }
 
   function updateDayHours(day: string, field: keyof DayHours, value: string) {
+    clearHoursError();
     setHours((prev) => ({
       ...prev,
       [day]: { ...prev[day as keyof OperatingHoursMap]!, [field]: value },
@@ -140,6 +148,11 @@ export function CreateBranchDialog({
     }
     if (step === 3) {
       if (data.treatmentRooms !== null && data.treatmentRooms < 0) newErrors.treatmentRooms = "Must be a positive number";
+      const openDays = Object.values(hours).filter((h): h is DayHours => !!h);
+      if (openDays.length === 0) newErrors.operatingHours = "Set at least one open day";
+      else if (openDays.some((h) => !h.open || !h.close || h.open >= h.close)) {
+        newErrors.operatingHours = "Opening time must be before closing time";
+      }
     }
     if (step === 4) {
       if (data.billingContactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.billingContactEmail)) {
@@ -410,6 +423,7 @@ export function CreateBranchDialog({
                     );
                   })}
                 </div>
+                <FieldError message={errors.operatingHours} />
               </div>
             </div>
           )}

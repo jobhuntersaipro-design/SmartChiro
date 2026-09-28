@@ -8,6 +8,15 @@ const connectionString = process.env.DATABASE_URL!
 const adapter = new PrismaNeon({ connectionString })
 const prisma = new PrismaClient({ adapter })
 
+/** Branch.operatingHours in the JSON format the app reads and writes (missing day = closed). */
+function weekHours(monFri: [string, string], sat?: [string, string]): string {
+  const day = ([open, close]: [string, string]) => ({ open, close })
+  return JSON.stringify({
+    mon: day(monFri), tue: day(monFri), wed: day(monFri), thu: day(monFri), fri: day(monFri),
+    ...(sat ? { sat: day(sat) } : {}),
+  })
+}
+
 async function main() {
   const hashedPassword = await hash('12345678', 12)
 
@@ -40,7 +49,7 @@ async function main() {
       email: 'branch@smartchiro.org',
       ownerName: 'Demo Wojak',
       clinicType: 'group',
-      operatingHours: 'Mon-Fri 9am-6pm, Sat 9am-1pm',
+      operatingHours: weekHours(['09:00', '18:00'], ['09:00', '13:00']),
       treatmentRooms: 4,
       specialties: 'Gonstead, Diversified, Sports Chiropractic',
       insuranceProviders: 'AIA, Great Eastern, Prudential',
@@ -78,12 +87,12 @@ async function main() {
         consultationFee: 150,
         treatmentRoom: 'Room A',
         workingSchedule: {
-          monday: { start: '09:00', end: '18:00' },
-          tuesday: { start: '09:00', end: '18:00' },
-          wednesday: { start: '09:00', end: '18:00' },
-          thursday: { start: '09:00', end: '18:00' },
-          friday: { start: '09:00', end: '17:00' },
-          saturday: { start: '09:00', end: '13:00' },
+          mon: { start: '09:00', end: '18:00' },
+          tue: { start: '09:00', end: '18:00' },
+          wed: { start: '09:00', end: '18:00' },
+          thu: { start: '09:00', end: '18:00' },
+          fri: { start: '09:00', end: '17:00' },
+          sat: { start: '09:00', end: '13:00' },
         },
       },
     },
@@ -103,12 +112,12 @@ async function main() {
         consultationFee: 130,
         treatmentRoom: 'Room B',
         workingSchedule: {
-          monday: { start: '10:00', end: '18:00' },
-          tuesday: { start: '10:00', end: '18:00' },
-          wednesday: null,
-          thursday: { start: '10:00', end: '18:00' },
-          friday: { start: '10:00', end: '17:00' },
-          saturday: { start: '09:00', end: '13:00' },
+          mon: { start: '10:00', end: '18:00' },
+          tue: { start: '10:00', end: '18:00' },
+          wed: null,
+          thu: { start: '10:00', end: '18:00' },
+          fri: { start: '10:00', end: '17:00' },
+          sat: { start: '09:00', end: '13:00' },
         },
       },
     },
@@ -128,12 +137,12 @@ async function main() {
         consultationFee: 180,
         treatmentRoom: 'Room C',
         workingSchedule: {
-          monday: { start: '08:00', end: '16:00' },
-          tuesday: { start: '08:00', end: '16:00' },
-          wednesday: { start: '08:00', end: '16:00' },
-          thursday: { start: '08:00', end: '16:00' },
-          friday: { start: '08:00', end: '14:00' },
-          saturday: null,
+          mon: { start: '08:00', end: '16:00' },
+          tue: { start: '08:00', end: '16:00' },
+          wed: { start: '08:00', end: '16:00' },
+          thu: { start: '08:00', end: '16:00' },
+          fri: { start: '08:00', end: '14:00' },
+          sat: null,
         },
       },
     },

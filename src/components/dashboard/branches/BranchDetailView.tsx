@@ -201,7 +201,11 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
 
       {/* Tab content */}
       {activeTab === "overview" && (
-        <BranchOverviewTab branch={branch} stats={stats} />
+        <BranchOverviewTab
+          branch={branch}
+          stats={stats}
+          onSetHours={canEdit ? () => handleTabChange("settings") : undefined}
+        />
       )}
       {activeTab === "doctors" && (
         <BranchDoctorsTab

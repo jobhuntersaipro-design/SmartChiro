@@ -1,7 +1,9 @@
 "use client";
 
 import { Clock, MapPin, DollarSign } from "lucide-react";
-import type { DoctorDetail, WorkingSchedule, DaySchedule } from "@/types/doctor";
+import type { DoctorDetail, DaySchedule } from "@/types/doctor";
+import { normalizeWorkingSchedule, DAY_KEYS_BY_WEEKDAY } from "@/lib/operating-hours";
+import { clinicParts } from "@/lib/clinic-time";
 
 interface DoctorScheduleTabProps {
   doctor: DoctorDetail;
@@ -20,8 +22,7 @@ const dayLabels: Record<string, string> = {
 };
 
 function getTodayDayKey(): string {
-  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-  return days[new Date().getDay()];
+  return DAY_KEYS_BY_WEEKDAY[clinicParts(new Date()).weekday];
 }
 
 function getHoursCount(day: DaySchedule | null | undefined): string {
@@ -33,7 +34,7 @@ function getHoursCount(day: DaySchedule | null | undefined): string {
 }
 
 export function DoctorScheduleTab({ doctor }: DoctorScheduleTabProps) {
-  const schedule = (doctor.profile?.workingSchedule ?? null) as WorkingSchedule | null;
+  const schedule = normalizeWorkingSchedule(doctor.profile?.workingSchedule);
   const todayKey = getTodayDayKey();
 
   if (!schedule) {

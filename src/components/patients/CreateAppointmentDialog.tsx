@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle, Coffee } from "lucide-react";
+import { Loader2, AlertCircle, Coffee, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PatientCombobox } from "@/components/patients/PatientCombobox";
 import { DoctorCombobox } from "@/components/patients/DoctorCombobox";
@@ -47,6 +47,12 @@ interface PatientOption {
   phone: string | null;
 }
 
+/** Confirmation gates the user has accepted — sent as bypass flags on retry. */
+interface SubmitOpts {
+  forceBookOnBreak?: boolean;
+  forceOutsideHours?: boolean;
+}
+
 /** Date + time inputs are clinic wall-clock time, not the device's zone. */
 function inputsToIso(date: string, time: string): string | null {
   if (!date || !time) return null;
@@ -75,7 +81,9 @@ export function CreateAppointmentDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
-  const [breakConfirm, setBreakConfirm] = useState<{ label: string } | null>(null);
+  // Each confirm keeps the gates already confirmed in this attempt so the retry re-sends them
+  const [breakConfirm, setBreakConfirm] = useState<{ label: string; confirmed: SubmitOpts } | null>(null);
+  const [hoursConfirm, setHoursConfirm] = useState<{ hours: string; confirmed: SubmitOpts } | null>(null);
 
   // Initialize from prefills when the dialog opens
   useEffect(() => {
@@ -101,6 +109,7 @@ export function CreateAppointmentDialog({
     setError(null);
     setConflicts([]);
     setBreakConfirm(null);
+    setHoursConfirm(null);
   }, [open, prefilledPatient, prefilledDoctor, prefilledDateTime]);
 
   // Doctors who are not admins can only book for themselves — auto-pin
@@ -137,7 +146,7 @@ export function CreateAppointmentDialog({
   const canSave =
     !!patient && !!doctor && !!iso && !isPast && conflicts.length === 0 && !submitting;
 
-  async function submit(opts: { forceBookOnBreak?: boolean } = {}) {
+  async function submit(opts: SubmitOpts = {}) {
     if (!patient || !doctor || !iso) return;
     setError(null);
     setSubmitting(true);
@@ -153,12 +162,17 @@ export function CreateAppointmentDialog({
           notes: notes.trim() || undefined,
           treatmentType: treatmentType || undefined,
           forceBookOnBreak: opts.forceBookOnBreak,
+          forceOutsideHours: opts.forceOutsideHours,
         }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (res.status === 409 && data?.error === "break_time_confirm_required") {
-          setBreakConfirm({ label: data.breakLabel ?? "Break time" });
+          setBreakConfirm({ label: data.breakLabel ?? "Break time", confirmed: opts });
+          return;
+        }
+        if (res.status === 409 && data?.error === "outside_hours_confirm_required") {
+          setHoursConfirm({ hours: data.hours ?? "", confirmed: opts });
           return;
         }
         if (res.status === 409 && data?.conflicts) {
@@ -354,14 +368,70 @@ export function CreateAppointmentDialog({
               </Button>
               <Button
                 onClick={() => {
+                  const confirmed = breakConfirm.confirmed;
                   setBreakConfirm(null);
-                  submit({ forceBookOnBreak: true });
+                  submit({ ...confirmed, forceBookOnBreak: true });
                 }}
                 disabled={submitting}
                 className="h-8 rounded-md text-[13px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 Book on break
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Opening-hours confirmation — appears when API returns outside_hours_confirm_required */}
+      {hoursConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setHoursConfirm(null)}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="outside-hours-title"
+            onClick={(e) => e.stopPropagation()}
+            className="w-105 rounded-2xl border border-[#e5edf5] bg-white p-6"
+            style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-5 w-5 text-[#F59E0B]" strokeWidth={1.75} />
+              <h3 id="outside-hours-title" className="text-[16px] font-semibold text-[#061b31]">
+                Outside opening hours
+              </h3>
+            </div>
+            <p className="text-[13px] text-[#425466] mb-4">
+              This time is outside the branch&apos;s opening hours
+              {hoursConfirm.hours ? (
+                <>
+                  {" "}(<strong>{hoursConfirm.hours}</strong>)
+                </>
+              ) : null}
+              . Book it anyway?
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setHoursConfirm(null)}
+                disabled={submitting}
+                className="h-8 rounded-md text-[13px]"
+              >
+                Pick another time
+              </Button>
+              <Button
+                onClick={() => {
+                  const confirmed = hoursConfirm.confirmed;
+                  setHoursConfirm(null);
+                  submit({ ...confirmed, forceOutsideHours: true });
+                }}
+                disabled={submitting}
+                className="h-8 rounded-md text-[13px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5"
+              >
+                {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
+                Book anyway
               </Button>
             </div>
           </div>

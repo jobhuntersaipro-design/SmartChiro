@@ -3,7 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { findConflictingAppointments } from "@/lib/appointments";
-import { overlapsBreak } from "@/lib/availability";
+import { findOverlappingBreak } from "@/lib/availability";
+import { outsideHoursSummary } from "@/lib/operating-hours";
 import { logAppointmentEvent } from "@/lib/appointment-audit";
 import { sendDoctorBookingNotification } from "@/lib/email";
 import { treatmentLabelFor } from "@/lib/treatment-colors";
@@ -159,6 +160,8 @@ const Body = z.object({
   treatmentType: z.enum(TREATMENT_TYPES).optional(),
   /** Bypass the break-time confirmation gate. Frontend sets this on retry after the user clicks "Book on break" in the dialog. */
   forceBookOnBreak: z.boolean().optional(),
+  /** Bypass the outside-opening-hours confirmation. Set on retry after the user clicks "Book anyway". */
+  forceOutsideHours: z.boolean().optional(),
 });
 
 export async function POST(req: Request): Promise<Response> {
@@ -172,7 +175,16 @@ export async function POST(req: Request): Promise<Response> {
       { status: 422 }
     );
   }
-  const { patientId, doctorId, dateTime, duration = 30, notes, treatmentType, forceBookOnBreak } = parsed.data;
+  const {
+    patientId,
+    doctorId,
+    dateTime,
+    duration = 30,
+    notes,
+    treatmentType,
+    forceBookOnBreak,
+    forceOutsideHours,
+  } = parsed.data;
 
   // Past-time guard
   const newStart = new Date(dateTime);
@@ -183,7 +195,7 @@ export async function POST(req: Request): Promise<Response> {
   // Resolve branch from the patient
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
-    select: { id: true, branchId: true },
+    select: { id: true, branchId: true, branch: { select: { operatingHours: true } } },
   });
   if (!patient) {
     return NextResponse.json({ error: "patient_not_found" }, { status: 404 });
@@ -238,15 +250,21 @@ export async function POST(req: Request): Promise<Response> {
       where: { userId: doctorId, branchId: patient.branchId },
       select: { userId: true, branchId: true, dayOfWeek: true, startMinute: true, endMinute: true, label: true },
     });
-    if (overlapsBreak(doctorId, newStart, newEnd, docBreaks)) {
+    const onBreak = findOverlappingBreak(doctorId, newStart, newEnd, docBreaks);
+    if (onBreak) {
       return NextResponse.json(
-        {
-          error: "break_time_confirm_required",
-          breakLabel:
-            docBreaks.find((b) => b.dayOfWeek === newStart.getDay())?.label ?? "Break time",
-        },
+        { error: "break_time_confirm_required", breakLabel: onBreak.label ?? "Break time" },
         { status: 409 }
       );
+    }
+  }
+
+  // Opening-hours confirmation gate — skipped when the branch has no hours set.
+  // Any role that can book may confirm (retry with `forceOutsideHours: true`).
+  if (forceOutsideHours !== true) {
+    const hours = outsideHoursSummary(patient.branch?.operatingHours, newStart, duration);
+    if (hours) {
+      return NextResponse.json({ error: "outside_hours_confirm_required", hours }, { status: 409 });
     }
   }
 

@@ -421,16 +421,30 @@ export function AppointmentsCalendarView({
         }
       }
 
-      // 5. PATCH
-      const res = await fetch(`/api/appointments/${event.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          dateTime: newStart.toISOString(),
-          duration: newDuration,
-          ...(doctorChanged ? { doctorId: newDoctorId } : {}),
-        }),
-      });
+      // 5. PATCH (re-sent with forceOutsideHours once the user confirms)
+      const patch = (forceOutsideHours = false) =>
+        fetch(`/api/appointments/${event.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            dateTime: newStart.toISOString(),
+            duration: newDuration,
+            ...(doctorChanged ? { doctorId: newDoctorId } : {}),
+            ...(forceOutsideHours ? { forceOutsideHours: true } : {}),
+          }),
+        });
+      let res = await patch();
+      if (res.status === 409) {
+        const body = await res.clone().json().catch(() => ({}));
+        if (body.error === "outside_hours_confirm_required") {
+          const hours = body.hours ? ` (${body.hours})` : "";
+          if (!window.confirm(`This time is outside the branch's opening hours${hours}. Move it anyway?`)) {
+            await fetchAppointments(); // snap back
+            return;
+          }
+          res = await patch(true);
+        }
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         toast.error(body.error ?? `Save failed (${res.status})`);

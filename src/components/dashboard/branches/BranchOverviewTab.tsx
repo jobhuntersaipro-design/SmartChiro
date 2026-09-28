@@ -3,13 +3,16 @@
 import { useState, useEffect } from "react";
 import { Clock, Building2, Stethoscope, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { BranchDetail, BranchStats, OperatingHoursMap } from "@/types/branch";
+import type { BranchDetail, BranchStats } from "@/types/branch";
+import { parseOperatingHours, hasAnyHours, formatDayHours } from "@/lib/operating-hours";
 import { ScheduleTable } from "../shared/ScheduleTable";
 import type { ScheduleAppointment as DashScheduleAppointment } from "../shared/ScheduleTable";
 
 interface BranchOverviewTabProps {
   branch: BranchDetail;
   stats: BranchStats | null;
+  /** Opens the Settings tab — passed only for roles that can edit the branch. */
+  onSetHours?: () => void;
 }
 
 const DAY_LABELS: Record<string, string> = {
@@ -18,7 +21,7 @@ const DAY_LABELS: Record<string, string> = {
 };
 const DAY_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
-export function BranchOverviewTab({ branch, stats }: BranchOverviewTabProps) {
+export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewTabProps) {
   const [appointments, setAppointments] = useState<DashScheduleAppointment[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
 
@@ -73,10 +76,8 @@ export function BranchOverviewTab({ branch, stats }: BranchOverviewTabProps) {
     fetchSchedule();
   }, [branch.id]);
 
-  let operatingHours: OperatingHoursMap = {};
-  try {
-    if (branch.operatingHours) operatingHours = JSON.parse(branch.operatingHours);
-  } catch { /* ignore */ }
+  const operatingHours = parseOperatingHours(branch.operatingHours);
+  const hoursSet = hasAnyHours(operatingHours);
 
   // Sort members by patient count descending
   const topDoctors = [...branch.members]
@@ -122,19 +123,36 @@ export function BranchOverviewTab({ branch, stats }: BranchOverviewTabProps) {
                 <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
                 Operating Hours
               </div>
-              <div className="space-y-1">
-                {DAY_ORDER.map((day) => {
-                  const hours = operatingHours[day];
-                  return (
-                    <div key={day} className="flex items-center justify-between text-[13px]">
-                      <span className="text-[#273951]">{DAY_LABELS[day]}</span>
-                      <span className={hours ? "text-[#273951]" : "text-[#c1c9d2]"}>
-                        {hours ? `${hours.open} - ${hours.close}` : "Closed"}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+              {hoursSet ? (
+                <div className="space-y-1">
+                  {DAY_ORDER.map((day) => {
+                    const hours = operatingHours[day];
+                    return (
+                      <div key={day} className="flex items-center justify-between text-[13px]">
+                        <span className="text-[#273951]">{DAY_LABELS[day]}</span>
+                        <span className={hours ? "text-[#273951]" : "text-[#c1c9d2]"}>
+                          {hours ? formatDayHours(hours) : "Closed"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-[4px] border border-[#F5D9A8] bg-[#FFF8EB] px-3 py-2 text-[13px] text-[#8A5A00]">
+                  Opening hours aren&apos;t set — bookings can&apos;t be checked against them.{" "}
+                  {onSetHours ? (
+                    <button
+                      type="button"
+                      onClick={onSetHours}
+                      className="font-medium text-[#533afd] hover:underline cursor-pointer"
+                    >
+                      Set hours
+                    </button>
+                  ) : (
+                    "Ask the branch owner to set them."
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Details */}
