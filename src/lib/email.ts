@@ -3,7 +3,14 @@ import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { CLINIC_TIME_ZONE } from '@/lib/clinic-time'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Created on first use: constructing Resend without a key throws, which used
+// to crash any route importing this module (e.g. /login, build page-data
+// collection) when RESEND_API_KEY was unset.
+let resendClient: Resend | null = null
+function resend(): Resend {
+  resendClient ??= new Resend(process.env.RESEND_API_KEY)
+  return resendClient
+}
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 const TOKEN_EXPIRY_HOURS = 24
@@ -46,7 +53,7 @@ export async function sendVerificationEmail(email: string, name: string) {
   const token = await createVerificationToken(email)
   const verifyUrl = `${APP_URL}/api/auth/verify?token=${token}`
 
-  const { error } = await resend.emails.send({
+  const { error } = await resend().emails.send({
     from: 'SmartChiro <noreply@smartchiro.org>',
     to: email,
     subject: 'Verify your SmartChiro account',
@@ -116,7 +123,7 @@ export async function sendPasswordResetEmail(
 ) {
   const resetUrl = `${APP_URL}/reset-password?token=${token}`
 
-  const { error } = await resend.emails.send({
+  const { error } = await resend().emails.send({
     from: 'SmartChiro <noreply@smartchiro.org>',
     to: email,
     subject: 'Reset your SmartChiro password',
@@ -201,7 +208,7 @@ export async function sendDoctorBookingNotification(args: {
     ? `<p style="margin: 6px 0; color: #697386; font-size: 13px;">Booked by ${escapeHtml(args.bookedByName)}</p>`
     : ''
   try {
-    await resend.emails.send({
+    await resend().emails.send({
       from: 'SmartChiro <noreply@smartchiro.org>',
       to: args.to,
       subject: `New appointment with ${args.patientName} — ${dateStr}`,
@@ -237,7 +244,7 @@ export async function sendReminderEmail(args: {
   from: string
 }): Promise<ReminderEmailResult> {
   try {
-    const r = await resend.emails.send({
+    const r = await resend().emails.send({
       from: args.from,
       to: args.to,
       subject: args.subject,

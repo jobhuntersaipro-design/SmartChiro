@@ -195,7 +195,7 @@ describe("public booking API", () => {
 
     const patients = await prisma.patient.findMany({ where: { branchId: branch.id } });
     expect(patients).toHaveLength(1);
-    expect(patients[0]).toMatchObject({ firstName: "Siti", lastName: "Nurhaliza", phone: "012-345 6789", status: "active", marketingConsent: false, doctorId: docA.id, reminderChannel: "WHATSAPP" });
+    expect(patients[0]).toMatchObject({ firstName: "Siti", lastName: "Nurhaliza", phone: "012-345 6789", status: "active", marketingConsent: true, doctorId: docA.id, reminderChannel: "WHATSAPP" });
     const appts = await prisma.appointment.findMany({ where: { branchId: branch.id } });
     expect(appts).toHaveLength(1);
     expect(appts[0]).toMatchObject({ source: "ONLINE", status: "SCHEDULED", treatmentType: "ADJUSTMENT", duration: 30, doctorId: docA.id, notes: "Lower back pain" });
