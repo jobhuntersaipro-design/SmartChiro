@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
   } else {
     // Owner/Admin
     if (branchId && branchId !== "all") {
+      const member = await prisma.branchMember.findUnique({
+        where: { userId_branchId: { userId, branchId } },
+        select: { role: true },
+      });
+      if (!member) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
       where.branchId = branchId;
     } else {
       const memberships = await prisma.branchMember.findMany({

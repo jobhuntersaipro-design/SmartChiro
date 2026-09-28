@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireXrayAccess } from "@/lib/auth/xray-guard";
 
 // GET /api/xrays/compare?ids={xrayId1},{xrayId2}
 export async function GET(request: NextRequest) {
@@ -22,6 +23,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const guard = await requireXrayAccess(...ids);
+    if (guard.error) return guard.error;
 
     const xrays = await prisma.xray.findMany({
       where: { id: { in: ids } },

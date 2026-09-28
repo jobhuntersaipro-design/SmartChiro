@@ -92,6 +92,9 @@ export async function GET(req: NextRequest) {
     select: { branchId: true },
   });
   const userBranchIds = memberships.map((m) => m.branchId);
+  if (branchId && branchId !== "all" && !userBranchIds.includes(branchId)) {
+    return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+  }
 
   const scopedBranchFilter =
     branchId && branchId !== "all"

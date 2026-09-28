@@ -20,6 +20,11 @@ export async function GET(req: NextRequest) {
   if (branchRole === "DOCTOR") {
     branchIds = session.user.activeBranchId ? [session.user.activeBranchId] : [];
   } else if (branchId && branchId !== "all") {
+    const member = await prisma.branchMember.findUnique({
+      where: { userId_branchId: { userId, branchId } },
+      select: { role: true },
+    });
+    if (!member) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
     branchIds = [branchId];
   } else {
     const memberships = await prisma.branchMember.findMany({

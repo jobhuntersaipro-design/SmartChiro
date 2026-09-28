@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+
+const mockAuth = vi.fn();
+vi.mock("@/lib/auth", () => ({ auth: (...args: unknown[]) => mockAuth(...args) }));
 
 const TEST_PREFIX = `test-annotation-save-${Date.now()}`;
 
@@ -66,6 +69,11 @@ describe("PUT /api/annotations/[id] — landmark correction capture", () => {
       },
     });
     annotationId = ann.id;
+  });
+
+  beforeEach(() => {
+    mockAuth.mockReset();
+    mockAuth.mockResolvedValue({ user: { id: userId } });
   });
 
   afterAll(async () => {
@@ -218,5 +226,81 @@ describe("PUT /api/annotations/[id] — landmark correction capture", () => {
       },
     });
     expect(stored).toBeNull();
+  });
+});
+
+describe("/api/annotations/[id] — access control", () => {
+  let ownerId: string;
+  let strangerId: string;
+  let otherDoctorId: string;
+  let branchId: string;
+  let annotationId: string;
+  const PREFIX = `test-annotation-acl-${Date.now()}`;
+
+  beforeAll(async () => {
+    const [owner, stranger, otherDoctor] = await Promise.all(
+      ["o", "s", "d"].map((k) => prisma.user.create({ data: { email: `${PREFIX}-${k}@t.com`, name: k } })),
+    );
+    ownerId = owner.id;
+    strangerId = stranger.id;
+    otherDoctorId = otherDoctor.id;
+    const branch = await prisma.branch.create({ data: { name: `${PREFIX} B` } });
+    branchId = branch.id;
+    await prisma.branchMember.createMany({
+      data: [
+        { userId: ownerId, branchId, role: "OWNER" },
+        { userId: otherDoctorId, branchId, role: "DOCTOR" },
+      ],
+    });
+    const patient = await prisma.patient.create({ data: { firstName: "P", lastName: PREFIX, branchId, doctorId: ownerId } });
+    const xray = await prisma.xray.create({
+      data: { patientId: patient.id, uploadedById: ownerId, fileName: "a.jpg", fileSize: 1, mimeType: "image/jpeg", fileUrl: "http://x" },
+    });
+    const ann = await prisma.annotation.create({
+      data: { xrayId: xray.id, createdById: ownerId, canvasState: { version: 1, shapes: [{ id: "keep" }] } },
+    });
+    annotationId = ann.id;
+  });
+
+  afterAll(async () => {
+    await prisma.annotation.deleteMany({ where: { id: annotationId } });
+    await prisma.xray.deleteMany({ where: { patient: { lastName: PREFIX } } });
+    await prisma.patient.deleteMany({ where: { lastName: PREFIX } });
+    await prisma.branchMember.deleteMany({ where: { branchId } });
+    await prisma.branch.deleteMany({ where: { id: branchId } });
+    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } });
+  });
+
+  const put = (body: unknown) =>
+    new NextRequest(`http://localhost:3000/api/annotations/${annotationId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const ctx = () => ({ params: Promise.resolve({ annotationId }) });
+
+  it("rejects an anonymous GET and PUT without touching the data", async () => {
+    mockAuth.mockResolvedValue(null);
+    const { GET, PUT } = await import("../route");
+    expect((await GET(put({}), ctx())).status).toBe(401);
+    expect((await PUT(put({ canvasState: { version: 1, shapes: [] } }), ctx())).status).toBe(401);
+    const stored = await prisma.annotation.findUnique({ where: { id: annotationId } });
+    expect(stored?.canvasState).toEqual({ version: 1, shapes: [{ id: "keep" }] });
+  });
+
+  it("hides the annotation from users outside the branch and from unassigned doctors", async () => {
+    const { GET } = await import("../route");
+    for (const id of [strangerId, otherDoctorId]) {
+      mockAuth.mockResolvedValue({ user: { id } });
+      expect((await GET(put({}), ctx())).status).toBe(404);
+    }
+  });
+
+  it("lets the branch owner read it, and accepts the sendBeacon POST alias", async () => {
+    mockAuth.mockResolvedValue({ user: { id: ownerId } });
+    const { GET, POST } = await import("../route");
+    expect((await GET(put({}), ctx())).status).toBe(200);
+    const res = await POST(put({ canvasState: { version: 1, shapes: [{ id: "keep" }] } }), ctx());
+    expect(res.status).toBe(200);
   });
 });

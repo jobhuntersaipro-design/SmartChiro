@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { canManageXray } from "@/lib/auth/xray";
 import { AnnotationPageClient } from "./AnnotationPageClient";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
 
@@ -16,31 +17,36 @@ export default async function AnnotationPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { xrayId } = await params;
+  const { patientId, xrayId } = await params;
   const { annotationId } = await searchParams;
 
-  const xray = await prisma.xray.findUnique({
-    where: { id: xrayId },
-    include: {
-      patient: { select: { firstName: true, lastName: true } },
-      annotations: annotationId
-        ? { where: { id: annotationId }, take: 1 }
-        : { orderBy: { updatedAt: "desc" }, take: 1 },
-    },
-  });
+  // Same rule as the X-ray APIs: assigned doctor or branch OWNER/ADMIN.
+  // notFound (not 403) so X-ray ids can't be probed.
+  if (!(await canManageXray(session.user.id, xrayId))) notFound();
 
-  if (!xray) {
+  const [xray, patientSeriesRaw] = await Promise.all([
+    prisma.xray.findUnique({
+      where: { id: xrayId },
+      include: {
+        patient: { select: { firstName: true, lastName: true } },
+        annotations: annotationId
+          ? { where: { id: annotationId }, take: 1 }
+          : { orderBy: { updatedAt: "desc" }, take: 1 },
+      },
+    }),
+    prisma.xray.findMany({
+      where: { patientId, status: "READY" },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, title: true, bodyRegion: true, thumbnailUrl: true, createdAt: true },
+    }),
+  ]);
+
+  if (!xray || xray.patientId !== patientId) {
     notFound();
   }
 
   const annotation = xray.annotations[0] ?? null;
   const patientName = `${xray.patient.firstName} ${xray.patient.lastName}`;
-
-  const patientSeriesRaw = await prisma.xray.findMany({
-    where: { patientId: xray.patientId, status: "READY" },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, title: true, bodyRegion: true, thumbnailUrl: true, createdAt: true },
-  });
 
   const patientSeries = patientSeriesRaw.map((x) => ({
     id: x.id,

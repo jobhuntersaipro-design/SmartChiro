@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { canManageXray } from "@/lib/auth/xray";
 import { ComparePageClient } from "./ComparePageClient";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,9 @@ interface ComparePageProps {
 }
 
 export default async function ComparePage({ searchParams }: ComparePageProps) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
   const { ids: idsParam } = await searchParams;
 
   if (!idsParam) {
@@ -18,6 +23,10 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean);
   if (ids.length !== 2) {
     redirect("/dashboard/patients");
+  }
+
+  for (const id of ids) {
+    if (!(await canManageXray(session.user.id, id))) notFound();
   }
 
   const xrays = await prisma.xray.findMany({

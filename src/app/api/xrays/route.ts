@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requirePatientXrayAccess } from "@/lib/auth/xray-guard";
 
 // GET /api/xrays?patientId={id}&page={n}&limit={n}&status={status}
 export async function GET(request: NextRequest) {
@@ -13,6 +14,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const guard = await requirePatientXrayAccess(patientId);
+    if (guard.error) return guard.error;
 
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)));

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireXrayAccess } from '@/lib/auth/xray-guard'
 
 export async function POST(
   request: NextRequest,
@@ -7,6 +8,8 @@ export async function POST(
 ) {
   try {
     const { xrayId } = await params
+    const guard = await requireXrayAccess(xrayId)
+    if (guard.error) return guard.error
     const body = await request.json()
     const { width, height } = body
 

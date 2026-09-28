@@ -61,6 +61,14 @@ describe('canManageXray / getXrayCapability', () => {
     expect(await getXrayCapability(doctorId, xrayId)).toBe('manage')
   })
 
+  it('returns null for a doctor in the branch who is not the assigned doctor', async () => {
+    const colleague = await prisma.user.create({ data: { email: `${TEST_PREFIX}-c@t.com`, name: 'C' } })
+    const patient = await prisma.patient.findFirst({ where: { firstName: 'P', lastName: 'X', doctorId } })
+    await prisma.branchMember.create({ data: { userId: colleague.id, branchId: patient!.branchId, role: 'DOCTOR' } })
+    expect(await getXrayCapability(colleague.id, xrayId)).toBeNull()
+    await prisma.branchMember.deleteMany({ where: { userId: colleague.id } })
+  })
+
   it('returns null for users outside the branch', async () => {
     expect(await getXrayCapability(outsiderId, xrayId)).toBeNull()
     expect(await canManageXray(outsiderId, xrayId)).toBe(false)

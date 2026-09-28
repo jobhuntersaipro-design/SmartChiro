@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireXrayAccess } from "@/lib/auth/xray-guard";
 import type { BaseShape } from "@/types/annotation";
 import { extractLandmarkCorrections } from "@/lib/landmark-corrections";
 
@@ -70,11 +71,25 @@ async function captureLandmarkCorrections(
   }
 }
 
+/** Signed in and allowed to manage the annotation's X-ray; 404 hides existence. */
+async function guardAnnotation(annotationId: string) {
+  const annotation = await prisma.annotation.findUnique({
+    where: { id: annotationId },
+    select: { xrayId: true },
+  });
+  if (!annotation) {
+    return { error: NextResponse.json({ error: "Annotation not found" }, { status: 404 }) };
+  }
+  return requireXrayAccess(annotation.xrayId);
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ annotationId: string }> }
 ) {
   const { annotationId } = await params;
+  const guard = await guardAnnotation(annotationId);
+  if (guard.error) return guard.error;
 
   try {
     const body = await request.json();
@@ -102,6 +117,7 @@ export async function PUT(
         imageAdjustments: imageAdjustments ?? undefined,
         version: { increment: 1 },
       },
+      select: { id: true, version: true },
     });
 
     // Side-channel: capture any AI-landmark corrections the user just made.
@@ -132,6 +148,8 @@ export async function GET(
   { params }: { params: Promise<{ annotationId: string }> }
 ) {
   const { annotationId } = await params;
+  const guard = await guardAnnotation(annotationId);
+  if (guard.error) return guard.error;
 
   try {
     const annotation = await prisma.annotation.findUnique({
@@ -154,3 +172,6 @@ export async function GET(
     );
   }
 }
+
+// navigator.sendBeacon (flush on tab close) can only POST — same handler as PUT.
+export { PUT as POST };

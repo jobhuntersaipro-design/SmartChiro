@@ -2,9 +2,27 @@ import { prisma } from '@/lib/prisma'
 
 export type XrayCapability = 'read' | 'manage'
 
+interface PatientScope {
+  branchId: string
+  doctorId: string | null
+}
+
+/**
+ * Mirrors the patient routes' access rule: the patient's assigned doctor, or an
+ * OWNER/ADMIN of the patient's branch. Other doctors in the branch — and anyone
+ * outside it — get nothing.
+ */
+async function canAccessPatientScope(userId: string, patient: PatientScope): Promise<boolean> {
+  if (patient.doctorId === userId) return true
+  const member = await prisma.branchMember.findUnique({
+    where: { userId_branchId: { userId, branchId: patient.branchId } },
+    select: { role: true },
+  })
+  return member?.role === 'OWNER' || member?.role === 'ADMIN'
+}
+
 /**
  * Returns the user's capability on this xray, or null if they have no access.
- * Membership in the X-ray's patient's branch with role OWNER/ADMIN/DOCTOR -> "manage".
  * Returning null lets callers respond 404 (no existence leak).
  */
 export async function getXrayCapability(
@@ -13,18 +31,10 @@ export async function getXrayCapability(
 ): Promise<XrayCapability | null> {
   const xray = await prisma.xray.findUnique({
     where: { id: xrayId },
-    select: { patient: { select: { branchId: true } } },
+    select: { patient: { select: { branchId: true, doctorId: true } } },
   })
   if (!xray) return null
-
-  const member = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId, branchId: xray.patient.branchId } },
-    select: { role: true },
-  })
-  if (!member) return null
-
-  // OWNER, ADMIN, DOCTOR -> manage (BranchRole has only these three today)
-  return 'manage'
+  return (await canAccessPatientScope(userId, xray.patient)) ? 'manage' : null
 }
 
 export async function canManageXray(userId: string, xrayId: string): Promise<boolean> {
@@ -32,19 +42,14 @@ export async function canManageXray(userId: string, xrayId: string): Promise<boo
 }
 
 /**
- * Same shape, but for the *upload* path where the xray doesn't exist yet —
- * the caller passes a patientId.
+ * Same rule, but for the *upload* and listing paths where the caller passes a
+ * patientId.
  */
 export async function canManagePatientXrays(userId: string, patientId: string): Promise<boolean> {
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
-    select: { branchId: true },
+    select: { branchId: true, doctorId: true },
   })
   if (!patient) return false
-
-  const member = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId, branchId: patient.branchId } },
-    select: { role: true },
-  })
-  return member !== null
+  return canAccessPatientScope(userId, patient)
 }
