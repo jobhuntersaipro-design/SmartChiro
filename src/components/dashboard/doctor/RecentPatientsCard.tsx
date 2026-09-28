@@ -4,6 +4,7 @@ import { Users, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "../shared/EmptyState";
 import type { RecentPatient } from "@/types/dashboard";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface RecentPatientsCardProps {
   patients: RecentPatient[];
@@ -35,7 +36,7 @@ export function RecentPatientsCard({ patients }: RecentPatientsCardProps) {
             <div className="flex items-center gap-2 mt-0.5">
               {patient.lastVisitDate && (
                 <span className="text-[13px] text-[#64748d]">
-                  Last visit: {new Date(patient.lastVisitDate).toLocaleDateString("en-US", {
+                  Last visit: {new Date(patient.lastVisitDate).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
                     month: "short",
                     day: "numeric",
                   })}

@@ -10,6 +10,7 @@ import {
   actionStyle,
   formatRelativeTime,
 } from "./audit-log-format";
+import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 
 interface BranchActivityLogProps {
   branchId: string;
@@ -157,7 +158,7 @@ function ActivityRow({ entry }: { entry: BranchAuditEntry }) {
     .join("")
     .toUpperCase();
 
-  const absoluteTime = new Date(entry.createdAt).toLocaleString();
+  const absoluteTime = `${clinicDateLabel(new Date(entry.createdAt), "numeric")} ${clinicTimeLabel(new Date(entry.createdAt))}`;
   const relativeTime = formatRelativeTime(entry.createdAt);
 
   return (

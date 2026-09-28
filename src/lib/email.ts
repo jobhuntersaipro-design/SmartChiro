@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
+import { CLINIC_TIME_ZONE } from '@/lib/clinic-time'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -186,6 +187,8 @@ export async function sendDoctorBookingNotification(args: {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+    // The server runs in UTC — without this an 8:00 AM booking read "12:00 am".
+    timeZone: CLINIC_TIME_ZONE,
   })
   const greetingName = args.doctorName ? args.doctorName.split(' ')[0] : null
   const greeting = greetingName ? `Hi ${escapeHtml(greetingName)},` : 'Hi,'

@@ -1,4 +1,5 @@
 import type { AppointmentStatus, CalendarAppointment } from "@/types/appointment";
+import { clinicDateKey, clinicDayBounds, clinicInstant, clinicParts } from "@/lib/clinic-time";
 
 export type AppointmentTabId =
   | "all"
@@ -56,12 +57,9 @@ export function appointmentMatchesTab(
   return true;
 }
 
+/** Same clinic day (Asia/Kuala_Lumpur), whatever the device's time zone. */
 function isSameLocalDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return clinicDateKey(a) === clinicDateKey(b);
 }
 
 /**
@@ -134,18 +132,13 @@ export function deriveStats(
   completionCount: number;
   totalForCompletionRate: number;
 } {
-  const dayStart = new Date(selectedDate);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
+  const { start: dayStart, end: dayEnd } = clinicDayBounds(clinicDateKey(selectedDate));
 
-  const weekStart = new Date(now);
-  // Monday-start week to match calendar config
-  const dow = (weekStart.getDay() + 6) % 7;
-  weekStart.setDate(weekStart.getDate() - dow);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7);
+  // Monday-start clinic week to match calendar config
+  const p = clinicParts(now);
+  const dow = (p.weekday + 6) % 7;
+  const weekStart = clinicInstant(p.year, p.month, p.day - dow);
+  const weekEnd = clinicInstant(p.year, p.month, p.day - dow + 7);
 
   let todayCount = 0;
   let todayRemaining = 0;

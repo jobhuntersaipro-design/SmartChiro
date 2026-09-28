@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Link2, Link2Off, ZoomIn, ZoomOut } from "lucide-react";
 import { ZOOM_MIN, ZOOM_MAX, ZOOM_SCROLL_STEP } from "@/types/annotation";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface XrayInfo {
   id: string;
@@ -180,7 +181,7 @@ export function ComparePageClient({
   }, [leftXray, rightXray]);
 
   const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("en-US", {
+    new Date(iso).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
       year: "numeric",
       month: "short",
       day: "numeric",

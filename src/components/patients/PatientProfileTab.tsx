@@ -11,6 +11,7 @@ import {
   buildBranchHref,
 } from "@/lib/format";
 import { formatMYR } from "@/lib/invoices";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface PatientProfileTabProps {
   patient: {
@@ -56,7 +57,7 @@ interface PatientProfileTabProps {
 
 function formatDateTime(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-MY", {
+  return date.toLocaleDateString("en-MY", { timeZone: CLINIC_TIME_ZONE,
     day: "numeric",
     month: "short",
     year: "numeric",

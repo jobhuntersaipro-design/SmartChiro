@@ -9,6 +9,7 @@ import { AppointmentsCalendarView } from "@/components/calendar/AppointmentsCale
 import { AppointmentsListView } from "./AppointmentsListView";
 import type { AppointmentTabId } from "@/lib/appointment-tabs";
 import { replaceUrl } from "@/lib/url-state";
+import { clinicDateKey, clinicInstant, clinicInstantFromInputs } from "@/lib/clinic-time";
 
 type ViewMode = "list" | "calendar";
 
@@ -37,10 +38,10 @@ function isAppointmentTab(s: string | null): s is AppointmentTabId {
   );
 }
 
+/** `?date=YYYY-MM-DD` as noon on that clinic day (not UTC midnight). */
 function parseDateParam(s: string | null): Date {
-  if (!s) return new Date();
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? new Date() : d;
+  const key = s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : clinicDateKey();
+  return clinicInstantFromInputs(key, "12:00");
 }
 
 export function AppointmentsPageShell({ currentUserId, branches }: Props) {
@@ -106,7 +107,7 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
     params.set("view", viewMode);
     if (branchId) params.set("branch", branchId);
     if (doctorIds.length > 0) params.set("doctors", doctorIds.join(","));
-    params.set("date", selectedDate.toISOString().split("T")[0]);
+    params.set("date", clinicDateKey(selectedDate));
     if (viewMode === "list") {
       params.set("tab", activeTab);
       if (selectedAppointmentId) params.set("appointment", selectedAppointmentId);
@@ -186,7 +187,10 @@ export function AppointmentsPageShell({ currentUserId, branches }: Props) {
             refreshKey={refreshKey}
             onBranchChange={setBranchId}
             onDoctorIdsChange={setDoctorIds}
-            onDateChange={setSelectedDate}
+            onDateChange={(d) =>
+              // Mini-calendar returns device-local midnight; keep the picked day.
+              setSelectedDate(clinicInstant(d.getFullYear(), d.getMonth() + 1, d.getDate(), 12))
+            }
             onActiveTabChange={setActiveTab}
             onSelectedAppointmentIdChange={setSelectedAppointmentId}
             onOpenCreate={() => setCreateOpen(true)}

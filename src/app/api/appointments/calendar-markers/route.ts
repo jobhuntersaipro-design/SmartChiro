@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { clinicDateKey } from "@/lib/clinic-time";
 
 export async function GET(req: Request): Promise<Response> {
   const user = await getCurrentUser();
@@ -44,11 +45,8 @@ export async function GET(req: Request): Promise<Response> {
 
   const set = new Set<string>();
   for (const row of rows) {
-    const d = row.dateTime;
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    set.add(`${yyyy}-${mm}-${dd}`);
+    // Clinic day, not the server's UTC day (bookings before 8 AM MYT landed on the previous date).
+    set.add(clinicDateKey(row.dateTime));
   }
 
   return NextResponse.json({ dates: Array.from(set).sort() });

@@ -137,3 +137,36 @@ export function clinicUtcOffsetLabel(instant: Date = new Date(), timeZone: strin
   const abs = Math.abs(mins);
   return `${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`;
 }
+
+/** "9:30 AM" in the clinic zone. */
+export function clinicTimeLabel(instant: Date, timeZone: string = CLINIC_TIME_ZONE): string {
+  return formatInClinic(instant, { hour: "numeric", minute: "2-digit", hour12: true }, "en-US", timeZone);
+}
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/**
+ * Fixed English date labels in the clinic zone (ICU month abbreviations vary
+ * by runtime, e.g. "Sep" vs "Sept", which also breaks hydration):
+ * "day" → "Mon, 28 Sep 2026", "short" → "28 Sep 2026", "month" → "September 2026",
+ * "numeric" → "28/09/2026".
+ */
+export function clinicDateLabel(
+  instant: Date,
+  style: "day" | "short" | "month" | "numeric" = "short",
+  timeZone: string = CLINIC_TIME_ZONE,
+): string {
+  const p = clinicParts(instant, timeZone);
+  const mon = MONTHS[p.month - 1];
+  switch (style) {
+    case "day":
+      return `${WEEKDAYS[p.weekday]}, ${p.day} ${mon.slice(0, 3)} ${p.year}`;
+    case "month":
+      return `${mon} ${p.year}`;
+    case "numeric":
+      return `${pad2(p.day)}/${pad2(p.month)}/${p.year}`;
+    default:
+      return `${p.day} ${mon.slice(0, 3)} ${p.year}`;
+  }
+}

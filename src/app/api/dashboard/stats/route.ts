@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { countClinicians } from "@/lib/stats-scope";
 import { clinicCalendar } from "@/lib/clinic-time";
 
 export async function GET(req: NextRequest) {
@@ -86,8 +87,6 @@ export async function GET(req: NextRequest) {
   }
 
   // Owner/Admin — optionally filtered by branchId
-  const branchFilter = branchId && branchId !== "all" ? { branchId } : {};
-
   // Get user's branch IDs for scoping
   const memberships = await prisma.branchMember.findMany({
     where: { userId },
@@ -125,13 +124,7 @@ export async function GET(req: NextRequest) {
           createdAt: { gte: lastWeekStart, lt: weekStart },
         },
       }),
-      prisma.branchMember.count({
-        where: scopedBranchFilter.branchId
-          ? typeof scopedBranchFilter.branchId === "string"
-            ? { branchId: scopedBranchFilter.branchId }
-            : { branchId: scopedBranchFilter.branchId }
-          : { branchId: { in: userBranchIds } },
-      }),
+      countClinicians(branchId && branchId !== "all" ? [branchId] : userBranchIds),
     ]);
 
   const completed = todayAppts.filter((a) => a.status === "COMPLETED").length;

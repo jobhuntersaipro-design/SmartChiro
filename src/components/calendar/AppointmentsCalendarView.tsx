@@ -39,6 +39,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "./calendar.css";
 import { replaceUrl } from "@/lib/url-state";
+import { clinicDateKey, clinicInstant, clinicInstantFromInputs, clinicParts } from "@/lib/clinic-time";
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({
@@ -102,28 +103,24 @@ const PARAM_FROM_VIEW: Record<View, string> = {
   [Views.WORK_WEEK]: "week",
 };
 
+/** Fetch window for the view, in clinic days (the server runs in UTC). */
 function getWindow(date: Date, view: View): { start: Date; end: Date } {
-  const start = new Date(date);
-  const end = new Date(date);
+  const p = clinicParts(date);
   if (view === Views.DAY) {
-    start.setHours(0, 0, 0, 0);
-    end.setDate(end.getDate() + 1);
-    end.setHours(0, 0, 0, 0);
-  } else if (view === Views.MONTH) {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-    end.setMonth(end.getMonth() + 1);
-    end.setDate(1);
-    end.setHours(0, 0, 0, 0);
-  } else {
-    // Week (default)
-    const dow = start.getDay();
-    const monOffset = (dow + 6) % 7; // mon=0
-    start.setDate(start.getDate() - monOffset);
-    start.setHours(0, 0, 0, 0);
-    end.setTime(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return { start: clinicInstant(p.year, p.month, p.day), end: clinicInstant(p.year, p.month, p.day + 1) };
   }
-  return { start, end };
+  if (view === Views.MONTH) {
+    return { start: clinicInstant(p.year, p.month, 1), end: clinicInstant(p.year, p.month + 1, 1) };
+  }
+  // Week (default), Monday first
+  const monOffset = (p.weekday + 6) % 7;
+  const start = clinicInstant(p.year, p.month, p.day - monOffset);
+  return { start, end: clinicInstant(p.year, p.month, p.day - monOffset + 7) };
+}
+
+/** Noon on a clinic day — a stable anchor that is the same day in every zone near MYT. */
+function clinicNoon(isoDate: string): Date {
+  return clinicInstantFromInputs(isoDate, "12:00");
 }
 
 export function AppointmentsCalendarView({
@@ -149,12 +146,18 @@ export function AppointmentsCalendarView({
     searchParams.get("doctors")?.split(",").filter(Boolean) ?? [];
   const initialView =
     VIEW_FROM_PARAM[searchParams.get("view") ?? "day"] ?? Views.DAY;
-  const initialDate = searchParams.get("date")
-    ? new Date(searchParams.get("date")!)
-    : new Date();
+  // Parsed as a clinic day; `new Date("YYYY-MM-DD")` is UTC midnight.
+  const dateParam = searchParams.get("date");
+  const initialDate = clinicNoon(
+    dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : clinicDateKey()
+  );
 
   const [branchId, setBranchId] = useState<string>(initialBranchId);
-  const [doctorIds, setDoctorIds] = useState<string[]>(initialDoctorIds);
+  // Drop ids that aren't doctors of the branch (a stale or copied link).
+  const [doctorIds, setDoctorIds] = useState<string[]>(() => {
+    const known = new Set(branches.find((b) => b.id === initialBranchId)?.doctors.map((d) => d.id));
+    return initialDoctorIds.filter((id) => known.has(id));
+  });
   const [view, setView] = useState<View>(initialView);
   const [date, setDate] = useState<Date>(initialDate);
   const [appointments, setAppointments] = useState<CalendarAppointment[]>([]);
@@ -184,6 +187,12 @@ export function AppointmentsCalendarView({
     [branchId, branches]
   );
 
+  // react-big-calendar lays out in the device zone, so it renders only in the
+  // browser; server HTML in UTC would never match (hydration error #418).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const todayParts = clinicParts(new Date());
+
   // ─── Sync URL when state changes (skip when shell owns the URL) ───
   useEffect(() => {
     if (disableUrlSync) return;
@@ -191,7 +200,7 @@ export function AppointmentsCalendarView({
     params.set("branch", branchId);
     if (doctorIds.length > 0) params.set("doctors", doctorIds.join(","));
     params.set("view", PARAM_FROM_VIEW[view] ?? "week");
-    params.set("date", date.toISOString().split("T")[0]);
+    params.set("date", clinicDateKey(date));
     replaceUrl(`?${params.toString()}`);
   }, [branchId, doctorIds, view, date, disableUrlSync]);
 
@@ -261,6 +270,27 @@ export function AppointmentsCalendarView({
       })),
     [appointments]
   );
+
+  // ─── Day-view doctor columns ───
+  // Branch clinicians (narrowed by the doctor filter), plus anyone else who
+  // has an appointment in the loaded window — otherwise bookings for an
+  // ADMIN-as-doctor or a former member silently vanished. Unknown ids in a
+  // stale ?doctors= are ignored.
+  const dayDoctors = useMemo(() => {
+    const all = branch?.doctors ?? [];
+    const known = new Set(all.map((d) => d.id));
+    const selected = doctorIds.filter((id) => known.has(id));
+    const base = selected.length === 0 ? all : all.filter((d) => selected.includes(d.id));
+    if (selected.length > 0) return base;
+    const seen = new Set(base.map((d) => d.id));
+    const extra: { id: string; name: string; image: string | null }[] = [];
+    for (const a of appointments) {
+      if (seen.has(a.doctor.id)) continue;
+      seen.add(a.doctor.id);
+      extra.push({ id: a.doctor.id, name: a.doctor.name ?? "Unknown doctor", image: a.doctor.image });
+    }
+    return [...base, ...extra];
+  }, [branch, doctorIds, appointments]);
 
   // ─── Resource columns (Day view + 2+ doctors) ───
   const resources: Resource[] | undefined = useMemo(() => {
@@ -460,7 +490,10 @@ export function AppointmentsCalendarView({
         }}
         onDoctorIdsChange={setDoctorIds}
         onViewChange={setView}
-        onDateChange={setDate}
+        onDateChange={(d) =>
+          // The picker returns device-local midnight; keep the picked day.
+          setDate(clinicInstant(d.getFullYear(), d.getMonth() + 1, d.getDate(), 12))
+        }
         onPrev={() => {
           const next = new Date(date);
           if (view === Views.DAY) next.setDate(next.getDate() - 1);
@@ -475,7 +508,7 @@ export function AppointmentsCalendarView({
           else if (view === Views.MONTH) next.setMonth(next.getMonth() + 1);
           setDate(next);
         }}
-        onToday={() => setDate(new Date())}
+        onToday={() => setDate(clinicNoon(clinicDateKey()))}
       />
 
       {error && (
@@ -488,11 +521,7 @@ export function AppointmentsCalendarView({
         <div className="flex-1 min-h-0 overflow-hidden">
           <DoctorDayCalendar
             date={date}
-            doctors={
-              doctorIds.length === 0
-                ? branch?.doctors ?? []
-                : (branch?.doctors ?? []).filter((d) => doctorIds.includes(d.id))
-            }
+            doctors={dayDoctors}
             appointments={appointments}
             availability={availability}
             loading={loading}
@@ -523,6 +552,7 @@ export function AppointmentsCalendarView({
             <Loader2 className="h-5 w-5 text-[#635BFF] animate-spin" strokeWidth={2} />
           </div>
         )}
+        {mounted && (
         <DnDCalendar
           localizer={localizer}
           events={events}
@@ -562,16 +592,16 @@ export function AppointmentsCalendarView({
               },
             };
           }}
-          dayPropGetter={(d: Date) => {
-            const today = new Date();
-            const isToday =
-              d.getFullYear() === today.getFullYear() &&
-              d.getMonth() === today.getMonth() &&
-              d.getDate() === today.getDate();
-            return isToday ? { style: { backgroundColor: "#F0EEFF" } } : {};
-          }}
+          dayPropGetter={(d: Date) =>
+            d.getFullYear() === todayParts.year &&
+            d.getMonth() + 1 === todayParts.month &&
+            d.getDate() === todayParts.day
+              ? { style: { backgroundColor: "#F0EEFF" } }
+              : {}
+          }
           toolbar={false}
         />
+        )}
       </div>
       )}
 

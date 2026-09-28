@@ -16,6 +16,7 @@ import { DeleteVisitDialog } from "@/components/patients/DeleteVisitDialog";
 import { ExternalLink } from "@/components/patients/ExternalLink";
 import { buildDoctorHref, formatAppointmentDateTime, getAppointmentWeekday } from "@/lib/format";
 import type { Visit } from "@/types/visit";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface PatientVisitsTabProps {
   patientId: string;
@@ -401,7 +402,7 @@ function VisitCard({
                     Next visit: {(() => {
                       const base = new Date(visit.visitDate);
                       base.setDate(base.getDate() + visit.nextVisitDays!);
-                      return base.toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" });
+                      return base.toLocaleDateString("en-MY", { timeZone: CLINIC_TIME_ZONE, day: "numeric", month: "short", year: "numeric" });
                     })()}
                     {" "}({visit.nextVisitDays} day{visit.nextVisitDays !== 1 ? "s" : ""} later)
                   </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   X, Loader2, User, CreditCard, Calendar, Users, Heart,
@@ -106,6 +106,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+  // Set synchronously so a second click/Enter can't POST again before the
+  // `submitting` state re-renders the button as disabled.
+  const submittingRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const updateField = useCallback(<K extends keyof CreatePatientData>(key: K, value: CreatePatientData[K]) => {
@@ -119,8 +122,6 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
       return next;
     });
   }, []);
-
-  if (!open) return null;
 
   // ─── Validation per step ───
 
@@ -167,7 +168,13 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validateStep(step)) return;
+    // Only the final step saves; Enter on earlier steps moves forward.
+    if (step !== 3) {
+      handleNext();
+      return;
+    }
+    if (submittingRef.current || !validateStep(step)) return;
+    submittingRef.current = true;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -181,15 +188,33 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to create patient");
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
 
-  function handleBackdropClick() {
+  /** Backdrop, Esc, X and Cancel all confirm before discarding typed input. */
+  function requestClose() {
+    if (submittingRef.current) return;
     const dirty = Object.values(touched).some(Boolean);
     if (dirty && !window.confirm(DISCARD_CHANGES_PROMPT)) return;
     handleClose();
   }
+
+  const requestCloseRef = useRef(requestClose);
+  useEffect(() => {
+    requestCloseRef.current = requestClose;
+  });
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") requestCloseRef.current();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (!open) return null;
 
   function handleClose() {
     setForm({ firstName: "", lastName: "" });
@@ -203,7 +228,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={handleBackdropClick} />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" onClick={requestClose} />
 
       {/* Dialog */}
       <div
@@ -225,7 +250,8 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
             </div>
           </div>
           <button
-            onClick={handleClose}
+            type="button"
+            onClick={requestClose}
             className="flex items-center justify-center h-8 w-8 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31]"
             aria-label="Close dialog"
           >
@@ -670,16 +696,22 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
               <Button
                 type="button"
                 variant="ghost"
-                onClick={handleClose}
+                onClick={requestClose}
                 className="h-9 px-4 text-[14px] font-medium rounded-md text-[#64748d] hover:text-[#273951] hover:bg-[#f6f9fc]"
               >
                 Cancel
               </Button>
 
+              {/* Distinct keys: reusing one <button> and flipping its type to
+                  "submit" mid-click submitted the form from step 2. */}
               {step < 3 ? (
                 <Button
+                  key="next"
                   type="button"
-                  onClick={handleNext}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNext();
+                  }}
                   className="h-9 px-5 text-[14px] font-medium rounded-md gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Next
@@ -687,6 +719,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 </Button>
               ) : (
                 <Button
+                  key="submit"
                   type="submit"
                   disabled={submitting}
                   className="h-9 px-5 text-[14px] font-medium rounded-md gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"

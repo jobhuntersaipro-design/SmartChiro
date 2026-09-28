@@ -8,7 +8,12 @@ import {
   buildMapsUrl,
   buildDoctorHref,
   buildBranchHref,
+  formatAppointmentTime,
+  formatAppointmentDateOnly,
+  formatAppointmentDateTime,
+  getAppointmentWeekday,
 } from '@/lib/format'
+import { clinicInstant } from '@/lib/clinic-time'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -113,13 +118,23 @@ describe('buildBranchHref', () => {
 })
 
 describe("todayLocalISODate", () => {
-  it("uses the local calendar date, not the UTC one", () => {
-    // 07:30 local on 28 Sep — in UTC+8 this is still 27 Sep, which toISOString() would return.
-    const local = new Date(2026, 8, 28, 7, 30);
-    expect(todayLocalISODate(local)).toBe("2026-09-28");
+  it("uses the clinic calendar date, not the UTC one", () => {
+    // 07:30 on 28 Sep in Malaysia is still 27 Sep in UTC, which toISOString() would return.
+    expect(todayLocalISODate(clinicInstant(2026, 9, 28, 7, 30))).toBe("2026-09-28");
   });
 
   it("zero-pads month and day", () => {
-    expect(todayLocalISODate(new Date(2026, 0, 5, 12))).toBe("2026-01-05");
+    expect(todayLocalISODate(clinicInstant(2026, 1, 5, 12))).toBe("2026-01-05");
+  });
+});
+
+describe("appointment formatting uses the clinic time zone", () => {
+  // 11:30 PM MYT on 28 Sep = 15:30 UTC; the report's midnight-edge case.
+  const iso = clinicInstant(2026, 9, 28, 23, 30).toISOString();
+  it("formats time and date in MYT whatever the process zone", () => {
+    expect(formatAppointmentTime(iso)).toBe("11:30 PM");
+    expect(formatAppointmentDateOnly(iso)).toBe("28/09/2026");
+    expect(formatAppointmentDateTime(iso)).toBe("11:30 PM 28/09/2026");
+    expect(getAppointmentWeekday(iso)).toEqual({ label: "Mon", isWeekend: false });
   });
 });

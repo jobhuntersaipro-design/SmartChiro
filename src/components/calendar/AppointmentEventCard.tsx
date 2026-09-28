@@ -1,7 +1,7 @@
 "use client";
 
-import { format } from "date-fns/format";
 import type { CalendarAppointment } from "@/types/appointment";
+import { clinicTimeLabel } from "@/lib/clinic-time";
 
 interface CalendarEvent {
   id: string;
@@ -17,7 +17,7 @@ interface Props {
 
 export function AppointmentEventCard({ event }: Props) {
   const a = event.appointment;
-  const time = format(event.start, "HH:mm");
+  const time = clinicTimeLabel(event.start);
   const isCancelled = a.status === "CANCELLED" || a.status === "NO_SHOW";
 
   return (

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { format } from "date-fns/format";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ConflictItem } from "@/types/appointment";
+import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 
 interface Props {
   conflicts: ConflictItem[];
@@ -55,7 +55,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
               </span>
               <span className="text-[#64748d] tabular-nums">
                 {" · "}
-                {format(new Date(c.dateTime), "d MMM HH:mm")}
+                {clinicDateLabel(new Date(c.dateTime), "short")} {clinicTimeLabel(new Date(c.dateTime))}
                 {" · "}
                 {c.duration}m
               </span>

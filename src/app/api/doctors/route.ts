@@ -111,19 +111,20 @@ export async function GET(req: NextRequest) {
   const userIds = entries.map((e) => e.user.id);
 
   const [patientCounts, visitCounts, xrayCounts] = await Promise.all([
+    // Scoped to the same branches as the list so totals match other pages.
     prisma.patient.groupBy({
       by: ["doctorId"],
-      where: { doctorId: { in: userIds } },
+      where: { doctorId: { in: userIds }, branchId: { in: targetBranchIds } },
       _count: { id: true },
     }),
     prisma.visit.groupBy({
       by: ["doctorId"],
-      where: { doctorId: { in: userIds } },
+      where: { doctorId: { in: userIds }, patient: { branchId: { in: targetBranchIds } } },
       _count: { id: true },
     }),
     prisma.xray.groupBy({
       by: ["uploadedById"],
-      where: { uploadedById: { in: userIds } },
+      where: { uploadedById: { in: userIds }, patient: { branchId: { in: targetBranchIds } } },
       _count: { id: true },
     }),
   ]);

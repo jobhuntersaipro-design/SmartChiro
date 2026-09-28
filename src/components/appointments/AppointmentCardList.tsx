@@ -1,13 +1,10 @@
 "use client";
 
-import { format } from "date-fns/format";
-import { isSameDay } from "date-fns/isSameDay";
-import { isToday } from "date-fns/isToday";
-import { isTomorrow } from "date-fns/isTomorrow";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { AppointmentCard } from "./AppointmentCard";
 import type { CalendarAppointment } from "@/types/appointment";
 import type { AppointmentTabId } from "@/lib/appointment-tabs";
+import { clinicDateKey, clinicInstantFromInputs, formatInClinic } from "@/lib/clinic-time";
 
 interface Props {
   appointments: CalendarAppointment[];
@@ -22,10 +19,12 @@ interface Props {
   onDelete: (appt: CalendarAppointment) => void;
 }
 
-function groupHeader(date: Date): string {
-  if (isToday(date)) return `Today, ${format(date, "EEEE d MMMM yyyy")}`;
-  if (isTomorrow(date)) return `Tomorrow, ${format(date, "EEEE d MMMM yyyy")}`;
-  return format(date, "EEEE, d MMMM yyyy");
+function groupHeader(date: Date, todayKey: string, tomorrowKey: string): string {
+  const key = clinicDateKey(date);
+  const label = formatInClinic(date, { weekday: "long", day: "numeric", month: "long", year: "numeric" }, "en-GB");
+  if (key === todayKey) return `Today, ${label}`;
+  if (key === tomorrowKey) return `Tomorrow, ${label}`;
+  return label;
 }
 
 export function AppointmentCardList({
@@ -79,11 +78,13 @@ export function AppointmentCardList({
   }
 
   // Build groups in order — appointments are already sorted asc by date.
+  const todayKey = clinicDateKey();
+  const tomorrowKey = clinicDateKey(new Date(clinicInstantFromInputs(todayKey, "12:00").getTime() + 86_400_000));
   const groups: { date: Date; items: CalendarAppointment[] }[] = [];
   for (const a of appointments) {
     const dt = new Date(a.dateTime);
     const last = groups[groups.length - 1];
-    if (last && isSameDay(last.date, dt)) {
+    if (last && clinicDateKey(last.date) === clinicDateKey(dt)) {
       last.items.push(a);
     } else {
       groups.push({ date: dt, items: [a] });
@@ -93,10 +94,10 @@ export function AppointmentCardList({
   return (
     <div className="py-2">
       {groups.map((g) => (
-        <section key={g.date.toISOString().split("T")[0]} className="mb-4">
+        <section key={clinicDateKey(g.date)} className="mb-4">
           <header className="flex items-center gap-3 mb-2">
             <span className="text-[13px] font-medium text-[#697386]">
-              {groupHeader(g.date)}
+              {groupHeader(g.date, todayKey, tomorrowKey)}
             </span>
             <span className="flex-1 h-px bg-[#e5edf5]" aria-hidden="true" />
             <span className="text-[12px] text-[#697386] tabular-nums">

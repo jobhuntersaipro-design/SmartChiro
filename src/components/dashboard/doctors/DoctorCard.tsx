@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DoctorListItem } from "@/types/doctor";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface DoctorCardProps {
   doctor: DoctorListItem;
@@ -29,7 +30,7 @@ function getInitials(name: string | null, email: string): string {
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", year: "numeric" });
 }
 
 export function DoctorCard({

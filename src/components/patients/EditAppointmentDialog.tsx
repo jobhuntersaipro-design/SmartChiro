@@ -5,6 +5,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DoctorCombobox } from "@/components/patients/DoctorCombobox";
 import { formatAppointmentDateTime } from "@/lib/format";
+import { clinicDateKey, clinicInstantFromInputs, clinicTimeInput } from "@/lib/clinic-time";
 
 interface Props {
   appointmentId: string | null;
@@ -41,19 +42,13 @@ const STATUSES = [
 
 function isoToInputs(iso: string): { date: string; time: string } {
   const d = new Date(iso);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const HH = String(d.getHours()).padStart(2, "0");
-  const MM = String(d.getMinutes()).padStart(2, "0");
-  return { date: `${yyyy}-${mm}-${dd}`, time: `${HH}:${MM}` };
+  return { date: clinicDateKey(d), time: clinicTimeInput(d) };
 }
 
+/** Date + time inputs are clinic wall-clock time, not the device's zone. */
 function inputsToIso(date: string, time: string): string | null {
   if (!date || !time) return null;
-  const [y, m, d] = date.split("-").map((s) => parseInt(s, 10));
-  const [hh, mm] = time.split(":").map((s) => parseInt(s, 10));
-  const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
+  const dt = clinicInstantFromInputs(date, time);
   if (Number.isNaN(dt.getTime())) return null;
   return dt.toISOString();
 }

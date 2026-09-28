@@ -12,6 +12,7 @@ import {
 } from "@/lib/treatment-colors";
 import type { TreatmentType } from "@/types/appointment";
 import { defaultStart } from "@/lib/appointment-defaults";
+import { clinicInstantFromInputs } from "@/lib/clinic-time";
 
 interface Props {
   open: boolean;
@@ -46,11 +47,10 @@ interface PatientOption {
   phone: string | null;
 }
 
+/** Date + time inputs are clinic wall-clock time, not the device's zone. */
 function inputsToIso(date: string, time: string): string | null {
   if (!date || !time) return null;
-  const [y, m, d] = date.split("-").map((s) => parseInt(s, 10));
-  const [hh, mm] = time.split(":").map((s) => parseInt(s, 10));
-  const dt = new Date(y, m - 1, d, hh, mm, 0, 0);
+  const dt = clinicInstantFromInputs(date, time);
   if (Number.isNaN(dt.getTime())) return null;
   return dt.toISOString();
 }

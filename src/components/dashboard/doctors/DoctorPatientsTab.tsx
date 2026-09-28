@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Search, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface PatientRow {
   id: string;
@@ -27,7 +28,7 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
     month: "short",
     day: "numeric",
     year: "numeric",

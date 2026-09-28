@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { cliniciansByBranch } from "@/lib/stats-scope";
 import { clinicCalendar } from "@/lib/clinic-time";
 
 export async function GET() {
@@ -52,19 +53,25 @@ export async function GET() {
     appointmentCounts.map((a) => [a.branchId, a._count.id])
   );
 
-  const result = branches.map((branch) => ({
-    id: branch.id,
-    name: branch.name,
-    address: branch.address,
-    doctorCount: branch.members.length,
-    patientCount: branch._count.patients,
-    todayAppointments: apptCountMap.get(branch.id) ?? 0,
-    doctors: branch.members.map((m) => ({
-      id: m.user.id,
-      name: m.user.name,
-      image: m.user.image,
-    })),
-  }));
+  const clinicians = await cliniciansByBranch(branches.map((b) => b.id));
+
+  const result = branches.map((branch) => {
+    const clinicianIds = new Set(clinicians.get(branch.id) ?? []);
+    const doctors = branch.members.filter((m) => clinicianIds.has(m.user.id));
+    return {
+      id: branch.id,
+      name: branch.name,
+      address: branch.address,
+      doctorCount: doctors.length,
+      patientCount: branch._count.patients,
+      todayAppointments: apptCountMap.get(branch.id) ?? 0,
+      doctors: doctors.map((m) => ({
+        id: m.user.id,
+        name: m.user.name,
+        image: m.user.image,
+      })),
+    };
+  });
 
   return NextResponse.json({ branches: result });
 }

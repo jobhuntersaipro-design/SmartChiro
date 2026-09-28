@@ -7,6 +7,7 @@ import { ArrowUpRight, Users, TrendingUp, CalendarClock } from "lucide-react";
 interface BranchStat {
   branchId: string;
   branchName: string;
+  totalPatients: number;
   activePatients: number;
   newThisMonth: number;
   upcomingThisWeek: number;
@@ -46,8 +47,8 @@ function BranchCard({ stat, scope }: { stat: BranchStat; scope: "all-branches" |
       <div className="flex items-start justify-between mb-2.5">
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-[#64748d] truncate">{stat.branchName}</p>
-          <p className="text-[28px] font-light leading-tight text-[#061b31] mt-0.5">{stat.activePatients}</p>
-          <p className="text-[12px] text-[#64748d] -mt-0.5">active patients</p>
+          <p className="text-[28px] font-light leading-tight text-[#061b31] mt-0.5">{stat.totalPatients}</p>
+          <p className="text-[12px] text-[#64748d] -mt-0.5">patients</p>
         </div>
         {scope === "all-branches" && (
           <ArrowUpRight
@@ -57,6 +58,11 @@ function BranchCard({ stat, scope }: { stat: BranchStat; scope: "all-branches" |
         )}
       </div>
       <div className="space-y-1.5 pt-2.5 border-t border-[#f0f3f7]">
+        <StatRow
+          icon={<Users className="h-3 w-3" strokeWidth={1.75} />}
+          label="Active"
+          value={stat.activePatients}
+        />
         <StatRow
           icon={<TrendingUp className="h-3 w-3" strokeWidth={1.75} />}
           label="New this month"

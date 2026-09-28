@@ -2,13 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { format } from "date-fns/format";
 import { Pencil, X, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { doctorColor } from "./doctor-color";
 import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
 import { nextStatusActions } from "@/lib/appointment-status-actions";
 import type { CalendarAppointment } from "@/types/appointment";
+import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 
 interface Props {
   appointment: CalendarAppointment;
@@ -100,7 +100,7 @@ export function AppointmentEventPopover({
           <ExternalLink className="inline-block h-3 w-3 ml-1 opacity-50" strokeWidth={1.75} />
         </Link>
         <p className="text-[13px] text-[#64748d] mt-0.5 tabular-nums">
-          {format(new Date(appointment.dateTime), "EEE, d MMM yyyy · HH:mm")} · {appointment.duration} min
+          {clinicDateLabel(new Date(appointment.dateTime), "day")} · {clinicTimeLabel(new Date(appointment.dateTime))} · {appointment.duration} min
         </p>
       </div>
 

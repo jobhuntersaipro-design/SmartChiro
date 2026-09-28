@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { format } from "date-fns/format";
 import {
   X,
   Phone,
@@ -22,6 +21,7 @@ import { buildWhatsAppUrl, buildMailtoUrl, formatDobWithAge } from "@/lib/format
 import { STATUS_TOKENS } from "@/lib/appointment-tabs";
 import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
 import type { CalendarAppointment } from "@/types/appointment";
+import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 
 interface Props {
   appointment: CalendarAppointment | null;
@@ -259,7 +259,7 @@ export function AppointmentDetailPanel({
           <dl className="grid grid-cols-[100px_1fr] gap-y-2 text-[13px]">
             <dt className="text-[#697386]">Date & time</dt>
             <dd className="text-[#061b31] tabular-nums">
-              {format(dt, "EEE, d MMM yyyy")} · {format(dt, "h:mm a")}
+              {clinicDateLabel(dt, "day")} · {clinicTimeLabel(dt)}
             </dd>
             <dt className="text-[#697386]">Duration</dt>
             <dd className="text-[#061b31] tabular-nums">

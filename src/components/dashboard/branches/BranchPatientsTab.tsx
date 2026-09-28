@@ -6,6 +6,7 @@ import { Search, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { BranchPatient, BranchMemberDetail } from "@/types/branch";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface BranchPatientsTabProps {
   branchId: string;
@@ -129,7 +130,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
                   </td>
                   <td className="px-5 py-3 text-[14px] text-[#273951]">
                     {p.lastVisitDate
-                      ? new Date(p.lastVisitDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                      ? new Date(p.lastVisitDate).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric", year: "numeric" })
                       : "—"}
                   </td>
                   <td className="px-5 py-3 text-[14px] text-[#273951]">{p.xrayCount}</td>

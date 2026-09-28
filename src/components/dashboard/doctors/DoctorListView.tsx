@@ -10,6 +10,7 @@ import { DoctorSummaryStats } from "./DoctorSummaryStats";
 import { DoctorCard } from "./DoctorCard";
 import { CreateDoctorDialog } from "./CreateDoctorDialog";
 import { RemoveDoctorDialog } from "./RemoveDoctorDialog";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface DoctorListViewProps {
   userId: string;
@@ -476,7 +477,7 @@ function DoctorTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <span className="text-[13px] text-[#64748d]">
-                  {new Date(d.createdAt).toLocaleDateString("en-US", {
+                  {new Date(d.createdAt).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
                     month: "short",
                     year: "2-digit",
                   })}

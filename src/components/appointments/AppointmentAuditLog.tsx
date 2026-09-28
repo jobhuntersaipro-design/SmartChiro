@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, History } from "lucide-react";
+import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
 
 interface Entry {
   id: string;
@@ -54,7 +55,8 @@ function formatValue(field: string, value: unknown): string {
   if (value == null || value === "") return "—";
   if (field === "dateTime" && typeof value === "string") {
     try {
-      return new Date(value).toLocaleString();
+      const d = new Date(value);
+      return `${clinicDateLabel(d, "numeric")} ${clinicTimeLabel(d)}`;
     } catch {
       return value;
     }
@@ -73,7 +75,7 @@ function relativeTime(iso: string): string {
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString();
+  return clinicDateLabel(new Date(iso), "numeric");
 }
 
 function actorInitials(name: string | null, email: string): string {
@@ -144,7 +146,7 @@ export function AppointmentAuditLog({ appointmentId }: Props) {
                 </span>
                 <span
                   className="text-[11px] text-[#697386] tabular-nums"
-                  title={new Date(e.createdAt).toLocaleString()}
+                  title={`${clinicDateLabel(new Date(e.createdAt), "numeric")} ${clinicTimeLabel(new Date(e.createdAt))}`}
                 >
                   · {relativeTime(e.createdAt)}
                 </span>

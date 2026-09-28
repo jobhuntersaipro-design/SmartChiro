@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { BranchRole } from "@prisma/client";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface SettingsUser {
   id: string;
@@ -43,7 +44,7 @@ function getInitials(name: string | null, email: string): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
     month: "long",
     year: "numeric",
   });

@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ScheduleAppointment, ScheduleDoctor } from "@/types/branch";
 import { WeekCalendar } from "./WeekCalendar";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface BranchScheduleTabProps {
   branchId: string;
@@ -20,9 +21,9 @@ function getWeekRange(date: Date): { start: Date; end: Date; label: string } {
   const end = new Date(start);
   end.setDate(start.getDate() + 7);
 
-  const startMonth = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const startMonth = start.toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric" });
   const endDate = new Date(end.getTime() - 86400000); // Saturday
-  const endMonth = endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const endMonth = endDate.toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric", year: "numeric" });
   const label = `${startMonth} — ${endMonth}`;
 
   return { start, end, label };

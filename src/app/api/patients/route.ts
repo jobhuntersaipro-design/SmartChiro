@@ -349,6 +349,29 @@ export async function POST(request: NextRequest) {
       assignedDoctorId = doctorId
     }
 
+    // IC numbers are unique across the system. A repeat is usually a double
+    // submit or a re-entered patient; only name the match inside this branch.
+    const ic = typeof icNumber === 'string' ? icNumber.trim() : ''
+    if (ic) {
+      const existing = await prisma.patient.findUnique({
+        where: { icNumber: ic },
+        select: { id: true, firstName: true, lastName: true, branchId: true },
+      })
+      if (existing) {
+        const sameBranch = existing.branchId === branchId
+        return NextResponse.json(
+          {
+            error: sameBranch
+              ? `A patient with this IC number already exists (${existing.firstName} ${existing.lastName}).`
+              : 'This IC number is already registered to a patient in another branch.',
+            code: 'duplicate_patient',
+            ...(sameBranch ? { patientId: existing.id } : {}),
+          },
+          { status: 409 }
+        )
+      }
+    }
+
     // Auto-extract DOB from IC if dateOfBirth is empty
     let resolvedDob: Date | null = dateOfBirth ? new Date(dateOfBirth) : null
     if (!resolvedDob && icNumber && IC_REGEX.test(icNumber)) {

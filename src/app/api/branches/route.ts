@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { cliniciansByBranch } from "@/lib/stats-scope";
 import { snapshotOf } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
 
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
     include: {
       branch: {
         include: {
-          _count: { select: { members: true, patients: true } },
+          _count: { select: { patients: true } },
           members: {
             include: {
               user: { select: { id: true, name: true, image: true } },
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
   const weekStart = cal.weekStart;
   const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
 
-  const [todayCounts, weekCounts] = await Promise.all([
+  const [todayCounts, weekCounts, clinicians] = await Promise.all([
     prisma.appointment.groupBy({
       by: ["branchId"],
       where: { branchId: { in: branchIds }, dateTime: { gte: todayStart, lt: todayEnd } },
@@ -80,6 +81,7 @@ export async function GET(req: NextRequest) {
       where: { branchId: { in: branchIds }, dateTime: { gte: weekStart, lt: weekEnd } },
       _count: { id: true },
     }),
+    cliniciansByBranch(branchIds),
   ]);
 
   const todayMap = new Map(todayCounts.map((a) => [a.branchId, a._count.id]));
@@ -87,6 +89,8 @@ export async function GET(req: NextRequest) {
 
   const branches = memberships.map((m) => {
     const b = m.branch;
+    const clinicianIds = new Set(clinicians.get(b.id) ?? []);
+    const doctors = b.members.filter((mem) => clinicianIds.has(mem.user.id));
     return {
       id: b.id,
       name: b.name,
@@ -103,11 +107,11 @@ export async function GET(req: NextRequest) {
       billingContactName: b.billingContactName,
       billingContactEmail: b.billingContactEmail,
       billingContactPhone: b.billingContactPhone,
-      doctorCount: b._count.members,
+      doctorCount: doctors.length,
       patientCount: b._count.patients,
       todayAppointments: todayMap.get(b.id) ?? 0,
       weekAppointments: weekMap.get(b.id) ?? 0,
-      doctors: b.members.map((mem) => ({
+      doctors: doctors.map((mem) => ({
         id: mem.user.id,
         name: mem.user.name,
         image: mem.user.image,

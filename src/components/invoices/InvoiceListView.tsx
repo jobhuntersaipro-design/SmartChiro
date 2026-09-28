@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { FileText, Loader2, Search } from "lucide-react";
 import { allowedInvoiceTransitions, formatMYR, type InvoiceStatus } from "@/lib/invoices";
 import { replaceUrl } from "@/lib/url-state";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface InvoiceRow {
   id: string;
@@ -53,7 +54,7 @@ const ACTION_LABEL: Partial<Record<InvoiceStatus, string>> = {
 };
 
 const dateMY = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-MY", { day: "2-digit", month: "short", year: "numeric" });
+  new Date(iso).toLocaleDateString("en-MY", { timeZone: CLINIC_TIME_ZONE, day: "2-digit", month: "short", year: "numeric" });
 
 function SummaryCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (

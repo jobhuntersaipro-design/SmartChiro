@@ -3,6 +3,7 @@
 import { Calendar, Users, CheckCircle2, BarChart3 } from "lucide-react";
 import type { CalendarAppointment } from "@/types/appointment";
 import { deriveStats } from "@/lib/appointment-tabs";
+import { clinicDateKey } from "@/lib/clinic-time";
 
 interface Props {
   appointments: CalendarAppointment[];
@@ -15,12 +16,7 @@ interface Props {
 }
 
 function isToday(d: Date): boolean {
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
+  return clinicDateKey(d) === clinicDateKey();
 }
 
 export function AppointmentStatCards({

@@ -64,7 +64,8 @@ export function BranchListView({ userName }: BranchListViewProps) {
 
   const totals = useMemo(() => ({
     branches: branches.length,
-    doctors: branches.reduce((sum, b) => sum + b.doctorCount, 0),
+    // Distinct people: an owner who treats in three branches is one doctor.
+    doctors: new Set(branches.flatMap((b) => b.doctors.map((d) => d.id))).size,
     patients: branches.reduce((sum, b) => sum + b.patientCount, 0),
   }), [branches]);
 

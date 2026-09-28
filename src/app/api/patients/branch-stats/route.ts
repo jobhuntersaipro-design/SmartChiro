@@ -2,16 +2,14 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { clinicCalendar } from '@/lib/clinic-time'
+import { ACTIVE_PATIENT_STATUS } from '@/lib/stats-scope'
 
 // Returns per-branch patient stats for branches the current user has OWNER/ADMIN
 // access to. DOCTOR users get a single entry for their active branch with
 // counts scoped to their own patients.
 //
-// Response: { role, scope, branches: [{ branchId, branchName, activePatients,
-//   newThisMonth, upcomingThisWeek }] }
-
-const startOfMonth = (now: Date = new Date()): Date => clinicCalendar(now).monthStart
-const startOfDay = (now: Date = new Date()): Date => clinicCalendar(now).dayStart
+// Response: { role, scope, branches: [{ branchId, branchName, totalPatients,
+//   activePatients, newThisMonth, upcomingThisWeek }] }
 
 export async function GET() {
   try {
@@ -41,10 +39,9 @@ export async function GET() {
     const isOwnerOrAdmin = activeMembership?.role === 'OWNER' || activeMembership?.role === 'ADMIN'
 
     const now = new Date()
-    const monthStart = startOfMonth(now)
-    const todayStart = startOfDay(now)
-    const weekEnd = new Date(todayStart)
-    weekEnd.setDate(weekEnd.getDate() + 7)
+    const cal = clinicCalendar(now)
+    const monthStart = cal.monthStart
+    const weekEnd = cal.addDays(7)
 
     // For OWNER/ADMIN: include every branch they're an OWNER/ADMIN in.
     // For DOCTOR: just their active branch with own-patient scope.
@@ -67,8 +64,9 @@ export async function GET() {
         const baseWhere: Record<string, unknown> = { branchId }
         if (scopedToOwn) baseWhere.doctorId = userId
 
-        const [activePatients, newThisMonth, upcomingThisWeek] = await Promise.all([
-          prisma.patient.count({ where: { ...baseWhere, status: 'active' } }),
+        const [totalPatients, activePatients, newThisMonth, upcomingThisWeek] = await Promise.all([
+          prisma.patient.count({ where: baseWhere }),
+          prisma.patient.count({ where: { ...baseWhere, status: ACTIVE_PATIENT_STATUS } }),
           prisma.patient.count({ where: { ...baseWhere, createdAt: { gte: monthStart } } }),
           prisma.appointment.count({
             where: {
@@ -83,6 +81,7 @@ export async function GET() {
         return {
           branchId,
           branchName,
+          totalPatients,
           activePatients,
           newThisMonth,
           upcomingThisWeek,

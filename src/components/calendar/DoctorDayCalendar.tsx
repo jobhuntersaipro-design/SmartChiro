@@ -7,6 +7,13 @@ import { AppointmentActionsMenu } from "@/components/patients/AppointmentActions
 import { treatmentTokensFor, treatmentLabelFor } from "@/lib/treatment-colors";
 import { STATUS_TOKENS } from "@/lib/appointment-tabs";
 import type { CalendarAppointment, AvailabilitySlot } from "@/types/appointment";
+import {
+  clinicDateKey,
+  clinicInstantFromInputs,
+  clinicParts,
+  clinicTimeLabel,
+  clinicUtcOffsetLabel,
+} from "@/lib/clinic-time";
 
 interface DoctorOption {
   id: string;
@@ -65,33 +72,40 @@ export function DoctorDayCalendar({
   const totalHeight = (totalMinutes / 60) * hourHeightPx;
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Tick every minute so the red current-time line moves
-  const [now, setNow] = useState(new Date());
+  // All positions use the clinic's wall clock, so the grid is identical on
+  // the server (UTC) and in any browser time zone.
+  const dayKey = clinicDateKey(date);
+
+  // "Now" is only known after mount — reading the clock during render made
+  // the server and browser disagree (hydration error #418). Ticks every
+  // minute so the red current-time line moves.
+  const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
+    const tick = () => setNow(new Date());
+    const first = setTimeout(tick, 0);
+    const t = setInterval(tick, 60_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+    };
   }, []);
 
   // Auto-scroll to the current time on first mount when viewing today
-  const isToday = useMemo(
-    () =>
-      now.getFullYear() === date.getFullYear() &&
-      now.getMonth() === date.getMonth() &&
-      now.getDate() === date.getDate(),
-    [now, date]
-  );
+  const isToday = now !== null && clinicDateKey(now) === dayKey;
+  const hasNow = now !== null;
   useEffect(() => {
-    if (isToday && containerRef.current) {
-      const minutesNow = now.getHours() * 60 + now.getMinutes();
+    if (isToday && now && containerRef.current) {
+      const p = clinicParts(now);
+      const minutesNow = p.hour * 60 + p.minute;
       const minutesFromStart = minutesNow - startHour * 60;
       if (minutesFromStart > 0 && minutesFromStart < totalMinutes) {
         const scrollTop = (minutesFromStart / 60) * hourHeightPx - 100;
         containerRef.current.scrollTop = Math.max(0, scrollTop);
       }
     }
-    // run once per date change
+    // run once per date change, after the clock is known
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date.toDateString()]);
+  }, [dayKey, hasNow]);
 
   const hours = useMemo(() => {
     const arr: number[] = [];
@@ -122,14 +136,9 @@ export function DoctorDayCalendar({
   // Convert a Date into "minutes from startHour" within the visible window,
   // clipped to [0, totalMinutes]. Returns null if entirely outside.
   function minutesFromTop(d: Date): number | null {
-    if (
-      d.getFullYear() !== date.getFullYear() ||
-      d.getMonth() !== date.getMonth() ||
-      d.getDate() !== date.getDate()
-    ) {
-      return null;
-    }
-    const m = d.getHours() * 60 + d.getMinutes();
+    if (clinicDateKey(d) !== dayKey) return null;
+    const p = clinicParts(d);
+    const m = p.hour * 60 + p.minute;
     if (m < startHour * 60) return 0;
     if (m >= endHour * 60) return totalMinutes;
     return m - startHour * 60;
@@ -140,7 +149,7 @@ export function DoctorDayCalendar({
   }
 
   // Current-time indicator
-  const currentMinuteOffset = isToday ? minutesFromTop(now) : null;
+  const currentMinuteOffset = isToday && now ? minutesFromTop(now) : null;
 
   function handleColumnClick(
     e: React.MouseEvent<HTMLDivElement>,
@@ -153,8 +162,9 @@ export function DoctorDayCalendar({
     const minutesFromTop = (y / hourHeightPx) * 60;
     const slotMinutes =
       Math.floor(minutesFromTop / 15) * 15 + startHour * 60;
-    const slotDate = new Date(date);
-    slotDate.setHours(Math.floor(slotMinutes / 60), slotMinutes % 60, 0, 0);
+    const hh = String(Math.floor(slotMinutes / 60)).padStart(2, "0");
+    const mm = String(slotMinutes % 60).padStart(2, "0");
+    const slotDate = clinicInstantFromInputs(dayKey, `${hh}:${mm}`);
     if (slotDate.getTime() < Date.now()) return;
     onSelectSlot({ dateTime: slotDate, doctorId });
   }
@@ -188,18 +198,12 @@ export function DoctorDayCalendar({
         <div className="px-2 py-3 text-[11px] font-medium text-[#697386] tabular-nums border-r border-[#e5edf5] flex items-end justify-center">
           GMT
           <br />
-          {tzOffset()}
+          {clinicUtcOffsetLabel(date)}
         </div>
         {doctors.map((d) => {
-          const todaysCount = (apptsByDoctor.get(d.id) ?? []).filter((a) => {
-            const dt = new Date(a.dateTime);
-            return (
-              dt.getFullYear() === date.getFullYear() &&
-              dt.getMonth() === date.getMonth() &&
-              dt.getDate() === date.getDate() &&
-              a.status !== "CANCELLED"
-            );
-          }).length;
+          const todaysCount = (apptsByDoctor.get(d.id) ?? []).filter(
+            (a) => clinicDateKey(new Date(a.dateTime)) === dayKey && a.status !== "CANCELLED"
+          ).length;
           return (
             <div
               key={d.id}
@@ -350,7 +354,7 @@ export function DoctorDayCalendar({
               style={{ top: pxFromMinutes(currentMinuteOffset) }}
             >
               <span className="absolute -left-12 -top-2.5 inline-flex items-center justify-center bg-[#061b31] text-white text-[11px] font-medium tabular-nums rounded-[3px] px-1.5 py-0.5">
-                {format(now, "h:mm a")}
+                {now && clinicTimeLabel(now)}
               </span>
               <div className="h-0.38 w-full bg-[#DF1B41]" />
             </div>
@@ -465,7 +469,7 @@ function AppointmentBlock({
               {appointment.patient.firstName} {appointment.patient.lastName}
             </p>
             <p className="text-[11px] text-[#425466] tabular-nums truncate">
-              {format(start, "h:mm a")} → {format(end, "h:mm a")}
+              {clinicTimeLabel(start)} → {clinicTimeLabel(end)}
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -507,12 +511,4 @@ function AppointmentBlock({
       </div>
     </div>
   );
-}
-
-function tzOffset(): string {
-  const offsetMin = -new Date().getTimezoneOffset();
-  const sign = offsetMin >= 0 ? "+" : "-";
-  const h = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, "0");
-  const m = String(Math.abs(offsetMin) % 60).padStart(2, "0");
-  return `${sign}${h}:${m}`;
 }

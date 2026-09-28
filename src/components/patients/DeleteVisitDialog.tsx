@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, AlertTriangle } from "lucide-react";
 import type { Visit } from "@/types/visit";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface DeleteVisitDialogProps {
   open: boolean;
@@ -55,7 +56,7 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
     }
   }
 
-  const visitDate = new Date(visit.visitDate).toLocaleDateString("en-MY", {
+  const visitDate = new Date(visit.visitDate).toLocaleDateString("en-MY", { timeZone: CLINIC_TIME_ZONE,
     day: "numeric",
     month: "long",
     year: "numeric",

@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Patient } from "@/types/patient";
 import { useRouter } from "next/navigation";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface PatientCardProps {
   patient: Patient;
@@ -78,7 +79,7 @@ export function PatientCard({ patient }: PatientCardProps) {
         <span>Dr. {patient.doctorName?.replace(/^Dr\.?\s*/i, '')}</span>
         <span>
           {patient.lastVisit
-            ? `Last: ${new Date(patient.lastVisit).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}`
+            ? `Last: ${new Date(patient.lastVisit).toLocaleDateString("en-MY", { timeZone: CLINIC_TIME_ZONE, day: "numeric", month: "short", year: "numeric" })}`
             : "No visits"}
         </span>
       </div>

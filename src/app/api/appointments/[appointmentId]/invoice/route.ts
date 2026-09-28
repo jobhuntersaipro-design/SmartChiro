@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { clinicDateLabel } from "@/lib/clinic-time";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -24,11 +25,9 @@ function generateInvoiceNumber(): string {
   return `INV-${ts}-${rand}`;
 }
 
+/** dd/mm/yyyy on the clinic's calendar (the server's UTC day is wrong before 8 AM MYT). */
 function formatDDMMYYYY(d: Date): string {
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
-  return `${dd}/${mm}/${yyyy}`;
+  return clinicDateLabel(d, "numeric");
 }
 
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {

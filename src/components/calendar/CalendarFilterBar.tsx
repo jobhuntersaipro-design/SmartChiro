@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Views, type View } from "react-big-calendar";
-import { format } from "date-fns/format";
 import { Check, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import {
   Popover,
@@ -27,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { doctorColor } from "./doctor-color";
+import { clinicDateLabel } from "@/lib/clinic-time";
 
 interface BranchOption {
   id: string;
@@ -88,10 +88,10 @@ export function CalendarFilterBar({
 
   const dateLabel =
     view === Views.MONTH
-      ? format(date, "MMMM yyyy")
+      ? clinicDateLabel(date, "month")
       : view === Views.DAY
-      ? format(date, "EEE, d MMM yyyy")
-      : `Week of ${format(date, "d MMM yyyy")}`;
+      ? clinicDateLabel(date, "day")
+      : `Week of ${clinicDateLabel(date, "short")}`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">

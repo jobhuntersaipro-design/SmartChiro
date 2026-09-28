@@ -4,6 +4,7 @@ import { Image } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "../shared/EmptyState";
 import type { RecentXray } from "@/types/dashboard";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface RecentXraysGridProps {
   xrays: RecentXray[];
@@ -40,7 +41,7 @@ export function RecentXraysGrid({ xrays }: RecentXraysGridProps) {
             {xray.patientName}
           </div>
           <div className="text-[12px] text-[#64748d]">
-            {new Date(xray.createdAt).toLocaleDateString("en-US", {
+            {new Date(xray.createdAt).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
               month: "short",
               day: "numeric",
             })}

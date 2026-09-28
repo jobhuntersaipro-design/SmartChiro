@@ -23,6 +23,7 @@ import {
   buildWhatsAppUrl,
   buildDoctorHref,
 } from "@/lib/format";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface PatientOverviewTabProps {
   patientId: string;
@@ -82,14 +83,14 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
     month: "short",
     day: "numeric",
   });
 }
 
 function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -208,7 +209,7 @@ function Sparkline({ visits }: { visits: VisitItem[] }) {
           className="text-[9px]"
           fill="#64748d"
         >
-          {new Date(c.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          {new Date(c.date).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric" })}
         </text>
       ))}
     </svg>
@@ -406,7 +407,7 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
             <InfoRow
               icon={Clock}
               label="Member Since"
-              value={new Date(patient.createdAt).toLocaleDateString("en-US", {
+              value={new Date(patient.createdAt).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
                 month: "long",
                 year: "numeric",
               })}

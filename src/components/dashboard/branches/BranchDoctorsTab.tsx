@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { BranchMemberDetail } from "@/types/branch";
 import type { BranchRole } from "@prisma/client";
 import { ManageDoctorsSheet } from "../owner/ManageDoctorsSheet";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 interface BranchDoctorsTabProps {
   branchId: string;
@@ -166,7 +167,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
 
                 {/* Joined date */}
                 <p className="text-[12px] text-[#c1c9d2] mt-2">
-                  Joined {new Date(member.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                  Joined {new Date(member.joinedAt).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", year: "numeric" })}
                 </p>
               </div>
             );

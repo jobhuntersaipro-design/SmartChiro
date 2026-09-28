@@ -1,10 +1,10 @@
 "use client";
 
-import { format } from "date-fns/format";
 import { Clock, MapPin, StickyNote } from "lucide-react";
 import { AppointmentActionsMenu } from "@/components/patients/AppointmentActionsMenu";
 import { STATUS_TOKENS } from "@/lib/appointment-tabs";
 import type { CalendarAppointment } from "@/types/appointment";
+import { clinicTimeLabel } from "@/lib/clinic-time";
 
 interface Props {
   appointment: CalendarAppointment;
@@ -36,7 +36,7 @@ export function AppointmentCard({
   const canDelete = isAdmin;
 
   const dt = new Date(appointment.dateTime);
-  const time = format(dt, "h:mm a");
+  const time = clinicTimeLabel(dt);
 
   return (
     <div
