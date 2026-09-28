@@ -93,20 +93,24 @@ describe('POST /api/auth/register', () => {
     expect(data.error).toBe('Password must be at least 8 characters')
   })
 
-  it('returns 409 when user already exists', async () => {
+  // Existing and new emails get the same response so the endpoint can't be
+  // used to discover which emails have accounts.
+  it('answers an existing email exactly like a new one, without creating a user', async () => {
     mockFindUnique.mockResolvedValue({ id: 'existing', email: 'test@example.com' })
 
     const res = await POST(createRequest(validBody))
-    expect(res.status).toBe(409)
+    expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.error).toBe('A user with this email already exists')
+    expect(data.message).toContain('verification email')
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(mockSendVerificationEmail).not.toHaveBeenCalled()
   })
 
   it('creates user with lowercased email and hashed password', async () => {
     mockFindUnique.mockResolvedValue(null)
 
     const res = await POST(createRequest({ ...validBody, email: 'Test@Example.COM' }))
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(200)
     expect(mockCreate).toHaveBeenCalledWith({
       data: {
         name: 'Dr. Test',
@@ -123,22 +127,21 @@ describe('POST /api/auth/register', () => {
     expect(mockSendVerificationEmail).toHaveBeenCalledWith('test@example.com', 'Dr. Test')
   })
 
-  it('returns 201 even if verification email fails', async () => {
+  it('still succeeds if the verification email fails', async () => {
     mockFindUnique.mockResolvedValue(null)
     mockSendVerificationEmail.mockRejectedValue(new Error('SMTP down'))
 
     const res = await POST(createRequest(validBody))
-    expect(res.status).toBe(201)
-    const data = await res.json()
-    expect(data.message).toContain('registered successfully')
+    expect(res.status).toBe(200)
+    expect(mockCreate).toHaveBeenCalled()
   })
 
-  it('returns 201 with success message on valid registration', async () => {
+  it('returns 200 with the verification message on valid registration', async () => {
     mockFindUnique.mockResolvedValue(null)
 
     const res = await POST(createRequest(validBody))
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.message).toContain('check your email')
+    expect(data.message).toContain('verification email has been sent')
   })
 })

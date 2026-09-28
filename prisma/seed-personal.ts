@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { hash } from 'bcryptjs'
 import 'dotenv/config'
+import { clinicInstant, clinicParts } from '../src/lib/clinic-time'
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) throw new Error('DATABASE_URL is not set')
@@ -616,9 +617,10 @@ async function main() {
     const patientId = `personal-patient-${String(a.patientIdx + 1).padStart(3, '0')}`
     const patient = patientsData[a.patientIdx]
     const doctor = allDoctors[patient.doctorIdx]
-    const dateTime = new Date(now)
-    dateTime.setDate(dateTime.getDate() + a.daysFromNow)
-    dateTime.setHours(a.hour, 0, 0, 0)
+    // Clinic wall-clock hour (Asia/Kuala_Lumpur) — setHours used the seeding
+    // machine's zone, so seeds run in UTC produced 12 AM / 1 AM bookings.
+    const today = clinicParts(now)
+    const dateTime = clinicInstant(today.year, today.month, today.day + a.daysFromNow, a.hour)
 
     await prisma.appointment.create({
       data: {

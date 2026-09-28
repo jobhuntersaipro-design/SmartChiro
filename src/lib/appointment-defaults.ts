@@ -16,7 +16,7 @@ export function defaultStart(prefilledIso?: string | null, now: Date = new Date(
   }
   const p = clinicParts(now);
   let hour = p.hour;
-  let minute = p.minute <= 30 ? 30 : 0;
+  const minute = p.minute <= 30 ? 30 : 0;
   if (minute === 0) hour += 1;
   if (hour >= 20) {
     return { date: clinicDateKey(clinicInstant(p.year, p.month, p.day + 1, 12)), time: "09:00" };

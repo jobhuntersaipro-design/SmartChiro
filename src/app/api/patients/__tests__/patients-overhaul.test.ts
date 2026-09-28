@@ -283,7 +283,7 @@ describe('Patient Overhaul', () => {
     it('17. auto-extracts DOB from IC when dateOfBirth empty', async () => {
       mockAuth.mockResolvedValue({ user: { id: doctorId } })
       const res = await POST(createRequest('POST', '/api/patients', {
-        firstName: 'AutoDob', lastName: 'Test', icNumber: '850315-08-5234',
+        firstName: 'AutoDob', lastName: 'Test', icNumber: '850315-08-5299',
       }))
       expect(res.status).toBe(201)
       const data = await res.json()

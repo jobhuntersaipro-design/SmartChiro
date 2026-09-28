@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { clinicDateKey, clinicInstantFromInputs } from '@/lib/clinic-time'
 
 // ─── Mock auth ───
 const mockAuth = vi.fn()
@@ -144,10 +145,11 @@ beforeAll(async () => {
   visit2Id = v2.id
 
   // Create appointments for today
-  const today = new Date()
-  today.setHours(10, 0, 0, 0)
-  const today2 = new Date()
-  today2.setHours(14, 0, 0, 0)
+  // 10:00 and 14:00 on the clinic's today — local setHours in a UTC test
+  // process lands on the previous clinic day after 16:00 UTC.
+  const clinicToday = clinicDateKey()
+  const today = clinicInstantFromInputs(clinicToday, '10:00')
+  const today2 = clinicInstantFromInputs(clinicToday, '14:00')
 
   const a1 = await prisma.appointment.create({
     data: {

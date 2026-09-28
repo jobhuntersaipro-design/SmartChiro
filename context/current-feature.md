@@ -1,29 +1,29 @@
-# Current Feature: WhatsApp Reminders via Meta Cloud API
+# Current Feature: Improvement Plan (UX review + Malaysian competitor gaps)
 
 ## Status
 
-In Progress — branch `claude/zen-goodall-84f7kl`, pushed to `main` for owner testing (2026-09-28)
+In Progress — Phase 1 (trust bugs) done 2026-09-29; building Phases 2–8 in order on `claude/zen-goodall-84f7kl`.
 
 ## Spec
 
-`context/features/whatsapp-cloud-api-spec.md`
+`context/features/improvement-plan-spec.md` (master plan; each phase is detailed there before it is built and recorded after)
 
 ## Goals
 
-- Replace the unbuilt Baileys worker with Meta's official WhatsApp Cloud API for appointment reminders.
-- Clinics connect from Branch → Settings → Appointment Reminders:
-  - **Coexistence** — keep using the WhatsApp Business app on their iPhone; SmartChiro sends from the same number.
-  - **New number** — standard Embedded Signup.
-  - **Manual** — paste WABA ID + phone number ID + token (testing with Meta's test number, or accounts set up elsewhere).
-- New `WhatsAppAccount` table (encrypted token), approved `smartchiro_appt_reminder_v1` template in `en` + `ms` created automatically.
-- Dispatcher sends WhatsApp reminders as template messages; unapproved template / disconnected account falls back to email.
-- `/api/whatsapp/webhook` handles delivery failures, template approvals and account removal.
-- Reminder date/time rendered in the clinic time zone.
+1. Trust bugs — done
+2. Front desk role, global branch context, dd/mm dates, table/mobile fixes
+3. Treatment plans, packages, recurring bookings
+4. Payments, manual invoices, SST, receipts
+5. Reports
+6. WhatsApp recall + review requests (BM/Chinese templates)
+7. Online booking link, then patient portal
+8. MyInvois, commissions, T&CM expiry, accounting export
 
 ## Notes
 
-- Legacy Baileys code (`src/lib/wa/*`, `src/app/api/branches/[branchId]/wa/*`, `src/app/api/wa/webhook`, `WaConnectModal`, `WaSession`) is now unused — delete in a follow-up once the owner confirms.
+- **WhatsApp Reminders via Meta Cloud API** (`context/features/whatsapp-cloud-api-spec.md`) — pushed to `main` 2026-09-28, awaiting owner testing with Meta credentials. Legacy Baileys code is unused; delete after the owner confirms.
 - Vercel Hobby only runs crons daily; `*/5` reminder dispatch needs Vercel Pro (or an external scheduler).
+- Owner action: delete the two `TEST UX Patient` records created by the old wizard bug (ids in the plan spec).
 
 ### Deferred / Parked Features
 - **AI Landmark Detection (X-Ray Viewer)** — in progress on `main` (branch `feat/xray-ai-landmarks` merged 2026-09-24). Goals, locked decisions and privacy boundary preserved at `context/features/xray-ai-landmarks-goals.md`.

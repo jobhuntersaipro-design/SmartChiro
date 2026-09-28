@@ -1,7 +1,7 @@
 # SmartChiro Improvement Plan (UX review + Malaysian competitor gaps)
 
 **Source:** `smartchiro-improvement-report.md` (UX review of smartchiro.org, 28 Sep 2026, Owner role on KLCC / Bangsar / Penang Georgetown).
-**Status:** Phase 1 in progress (2026-09-28).
+**Status:** Phase 1 done (2026-09-29); Phase 2 next.
 **Branch:** `claude/zen-goodall-84f7kl` — one commit (or small set) per phase, each phase built, tested and pushed before the next starts.
 
 This file is the master plan. Each phase has a detailed section that is filled in
@@ -71,6 +71,13 @@ Every count (dashboard stats, dashboard branch cards, branches list, doctors sum
 ### 1.7 Hydration error #418 on Appointments (report §3.7)
 **Cause:** the calendar is server-rendered in UTC and re-rendered in the browser: the "GMT +00:00" label, `new Date()` "now" line and today's date differ.
 **Fix:** zone label from the clinic zone; "now" set after mount; the page passes the clinic's today; all rendering uses clinic-zone formatting.
+
+### Phase 1 — record (done 2026-09-29)
+- All seven items shipped as specified. Extras found on the way: the seeds built appointment times in the seeding machine's zone (seeds run in UTC produced the 12:00 AM / 1:00 AM bookings the report saw) — fixed with clinic-time helpers; the calibration-carry toast changed adjustments without marking the canvas dirty; exporting an un-annotated X-ray now has its own route (`/api/xrays/[id]/export`) instead of creating an empty annotation to export.
+- Gallery "N annot." shows the latest annotation's `shapeCount`, matching the viewer's "N annotations".
+- Existing empty annotation rows stay in the database with `shapeCount = 0`; they no longer count or appear in the activity feed.
+- Branch rows seeded with free-text hours keep their text (seed upserts don't update); the parser reads it.
+- Verified in Chromium (browser zone America/Los_Angeles) against a local Postgres: wizard step 1→2→3, Esc confirm, double-click Save creates one record; counts agree (dashboard / doctors / branches / patients); 23:00 booking returns `outside_hours_confirm_required`; no hydration error on Appointments (the original code reproduces it). Full vitest suite 972/972 with the local DB; stale tests fixed (register's anti-enumeration 200, a duplicate fixture IC, a "today" fixture built in UTC).
 
 ## Phase 2 — Front desk role, global branch context, dates, tables, mobile
 
