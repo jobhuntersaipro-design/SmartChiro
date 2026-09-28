@@ -19,6 +19,7 @@ import {
   Bone,
   Check,
   FileText,
+  BarChart3,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
@@ -32,9 +33,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { can, ROLE_LABELS, type Capability } from "@/lib/permissions";
 
-const navItems: { label: string; href: string; icon: typeof Users; roles?: BranchRole[] }[] = [
+const navItems: { label: string; href: string; icon: typeof Users; roles?: BranchRole[]; capability?: Capability }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/dashboard/patients", icon: Users },
   { label: "Branches", href: "/dashboard/branches", icon: Building2 },
@@ -43,6 +44,7 @@ const navItems: { label: string; href: string; icon: typeof Users; roles?: Branc
   { label: "Appointments", href: "/dashboard/appointments", icon: Calendar },
   // Billing is the owner's / front desk's job.
   { label: "Invoices", href: "/dashboard/invoices", icon: FileText, roles: ["OWNER", "ADMIN", "FRONT_DESK"] },
+  { label: "Reports", href: "/dashboard/reports", icon: BarChart3, capability: "reports.read" },
   { label: "Anatomy", href: "/dashboard/anatomy", icon: Bone, roles: ["OWNER", "ADMIN", "DOCTOR"] },
 ];
 
@@ -156,6 +158,12 @@ function getInitials(name: string | null, email: string): string {
   return email.slice(0, 2).toUpperCase();
 }
 
+/** The active branch's role grants it, or — in "All branches" — any member branch's role does. */
+function hasCapabilityInScope(user: SidebarUser, capability: Capability): boolean {
+  if (can(user.branchRole, capability)) return true;
+  return !!user.allBranches && user.branches.some((b) => can(b.role, capability));
+}
+
 export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
   const pathname = usePathname();
   const initials = getInitials(user.name, user.email);
@@ -188,6 +196,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <div className="space-y-0.5">
           {navItems
             .filter((item) => !item.roles || (user.branchRole !== null && item.roles.includes(user.branchRole)))
+            .filter((item) => !item.capability || hasCapabilityInScope(user, item.capability))
             .map((item) => {
             const isActive =
               item.href === "/dashboard"

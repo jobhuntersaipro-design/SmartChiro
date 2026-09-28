@@ -33,6 +33,7 @@ const MATRIX: Record<Capability, [boolean, boolean, boolean, boolean]> = {
   "reminders.manage": [true, true, false, false],
   "audit.read": [true, true, false, false],
   "dashboard.clinicalStats": [true, true, true, false],
+  "reports.read": [true, true, false, false],
 };
 
 describe("permissions matrix", () => {
