@@ -229,6 +229,11 @@ For the screens: the list's status styles need a `PARTIALLY_PAID` entry ("Partia
 - Sidebar gets a **Reports** link for OWNER/ADMIN (the report's 404 goes away).
 **Done when:** an owner can answer "how much did we collect this month, per doctor, and what do we still owe in package sessions" from one page, and the CSV totals match the cards.
 
+### Phase 5 — record (done 2026-09-29)
+- Shipped as specified: six independently loading cards with SVG charts and CSV export (`src/lib/reports/*`, `/api/reports/*`, `src/components/reports/*`), Reports link for OWNER/ADMIN, front desk/doctors get 403/404.
+- Receivables, package liability and lapsed patients are "as of now", not range-limited (labelled on the cards). Overdue includes part-paid invoices past due. Utilisation uses the doctor's weekly schedule (not per-branch), so a doctor split across branches looks under-utilised in a single-branch view; owners count as clinicians and show 0% if they don't treat.
+- Verified: CSV totals match the cards (revenue and packages), weekly buckets over 90 days, 390px no page overflow; 1215 tests at merge time.
+
 ## Phase 6 — WhatsApp recall and review requests
 
 Recall is where clinics win back revenue; today only appointment reminders exist.
