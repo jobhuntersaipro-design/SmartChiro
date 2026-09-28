@@ -234,6 +234,8 @@ model Branch {
   bookingTreatments  TreatmentType[]
   bookingDoctorIds   String[]
   bookingNote        String?
+  // Patient portal (Phase 7.2): patients may cancel online up to this many hours before the start.
+  portalCancelHours Int @default(24)
 
   members      BranchMember[]
   patients     Patient[]
@@ -1198,4 +1200,36 @@ model AppointmentSeries {
   @@index([patientId])
   @@index([branchId])
   @@index([carePlanId])
+}
+
+// ─── Patient portal (Phase 7.2) ───
+
+/// One-time sign-in code sent by email. Only the HMAC of the code is stored.
+model PortalLoginCode {
+  id         String    @id @default(cuid())
+  /// Lowercased.
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  ip         String?
+  createdAt  DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+/// A signed-in portal browser. The cookie holds a random token; only its hash is stored.
+/// Covers every Patient row with this email (case-insensitive), across branches.
+model PortalSession {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  /// Lowercased.
+  email      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  userAgent  String?
+
+  @@index([email])
 }

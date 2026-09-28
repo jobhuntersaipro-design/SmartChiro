@@ -50,6 +50,7 @@ const FIELD_LABELS: Record<string, string> = {
   doctorId: "Doctor",
   treatmentType: "Treatment",
   room: "Room",
+  cancelReason: "Reason",
 };
 
 function formatValue(field: string, value: unknown): string {

@@ -15,6 +15,7 @@ import { nationalityLabel } from "@/lib/nationality";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 import { languageLabel } from "@/lib/outreach/consent";
 import { PatientOutreachSection } from "@/components/patients/PatientOutreachSection";
+import { PatientPortalAccess } from "@/components/patients/PatientPortalAccess";
 
 interface PatientProfileTabProps {
   patient: {
@@ -204,6 +205,7 @@ export function PatientProfileTab({ patient, showClinical = true, onPatientChang
             <DetailRow label="Address" value={fullAddress} href={mapsHref} />
           </div>
         </div>
+        <PatientPortalAccess email={patient.email} />
       </Section>
 
       {/* Emergency Contact */}
