@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
+import Link from 'next/link'
 import { Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,6 +9,13 @@ import {
   generateThumbnail,
   type ImageDimensions,
 } from '@/lib/xray-validation'
+import {
+  uploadXray,
+  BODY_REGION_OPTIONS,
+  VIEW_TYPE_OPTIONS,
+  type BodyRegion,
+  type ViewType,
+} from '@/lib/xray-upload-client'
 
 type UploadStage =
   | 'idle'
@@ -29,6 +37,9 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const [fileSize, setFileSize] = useState<number>(0)
+  const [bodyRegion, setBodyRegion] = useState<BodyRegion | ''>('')
+  const [viewType, setViewType] = useState<ViewType | ''>('')
+  const [uploadedId, setUploadedId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const reset = useCallback(() => {
@@ -37,6 +48,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
     setProgress(0)
     setFileName(null)
     setFileSize(0)
+    setUploadedId(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (preview) {
       URL.revokeObjectURL(preview)
@@ -74,60 +86,30 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
         return
       }
 
-      // Step 3: Upload via server-side proxy (avoids R2 CORS issues)
+      // Step 3: Upload straight to storage (see uploadXray), then confirm.
       try {
         setStage('uploading')
         setProgress(0)
-
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('thumbnail', new File([thumbnail], 'thumbnail.jpg', { type: 'image/jpeg' }))
-        formData.append('patientId', patientId)
-        formData.append('width', String(dimensions.width))
-        formData.append('height', String(dimensions.height))
-
-        const xhr = new XMLHttpRequest()
-
-        const uploadResult = await new Promise<{ xrayId: string }>((resolve, reject) => {
-          xhr.open('POST', '/api/xrays/upload')
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              setProgress(Math.round((e.loaded / e.total) * 100))
-            }
-          }
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const data = JSON.parse(xhr.responseText)
-                resolve(data)
-              } catch {
-                reject(new Error('Invalid server response.'))
-              }
-            } else {
-              try {
-                const data = JSON.parse(xhr.responseText)
-                reject(new Error(data.error || 'Upload failed.'))
-              } catch {
-                reject(new Error(`Upload failed with status ${xhr.status}.`))
-              }
-            }
-          }
-
-          xhr.onerror = () => reject(new Error('Upload failed. Check your connection.'))
-          xhr.send(formData)
+        const { xrayId } = await uploadXray({
+          file,
+          thumbnail,
+          width: dimensions.width,
+          height: dimensions.height,
+          patientId,
+          bodyRegion: bodyRegion || null,
+          viewType: viewType || null,
+          onProgress: setProgress,
         })
-
         setStage('done')
         setProgress(100)
-        onUploadComplete?.(uploadResult.xrayId)
+        setUploadedId(xrayId)
+        onUploadComplete?.(xrayId)
       } catch (err) {
         setStage('error')
         setError(err instanceof Error ? err.message : 'Upload failed.')
       }
     },
-    [patientId, onUploadComplete]
+    [patientId, onUploadComplete, bodyRegion, viewType]
   )
 
   const handleFileChange = useCallback(
@@ -170,6 +152,38 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
 
   return (
     <div className="w-full max-w-130">
+      {/* Optional details, saved with the X-ray (the title defaults to the file name) */}
+      {stage === 'idle' && (
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          <label className="text-[14px] text-[#425466]">
+            Body region
+            <select
+              value={bodyRegion}
+              onChange={(e) => setBodyRegion(e.target.value as BodyRegion | '')}
+              className="mt-1 block h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-2 text-[15px] text-[#061b31] focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            >
+              <option value="">Not set</option>
+              {BODY_REGION_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-[14px] text-[#425466]">
+            View
+            <select
+              value={viewType}
+              onChange={(e) => setViewType(e.target.value as ViewType | '')}
+              className="mt-1 block h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-2 text-[15px] text-[#061b31] focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            >
+              <option value="">Not set</option>
+              {VIEW_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
       {/* Drop zone */}
       {stage === 'idle' && (
         <label
@@ -267,6 +281,16 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
                   {stageLabel[stage]}
                 </span>
               </div>
+
+              {stage === 'done' && uploadedId && (
+                <Link
+                  href={`/dashboard/xrays/${patientId}/${uploadedId}/annotate`}
+                  target="_blank"
+                  className="mt-2 inline-block text-[14px] font-medium text-[#533afd] hover:underline"
+                >
+                  Annotate now →
+                </Link>
+              )}
 
               {/* Error message + retry */}
               {stage === 'error' && error && (

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!
@@ -17,12 +17,12 @@ export const r2Client = new S3Client({
 
 /**
  * Generate a presigned PUT URL for uploading a file to R2.
- * Expires in 5 minutes by default.
+ * Expires in 15 minutes by default (a large film on a slow clinic line).
  */
 export async function getPresignedUploadUrl(
   key: string,
   contentType: string,
-  expiresIn = 300
+  expiresIn = 900
 ): Promise<string> {
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET_NAME,
@@ -30,6 +30,20 @@ export async function getPresignedUploadUrl(
     ContentType: contentType,
   })
   return getSignedUrl(r2Client, command, { expiresIn })
+}
+
+/**
+ * Size of an object in R2, or null when it doesn't exist. Other errors throw.
+ */
+export async function headR2Object(key: string): Promise<{ size: number } | null> {
+  try {
+    const res = await r2Client.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }))
+    return { size: res.ContentLength ?? 0 }
+  } catch (error) {
+    const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode
+    if (status === 404 || (error as Error).name === 'NotFound') return null
+    throw error
+  }
 }
 
 /**

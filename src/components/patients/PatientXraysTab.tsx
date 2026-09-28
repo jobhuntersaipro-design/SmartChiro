@@ -124,7 +124,8 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
 
       {showUpload && (
         <div className="mb-4 rounded-[6px] border border-[#e5edf5] bg-white p-4">
-          <XrayUpload patientId={patientId} onUploadComplete={() => { setShowUpload(false); onRefresh() }} />
+          {/* Stays open after upload so "Annotate now" is one click away. */}
+          <XrayUpload patientId={patientId} onUploadComplete={() => onRefresh()} />
         </div>
       )}
 

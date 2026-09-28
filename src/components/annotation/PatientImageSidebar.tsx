@@ -8,6 +8,7 @@ import {
   generateThumbnail,
   type ImageDimensions,
 } from "@/lib/xray-validation";
+import { uploadXray } from "@/lib/xray-upload-client";
 
 interface PatientXray {
   id: string;
@@ -199,36 +200,19 @@ export function PatientImageSidebar({
         )
       );
 
-      const formData = new FormData();
-      formData.append("file", entry.file);
-      formData.append(
-        "thumbnail",
-        new File([thumbnail], "thumbnail.jpg", { type: "image/jpeg" })
-      );
-      formData.append("patientId", patientId);
-      formData.append("width", String(dimensions.width));
-      formData.append("height", String(dimensions.height));
-
       try {
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", "/api/xrays/upload");
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const pct = Math.round((e.loaded / e.total) * 100);
-              setUploadFiles((prev) =>
-                prev.map((f) =>
-                  f.id === entry.id ? { ...f, progress: pct } : f
-                )
-              );
-            }
-          };
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) resolve();
-            else reject(new Error(`Upload failed (${xhr.status})`));
-          };
-          xhr.onerror = () => reject(new Error("Upload failed"));
-          xhr.send(formData);
+        // Straight to storage with a presigned URL (see uploadXray); the
+        // title defaults to the file name.
+        await uploadXray({
+          file: entry.file,
+          thumbnail,
+          width: dimensions.width,
+          height: dimensions.height,
+          patientId,
+          onProgress: (pct) =>
+            setUploadFiles((prev) =>
+              prev.map((f) => (f.id === entry.id ? { ...f, progress: pct } : f))
+            ),
         });
 
         setUploadFiles((prev) =>

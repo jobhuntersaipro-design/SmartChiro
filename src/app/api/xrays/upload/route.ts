@@ -8,7 +8,15 @@ import { canManagePatientXrays } from '@/lib/auth/xray'
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300 MB
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME!
+const BODY_REGIONS = ['CERVICAL', 'THORACIC', 'LUMBAR', 'PELVIS', 'FULL_SPINE', 'EXTREMITY', 'OTHER'] as const
+const VIEW_TYPES = ['AP', 'LATERAL', 'OBLIQUE', 'PA', 'OTHER'] as const
 
+/**
+ * Fallback upload through the server, used only when the browser can't PUT
+ * to R2 directly (bucket CORS not configured) and the file is small enough
+ * for a serverless request body (~4.5 MB on Vercel). The normal path is
+ * /api/xrays/upload-url → PUT to R2 → /api/xrays/[id]/confirm.
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
@@ -26,6 +34,9 @@ export async function POST(request: NextRequest) {
     const patientId = formData.get('patientId') as string | null
     const widthStr = formData.get('width') as string | null
     const heightStr = formData.get('height') as string | null
+    const title = ((formData.get('title') as string | null) ?? '').trim().slice(0, 200) || null
+    const bodyRegion = BODY_REGIONS.find((r) => r === formData.get('bodyRegion')) ?? null
+    const viewType = VIEW_TYPES.find((v) => v === formData.get('viewType')) ?? null
 
     if (!file || !patientId) {
       return NextResponse.json(
@@ -79,6 +90,9 @@ export async function POST(request: NextRequest) {
         status: 'UPLOADING',
         width,
         height,
+        title,
+        bodyRegion,
+        viewType,
       },
     })
 
