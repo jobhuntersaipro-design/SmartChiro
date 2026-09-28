@@ -27,6 +27,9 @@ import { CreateAppointmentDialog } from "@/components/patients/CreateAppointment
 import { EditAppointmentDialog } from "@/components/patients/EditAppointmentDialog";
 import { CancelAppointmentDialog } from "@/components/patients/CancelAppointmentDialog";
 import { DeleteAppointmentDialog } from "@/components/patients/DeleteAppointmentDialog";
+import { SeriesScopeDialog, type SeriesScope } from "@/components/packages/SeriesScope";
+import { useFollowingEdit } from "@/components/packages/useFollowingEdit";
+import { followingUpdatedMessage } from "@/lib/series-client";
 
 import { AppointmentEventCard } from "./AppointmentEventCard";
 import { AppointmentEventPopover } from "./AppointmentEventPopover";
@@ -363,6 +366,10 @@ export function AppointmentsCalendarView({
 
   // ─── Drag-and-drop handler ───
   const conflictResolverRef = useRef<((override: boolean) => void) | null>(null);
+  // Series visits: "this appointment" / "this and following"
+  const [scopePrompt, setScopePrompt] = useState<((scope: SeriesScope | null) => void) | null>(null);
+  const following = useFollowingEdit(isAdmin);
+  const runFollowing = following.run;
 
   // Single mutation handler — react-big-calendar fires the same shape for
   // both drop and resize, and `newDuration` derives correctly from `newEnd - newStart`
@@ -407,6 +414,26 @@ export function AppointmentsCalendarView({
       }
 
       const newDuration = differenceInMinutes(newEnd, newStart);
+
+      // 3b. Series visit — this one only, or shift every later booked visit too
+      if (event.appointment.seriesId) {
+        const scope = await new Promise<SeriesScope | null>((resolve) => setScopePrompt(() => resolve));
+        if (!scope) {
+          await fetchAppointments();
+          return;
+        }
+        if (scope === "following") {
+          const outcome = await runFollowing(event.id, {
+            dateTime: newStart.toISOString(),
+            ...(newDuration !== event.appointment.duration ? { duration: newDuration } : {}),
+            ...(doctorChanged ? { doctorId: newDoctorId } : {}),
+          });
+          if (outcome.ok) toast.success(followingUpdatedMessage(outcome.count));
+          else if (!outcome.dismissed) toast.error(outcome.message);
+          await fetchAppointments();
+          return;
+        }
+      }
 
       // 4. Pre-flight conflict check
       const conflictUrl = new URL("/api/appointments/check-conflict", window.location.origin);
@@ -481,7 +508,7 @@ export function AppointmentsCalendarView({
       toast.success("Appointment updated");
       await fetchAppointments();
     },
-    [currentUserId, fetchAppointments, isAdmin]
+    [currentUserId, fetchAppointments, isAdmin, runFollowing]
   );
 
 
@@ -721,6 +748,7 @@ export function AppointmentsCalendarView({
         appointmentId={cancelTarget?.id ?? null}
         patientName={cancelTarget ? `${cancelTarget.patient.firstName} ${cancelTarget.patient.lastName}` : ""}
         appointmentDateTime={cancelTarget?.dateTime ?? null}
+        seriesId={cancelTarget?.seriesId ?? null}
         onClose={() => setCancelTarget(null)}
         onCancelled={() => {
           setCancelTarget(null);
@@ -737,6 +765,20 @@ export function AppointmentsCalendarView({
           fetchAppointments();
         }}
       />
+      <SeriesScopeDialog
+        open={!!scopePrompt}
+        title="Move recurring appointment"
+        verb="Shift"
+        onChoose={(scope) => {
+          scopePrompt?.(scope);
+          setScopePrompt(null);
+        }}
+        onClose={() => {
+          scopePrompt?.(null);
+          setScopePrompt(null);
+        }}
+      />
+      {following.dialog}
       {conflictDialog && (
         <ConflictOverrideDialog
           conflicts={conflictDialog.conflicts}

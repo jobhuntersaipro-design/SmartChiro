@@ -16,6 +16,11 @@ import type { TreatmentType } from "@/types/appointment";
 import { defaultStart } from "@/lib/appointment-defaults";
 import { clinicDateKey, clinicInstantFromInputs, clinicUtcOffsetLabel } from "@/lib/clinic-time";
 import { DateInput } from "@/components/ui/date-input";
+import { toast } from "sonner";
+import { RepeatBookingSection } from "@/components/packages/RepeatBookingSection";
+import { useSeriesPreview } from "@/components/packages/useSeriesPreview";
+import { buildRepeatRule, defaultRepeatState, type RepeatFormState } from "@/lib/package-ui";
+import { bookSeries } from "@/lib/series-client";
 
 interface Props {
   open: boolean;
@@ -117,6 +122,10 @@ export function CreateAppointmentDialog({
   // Each confirm keeps the gates already confirmed in this attempt so the retry re-sends them
   const [breakConfirm, setBreakConfirm] = useState<{ label: string; confirmed: SubmitOpts } | null>(null);
   const [hoursConfirm, setHoursConfirm] = useState<{ hours: string; confirmed: SubmitOpts } | null>(null);
+  // Repeat (recurring series)
+  const [repeat, setRepeat] = useState<RepeatFormState>(() => defaultRepeatState(defaultStart(prefilledDateTime).date));
+  const [skipProblemDates, setSkipProblemDates] = useState(false);
+  const [seriesPackageId, setSeriesPackageId] = useState("");
 
   // Initialize from prefills when the dialog opens
   useEffect(() => {
@@ -146,6 +155,9 @@ export function CreateAppointmentDialog({
     setConflicts([]);
     setBreakConfirm(null);
     setHoursConfirm(null);
+    setRepeat(defaultRepeatState(start.date));
+    setSkipProblemDates(false);
+    setSeriesPackageId("");
   }, [open, prefilledPatient, prefilledDoctor, prefilledDateTime, defaultBranchId]);
 
   // The user's branches — for the branch field, room suggestions and per-branch role
@@ -196,6 +208,16 @@ export function CreateAppointmentDialog({
     return () => clearTimeout(t);
   }, [doctor, date, time, duration]);
 
+  const repeatRule = repeat.enabled ? buildRepeatRule(repeat, date, time) : null;
+  const series = useSeriesPreview({
+    rule: open && repeatRule?.ok ? repeatRule.rule : null,
+    branchId,
+    doctorId: doctor?.id,
+    patientId: patient?.id,
+    duration,
+    treatmentType,
+  });
+
   if (!open) return null;
 
   function changeBranch(id: string) {
@@ -215,10 +237,43 @@ export function CreateAppointmentDialog({
   const roomCount = branch?.treatmentRooms ?? 0;
   const iso = inputsToIso(date, time);
   const isPast = iso ? new Date(iso).getTime() < Date.now() : false;
-  const canSave =
-    !!patient && !!doctor && !!iso && !isPast && conflicts.length === 0 && !submitting;
+  const seriesOk = series.preview?.summary.ok ?? 0;
+  const seriesBlocked = !!series.preview && series.preview.summary.withProblems > 0 && !skipProblemDates;
+  const canSave = repeat.enabled
+    ? !!patient && !!doctor && !!repeatRule?.ok && !!series.preview && !series.loading && seriesOk > 0 && !seriesBlocked && !submitting
+    : !!patient && !!doctor && !!iso && !isPast && conflicts.length === 0 && !submitting;
+
+  async function submitSeries() {
+    if (!patient || !doctor || !repeatRule?.ok) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const result = await bookSeries({
+        ...repeatRule.rule,
+        branchId,
+        doctorId: doctor.id,
+        patientId: patient.id,
+        duration,
+        treatmentType: treatmentType || undefined,
+        room: room.trim() || undefined,
+        notes: notes.trim() || undefined,
+        skipProblemDates,
+        patientPackageId: seriesPackageId || undefined,
+      });
+      if (!result.ok) {
+        setError(result.problems ? `${result.message} Tick “Skip problem dates” or change the repeat.` : result.message);
+        return;
+      }
+      toast.success(result.message);
+      onCreated();
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function submit(opts: SubmitOpts = {}) {
+    if (repeat.enabled) return submitSeries();
     if (!patient || !doctor || !iso) return;
     setError(null);
     setSubmitting(true);
@@ -410,6 +465,22 @@ export function CreateAppointmentDialog({
           </div>
         </div>
 
+        <RepeatBookingSection
+          value={repeat}
+          onChange={setRepeat}
+          date={date}
+          ruleError={repeatRule && !repeatRule.ok ? repeatRule.error : null}
+          preview={series.preview}
+          previewLoading={series.loading}
+          previewError={series.error}
+          skipProblemDates={skipProblemDates}
+          onSkipChange={setSkipProblemDates}
+          patientId={patient?.id ?? null}
+          treatmentType={treatmentType}
+          packageId={seriesPackageId}
+          onPackageChange={setSeriesPackageId}
+        />
+
         <div className="mb-4">
           <label className="block text-[12px] font-medium text-[#425466] mb-1">
             Notes (optional)
@@ -422,14 +493,14 @@ export function CreateAppointmentDialog({
           />
         </div>
 
-        {isPast && (
+        {isPast && !repeat.enabled && (
           <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41] inline-flex items-start gap-2">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" strokeWidth={2} />
             <span>Selected time is in the past.</span>
           </div>
         )}
 
-        {conflicts.length > 0 && (
+        {conflicts.length > 0 && !repeat.enabled && (
           <div className="mb-3 rounded-md bg-[#FDE7EC] border border-[#DF1B41]/20 px-3 py-2 text-[13px] text-[#DF1B41]">
             <div className="flex items-center gap-1.5 font-medium mb-1">
               <AlertCircle className="h-3.5 w-3.5" strokeWidth={2} />
@@ -447,7 +518,7 @@ export function CreateAppointmentDialog({
           </div>
         )}
 
-        {error && !conflicts.length && (
+        {error && (repeat.enabled || !conflicts.length) && (
           <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
             {error}
           </div>
@@ -461,7 +532,11 @@ export function CreateAppointmentDialog({
           </Button>
           <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
-            {submitting ? "Scheduling…" : "Schedule"}
+            {submitting
+              ? "Scheduling…"
+              : repeat.enabled && seriesOk > 0
+                ? `Book ${seriesOk} visit${seriesOk === 1 ? "" : "s"}`
+                : "Schedule"}
           </Button>
         </div>
       </div>

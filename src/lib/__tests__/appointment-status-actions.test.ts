@@ -29,4 +29,16 @@ describe("changeAppointmentStatus", () => {
     const denied = vi.fn(async () => new Response('{"error":"forbidden"}', { status: 403 }));
     expect((await changeAppointmentStatus("a1", "NO_SHOW", denied as unknown as typeof fetch)).message).toMatch(/own appointments/);
   });
+
+  it("mentions the package session a completed visit used", async () => {
+    const redemption = { id: "r1", appointmentId: "a1", patientPackageId: "p1", packageName: "12 Adjustments", sessionsUsed: 5, sessionsTotal: 12, sessionsLeft: 7, redeemedAt: "2026-09-28T02:00:00.000Z" };
+    const done = vi.fn(async () => new Response(JSON.stringify({ appointment: {}, redemption }), { status: 200 }));
+    expect(await changeAppointmentStatus("a1", "COMPLETED", done as unknown as typeof fetch)).toEqual({
+      ok: true,
+      message: "Appointment completed · Session 5 of 12 used from 12 Adjustments",
+      redemption,
+    });
+    const none = vi.fn(async () => new Response(JSON.stringify({ appointment: {}, redemption: null }), { status: 200 }));
+    expect(await changeAppointmentStatus("a1", "COMPLETED", none as unknown as typeof fetch)).toEqual({ ok: true, message: "Appointment completed" });
+  });
 });

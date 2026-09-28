@@ -363,6 +363,7 @@ export function AppointmentsListView({
             : ""
         }
         appointmentDateTime={cancelTarget?.dateTime ?? null}
+        seriesId={cancelTarget?.seriesId ?? null}
         onClose={() => setCancelTarget(null)}
         onCancelled={() => {
           setCancelTarget(null);

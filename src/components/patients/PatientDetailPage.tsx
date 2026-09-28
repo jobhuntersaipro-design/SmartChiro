@@ -27,6 +27,7 @@ import { PatientOverviewTab } from "@/components/patients/PatientOverviewTab";
 import { PatientHistoryTab } from "@/components/patients/PatientHistoryTab";
 import { PatientXraysTab } from "@/components/patients/PatientXraysTab";
 import { PatientProfileTab } from "@/components/patients/PatientProfileTab";
+import { PatientCareTab, canViewPatientPackages } from "@/components/packages/PatientCareTab";
 import { ExternalLink } from "@/components/patients/ExternalLink";
 import { PhoneLinks } from "@/components/patients/PhoneLinks";
 import {
@@ -56,6 +57,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "history", label: "History" },
   { id: "xrays", label: "X-Rays" },
+  { id: "care", label: "Care & packages" },
   { id: "profile", label: "Profile" },
 ] as const;
 
@@ -66,7 +68,7 @@ type TabId = (typeof TABS)[number]["id"];
 // the right place.
 function resolveInitialTab(raw: string | null): TabId {
   if (raw === "visits") return "history";
-  if (raw === "history" || raw === "overview" || raw === "xrays" || raw === "profile") {
+  if (raw === "history" || raw === "overview" || raw === "xrays" || raw === "profile" || raw === "care") {
     return raw;
   }
   return "overview";
@@ -108,9 +110,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   // Front desk sees demographics and appointments only (no visits / X-rays).
   const clinical = can(branchRole, "clinical.read");
   const requestedTab: TabId = resolveInitialTab(searchParams.get("tab"));
-  const initialTab: TabId =
-    clinical || requestedTab === "history" || requestedTab === "profile" ? requestedTab : "history";
-  const visibleTabs = clinical ? TABS : TABS.filter((t) => t.id === "history" || t.id === "profile");
+  // Front desk also sees packages (no care plans — those are clinical).
+  const nonClinicalTabs: readonly TabId[] = ["history", "care", "profile"];
+  const initialTab: TabId = clinical || nonClinicalTabs.includes(requestedTab) ? requestedTab : "history";
 
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,6 +121,8 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [createAppointmentOpen, setCreateAppointmentOpen] = useState(false);
+  // Bumped after booking so the tabs re-fetch (a full reload would drop the booking toast).
+  const [bookingVersion, setBookingVersion] = useState(0);
 
   const fetchPatient = useCallback(async () => {
     try {
@@ -222,6 +226,10 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
     );
   }
 
+  const showCareTab = canViewPatientPackages(branchRole, patient.doctorId, currentUserId);
+  const visibleTabs = TABS.filter(
+    (t) => (clinical || nonClinicalTabs.includes(t.id)) && (t.id !== "care" || showCareTab),
+  ).map((t) => (t.id === "care" && !clinical ? { ...t, label: "Packages" } : t));
   const initials = getInitials(patient.firstName, patient.lastName);
   const fullName = `${patient.firstName} ${patient.lastName}`;
   const dobDisplay = formatDobWithAge(patient.dateOfBirth);
@@ -416,7 +424,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         <PatientOverviewTab patientId={patientId} patient={patient} />
       )}
       {activeTab === "history" && (
-        <PatientHistoryTab patientId={patientId} branchRole={branchRole} />
+        <PatientHistoryTab key={bookingVersion} patientId={patientId} branchRole={branchRole} />
       )}
       {activeTab === "xrays" && clinical && (
         <PatientXraysTab
@@ -424,6 +432,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
           xrays={patient.xrays ?? []}
           onRefresh={fetchPatient}
         />
+      )}
+      {activeTab === "care" && showCareTab && (
+        <PatientCareTab key={bookingVersion} patient={patient} branchRole={branchRole} currentUserId={currentUserId} />
       )}
       {activeTab === "profile" && (
         <PatientProfileTab patient={patient} showClinical={clinical} />
@@ -458,8 +469,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         onClose={() => setCreateAppointmentOpen(false)}
         onCreated={() => {
           setCreateAppointmentOpen(false);
-          // Reload patient to refresh upcomingAppointment field
-          window.location.reload();
+          // Refresh the next-appointment card and the tabs
+          void fetchPatient();
+          setBookingVersion((v) => v + 1);
         }}
       />
     </div>

@@ -35,6 +35,9 @@ export interface CalendarAppointment {
   room?: string | null;
   /** Whether this appointment has at least one DRAFT/SENT/OVERDUE invoice */
   hasUnpaidInvoice?: boolean;
+  /** Recurring series this visit belongs to (1-based `seriesIndex` in date order). */
+  seriesId?: string | null;
+  seriesIndex?: number | null;
   patient: {
     id: string;
     firstName: string;

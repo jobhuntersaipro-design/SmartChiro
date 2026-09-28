@@ -10,6 +10,8 @@ import { CLINIC_TYPE_OPTIONS, formatClinicType, normalizeWebsite } from "@/lib/b
 import { DeleteBranchDialog } from "./DeleteBranchDialog";
 import { BranchActivityLog } from "./BranchActivityLog";
 import { BranchReminderSettingsCard } from "@/components/branches/BranchReminderSettingsCard";
+import { PackageCatalogCard } from "@/components/packages/PackageCatalogCard";
+import { can } from "@/lib/permissions";
 import { useRouter } from "next/navigation";
 
 interface BranchSettingsTabProps {
@@ -294,6 +296,9 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
         canEdit={true}
         branch={{ name: branch.name, address: branch.address, phone: branch.phone }}
       />
+
+      {/* Packages catalogue (Phase 3) */}
+      <PackageCatalogCard branchId={branch.id} canManage={can(branch.userRole, "package.manage")} />
 
       {/* Activity Log — visible to OWNER + ADMIN per 2026-05-05 RBAC */}
       {(isOwner || branch.userRole === "ADMIN") && (

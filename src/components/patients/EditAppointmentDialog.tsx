@@ -7,6 +7,10 @@ import { DoctorCombobox } from "@/components/patients/DoctorCombobox";
 import { formatAppointmentDateTime } from "@/lib/format";
 import { clinicDateKey, clinicInstantFromInputs, clinicTimeInput } from "@/lib/clinic-time";
 import { DateInput } from "@/components/ui/date-input";
+import { toast } from "sonner";
+import { SeriesScopeDialog, type SeriesScope } from "@/components/packages/SeriesScope";
+import { useFollowingEdit } from "@/components/packages/useFollowingEdit";
+import { followingUpdatedMessage } from "@/lib/series-client";
 
 interface Props {
   appointmentId: string | null;
@@ -25,6 +29,7 @@ interface AppointmentDetail {
   patient: { id: string; firstName: string; lastName: string };
   doctor: { id: string; name: string };
   branchId: string;
+  seriesId?: string | null;
 }
 
 interface ConflictItem {
@@ -73,6 +78,8 @@ export function EditAppointmentDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
+  const [scopeOpen, setScopeOpen] = useState(false);
+  const following = useFollowingEdit(isAdmin);
 
   useEffect(() => {
     if (!appointmentId) {
@@ -132,23 +139,30 @@ export function EditAppointmentDialog({
   const isPast = iso ? new Date(iso).getTime() < Date.now() : false;
   const canSave = !!iso && !isPast && conflicts.length === 0 && !submitting;
 
-  async function submit() {
+  async function submit(scope?: SeriesScope) {
     if (!appointmentId || !iso) return;
     setError(null);
+    const body: Record<string, unknown> = {};
+    if (appt && iso !== appt.dateTime) body.dateTime = iso;
+    if (appt && duration !== appt.duration) body.duration = duration;
+    if (isAdmin && doctor && appt && doctor.id !== appt.doctor.id) body.doctorId = doctor.id;
+    if (isAdmin && appt && status !== appt.status) body.status = status;
+    if (appt && (notes ?? "") !== (appt.notes ?? "")) body.notes = notes;
+    if (appt && room.trim() !== (appt.room ?? "")) body.room = room.trim() || null;
+
+    if (Object.keys(body).length === 0) {
+      onClose();
+      return;
+    }
+    // A series visit whose time / doctor / length changes: ask which visits it applies to.
+    const seriesFields = ["dateTime", "duration", "doctorId"].filter((k) => k in body);
+    if (appt?.seriesId && seriesFields.length > 0 && !scope) {
+      setScopeOpen(true);
+      return;
+    }
+    if (scope === "following") return submitFollowing(body, seriesFields);
     setSubmitting(true);
     try {
-      const body: Record<string, unknown> = {};
-      if (appt && iso !== appt.dateTime) body.dateTime = iso;
-      if (appt && duration !== appt.duration) body.duration = duration;
-      if (isAdmin && doctor && appt && doctor.id !== appt.doctor.id) body.doctorId = doctor.id;
-      if (isAdmin && appt && status !== appt.status) body.status = status;
-      if (appt && (notes ?? "") !== (appt.notes ?? "")) body.notes = notes;
-      if (appt && room.trim() !== (appt.room ?? "")) body.room = room.trim() || null;
-
-      if (Object.keys(body).length === 0) {
-        onClose();
-        return;
-      }
 
       const patch = (extra: Record<string, unknown> = {}) =>
         fetch(`/api/appointments/${appointmentId}`, {
@@ -177,6 +191,38 @@ export function EditAppointmentDialog({
         }
         return;
       }
+      onUpdated();
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  /** Time / doctor / length go to every later visit; other edits stay on this one. */
+  async function submitFollowing(body: Record<string, unknown>, seriesFields: string[]) {
+    if (!appointmentId) return;
+    const rest = Object.fromEntries(Object.entries(body).filter(([k]) => !seriesFields.includes(k)));
+    const shared = Object.fromEntries(seriesFields.map((k) => [k, body[k]]));
+    setSubmitting(true);
+    try {
+      if (Object.keys(rest).length > 0) {
+        const res = await fetch(`/api/appointments/${appointmentId}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(rest),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data?.message ?? data?.error ?? `Save failed (${res.status})`);
+          return;
+        }
+      }
+      const outcome = await following.run(appointmentId, shared);
+      if (!outcome.ok) {
+        if (!outcome.dismissed) setError(outcome.message);
+        return;
+      }
+      toast.success(followingUpdatedMessage(outcome.count));
       onUpdated();
       onClose();
     } finally {
@@ -341,7 +387,7 @@ export function EditAppointmentDialog({
               <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">
                 Cancel
               </Button>
-              <Button onClick={submit} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
+              <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 {submitting ? "Saving…" : "Save changes"}
               </Button>
@@ -349,6 +395,17 @@ export function EditAppointmentDialog({
           </>
         )}
       </div>
+      <SeriesScopeDialog
+        open={scopeOpen}
+        title="Edit recurring appointment"
+        verb="Shift"
+        onClose={() => setScopeOpen(false)}
+        onChoose={(scope) => {
+          setScopeOpen(false);
+          void submit(scope);
+        }}
+      />
+      {following.dialog}
     </div>
   );
 }

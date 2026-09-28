@@ -12,7 +12,7 @@ import { can } from "@/lib/permissions";
 
 /** OWNER / ADMIN — manage catalogue, sell, cancel. */
 export function isManagerRole(role: BranchRole | null): boolean {
-  return role === "OWNER" || role === "ADMIN";
+  return can(role, "package.manage");
 }
 
 export interface PatientAccess {

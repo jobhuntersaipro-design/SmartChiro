@@ -1,3 +1,6 @@
+import { redemptionToast } from "@/lib/package-ui";
+import type { RedemptionSummaryJson } from "@/types/packages";
+
 export type AppointmentStatus = "SCHEDULED" | "CHECKED_IN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
 
 export interface StatusAction {
@@ -52,19 +55,28 @@ const ERRORS: Record<string, string> = {
   unauthorized: "Your session expired — sign in again.",
 };
 
-/** PATCH the status; resolves with a message for a toast. */
+/**
+ * PATCH the status; resolves with a message for a toast. Completing a visit
+ * may use a package session — then `redemption` is set and the message says so.
+ */
 export async function changeAppointmentStatus(
   appointmentId: string,
   status: AppointmentStatus,
   fetchImpl: typeof fetch = fetch,
-): Promise<{ ok: boolean; message: string }> {
+): Promise<{ ok: boolean; message: string; redemption?: RedemptionSummaryJson }> {
   try {
     const res = await fetchImpl(`/api/appointments/${appointmentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (res.ok) return { ok: true, message: SUCCESS[status] };
+    if (res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { redemption?: RedemptionSummaryJson | null };
+      const redemption = status === "COMPLETED" ? body.redemption ?? null : null;
+      return redemption
+        ? { ok: true, message: `${SUCCESS[status]} · ${redemptionToast(redemption)}`, redemption }
+        : { ok: true, message: SUCCESS[status] };
+    }
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     return { ok: false, message: (body.error && ERRORS[body.error]) ?? "Couldn't update the appointment." };
   } catch {

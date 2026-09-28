@@ -41,7 +41,9 @@ export type Capability =
   /** Visits, X-rays and recovery numbers on the dashboard. */
   | "dashboard.clinicalStats"
   /** Revenue, receivables, utilisation, packages and retention reports. */
-  | "reports.read";
+  | "reports.read"
+  /** Package catalogue, cancelling sold packages (selling is `invoice.manage`). */
+  | "package.manage";
 
 const ALL: readonly Capability[] = [
   "patient.readAll",
@@ -63,6 +65,7 @@ const ALL: readonly Capability[] = [
   "audit.read",
   "dashboard.clinicalStats",
   "reports.read",
+  "package.manage",
 ];
 
 export const ROLE_CAPABILITIES: Record<BranchRole, readonly Capability[]> = {

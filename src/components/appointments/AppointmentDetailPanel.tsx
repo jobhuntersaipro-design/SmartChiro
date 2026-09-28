@@ -22,6 +22,7 @@ import { STATUS_TOKENS } from "@/lib/appointment-tabs";
 import { AppointmentStatusActions } from "@/components/appointments/AppointmentStatusActions";
 import type { CalendarAppointment } from "@/types/appointment";
 import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
+import { AppointmentPackageInfo } from "@/components/packages/AppointmentPackageInfo";
 
 interface Props {
   appointment: CalendarAppointment | null;
@@ -300,7 +301,23 @@ export function AppointmentDetailPanel({
                 <ExternalLink className="inline-block h-3 w-3 ml-1 opacity-50" strokeWidth={1.75} />
               </Link>
             </dd>
+            {appointment.seriesIndex != null && (
+              <>
+                <dt className="text-[#697386]">Series</dt>
+                <dd className="text-[#061b31] tabular-nums">Visit {appointment.seriesIndex} of a recurring series</dd>
+              </>
+            )}
           </dl>
+          <div className="mt-3 empty:hidden">
+            <AppointmentPackageInfo
+              appointmentId={appointment.id}
+              status={appointment.status}
+              patientId={appointment.patient.id}
+              treatmentType={appointment.treatmentType}
+              canRedeem={canEdit}
+              onChanged={onChanged}
+            />
+          </div>
         </div>
 
         {/* Notes */}

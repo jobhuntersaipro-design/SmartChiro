@@ -9,6 +9,7 @@ import { AppointmentStatusActions } from "@/components/appointments/AppointmentS
 import { nextStatusActions } from "@/lib/appointment-status-actions";
 import type { CalendarAppointment } from "@/types/appointment";
 import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
+import { AppointmentPackageInfo } from "@/components/packages/AppointmentPackageInfo";
 
 interface Props {
   appointment: CalendarAppointment;
@@ -144,6 +145,19 @@ export function AppointmentEventPopover({
             ☎ {appointment.patient.phone}
           </p>
         )}
+        {appointment.seriesIndex != null && (
+          <p className="text-[12px] text-[#64748d] tabular-nums">Recurring · visit {appointment.seriesIndex}</p>
+        )}
+        <div className="empty:hidden">
+          <AppointmentPackageInfo
+            appointmentId={appointment.id}
+            status={appointment.status}
+            patientId={appointment.patient.id}
+            treatmentType={appointment.treatmentType}
+            canRedeem={canEdit}
+            compact
+          />
+        </div>
       </div>
 
       {canEdit && nextStatusActions(appointment.status, new Date(appointment.dateTime)).length > 0 && (

@@ -721,8 +721,114 @@ async function main() {
   }
   console.log(`Seeded ${invCount} invoices`)
 
+  await seedPackages(branches, patientsData, allDoctors, now)
+
   console.log('\n✓ Personal seed complete!')
   console.log(`   Login: ${SEED_EMAIL}`)
+}
+
+type TreatmentCode = 'ADJUSTMENT' | 'GONSTEAD' | 'DIVERSIFIED' | 'FOLLOW_UP' | 'WELLNESS_CHECK' | 'REHAB_EXERCISE' | 'SPORTS_REHAB' | 'SOFT_TISSUE'
+
+const PACKAGE_TEMPLATES: { name: string; description: string; sessions: number; price: number; validityDays: number | null; treatmentTypes: TreatmentCode[] }[] = [
+  { name: '12 Adjustments', description: 'Corrective care block — 12 adjustment visits.', sessions: 12, price: 1080, validityDays: 180, treatmentTypes: ['ADJUSTMENT', 'GONSTEAD', 'DIVERSIFIED', 'FOLLOW_UP'] },
+  { name: 'Wellness 5', description: 'Maintenance visits, any treatment.', sessions: 5, price: 500, validityDays: 90, treatmentTypes: [] },
+  { name: 'Rehab 8', description: 'Rehab and soft tissue sessions.', sessions: 8, price: 880, validityDays: 120, treatmentTypes: ['REHAB_EXERCISE', 'SPORTS_REHAB', 'SOFT_TISSUE'] },
+]
+
+/**
+ * Phase 3 packages: a small catalogue per branch and two sold packages with a
+ * few used sessions (one reversed) so the patient page has something to show.
+ */
+async function seedPackages(
+  branches: { id: string; name: string }[],
+  patientsData: { branchIdx: number; doctorIdx: number }[],
+  allDoctors: { id: string }[],
+  now: Date,
+) {
+  const branchIds = branches.map((b) => b.id)
+  await prisma.carePlan.deleteMany({ where: { patientId: { startsWith: 'personal-patient-' } } })
+  await prisma.appointmentSeries.deleteMany({ where: { patientId: { startsWith: 'personal-patient-' } } })
+  await prisma.patientPackage.deleteMany({ where: { patientId: { startsWith: 'personal-patient-' } } })
+  await prisma.packageTemplate.deleteMany({ where: { branchId: { in: branchIds } } })
+
+  const templates = new Map<string, string>()
+  for (const b of branches) {
+    for (const t of PACKAGE_TEMPLATES) {
+      const row = await prisma.packageTemplate.create({ data: { ...t, branchId: b.id } })
+      templates.set(`${b.id}:${t.name}`, row.id)
+    }
+  }
+  console.log(`Seeded ${templates.size} package templates`)
+
+  const today = clinicParts(now)
+  const sales = [
+    { patientIdx: 0, template: '12 Adjustments', daysAgo: 20, paid: true, visits: [{ daysAgo: 16, treatment: 'ADJUSTMENT' as const }, { daysAgo: 9, treatment: 'GONSTEAD' as const }, { daysAgo: 6, treatment: 'ADJUSTMENT' as const, reversed: true }] },
+    { patientIdx: 4, template: 'Rehab 8', daysAgo: 12, paid: false, visits: [{ daysAgo: 8, treatment: 'SPORTS_REHAB' as const }] },
+  ]
+  for (const [i, s] of sales.entries()) {
+    const patientId = `personal-patient-${String(s.patientIdx + 1).padStart(3, '0')}`
+    const patient = patientsData[s.patientIdx]
+    const branchId = branches[patient.branchIdx].id
+    const doctorId = allDoctors[patient.doctorIdx].id
+    const t = PACKAGE_TEMPLATES.find((x) => x.name === s.template)!
+    const purchasedAt = clinicInstant(today.year, today.month, today.day - s.daysAgo, 10)
+    const expiresAt = t.validityDays ? clinicInstant(today.year, today.month, today.day - s.daysAgo + t.validityDays + 1) : null
+    const invoice = await prisma.invoice.create({
+      data: {
+        invoiceNumber: `JH-INV-PKG-${String(i + 1).padStart(4, '0')}`,
+        amount: t.price,
+        currency: 'MYR',
+        status: s.paid ? 'PAID' : 'SENT',
+        paidAt: s.paid ? purchasedAt : null,
+        dueDate: clinicInstant(today.year, today.month, today.day - s.daysAgo + 14),
+        lineItems: [{ description: `Package: ${t.name} (${t.sessions} sessions)`, quantity: 1, unitPrice: t.price, total: t.price }],
+        subtotal: t.price,
+        taxAmount: 0,
+        amountPaid: s.paid ? t.price : 0,
+        issuedAt: purchasedAt,
+        patientId,
+        branchId,
+        createdAt: purchasedAt,
+        ...(s.paid
+          ? { payments: { create: { amount: t.price, method: 'DUITNOW_QR' as const, receivedAt: purchasedAt, receiptNumber: `JH-RCP-PKG-${String(i + 1).padStart(4, '0')}`, branchId } } }
+          : {}),
+      },
+    })
+    const used = s.visits.filter((v) => !('reversed' in v && v.reversed)).length
+    const pkg = await prisma.patientPackage.create({
+      data: {
+        patientId,
+        branchId,
+        templateId: templates.get(`${branchId}:${t.name}`),
+        name: t.name,
+        sessionsTotal: t.sessions,
+        sessionsUsed: used,
+        price: t.price,
+        treatmentTypes: t.treatmentTypes,
+        purchasedAt,
+        expiresAt,
+        soldById: allDoctors[0].id,
+        invoiceId: invoice.id,
+      },
+    })
+    for (const v of s.visits) {
+      const at = clinicInstant(today.year, today.month, today.day - v.daysAgo, 11)
+      const appt = await prisma.appointment.create({
+        data: { dateTime: at, duration: 30, status: 'COMPLETED', treatmentType: v.treatment, patientId, branchId, doctorId },
+      })
+      const reversed = 'reversed' in v && v.reversed
+      await prisma.packageRedemption.create({
+        data: {
+          patientPackageId: pkg.id,
+          appointmentId: appt.id,
+          redeemedAt: at,
+          redeemedById: doctorId,
+          ...(reversed ? { reversedAt: new Date(at.getTime() + 3_600_000), reversedById: allDoctors[0].id } : {}),
+        },
+      })
+    }
+  }
+  console.log(`Seeded ${sales.length} patient packages with redemptions`)
 }
 
 main()

@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatAppointmentDateTime } from "@/lib/format";
+import { toast } from "sonner";
+import { SeriesScopeChoice, type SeriesScope } from "@/components/packages/SeriesScope";
+import { followingUpdatedMessage, patchFollowing } from "@/lib/series-client";
 
 interface Props {
   appointmentId: string | null;
   patientName: string;
   appointmentDateTime: string | null;
+  /** Series visits can cancel "this and following". */
+  seriesId?: string | null;
   onClose: () => void;
   onCancelled: () => void;
 }
@@ -17,11 +22,18 @@ export function CancelAppointmentDialog({
   appointmentId,
   patientName,
   appointmentDateTime,
+  seriesId,
   onClose,
   onCancelled,
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scope, setScope] = useState<SeriesScope>("one");
+
+  useEffect(() => {
+    setScope("one");
+    setError(null);
+  }, [appointmentId]);
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -39,6 +51,17 @@ export function CancelAppointmentDialog({
     setError(null);
     setSubmitting(true);
     try {
+      if (seriesId && scope === "following") {
+        const result = await patchFollowing(appointmentId, { status: "CANCELLED" });
+        if (!result.ok) {
+          setError(result.message);
+          return;
+        }
+        toast.success(followingUpdatedMessage(result.count, true));
+        onCancelled();
+        onClose();
+        return;
+      }
       const res = await fetch(`/api/appointments/${appointmentId}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
@@ -85,6 +108,12 @@ export function CancelAppointmentDialog({
         <p className="text-[13px] text-[#64748d] mb-5">
           Pending reminders will be removed. To restore, create a new appointment.
         </p>
+
+        {seriesId && (
+          <div className="mb-5">
+            <SeriesScopeChoice value={scope} onChange={setScope} verb="Cancel" name="cancel-appointment-scope" />
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
