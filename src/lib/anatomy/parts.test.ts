@@ -3,7 +3,9 @@ import {
   ANATOMY_GROUPS,
   ANATOMY_PARTS,
   compareParts,
+  expansionFor,
   groupParts,
+  isPeeledAway,
   matchesQuery,
   type AnatomyLayer,
   type AnatomyPart,
@@ -76,5 +78,57 @@ describe("search", () => {
     const groups = groupParts("muscles", "gluteus");
     expect(groups.map((g) => g.group.key)).toEqual(["hip"]);
     expect(groups[0].parts.length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe("muscle depth layers", () => {
+  const muscle = (label: string) => {
+    const part = ANATOMY_PARTS.muscles.find((p) => p.label === label);
+    if (!part) throw new Error(`missing ${label}`);
+    return part;
+  };
+
+  it("gives every muscle a layer and an explode vector", () => {
+    const missing = ANATOMY_PARTS.muscles.filter((p) => !p.layer || !p.explode);
+    expect(missing).toEqual([]);
+    expect(ANATOMY_PARTS.skeleton.some((p) => p.layer || p.explode)).toBe(false);
+  });
+
+  it("uses all three layers", () => {
+    const layers = new Set(ANATOMY_PARTS.muscles.map((p) => p.layer));
+    expect([...layers].sort()).toEqual([1, 2, 3]);
+  });
+
+  it.each([
+    ["Right gluteus maximus", 1],
+    ["Left latissimus dorsi", 1],
+    ["Right rectus abdominis", 1],
+    ["Right vastus intermedius", 2],
+    ["Right longissimus thoracis", 2],
+    ["Right multifidus", 3],
+    ["Right psoas major", 3],
+  ] as const)("classifies %s as layer %i", (label, layer) => {
+    expect(muscle(label).layer).toBe(layer);
+  });
+
+  it("peels layers from the outside in", () => {
+    const superficial = muscle("Right gluteus maximus");
+    const deep = muscle("Right psoas major");
+    expect(isPeeledAway(superficial, 1)).toBe(false);
+    expect(isPeeledAway(superficial, 2)).toBe(true);
+    expect(isPeeledAway(deep, 3)).toBe(false);
+  });
+
+  it("spreads superficial muscles further than deep ones in the same region", () => {
+    const length = (p: { explode?: number[] }) => Math.hypot(...(p.explode ?? [0]));
+    expect(length(muscle("Right vastus lateralis"))).toBeGreaterThan(length(muscle("Right vastus intermedius")));
+  });
+
+  it("expands everything when no group is picked, otherwise only picked groups", () => {
+    const thigh = muscle("Right vastus lateralis");
+    const neck = muscle("Right sternocleidomastoid");
+    expect(expansionFor(neck, 0.5, new Set())).toBe(0.5);
+    expect(expansionFor(thigh, 0.5, new Set(["thigh"]))).toBe(0.5);
+    expect(expansionFor(neck, 0.5, new Set(["thigh"]))).toBe(0);
   });
 });

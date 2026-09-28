@@ -1,13 +1,22 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
-import { CameraControls, useGLTF, useProgress } from "@react-three/drei";
+import { Suspense, use, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { CameraControls } from "@react-three/drei";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { FOCUS_FOV_DEG, focusView } from "@/lib/anatomy/camera";
-import { ANATOMY_PARTS, MODEL_URLS, type AnatomyLayer, type AnatomyPart } from "@/lib/anatomy/parts";
+import {
+  ANATOMY_PARTS,
+  MODEL_URLS,
+  expansionFor,
+  isPeeledAway,
+  type AnatomyLayer,
+  type AnatomyPart,
+  type MuscleLayer,
+} from "@/lib/anatomy/parts";
+import { getModelProgress, getServerModelProgress, loadModel, subscribeModelProgress } from "./model-loader";
 
 export interface FocusRequest {
   ids: string[];
@@ -22,6 +31,12 @@ interface AnatomyViewerProps {
   showSkeletonUnderlay: boolean;
   focusRequest: FocusRequest | null;
   resetNonce: number;
+  /** Muscles only: peel down to this layer (1 shows everything). */
+  peelDepth: MuscleLayer;
+  /** Muscles only: exploded-view amount, 0–1. */
+  expansion: number;
+  /** Muscle groups to expand; empty expands the whole body. */
+  expandGroups: Set<string>;
   onPartClick: (id: string, additive: boolean) => void;
 }
 
@@ -98,10 +113,17 @@ interface ModelMesh {
   mesh: THREE.Mesh;
 }
 
+/** Starts downloading a layer's model ahead of time (e.g. on tab hover). */
+export function preloadLayer(layer: AnatomyLayer) {
+  void loadModel(MODEL_URLS[layer]);
+}
+
 function useModelMeshes(layer: AnatomyLayer): ModelMesh[] {
-  const { scene } = useGLTF(MODEL_URLS[layer], false, true);
+  const gltf = use(loadModel(MODEL_URLS[layer]));
+  const scene = gltf?.scene;
   return useMemo(() => {
     const out: ModelMesh[] = [];
+    if (!scene) return out;
     scene.updateMatrixWorld(true);
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
@@ -119,6 +141,7 @@ interface PartMeshProps {
   visible: boolean;
   interactive: boolean;
   registry?: MeshRegistry;
+  offsetRegistry?: Map<string, THREE.Group>;
   onHover?: (id: string, event: ThreeEvent<PointerEvent>) => void;
   onHoverEnd?: (id: string) => void;
   onMove?: (event: ThreeEvent<PointerEvent>) => void;
@@ -132,6 +155,7 @@ function PartMesh({
   visible,
   interactive,
   registry,
+  offsetRegistry,
   onHover,
   onHoverEnd,
   onMove,
@@ -139,38 +163,84 @@ function PartMesh({
 }: PartMeshProps) {
   const pickable = interactive && visible;
   return (
-    <mesh
-      ref={(mesh) => {
-        if (!registry) return;
-        if (mesh) registry.set(id, mesh);
-        else registry.delete(id);
+    <group
+      ref={(group) => {
+        if (!offsetRegistry) return;
+        if (group) offsetRegistry.set(id, group);
+        else offsetRegistry.delete(id);
       }}
-      geometry={source.geometry}
-      matrixAutoUpdate={false}
-      matrix={source.matrixWorld}
-      material={material}
-      visible={visible}
-      raycast={pickable ? THREE.Mesh.prototype.raycast : () => undefined}
-      onPointerOver={
-        pickable
-          ? (e) => {
-              e.stopPropagation();
-              onHover?.(id, e);
-            }
-          : undefined
-      }
-      onPointerOut={pickable ? () => onHoverEnd?.(id) : undefined}
-      onPointerMove={pickable ? onMove : undefined}
-      onClick={
-        pickable
-          ? (e) => {
-              e.stopPropagation();
-              onSelect?.(id, e);
-            }
-          : undefined
-      }
-    />
+    >
+      <mesh
+        ref={(mesh) => {
+          if (!registry) return;
+          if (mesh) registry.set(id, mesh);
+          else registry.delete(id);
+        }}
+        geometry={source.geometry}
+        matrixAutoUpdate={false}
+        matrix={source.matrixWorld}
+        material={material}
+        visible={visible}
+        raycast={pickable ? THREE.Mesh.prototype.raycast : () => undefined}
+        onPointerOver={
+          pickable
+            ? (e) => {
+                e.stopPropagation();
+                onHover?.(id, e);
+              }
+            : undefined
+        }
+        onPointerOut={pickable ? () => onHoverEnd?.(id) : undefined}
+        onPointerMove={pickable ? onMove : undefined}
+        onClick={
+          pickable
+            ? (e) => {
+                e.stopPropagation();
+                onSelect?.(id, e);
+              }
+            : undefined
+        }
+      />
+    </group>
   );
+}
+
+const EXPLODE_EASING = 9; // per second; higher settles faster
+
+/**
+ * Eases each muscle toward its exploded offset (`explode` vector × amount).
+ * Runs inside the demand frameloop: it keeps requesting frames only while
+ * something is still moving.
+ */
+function useExplodedView(layer: AnatomyLayer, amount: number, groups: Set<string> | undefined) {
+  const offsets = useMemo(() => new Map<string, THREE.Group>(), []);
+  const current = useRef(new Map<string, number>());
+  const invalidate = useThree((state) => state.invalidate);
+  const scope = useMemo(() => groups ?? new Set<string>(), [groups]);
+
+  useEffect(() => invalidate(), [amount, scope, invalidate]);
+
+  useFrame((_, delta) => {
+    if (layer !== "muscles") return;
+    const t = 1 - Math.exp(-delta * EXPLODE_EASING);
+    let moving = false;
+    for (const [id, group] of offsets) {
+      const part = PART_LOOKUP.muscles.get(id);
+      if (!part?.explode) continue;
+      const target = expansionFor(part, amount, scope);
+      let value = current.current.get(id) ?? 0;
+      if (Math.abs(target - value) < 1e-3) value = target;
+      else {
+        value += (target - value) * t;
+        moving = true;
+      }
+      current.current.set(id, value);
+      group.position.set(part.explode[0] * value, part.explode[1] * value, part.explode[2] * value);
+    }
+    if (moving) invalidate();
+  });
+
+  return offsets;
 }
 
 interface LayerModelProps {
@@ -181,6 +251,9 @@ interface LayerModelProps {
   hovered?: string | null;
   hiddenGroups?: Set<string>;
   isolate?: boolean;
+  peelDepth?: MuscleLayer;
+  expansion?: number;
+  expandGroups?: Set<string>;
   registry?: MeshRegistry;
   onHover?: PartMeshProps["onHover"];
   onHoverEnd?: PartMeshProps["onHoverEnd"];
@@ -196,6 +269,9 @@ function LayerModel({
   hovered,
   hiddenGroups,
   isolate,
+  peelDepth = 1,
+  expansion = 0,
+  expandGroups,
   registry,
   onHover,
   onHoverEnd,
@@ -205,6 +281,7 @@ function LayerModel({
   const meshes = useModelMeshes(layer);
   const lookup = PART_LOOKUP[layer];
   const hasSelection = (selected?.size ?? 0) > 0;
+  const offsets = useExplodedView(layer, expansion, expandGroups);
 
   return (
     <group>
@@ -215,7 +292,7 @@ function LayerModel({
         if (selected?.has(id)) state = "selected";
         else if (hovered === id) state = "hover";
         else if (isolate && hasSelection) state = "ghost";
-        const visible = !(part && hiddenGroups?.has(part.group));
+        const visible = !(part && (hiddenGroups?.has(part.group) || isPeeledAway(part, peelDepth)));
         return (
           <PartMesh
             key={id}
@@ -225,6 +302,7 @@ function LayerModel({
             visible={visible}
             interactive={interactive && state !== "ghost"}
             registry={registry}
+            offsetRegistry={offsets}
             onHover={onHover}
             onHoverEnd={onHoverEnd}
             onMove={onMove}
@@ -274,13 +352,41 @@ function CameraRig({ registry, focusRequest, resetNonce }: CameraRigProps) {
   );
 }
 
-function LoadingOverlay() {
-  const { active, progress } = useProgress();
-  if (!active) return null;
+function formatMb(bytes: number) {
+  return (bytes / 1e6).toFixed(1);
+}
+
+function LoadingOverlay({ layer }: { layer: AnatomyLayer }) {
+  const snapshot = useSyncExternalStore(subscribeModelProgress, getModelProgress, getServerModelProgress);
+  const progress = snapshot[MODEL_URLS[layer]];
+  if (progress?.failed) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/85">
+        <AlertTriangle className="h-6 w-6 text-[#F5A623]" strokeWidth={1.5} />
+        <span className="text-[14px]">Couldn&apos;t load the 3D model.</span>
+        <button
+          onClick={() => window.location.reload()}
+          className="rounded-[4px] border border-white/20 bg-white/10 px-3 py-1 text-[13px] font-medium hover:bg-white/20"
+        >
+          Reload
+        </button>
+      </div>
+    );
+  }
+  if (progress?.done) return null;
+  const loaded = progress?.loaded ?? 0;
+  const total = progress?.total ?? 0;
+  const pct = total > 0 ? Math.min(100, (loaded / total) * 100) : 0;
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/80">
       <Loader2 className="h-6 w-6 animate-spin" strokeWidth={1.5} />
-      <span className="text-[14px]">Loading 3D model… {Math.round(progress)}%</span>
+      <span className="text-[14px]">Loading high-resolution {layer === "muscles" ? "muscle" : "skeleton"} model…</span>
+      <div className="h-1 w-56 overflow-hidden rounded-full bg-white/15">
+        <div className="h-full rounded-full bg-[#635BFF] transition-[width]" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="font-mono text-[12px] text-white/60">
+        {total > 0 ? `${formatMb(loaded)} / ${formatMb(total)} MB` : loaded > 0 ? `${formatMb(loaded)} MB` : "\u00a0"}
+      </span>
     </div>
   );
 }
@@ -293,6 +399,9 @@ export default function AnatomyViewer({
   showSkeletonUnderlay,
   focusRequest,
   resetNonce,
+  peelDepth,
+  expansion,
+  expandGroups,
   onPartClick,
 }: AnatomyViewerProps) {
   const materials = useMemo(() => createMaterials(), []);
@@ -375,6 +484,9 @@ export default function AnatomyViewer({
             hovered={hovered}
             hiddenGroups={hiddenGroups}
             isolate={isolate}
+            peelDepth={peelDepth}
+            expansion={expansion}
+            expandGroups={expandGroups}
             registry={registry}
             onHover={handleHover}
             onHoverEnd={handleHoverEnd}
@@ -397,9 +509,9 @@ export default function AnatomyViewer({
         {hoveredPart?.label}
       </div>
 
-      <LoadingOverlay />
+      <LoadingOverlay layer={layer} />
     </div>
   );
 }
 
-useGLTF.preload(MODEL_URLS.skeleton, false, true);
+preloadLayer("skeleton");

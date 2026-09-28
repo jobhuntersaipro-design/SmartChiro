@@ -2,6 +2,8 @@ import manifest from "./manifest.json";
 
 export type AnatomyLayer = "skeleton" | "muscles";
 export type AnatomySide = "left" | "right" | "midline";
+/** Muscle depth: 1 superficial, 2 intermediate, 3 deep. */
+export type MuscleLayer = 1 | 2 | 3;
 
 export interface AnatomyPart {
   id: string;
@@ -10,6 +12,10 @@ export interface AnatomyPart {
   side: AnatomySide;
   /** Spinal level code, e.g. "L5" or "L5–S1" — only on vertebrae and discs. */
   short?: string;
+  /** Muscles only: depth layer from the build-time voxel peel. */
+  layer?: MuscleLayer;
+  /** Muscles only: exploded-view offset in metres at full expansion. */
+  explode?: [number, number, number];
 }
 
 export interface AnatomyGroup {
@@ -53,6 +59,30 @@ export const ANATOMY_GROUPS: Record<AnatomyLayer, AnatomyGroup[]> = {
     { key: "leg", label: "Leg & foot" },
   ],
 };
+
+export const MUSCLE_LAYERS: { layer: MuscleLayer; label: string }[] = [
+  { layer: 1, label: "Superficial" },
+  { layer: 2, label: "Intermediate" },
+  { layer: 3, label: "Deep" },
+];
+
+export function layerLabel(layer: MuscleLayer): string {
+  return MUSCLE_LAYERS[layer - 1].label;
+}
+
+/**
+ * Peeling to `depth` hides every muscle above it: depth 1 shows everything,
+ * depth 2 hides superficial muscles, depth 3 leaves only the deep ones.
+ */
+export function isPeeledAway(part: AnatomyPart, depth: MuscleLayer): boolean {
+  return part.layer !== undefined && part.layer < depth;
+}
+
+/** Expansion (0–1) applied to a part: everything when no groups are picked. */
+export function expansionFor(part: AnatomyPart, amount: number, groups: ReadonlySet<string>): number {
+  if (!part.explode) return 0;
+  return groups.size === 0 || groups.has(part.group) ? amount : 0;
+}
 
 export const ANATOMY_PARTS: Record<AnatomyLayer, AnatomyPart[]> = {
   skeleton: manifest.skeleton as AnatomyPart[],

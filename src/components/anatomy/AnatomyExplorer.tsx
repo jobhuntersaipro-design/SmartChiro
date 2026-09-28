@@ -6,9 +6,11 @@ import {
   Bone,
   ChevronRight,
   Crosshair,
+  Expand,
   Eye,
   EyeOff,
   Focus,
+  Layers,
   Loader2,
   RotateCcw,
   Search as SearchIcon,
@@ -20,8 +22,12 @@ import {
   findPart,
   groupLabel,
   groupParts,
+  isPeeledAway,
+  layerLabel,
+  MUSCLE_LAYERS,
   type AnatomyLayer,
   type AnatomyPart,
+  type MuscleLayer,
 } from "@/lib/anatomy/parts";
 import type { FocusRequest } from "./AnatomyViewer";
 
@@ -41,6 +47,12 @@ const LAYERS: { key: AnatomyLayer; label: string }[] = [
 
 type PerLayer<T> = Record<AnatomyLayer, T>;
 
+const DEFAULT_EXPANSION = 0.6;
+
+function preloadMuscles() {
+  void import("./AnatomyViewer").then((m) => m.preloadLayer("muscles"));
+}
+
 export function AnatomyExplorer() {
   const [layer, setLayer] = useState<AnatomyLayer>("skeleton");
   const [selected, setSelected] = useState<PerLayer<string[]>>({ skeleton: [], muscles: [] });
@@ -51,7 +63,12 @@ export function AnatomyExplorer() {
   const [showSkeleton, setShowSkeleton] = useState(true);
   const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
   const [resetNonce, setResetNonce] = useState(0);
+  const [peelDepth, setPeelDepth] = useState<MuscleLayer>(1);
+  const [expansion, setExpansion] = useState(0);
+  const [expandGroupKeys, setExpandGroupKeys] = useState<string[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+  const expandGroups = useMemo(() => new Set(expandGroupKeys), [expandGroupKeys]);
+  const isMuscles = layer === "muscles";
 
   const selectedIds = selected[layer];
   const hiddenGroups = useMemo(() => new Set(hidden[layer]), [hidden, layer]);
@@ -77,7 +94,22 @@ export function AnatomyExplorer() {
     const part = findPart(layer, id);
     if (part && next.includes(id)) {
       setExpanded((prev) => new Set(prev).add(`${layer}:${part.group}`));
+      // Selecting a muscle that is currently peeled away reveals its layer.
+      if (isMuscles && part.layer && isPeeledAway(part, peelDepth)) setPeelDepth(part.layer);
     }
+  }
+
+  function toggleGroupExpansion(key: string) {
+    const next = expandGroupKeys.includes(key) ? expandGroupKeys.filter((k) => k !== key) : [...expandGroupKeys, key];
+    setExpandGroupKeys(next);
+    // An empty scope means "whole body", so collapse instead of spreading everything.
+    if (next.length === 0) setExpansion(0);
+    else if (expansion === 0) setExpansion(DEFAULT_EXPANSION);
+  }
+
+  function clearExpansion() {
+    setExpandGroupKeys([]);
+    setExpansion(0);
   }
 
   function clearSelection() {
@@ -136,6 +168,8 @@ export function AnatomyExplorer() {
               role="tab"
               aria-selected={layer === l.key}
               onClick={() => setLayer(l.key)}
+              onPointerEnter={l.key === "muscles" ? preloadMuscles : undefined}
+              onFocus={l.key === "muscles" ? preloadMuscles : undefined}
               className={cn(
                 "rounded-[4px] px-3.5 py-1 text-[14px] font-medium transition-colors",
                 layer === l.key ? "bg-[#ededfc] text-[#533afd]" : "text-[#425466] hover:bg-[#f6f9fc] hover:text-[#061b31]"
@@ -157,23 +191,38 @@ export function AnatomyExplorer() {
             showSkeletonUnderlay={showSkeleton}
             focusRequest={focusRequest}
             resetNonce={resetNonce}
+            peelDepth={isMuscles ? peelDepth : 1}
+            expansion={isMuscles ? expansion : 0}
+            expandGroups={expandGroups}
             onPartClick={selectPart}
           />
 
-          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-            <ViewerButton onClick={() => setResetNonce((n) => n + 1)} icon={RotateCcw} label="Reset view" />
-            <ViewerButton
-              onClick={() => setIsolate((v) => !v)}
-              icon={Focus}
-              label="Isolate selection"
-              active={isolate}
-            />
-            {layer === "muscles" && (
+          <div className="pointer-events-none absolute inset-x-3 top-3 flex flex-wrap items-start justify-between gap-2">
+            <div className="pointer-events-auto flex flex-wrap gap-1.5">
+              <ViewerButton onClick={() => setResetNonce((n) => n + 1)} icon={RotateCcw} label="Reset view" />
               <ViewerButton
-                onClick={() => setShowSkeleton((v) => !v)}
-                icon={Bone}
-                label="Show skeleton"
-                active={showSkeleton}
+                onClick={() => setIsolate((v) => !v)}
+                icon={Focus}
+                label="Isolate selection"
+                active={isolate}
+              />
+              {layer === "muscles" && (
+                <ViewerButton
+                  onClick={() => setShowSkeleton((v) => !v)}
+                  icon={Bone}
+                  label="Show skeleton"
+                  active={showSkeleton}
+                />
+              )}
+            </div>
+            {isMuscles && (
+              <MuscleDepthControls
+                peelDepth={peelDepth}
+                onPeelDepthChange={setPeelDepth}
+                expansion={expansion}
+                onExpansionChange={setExpansion}
+                scopeLabels={expandGroupKeys.map((k) => groupLabel("muscles", k))}
+                onClearScope={clearExpansion}
               />
             )}
           </div>
@@ -227,6 +276,7 @@ export function AnatomyExplorer() {
               const open = query.trim() !== "" || expanded.has(`${layer}:${group.key}`);
               const isHidden = hiddenGroups.has(group.key);
               const selectedCount = parts.filter((p) => selectedIds.includes(p.id)).length;
+              const isExpanding = expandGroups.has(group.key) && expansion > 0;
               return (
                 <div key={group.key}>
                   <div className="group flex items-center gap-1 px-2 hover:bg-[#f6f9fc]">
@@ -250,6 +300,22 @@ export function AnatomyExplorer() {
                         </span>
                       )}
                     </button>
+                    {isMuscles && (
+                      <button
+                        onClick={() => toggleGroupExpansion(group.key)}
+                        aria-pressed={isExpanding}
+                        aria-label={`${isExpanding ? "Collapse" : "Expand"} ${group.label} in 3D view`}
+                        title={isExpanding ? "Collapse this group" : "Expand this group to see deeper muscles"}
+                        className={cn(
+                          "rounded-[4px] p-1",
+                          isExpanding
+                            ? "bg-[#ededfc] text-[#533afd]"
+                            : "text-[#64748d] hover:bg-white hover:text-[#061b31]"
+                        )}
+                      >
+                        <Expand className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      </button>
+                    )}
                     <button
                       onClick={() => toggleGroupVisibility(group.key)}
                       aria-label={isHidden ? `Show ${group.label}` : `Hide ${group.label}`}
@@ -267,6 +333,7 @@ export function AnatomyExplorer() {
                     <ul className="pb-1">
                       {parts.map((part) => {
                         const isSelected = selectedIds.includes(part.id);
+                        const peeled = isMuscles && isPeeledAway(part, peelDepth);
                         return (
                           <li key={part.id}>
                             <button
@@ -276,10 +343,16 @@ export function AnatomyExplorer() {
                                 "flex w-full items-center gap-2 py-1 pl-8 pr-3 text-left text-[14px] transition-colors",
                                 isSelected
                                   ? "bg-[#ededfc] text-[#533afd]"
-                                  : "text-[#425466] hover:bg-[#f6f9fc] hover:text-[#061b31]"
+                                  : peeled
+                                    ? "text-[#A3ACB9] hover:bg-[#f6f9fc] hover:text-[#425466]"
+                                    : "text-[#425466] hover:bg-[#f6f9fc] hover:text-[#061b31]"
                               )}
+                              title={peeled ? "Peeled away — click to reveal this layer" : undefined}
                             >
                               <span className="flex-1 truncate">{part.label}</span>
+                              {part.layer && part.layer > 1 && (
+                                <span className="shrink-0 text-[11px] text-[#697386]">{layerLabel(part.layer)}</span>
+                              )}
                               {part.short && (
                                 <span className="shrink-0 rounded-full bg-[#f6f9fc] px-1.5 font-mono text-[11px] text-[#425466]">
                                   {part.short}
@@ -323,6 +396,86 @@ function ViewerButton({ onClick, icon: Icon, label, active }: ViewerButtonProps)
       <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
       {label}
     </button>
+  );
+}
+
+interface MuscleDepthControlsProps {
+  peelDepth: MuscleLayer;
+  onPeelDepthChange: (depth: MuscleLayer) => void;
+  expansion: number;
+  onExpansionChange: (value: number) => void;
+  scopeLabels: string[];
+  onClearScope: () => void;
+}
+
+function MuscleDepthControls({
+  peelDepth,
+  onPeelDepthChange,
+  expansion,
+  onExpansionChange,
+  scopeLabels,
+  onClearScope,
+}: MuscleDepthControlsProps) {
+  const scope = scopeLabels.length ? scopeLabels.join(", ") : "Whole body";
+  return (
+    <div className="pointer-events-auto w-full max-w-66 rounded-[6px] border border-white/15 bg-[#0A2540]/70 p-2.5 text-white shadow-md backdrop-blur-sm sm:w-66">
+      <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.04em] text-white/70">
+        <Layers className="h-3.5 w-3.5" strokeWidth={1.75} />
+        Peel to
+      </div>
+      <div
+        role="radiogroup"
+        aria-label="Peel muscles to layer"
+        className="mt-1.5 grid grid-cols-3 gap-0.5 rounded-[4px] bg-white/10 p-0.5"
+      >
+        {MUSCLE_LAYERS.map(({ layer, label }) => (
+          <button
+            key={layer}
+            role="radio"
+            aria-checked={peelDepth === layer}
+            onClick={() => onPeelDepthChange(layer)}
+            className={cn(
+              "rounded-[4px] px-1 py-1 text-[12px] font-medium transition-colors",
+              peelDepth === layer ? "bg-[#635BFF] text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between text-[12px] font-medium uppercase tracking-[0.04em] text-white/70">
+        <label htmlFor="muscle-expansion" className="flex items-center gap-1.5">
+          <Expand className="h-3.5 w-3.5" strokeWidth={1.75} />
+          Expand
+        </label>
+        <span className="font-mono normal-case tracking-normal text-white/80">{Math.round(expansion * 100)}%</span>
+      </div>
+      <input
+        id="muscle-expansion"
+        type="range"
+        min={0}
+        max={1}
+        step={0.01}
+        value={expansion}
+        onChange={(e) => onExpansionChange(Number(e.target.value))}
+        className="mt-1.5 w-full accent-[#635BFF]"
+      />
+      <div className="mt-1 flex items-center gap-1 text-[12px] text-white/65">
+        <span className="truncate" title={scope}>
+          {scope}
+        </span>
+        {scopeLabels.length > 0 && (
+          <button
+            onClick={onClearScope}
+            aria-label="Collapse all groups"
+            className="ml-auto shrink-0 rounded-[4px] p-0.5 hover:bg-white/10 hover:text-white"
+          >
+            <X className="h-3 w-3" strokeWidth={2} />
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -375,6 +528,7 @@ function SelectionCard({ layer, parts, onRemove, onFocus, onClear }: SelectionCa
           <p className="mt-0.5 text-[13px] text-[#64748d]">
             {groupLabel(layer, single.group)}
             {single.side !== "midline" && ` · ${single.side === "right" ? "Right" : "Left"} side`}
+            {single.layer && ` · ${layerLabel(single.layer)} layer`}
           </p>
         </div>
       ) : (

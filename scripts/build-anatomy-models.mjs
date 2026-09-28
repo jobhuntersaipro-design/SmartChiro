@@ -12,7 +12,8 @@
  * Outputs:
  *   public/models/anatomy/skeleton.glb   — one named mesh per bone / disc
  *   public/models/anatomy/muscles.glb    — one named mesh per muscle part
- *   src/lib/anatomy/manifest.json        — part metadata (id, label, group, side)
+ *   src/lib/anatomy/manifest.json        — part metadata (id, label, group, side;
+ *                                          muscles also get depth layer + explode vector)
  *
  * Pipeline per part: parse binary STL → weld exact duplicate vertices →
  * meshoptimizer simplify to a triangle budget → smooth normals. Parts are then
@@ -26,6 +27,7 @@ import { Document, NodeIO } from "@gltf-transform/core";
 import { EXTMeshoptCompression, KHRMeshQuantization } from "@gltf-transform/extensions";
 import { meshopt } from "@gltf-transform/functions";
 import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
+import { computeExplodeVectors, computeMuscleLayers } from "./anatomy-layers.mjs";
 
 const SRC = process.argv[2];
 if (!SRC) {
@@ -38,8 +40,18 @@ const OUT_MODELS = path.join(ROOT, "public/models/anatomy");
 const OUT_MANIFEST = path.join(ROOT, "src/lib/anatomy/manifest.json");
 
 // Total triangle budget per model after simplification.
-const BUDGET = { skeleton: 700_000, muscles: 560_000 };
+const BUDGET = { skeleton: 700_000, muscles: 5_000_000 };
 const MIN_TRIS_PER_PART = 1_200;
+// Position quantization bits (scene-wide grid over ~1.65 m): 14 → 0.1 mm, 16 → 0.025 mm.
+const POSITION_BITS = { skeleton: 14, muscles: 16 };
+
+// Where BodyParts3D geometry misleads the voxel peel: the rectus sheath is
+// modelled as part of the external oblique (so rectus looks covered), and the
+// deep calf flexors surface only as tendons at the ankle.
+const LAYER_OVERRIDES = [
+  [/rectus abdominis/, 1],
+  [/flexor (digitorum|hallucis) longus/, 2],
+];
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
 
@@ -325,6 +337,24 @@ async function main() {
     }
   }
   const offset = [-(min[0] + max[0]) / 2, -min[1], -(min[2] + max[2]) / 2];
+  for (const p of [...parts.skeleton, ...parts.muscles]) {
+    for (let i = 0; i < p.tri.length; i += 3) {
+      p.tri[i] += offset[0];
+      p.tri[i + 1] += offset[1];
+      p.tri[i + 2] += offset[2];
+    }
+  }
+
+  console.log("computing muscle depth layers…");
+  const layers = computeMuscleLayers(
+    parts.muscles,
+    parts.skeleton.map((p) => p.tri),
+  ).map((layer, i) => LAYER_OVERRIDES.find(([re]) => re.test(parts.muscles[i].name))?.[1] ?? layer);
+  const explode = computeExplodeVectors(parts.muscles, layers);
+  parts.muscles.forEach((p, i) => {
+    p.layer = layers[i];
+    p.explode = explode[i];
+  });
 
   fs.mkdirSync(OUT_MODELS, { recursive: true });
   fs.mkdirSync(path.dirname(OUT_MANIFEST), { recursive: true });
@@ -346,11 +376,6 @@ async function main() {
     let outTris = 0;
 
     for (const p of list) {
-      for (let i = 0; i < p.tri.length; i += 3) {
-        p.tri[i] += offset[0];
-        p.tri[i + 1] += offset[1];
-        p.tri[i + 2] += offset[2];
-      }
       const srcTris = p.tri.length / 9;
       const target = Math.max(MIN_TRIS_PER_PART, Math.round(srcTris * ratio));
       const { positions, indices } = simplify(p.tri, target);
@@ -369,12 +394,21 @@ async function main() {
 
       const entry = { id: p.id, label: p.label, group: p.group, side: p.side };
       if (p.short) entry.short = p.short;
+      if (p.layer) entry.layer = p.layer;
+      if (p.explode) entry.explode = p.explode;
       manifest[kind].push(entry);
     }
 
     doc.createExtension(EXTMeshoptCompression).setRequired(true);
     doc.createExtension(KHRMeshQuantization).setRequired(true);
-    await doc.transform(meshopt({ encoder: MeshoptEncoder, level: "high", quantizationVolume: "scene" }));
+    await doc.transform(
+      meshopt({
+        encoder: MeshoptEncoder,
+        level: "high",
+        quantizationVolume: "scene",
+        quantizePosition: POSITION_BITS[kind],
+      }),
+    );
     const out = path.join(OUT_MODELS, `${kind}.glb`);
     await new NodeIO()
       .registerExtensions([EXTMeshoptCompression, KHRMeshQuantization])
