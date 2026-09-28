@@ -34,7 +34,9 @@ export default async function AppointmentsPage() {
     name: m.branch.name,
     role: m.role,
     doctors: m.branch.members
-      .filter((mem) => mem.role === "DOCTOR" || mem.role === "OWNER" || mem.role === "ADMIN")
+      // Calendar columns are clinicians: doctors and practising owners, not
+      // front-desk admins.
+      .filter((mem) => mem.role === "DOCTOR" || mem.role === "OWNER")
       .map((mem) => ({
         id: mem.user.id,
         name: mem.user.name ?? "Unnamed",

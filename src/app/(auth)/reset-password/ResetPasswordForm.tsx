@@ -127,7 +127,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] cursor-pointer"
-                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
               >
                 {showPassword ? (
                   <EyeOff size={16} strokeWidth={1.5} />
@@ -160,7 +161,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 type="button"
                 onClick={() => setShowConfirmPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] cursor-pointer"
-                tabIndex={-1}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                aria-pressed={showConfirmPassword}
               >
                 {showConfirmPassword ? (
                   <EyeOff size={16} strokeWidth={1.5} />

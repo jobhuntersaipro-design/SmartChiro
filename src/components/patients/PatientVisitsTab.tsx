@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Plus, Loader2, ChevronDown, ChevronUp, Calendar,
@@ -126,13 +127,20 @@ function VisitCard({
   patientId,
   onEdit,
   onDelete,
+  initiallyExpanded = false,
 }: {
   visit: Visit;
   patientId: string;
   onEdit: (visit: Visit) => void;
   onDelete: (visit: Visit) => void;
+  /** Deep link (?visit=<id>, e.g. "View visit" on an appointment): open and scroll to it. */
+  initiallyExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (initiallyExpanded) cardRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [initiallyExpanded]);
   const config = getVisitConfig(visit.visitType);
   const q = visit.questionnaire;
 
@@ -148,7 +156,8 @@ function VisitCard({
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white transition-shadow duration-200 hover:shadow-sm"
+      ref={cardRef}
+      className={`rounded-[6px] border border-[#e5edf5] bg-white transition-shadow duration-200 hover:shadow-sm ${initiallyExpanded ? "ring-2 ring-[#533afd]/30" : ""}`}
       style={{ borderLeft: `4px solid ${config.border}` }}
     >
       {/* Collapsed Header */}
@@ -487,6 +496,7 @@ const FILTER_OPTIONS = [
 // ─── Main Component ───
 
 export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
+  const linkedVisitId = useSearchParams().get("visit");
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -596,6 +606,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
               patientId={patientId}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              initiallyExpanded={visit.id === linkedVisitId}
             />
           ))}
         </div>

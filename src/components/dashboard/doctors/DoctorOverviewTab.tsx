@@ -6,6 +6,7 @@ import {
   Clock, User, CalendarDays, FileText, ChevronRight,
 } from "lucide-react";
 import type { DoctorDetail, WorkingSchedule } from "@/types/doctor";
+import { formatMYR } from "@/lib/invoices";
 
 interface DoctorOverviewTabProps {
   doctorId: string;
@@ -216,7 +217,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
               <InfoRow label="Room" value={doctor.profile.treatmentRoom} />
             )}
             {doctor.profile?.consultationFee != null && (
-              <InfoRow label="Fee" value={`RM ${doctor.profile.consultationFee}`} />
+              <InfoRow label="Fee" value={formatMYR(Number(doctor.profile.consultationFee))} />
             )}
           </div>
         </div>

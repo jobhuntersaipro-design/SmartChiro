@@ -399,8 +399,7 @@ describe('Patient CRUD', () => {
       expect(res.status).toBe(404)
     })
 
-    it('assigned doctor can delete and it is removed from DB', async () => {
-      // Create disposable patient
+    it('assigned doctor cannot delete (cascades to visits, X-rays and invoices)', async () => {
       const temp = await prisma.patient.create({
         data: { firstName: 'Temp', lastName: 'Del', branchId, doctorId },
       })
@@ -410,13 +409,9 @@ describe('Patient CRUD', () => {
         createRequest('DELETE', `/api/patients/${temp.id}`),
         { params: Promise.resolve({ patientId: temp.id }) }
       )
-      expect(res.status).toBe(200)
-      const data = await res.json()
-      expect(data.success).toBe(true)
-
-      // Verify deleted from Neon DB
-      const dbPatient = await prisma.patient.findUnique({ where: { id: temp.id } })
-      expect(dbPatient).toBeNull()
+      expect(res.status).toBe(403)
+      expect(await prisma.patient.findUnique({ where: { id: temp.id } })).not.toBeNull()
+      await prisma.patient.delete({ where: { id: temp.id } })
     })
 
     it('OWNER can delete', async () => {

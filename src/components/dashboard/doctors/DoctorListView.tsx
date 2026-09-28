@@ -214,7 +214,7 @@ export function DoctorListView({
             className="h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
           >
             <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
-            Add Doctor
+            Add staff
           </Button>
         )}
       </div>
@@ -370,7 +370,7 @@ function EmptyState({
           className="mt-4 h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
-          Add Doctor
+          Add staff
         </Button>
       )}
     </div>

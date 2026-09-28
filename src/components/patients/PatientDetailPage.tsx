@@ -357,14 +357,16 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
               Edit
             </Button>
-            <Button
-              variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
-              onClick={() => setDeleteOpen(true)}
-            >
-              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-              Delete
-            </Button>
+            {(branchRole === "OWNER" || branchRole === "ADMIN") && (
+              <Button
+                variant="outline"
+                className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Delete
+              </Button>
+            )}
           </div>
         </div>
       </div>

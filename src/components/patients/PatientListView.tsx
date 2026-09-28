@@ -171,7 +171,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
   const fetchDoctors = useCallback(async () => {
     if (!isAdmin) return;
     try {
-      const res = await fetch("/api/doctors");
+      const res = await fetch("/api/doctors?clinical=1");
       if (!res.ok) return;
       const data = (await res.json()) as { doctors?: Array<{ id: string; name: string | null }> };
       setBranchDoctors((data.doctors ?? []).map((d) => ({ id: d.id, name: d.name || "Unknown" })));
@@ -383,7 +383,7 @@ export function PatientListView({ userId, userName, branchRole }: PatientListVie
         <PatientTable
           patients={filtered}
           onEdit={(p) => setEditPatient(p)}
-          onDelete={(p) => setDeletePatient(p)}
+          onDelete={isAdmin ? (p) => setDeletePatient(p) : undefined}
           sortKey={sortKey}
           sortDir={sortDir}
           onSortChange={handleSortChange}

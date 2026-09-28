@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
   const branchId = searchParams.get("branchId");
   const search = searchParams.get("search");
   const status = searchParams.get("status"); // "active" | "inactive" | "all"
+  // ?clinical=1 — people who see patients (DOCTOR/OWNER), for booking and
+  // doctor filters; front-desk ADMINs are staff but not bookable.
+  const clinicalOnly = searchParams.get("clinical") === "1";
 
   // 1. Get all caller's branch memberships
   const callerMemberships = await prisma.branchMember.findMany({
@@ -41,7 +44,10 @@ export async function GET(req: NextRequest) {
 
   // 2. Find all BranchMembers in those branches
   const members = await prisma.branchMember.findMany({
-    where: { branchId: { in: targetBranchIds } },
+    where: {
+      branchId: { in: targetBranchIds },
+      ...(clinicalOnly ? { role: { in: ["DOCTOR", "OWNER"] } } : {}),
+    },
     include: {
       user: {
         include: {

@@ -34,7 +34,7 @@ export function DoctorCombobox({ value, onChange, disabled }: Props) {
     void (async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/doctors");
+        const res = await fetch("/api/doctors?clinical=1");
         if (!res.ok) return;
         const data = (await res.json()) as { doctors?: Array<{ id: string; name: string | null }> };
         if (cancelled) return;

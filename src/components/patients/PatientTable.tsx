@@ -152,7 +152,9 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
   );
 }
 
-const COL_GRID = "grid grid-cols-[minmax(220px,300px)_230px_minmax(140px,1fr)_140px_110px_70px_40px] gap-3";
+// Flexible minimums (~830 px) so the table fits a laptop next to the sidebar.
+const COL_GRID =
+  "grid grid-cols-[minmax(180px,2fr)_minmax(150px,1.4fr)_minmax(120px,1fr)_minmax(110px,1fr)_100px_60px_40px] gap-3";
 
 export function PatientTable({
   patients,
@@ -204,11 +206,12 @@ export function PatientTable({
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden transition-all duration-200 hover:border-[#c1c9d2]"
+      // No overflow-hidden: it clipped the row actions menu.
+      className="rounded-[6px] border border-[#e5edf5] bg-white transition-all duration-200 hover:border-[#c1c9d2]"
       style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
     >
       {/* Header */}
-      <div className={`${COL_GRID} px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc] sticky top-0 z-10`}>
+      <div className={`${COL_GRID} px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc] rounded-t-[6px]`}>
         <SortHeader label="Patient" sortKey="lastName" active={sortKey === "lastName"} dir={sortDir} onClick={handleSort} />
         <SortHeader label="Next Appointment" sortKey="upcomingAppointment" active={sortKey === "upcomingAppointment"} dir={sortDir} onClick={handleSort} />
         <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Contact</span>
@@ -226,7 +229,7 @@ export function PatientTable({
           <div
             key={patient.id}
             onClick={() => router.push(`/dashboard/patients/${patient.id}/details`)}
-            className={`${COL_GRID} items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5`}
+            className={`${COL_GRID} items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 last:rounded-b-[6px] transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5`}
           >
             {/* Patient name + IC */}
             <div className="flex items-center gap-2.5 min-w-0">

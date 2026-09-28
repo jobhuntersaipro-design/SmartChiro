@@ -2,6 +2,7 @@
 
 import { CheckCircle2, XCircle, AlertTriangle, Clock, DollarSign } from "lucide-react";
 import type { PastAppointmentStats } from "@/types/patient";
+import { formatMYR } from "@/lib/invoices";
 
 interface PastAppointmentStatCardsProps {
   stats: PastAppointmentStats;
@@ -70,7 +71,7 @@ export function PastAppointmentStatCards({
   // showing "RM 0 outstanding" adds noise. Same logic as Stripe's "Net volume" card.
   const outstandingLine =
     stats.outstanding > 0
-      ? `RM ${stats.outstanding.toLocaleString()} outstanding`
+      ? `${formatMYR(stats.outstanding)} outstanding`
       : undefined;
 
   return (
@@ -123,7 +124,7 @@ export function PastAppointmentStatCards({
         label="Revenue"
         icon={DollarSign}
         iconColor="#108c3d"
-        headline={`RM ${stats.paid.toLocaleString()}`}
+        headline={formatMYR(stats.paid)}
         headlineColor="#108c3d"
         subline={outstandingLine}
         sublineColor="#64748d"

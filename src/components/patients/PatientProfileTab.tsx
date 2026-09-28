@@ -10,6 +10,7 @@ import {
   buildDoctorHref,
   buildBranchHref,
 } from "@/lib/format";
+import { formatMYR } from "@/lib/invoices";
 
 interface PatientProfileTabProps {
   patient: {
@@ -220,15 +221,15 @@ export function PatientProfileTab({ patient }: PatientProfileTabProps) {
         <div className="grid grid-cols-3 gap-y-3 gap-x-8">
           <DetailRow
             label="Initial Treatment Fee"
-            value={patient.initialTreatmentFee != null ? `RM ${patient.initialTreatmentFee.toFixed(2)}` : null}
+            value={patient.initialTreatmentFee != null ? formatMYR(patient.initialTreatmentFee) : null}
           />
           <DetailRow
             label="First Treatment"
-            value={patient.firstTreatmentFee != null ? `RM ${patient.firstTreatmentFee.toFixed(2)}` : null}
+            value={patient.firstTreatmentFee != null ? formatMYR(patient.firstTreatmentFee) : null}
           />
           <DetailRow
             label="Standard Follow-Up"
-            value={patient.standardFollowUpFee != null ? `RM ${patient.standardFollowUpFee.toFixed(2)}` : null}
+            value={patient.standardFollowUpFee != null ? formatMYR(patient.standardFollowUpFee) : null}
           />
         </div>
       </Section>

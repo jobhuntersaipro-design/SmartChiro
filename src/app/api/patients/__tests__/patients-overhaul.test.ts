@@ -473,7 +473,7 @@ describe('Patient Overhaul', () => {
         },
       })
 
-      mockAuth.mockResolvedValue({ user: { id: doctorId } })
+      mockAuth.mockResolvedValue({ user: { id: ownerId } }) // deleting is OWNER/ADMIN only
       const res = await DELETE(
         createRequest('DELETE', `/api/patients/${temp.id}`),
         { params: Promise.resolve({ patientId: temp.id }) }
@@ -505,7 +505,7 @@ describe('Patient Overhaul', () => {
         },
       })
 
-      mockAuth.mockResolvedValue({ user: { id: doctorId } })
+      mockAuth.mockResolvedValue({ user: { id: ownerId } }) // deleting is OWNER/ADMIN only
       const res = await DELETE(
         createRequest('DELETE', `/api/patients/${temp.id}`),
         { params: Promise.resolve({ patientId: temp.id }) }

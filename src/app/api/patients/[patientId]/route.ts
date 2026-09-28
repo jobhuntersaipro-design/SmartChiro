@@ -454,6 +454,16 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  // Deleting cascades to visits, X-rays, annotations and invoices — only the
+  // branch's OWNER/ADMIN may do it, not the assigned doctor.
+  const membership = await prisma.branchMember.findUnique({
+    where: { userId_branchId: { userId: session.user.id, branchId: patient.branchId } },
+    select: { role: true },
+  });
+  if (membership?.role !== "OWNER" && membership?.role !== "ADMIN") {
+    return NextResponse.json({ error: "Only the branch owner or an admin can delete patients" }, { status: 403 });
+  }
+
   await prisma.patient.delete({ where: { id: patientId } });
 
   return NextResponse.json({ success: true });
