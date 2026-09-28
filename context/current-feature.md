@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — Phase 1 (trust bugs) done 2026-09-29; building Phases 2–8 in order on `claude/zen-goodall-84f7kl`.
+In Progress — Phases 1–2 done 2026-09-29; building Phases 3–8 in order on `claude/zen-goodall-84f7kl`.
 
 ## Spec
 
@@ -11,7 +11,7 @@ In Progress — Phase 1 (trust bugs) done 2026-09-29; building Phases 2–8 in o
 ## Goals
 
 1. Trust bugs — done
-2. Front desk role, global branch context, dd/mm dates, table/mobile fixes
+2. Front desk role, global branch context, dd/mm dates, table/mobile fixes — done
 3. Treatment plans, packages, recurring bookings
 4. Payments, manual invoices, SST, receipts
 5. Reports

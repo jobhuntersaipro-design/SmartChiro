@@ -1,7 +1,7 @@
 # SmartChiro Improvement Plan (UX review + Malaysian competitor gaps)
 
 **Source:** `smartchiro-improvement-report.md` (UX review of smartchiro.org, 28 Sep 2026, Owner role on KLCC / Bangsar / Penang Georgetown).
-**Status:** Phase 1 done (2026-09-29); Phase 2 in progress.
+**Status:** Phases 1–2 done (2026-09-29); Phase 3 in progress.
 **Branch:** `claude/zen-goodall-84f7kl` — one commit (or small set) per phase, each phase built, tested and pushed before the next starts.
 
 This file is the master plan. Each phase has a detailed section that is filled in
@@ -118,6 +118,12 @@ The sidebar branch switcher drives every page (patients directory, appointments 
 - Reminder preview uses the full branch name; marketing "Get Started" → `/register`.
 - Mobile 390px: headers stack, search placeholder short, "All Branches" button doesn't wrap, no sideways page scroll, cards instead of tables below 640px. (The stale `cursor/mobile-clinic-ux-1187` branch is not merged — it is 30 commits behind `main`; ideas taken from it where still relevant.)
 
+
+### Phase 2 — record (done 2026-09-29)
+- Shipped as specified in four parts (front desk / branch context / forms / display). Permissions live in `src/lib/permissions.ts` (`can(role, capability)`); branch scope in `src/lib/branch-scope.ts` + `loadBranchContext`.
+- Decisions made while building: a patient belongs to one branch, so the booking dialog's branch field narrows the patient/doctor pickers and the API rejects a mismatch (`patient_not_in_branch`); with both phone and email the reminder channel defaults to WhatsApp (email fallback already exists); front desk can reassign a patient's doctor (to clinicians only) and read the appointment audit log; DOCTOR loses read access to reminder/WhatsApp settings (was hidden in the UI already); owner signals (revenue) are OWNER/ADMIN only; `/dashboard/reports` renders the branded 404 but returns HTTP 200 in dev because the dashboard `loading.tsx` streams first.
+- "Next appointment" already used `dateTime >= now`; no change needed.
+- Verified in Chromium against local Postgres: front-desk login books and cancels but gets 403 on visits, patient delete, appointment delete and reminder settings, sees only History/Profile on a patient and no medical history; owner appointments page shows branch names, not ids; no page-level horizontal scroll at 390px on dashboard/appointments/patients/invoices; no hydration errors. 1108/1108 tests, lint 0 errors, build passes.
 
 ## Phase 3 — Treatment plans, packages, recurring bookings
 
