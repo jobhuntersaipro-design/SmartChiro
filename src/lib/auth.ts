@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import type { BranchRole } from '@prisma/client'
 import authConfig from './auth.config'
 import { sendVerificationEmail } from './email'
+import { loadBranchContext } from './branch-context'
 
 class EmailNotVerifiedError extends CredentialsSignin {
   code = 'email_not_verified'
@@ -101,8 +102,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
-        session.user.branchRole = token.branchRole as BranchRole | null
-        session.user.activeBranchId = token.activeBranchId as string | null
+        // Role and active branch come from the database, not the token
+        // (see loadBranchContext) — so they're current after creating or
+        // switching a branch, and set for Google sign-ins too.
+        const context = await loadBranchContext(session.user.id)
+        session.user.branchRole = context.branchRole
+        session.user.activeBranchId = context.activeBranchId
       }
       return session
     },

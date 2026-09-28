@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { loadBranchContext } from "@/lib/branch-context";
 
 export default async function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default async function DashboardLayout({
   if (!session?.user) {
     redirect("/login");
   }
+  const { branches, activeBranchId } = await loadBranchContext(session.user.id);
 
   return (
     <DashboardShell
@@ -20,6 +22,8 @@ export default async function DashboardLayout({
         email: session.user.email,
         image: session.user.image ?? null,
         branchRole: session.user.branchRole ?? null,
+        activeBranchId,
+        branches: branches.map(({ id, name, role }) => ({ id, name, role })),
       }}
     >
       {children}

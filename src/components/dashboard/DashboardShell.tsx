@@ -14,6 +14,8 @@ interface SidebarUser {
   email: string;
   image: string | null;
   branchRole: BranchRole | null;
+  activeBranchId: string | null;
+  branches: { id: string; name: string; role: BranchRole }[];
 }
 
 export function DashboardShell({

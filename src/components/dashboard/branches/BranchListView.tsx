@@ -79,6 +79,9 @@ export function BranchListView({ userName }: BranchListViewProps) {
       throw new Error(err.error);
     }
     await fetchBranches();
+    // Re-render server components so the sidebar and role pick up the new
+    // branch (a first branch makes this user its owner) without re-login.
+    router.refresh();
   }
 
   async function handleDeleteBranch(branchId: string) {
@@ -88,6 +91,7 @@ export function BranchListView({ userName }: BranchListViewProps) {
       throw new Error(err.error);
     }
     await fetchBranches();
+    router.refresh();
   }
 
   function handleEdit(branchId: string) {

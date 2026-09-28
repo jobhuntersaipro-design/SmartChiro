@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +17,7 @@ import {
   Building2,
   Stethoscope,
   Bone,
+  Check,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
@@ -44,6 +47,71 @@ interface SidebarUser {
   email: string;
   image: string | null;
   branchRole: BranchRole | null;
+  activeBranchId: string | null;
+  branches: { id: string; name: string; role: BranchRole }[];
+}
+
+const ROLE_LABEL: Record<BranchRole, string> = { OWNER: "Owner", ADMIN: "Admin", DOCTOR: "Doctor" };
+
+/** Which branch the dashboard works in; switching changes the role shown too. */
+function BranchSwitcher({ user }: { user: SidebarUser }) {
+  const router = useRouter();
+  const [switching, setSwitching] = useState(false);
+  const active = user.branches.find((b) => b.id === user.activeBranchId) ?? user.branches[0];
+  if (!active) {
+    return (
+      <span className="text-[12px] font-medium tracking-[0.04em] text-[#64748d] uppercase">Health Center</span>
+    );
+  }
+  const label = (
+    <span className="block truncate text-[13px] text-[#64748d]" title={`${active.name} · ${ROLE_LABEL[active.role]}`}>
+      {active.name}
+    </span>
+  );
+  if (user.branches.length < 2) return label;
+
+  async function switchTo(branchId: string) {
+    if (branchId === active.id) return;
+    setSwitching(true);
+    try {
+      const res = await fetch("/api/me/active-branch", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ branchId }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(`Switched to ${user.branches.find((b) => b.id === branchId)?.name ?? "branch"}`);
+      router.refresh();
+    } catch {
+      toast.error("Couldn't switch branch.");
+    } finally {
+      setSwitching(false);
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        disabled={switching}
+        aria-label={`Branch: ${active.name}. Switch branch`}
+        className="flex w-full min-w-0 items-center gap-1 rounded-[4px] text-left hover:text-[#061b31] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
+      >
+        <span className="min-w-0 flex-1">{label}</span>
+        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[#64748d]" strokeWidth={1.5} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-60">
+        {user.branches.map((b) => (
+          <DropdownMenuItem key={b.id} onClick={() => void switchTo(b.id)} className="flex items-center gap-2">
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] text-[#061b31]">{b.name}</span>
+              <span className="block text-[12px] text-[#64748d]">{ROLE_LABEL[b.role]}</span>
+            </span>
+            {b.id === active.id && <Check className="h-4 w-4 text-[#533afd]" strokeWidth={2} />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 interface SidebarProps {
@@ -79,13 +147,11 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
           SC
         </div>
         {!collapsed && (
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-1 flex-col">
             <span className="text-[15px] font-semibold leading-tight text-[#061b31]">
               SmartChiro
             </span>
-            <span className="text-[12px] font-medium tracking-[0.04em] text-[#64748d] uppercase">
-              Health Center
-            </span>
+            <BranchSwitcher user={user} />
           </div>
         )}
       </div>
