@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { uploadToR2, getPresignedDownloadUrl, buildExportKey } from "@/lib/r2";
 import { renderAnnotatedPng, renderAnnotatedPdf } from "@/lib/export-renderer";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
+import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 
 export interface ExportOptions {
   format: "png" | "pdf";
@@ -79,6 +80,7 @@ export async function exportXray(
     contentType = "image/png";
   } else {
     const exportDate = new Date().toLocaleDateString("en-US", {
+      timeZone: CLINIC_TIME_ZONE,
       year: "numeric",
       month: "long",
       day: "numeric",
