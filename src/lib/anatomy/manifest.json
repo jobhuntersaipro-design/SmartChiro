@@ -1,0 +1,4123 @@
+{
+ "source": "BodyParts3D, © The Database Center for Life Science, licensed under CC BY-SA 2.1 JP",
+ "height": 1.6469956310465932,
+ "skeleton": [
+  {
+   "id": "FMA12519",
+   "label": "Atlas (C1)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C1"
+  },
+  {
+   "id": "FMA12520",
+   "label": "Axis (C2)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C2"
+  },
+  {
+   "id": "FMA7487",
+   "label": "Body of sternum",
+   "group": "ribcage",
+   "side": "midline"
+  },
+  {
+   "id": "FMA25058",
+   "label": "C2–C3 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "C2–C3"
+  },
+  {
+   "id": "FMA13896",
+   "label": "C3–C4 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "C3–C4"
+  },
+  {
+   "id": "FMA13897",
+   "label": "C4–C5 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "C4–C5"
+  },
+  {
+   "id": "FMA13898",
+   "label": "C5–C6 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "C5–C6"
+  },
+  {
+   "id": "FMA13899",
+   "label": "C6–C7 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "C6–C7"
+  },
+  {
+   "id": "FMA13900",
+   "label": "C7–T1 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "C7–T1"
+  },
+  {
+   "id": "FMA32651",
+   "label": "Distal phalanx of left big toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA32657",
+   "label": "Distal phalanx of left fourth toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA23953",
+   "label": "Distal phalanx of left index finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA23959",
+   "label": "Distal phalanx of left little finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA32659",
+   "label": "Distal phalanx of left little toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA23955",
+   "label": "Distal phalanx of left middle finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA23957",
+   "label": "Distal phalanx of left ring finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA32653",
+   "label": "Distal phalanx of left second toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA32655",
+   "label": "Distal phalanx of left third toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA23951",
+   "label": "Distal phalanx of left thumb",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA32650",
+   "label": "Distal phalanx of right big toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA32656",
+   "label": "Distal phalanx of right fourth toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24460",
+   "label": "Distal phalanx of right index finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24463",
+   "label": "Distal phalanx of right little finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA32658",
+   "label": "Distal phalanx of right little toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24461",
+   "label": "Distal phalanx of right middle finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24462",
+   "label": "Distal phalanx of right ring finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA32652",
+   "label": "Distal phalanx of right second toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA32654",
+   "label": "Distal phalanx of right third toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24459",
+   "label": "Distal phalanx of right thumb",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA9991",
+   "label": "Eighth thoracic vertebra (T8)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T8"
+  },
+  {
+   "id": "FMA10059",
+   "label": "Eleventh thoracic vertebra (T11)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T11"
+  },
+  {
+   "id": "FMA52740",
+   "label": "Ethmoid",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA12523",
+   "label": "Fifth cervical vertebra (C5)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C5"
+  },
+  {
+   "id": "FMA13076",
+   "label": "Fifth lumbar vertebra (L5)",
+   "group": "lumbar",
+   "side": "midline",
+   "short": "L5"
+  },
+  {
+   "id": "FMA9922",
+   "label": "Fifth thoracic vertebra (T5)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T5"
+  },
+  {
+   "id": "FMA13072",
+   "label": "First lumbar vertebra (L1)",
+   "group": "lumbar",
+   "side": "midline",
+   "short": "L1"
+  },
+  {
+   "id": "FMA9165",
+   "label": "First thoracic vertebra (T1)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T1"
+  },
+  {
+   "id": "FMA12522",
+   "label": "Fourth cervical vertebra (C4)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C4"
+  },
+  {
+   "id": "FMA13075",
+   "label": "Fourth lumbar vertebra (L4)",
+   "group": "lumbar",
+   "side": "midline",
+   "short": "L4"
+  },
+  {
+   "id": "FMA9248",
+   "label": "Fourth thoracic vertebra (T4)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T4"
+  },
+  {
+   "id": "FMA52734",
+   "label": "Frontal bone",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA52749",
+   "label": "Hyoid bone",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA16033",
+   "label": "L1–L2 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "L1–L2"
+  },
+  {
+   "id": "FMA16034",
+   "label": "L2–L3 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "L2–L3"
+  },
+  {
+   "id": "FMA16035",
+   "label": "L3–L4 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "L3–L4"
+  },
+  {
+   "id": "FMA16036",
+   "label": "L4–L5 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "L4–L5"
+  },
+  {
+   "id": "FMA16037",
+   "label": "L5–S1 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "L5–S1"
+  },
+  {
+   "id": "FMA24498",
+   "label": "Left calcaneus",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA24447",
+   "label": "Left capitate",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA13323",
+   "label": "Left clavicle",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "BP24",
+   "label": "Left costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24529",
+   "label": "Left cuboid bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA8310",
+   "label": "Left eighth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8532",
+   "label": "Left eleventh rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24475",
+   "label": "Left femur",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA24481",
+   "label": "Left fibula",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA8112",
+   "label": "Left fifth costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24473",
+   "label": "Left fifth metacarpal bone",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24516",
+   "label": "Left fifth metatarsal bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA8093",
+   "label": "Left fifth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8005",
+   "label": "Left first costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24465",
+   "label": "Left first metacarpal bone",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24508",
+   "label": "Left first metatarsal bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA7987",
+   "label": "Left first rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8167",
+   "label": "Left fourth costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24471",
+   "label": "Left fourth metacarpal bone",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24514",
+   "label": "Left fourth metatarsal bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA8148",
+   "label": "Left fourth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24449",
+   "label": "Left hamate",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA16587",
+   "label": "Left hip bone",
+   "group": "pelvis",
+   "side": "left"
+  },
+  {
+   "id": "FMA23131",
+   "label": "Left humerus",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA54738",
+   "label": "Left inferior nasal concha",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA24524",
+   "label": "Left intermediate cuneiform bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA53646",
+   "label": "Left lacrimal bone",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA24526",
+   "label": "Left lateral cuneiform bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA24438",
+   "label": "Left lunate",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA53650",
+   "label": "Left maxilla",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA24522",
+   "label": "Left medial cuneiform bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA53648",
+   "label": "Left nasal bone",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA8391",
+   "label": "Left ninth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA53656",
+   "label": "Left palatine bone",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA52789",
+   "label": "Left parietal bone",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA24487",
+   "label": "Left patella",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA24442",
+   "label": "Left pisiform",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA23465",
+   "label": "Left radius",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA24436",
+   "label": "Left scaphoid",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA13396",
+   "label": "Left scapula",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA8031",
+   "label": "Left second costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24467",
+   "label": "Left second metacarpal bone",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24510",
+   "label": "Left second metatarsal bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA8012",
+   "label": "Left second rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8275",
+   "label": "Left seventh costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8256",
+   "label": "Left seventh rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8221",
+   "label": "Left sixth costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8202",
+   "label": "Left sixth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24483",
+   "label": "Left talus",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA52739",
+   "label": "Left temporal bone",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA8472",
+   "label": "Left tenth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA8058",
+   "label": "Left third costal cartilage",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24469",
+   "label": "Left third metacarpal bone",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24512",
+   "label": "Left third metatarsal bone",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA8039",
+   "label": "Left third rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA24478",
+   "label": "Left tibia",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA24444",
+   "label": "Left trapezium",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24445",
+   "label": "Left trapezoid",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA24440",
+   "label": "Left triquetral",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA8534",
+   "label": "Left twelfth rib",
+   "group": "ribcage",
+   "side": "left"
+  },
+  {
+   "id": "FMA23468",
+   "label": "Left ulna",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA52893",
+   "label": "Left zygomatic bone",
+   "group": "skull",
+   "side": "left"
+  },
+  {
+   "id": "FMA52748",
+   "label": "Mandible",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA7486",
+   "label": "Manubrium",
+   "group": "ribcage",
+   "side": "midline"
+  },
+  {
+   "id": "FMA32647",
+   "label": "Middle phalanx of left fourth toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA23938",
+   "label": "Middle phalanx of left index finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA23944",
+   "label": "Middle phalanx of left little finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA230988",
+   "label": "Middle phalanx of left little toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA23940",
+   "label": "Middle phalanx of left middle finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA23942",
+   "label": "Middle phalanx of left ring finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA32643",
+   "label": "Middle phalanx of left second toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA32645",
+   "label": "Middle phalanx of left third toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA32646",
+   "label": "Middle phalanx of right fourth toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24455",
+   "label": "Middle phalanx of right index finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24458",
+   "label": "Middle phalanx of right little finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA230986",
+   "label": "Middle phalanx of right little toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24456",
+   "label": "Middle phalanx of right middle finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24457",
+   "label": "Middle phalanx of right ring finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA32642",
+   "label": "Middle phalanx of right second toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA32644",
+   "label": "Middle phalanx of right third toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24501",
+   "label": "Navicular bone of left foot",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA24500",
+   "label": "Navicular bone of right foot",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA10014",
+   "label": "Ninth thoracic vertebra (T9)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T9"
+  },
+  {
+   "id": "FMA52735",
+   "label": "Occipital bone",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA43254",
+   "label": "Proximal phalanx of left big toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA32639",
+   "label": "Proximal phalanx of left fourth toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA71915",
+   "label": "Proximal phalanx of left index finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA66791",
+   "label": "Proximal phalanx of left little finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA32641",
+   "label": "Proximal phalanx of left little toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA71908",
+   "label": "Proximal phalanx of left middle finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA71916",
+   "label": "Proximal phalanx of left ring finger",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA32635",
+   "label": "Proximal phalanx of left second toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA32637",
+   "label": "Proximal phalanx of left third toe",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA65470",
+   "label": "Proximal phalanx of left thumb",
+   "group": "hand",
+   "side": "left"
+  },
+  {
+   "id": "FMA43253",
+   "label": "Proximal phalanx of right big toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA32638",
+   "label": "Proximal phalanx of right fourth toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24451",
+   "label": "Proximal phalanx of right index finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24454",
+   "label": "Proximal phalanx of right little finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA32640",
+   "label": "Proximal phalanx of right little toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24452",
+   "label": "Proximal phalanx of right middle finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24453",
+   "label": "Proximal phalanx of right ring finger",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA32634",
+   "label": "Proximal phalanx of right second toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA32636",
+   "label": "Proximal phalanx of right third toe",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24450",
+   "label": "Proximal phalanx of right thumb",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24497",
+   "label": "Right calcaneus",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24446",
+   "label": "Right capitate",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA13322",
+   "label": "Right clavicle",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "BP28",
+   "label": "Right costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24528",
+   "label": "Right cuboid bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA8283",
+   "label": "Right eighth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA8531",
+   "label": "Right eleventh rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24474",
+   "label": "Right femur",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA24480",
+   "label": "Right fibula",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA8070",
+   "label": "Right fifth costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24472",
+   "label": "Right fifth metacarpal bone",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24515",
+   "label": "Right fifth metatarsal bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA8066",
+   "label": "Right fifth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA7875",
+   "label": "Right first costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24464",
+   "label": "Right first metacarpal bone",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24507",
+   "label": "Right first metatarsal bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA7857",
+   "label": "Right first rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA7976",
+   "label": "Right fourth costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24470",
+   "label": "Right fourth metacarpal bone",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24513",
+   "label": "Right fourth metatarsal bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA7957",
+   "label": "Right fourth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24448",
+   "label": "Right hamate",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA16586",
+   "label": "Right hip bone",
+   "group": "pelvis",
+   "side": "right"
+  },
+  {
+   "id": "FMA23130",
+   "label": "Right humerus",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA54737",
+   "label": "Right inferior nasal concha",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA24523",
+   "label": "Right intermediate cuneiform bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA53645",
+   "label": "Right lacrimal bone",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA24525",
+   "label": "Right lateral cuneiform bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA24437",
+   "label": "Right lunate",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA53649",
+   "label": "Right maxilla",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA24521",
+   "label": "Right medial cuneiform bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA53647",
+   "label": "Right nasal bone",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA8364",
+   "label": "Right ninth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA53655",
+   "label": "Right palatine bone",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA52788",
+   "label": "Right parietal bone",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA24486",
+   "label": "Right patella",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA24441",
+   "label": "Right pisiform",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA23464",
+   "label": "Right radius",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA24435",
+   "label": "Right scaphoid",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA13395",
+   "label": "Right scapula",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA7886",
+   "label": "Right second costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24466",
+   "label": "Right second metacarpal bone",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24509",
+   "label": "Right second metatarsal bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA7882",
+   "label": "Right second rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA8248",
+   "label": "Right seventh costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA8229",
+   "label": "Right seventh rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA8194",
+   "label": "Right sixth costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA8175",
+   "label": "Right sixth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24482",
+   "label": "Right talus",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA52738",
+   "label": "Right temporal bone",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA8445",
+   "label": "Right tenth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA7913",
+   "label": "Right third costal cartilage",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24468",
+   "label": "Right third metacarpal bone",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24511",
+   "label": "Right third metatarsal bone",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA7909",
+   "label": "Right third rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA24477",
+   "label": "Right tibia",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA24443",
+   "label": "Right trapezium",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA23725",
+   "label": "Right trapezoid",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA24439",
+   "label": "Right triquetral",
+   "group": "hand",
+   "side": "right"
+  },
+  {
+   "id": "FMA8533",
+   "label": "Right twelfth rib",
+   "group": "ribcage",
+   "side": "right"
+  },
+  {
+   "id": "FMA23467",
+   "label": "Right ulna",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA52892",
+   "label": "Right zygomatic bone",
+   "group": "skull",
+   "side": "right"
+  },
+  {
+   "id": "FMA16202",
+   "label": "Sacrum",
+   "group": "pelvis",
+   "side": "midline"
+  },
+  {
+   "id": "FMA13073",
+   "label": "Second lumbar vertebra (L2)",
+   "group": "lumbar",
+   "side": "midline",
+   "short": "L2"
+  },
+  {
+   "id": "FMA9187",
+   "label": "Second thoracic vertebra (T2)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T2"
+  },
+  {
+   "id": "FMA45098",
+   "label": "Sesamoid bone of left foot",
+   "group": "foot",
+   "side": "left"
+  },
+  {
+   "id": "FMA45097",
+   "label": "Sesamoid bone of right foot",
+   "group": "foot",
+   "side": "right"
+  },
+  {
+   "id": "FMA12525",
+   "label": "Seventh cervical vertebra (C7)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C7"
+  },
+  {
+   "id": "FMA9968",
+   "label": "Seventh thoracic vertebra (T7)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T7"
+  },
+  {
+   "id": "FMA12524",
+   "label": "Sixth cervical vertebra (C6)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C6"
+  },
+  {
+   "id": "FMA9945",
+   "label": "Sixth thoracic vertebra (T6)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T6"
+  },
+  {
+   "id": "FMA52736",
+   "label": "Sphenoid bone",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA10458",
+   "label": "T1–T2 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T1–T2"
+  },
+  {
+   "id": "FMA13507",
+   "label": "T10–T11 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T10–T11"
+  },
+  {
+   "id": "FMA13508",
+   "label": "T11–T12 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T11–T12"
+  },
+  {
+   "id": "FMA13509",
+   "label": "T12–L1 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T12–L1"
+  },
+  {
+   "id": "FMA13495",
+   "label": "T2–T3 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T2–T3"
+  },
+  {
+   "id": "FMA13500",
+   "label": "T3–T4 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T3–T4"
+  },
+  {
+   "id": "FMA13501",
+   "label": "T4–T5 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T4–T5"
+  },
+  {
+   "id": "FMA13502",
+   "label": "T5–T6 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T5–T6"
+  },
+  {
+   "id": "FMA13503",
+   "label": "T6–T7 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T6–T7"
+  },
+  {
+   "id": "FMA13504",
+   "label": "T7–T8 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T7–T8"
+  },
+  {
+   "id": "FMA13505",
+   "label": "T8–T9 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T8–T9"
+  },
+  {
+   "id": "FMA13506",
+   "label": "T9–T10 intervertebral disc",
+   "group": "discs",
+   "side": "midline",
+   "short": "T9–T10"
+  },
+  {
+   "id": "teeth",
+   "label": "Teeth",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA10037",
+   "label": "Tenth thoracic vertebra (T10)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T10"
+  },
+  {
+   "id": "FMA12521",
+   "label": "Third cervical vertebra (C3)",
+   "group": "cervical",
+   "side": "midline",
+   "short": "C3"
+  },
+  {
+   "id": "FMA13074",
+   "label": "Third lumbar vertebra (L3)",
+   "group": "lumbar",
+   "side": "midline",
+   "short": "L3"
+  },
+  {
+   "id": "FMA9209",
+   "label": "Third thoracic vertebra (T3)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T3"
+  },
+  {
+   "id": "FMA10081",
+   "label": "Twelfth thoracic vertebra (T12)",
+   "group": "thoracic",
+   "side": "midline",
+   "short": "T12"
+  },
+  {
+   "id": "FMA9710",
+   "label": "Vomer",
+   "group": "skull",
+   "side": "midline"
+  },
+  {
+   "id": "FMA7488",
+   "label": "Xiphoid process",
+   "group": "ribcage",
+   "side": "midline"
+  }
+ ],
+ "muscles": [
+  {
+   "id": "FMA45875",
+   "label": "Abdominal part of left pectoralis major",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA45874",
+   "label": "Abdominal part of right pectoralis major",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA37464",
+   "label": "Abductor digiti minimi of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37397",
+   "label": "Abductor digiti minimi of left hand",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA37463",
+   "label": "Abductor digiti minimi of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37396",
+   "label": "Abductor digiti minimi of right hand",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA34683",
+   "label": "Acromial part of left deltoid",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA34682",
+   "label": "Acromial part of right deltoid",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA46305",
+   "label": "Anterior belly of left digastric",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA46304",
+   "label": "Anterior belly of right digastric",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA46768",
+   "label": "Aponeurosis of epicranius",
+   "group": "head",
+   "side": "midline"
+  },
+  {
+   "id": "FMA33583",
+   "label": "Ascending part of left trapezius",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA33581",
+   "label": "Ascending part of right trapezius",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA34681",
+   "label": "Clavicular part of left deltoid",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA34691",
+   "label": "Clavicular part of left pectoralis major",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA34680",
+   "label": "Clavicular part of right deltoid",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA34690",
+   "label": "Clavicular part of right pectoralis major",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA46111",
+   "label": "Deep head of left flexor pollicis brevis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA46110",
+   "label": "Deep head of right flexor pollicis brevis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA49005",
+   "label": "Deep part of left masseter",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA49004",
+   "label": "Deep part of right masseter",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA33587",
+   "label": "Descending part of left trapezius",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA33586",
+   "label": "Descending part of right trapezius",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA13295",
+   "label": "Diaphragm",
+   "group": "chest",
+   "side": "midline"
+  },
+  {
+   "id": "FMA21930",
+   "label": "External anal sphincter",
+   "group": "abdomen",
+   "side": "midline"
+  },
+  {
+   "id": "FMA9756",
+   "label": "External intercostal muscle",
+   "group": "chest",
+   "side": "midline"
+  },
+  {
+   "id": "FMA37718",
+   "label": "First lumbrical of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37717",
+   "label": "First lumbrical of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37746",
+   "label": "First plantar interosseous of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37745",
+   "label": "First plantar interosseous of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37472",
+   "label": "Flexor digiti minimi brevis of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37399",
+   "label": "Flexor digiti minimi brevis of left hand",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA37471",
+   "label": "Flexor digiti minimi brevis of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37398",
+   "label": "Flexor digiti minimi brevis of right hand",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA40121",
+   "label": "Flexor retinaculum of left wrist",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA40120",
+   "label": "Flexor retinaculum of right wrist",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA37484",
+   "label": "Fourth lumbrical of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37483",
+   "label": "Fourth lumbrical of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "BP44",
+   "label": "Humeral head of left extensor carpi ulnaris",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38618",
+   "label": "Humeral head of left flexor carpi ulnaris",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38561",
+   "label": "Humeral head of left pronator teres",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "BP45",
+   "label": "Humeral head of right extensor carpi ulnaris",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38617",
+   "label": "Humeral head of right flexor carpi ulnaris",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38560",
+   "label": "Humeral head of right pronator teres",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA38639",
+   "label": "Humeroulnar head of left flexor digitorum superficialis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38638",
+   "label": "Humeroulnar head of right flexor digitorum superficialis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA46288",
+   "label": "Inferior oblique part of left longus colli",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA46287",
+   "label": "Inferior oblique part of right longus colli",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA9758",
+   "label": "Innermost intercostal muscle",
+   "group": "chest",
+   "side": "midline"
+  },
+  {
+   "id": "FMA9757",
+   "label": "Internal intercostal muscle",
+   "group": "chest",
+   "side": "midline"
+  },
+  {
+   "id": "FMA45974",
+   "label": "Lateral head of left flexor hallucis brevis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA45961",
+   "label": "Lateral head of left gastrocnemius",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37698",
+   "label": "Lateral head of left triceps brachii",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA45973",
+   "label": "Lateral head of right flexor hallucis brevis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA45960",
+   "label": "Lateral head of right gastrocnemius",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37697",
+   "label": "Lateral head of right triceps brachii",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA37460",
+   "label": "Left abductor hallucis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37387",
+   "label": "Left abductor pollicis brevis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38517",
+   "label": "Left abductor pollicis longus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA22454",
+   "label": "Left adductor brevis",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA22457",
+   "label": "Left adductor longus",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA22460",
+   "label": "Left adductor magnus",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA43887",
+   "label": "Left adductor minimus",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA37706",
+   "label": "Left anconeus",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA37669",
+   "label": "Left brachialis",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38487",
+   "label": "Left brachioradialis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA46836",
+   "label": "Left buccinator",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA264844",
+   "label": "Left calcaneal tendon",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA81753",
+   "label": "Left cervical rotator",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA46444",
+   "label": "Left coccygeus",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA37666",
+   "label": "Left coracobrachialis",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA46797",
+   "label": "Left corrugator supercilii",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46830",
+   "label": "Left depressor anguli oris",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46818",
+   "label": "Left depressor labii inferioris",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA55609",
+   "label": "Left depressor septi nasi",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA38499",
+   "label": "Left extensor carpi radialis brevis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38496",
+   "label": "Left extensor carpi radialis longus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38505",
+   "label": "Left extensor digiti minimi",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38502",
+   "label": "Left extensor digitorum",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA51143",
+   "label": "Left extensor digitorum brevis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA22549",
+   "label": "Left extensor digitorum longus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA51145",
+   "label": "Left extensor hallucis brevis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA22547",
+   "label": "Left extensor hallucis longus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA38526",
+   "label": "Left extensor indicis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38520",
+   "label": "Left extensor pollicis brevis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38523",
+   "label": "Left extensor pollicis longus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA13337",
+   "label": "Left external oblique",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA22555",
+   "label": "Left fibularis brevis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA22553",
+   "label": "Left fibularis longus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA22551",
+   "label": "Left fibularis tertius",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37466",
+   "label": "Left flexor accessorius",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA38461",
+   "label": "Left flexor carpi radialis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA37462",
+   "label": "Left flexor digitorum brevis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA65017",
+   "label": "Left flexor digitorum longus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA38480",
+   "label": "Left flexor digitorum profundus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA65015",
+   "label": "Left flexor hallucis longus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA38484",
+   "label": "Left flexor pollicis longus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA46760",
+   "label": "Left frontalis",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA22337",
+   "label": "Left gemellus inferior",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA22335",
+   "label": "Left gemellus superior",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA46327",
+   "label": "Left geniohyoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA22329",
+   "label": "Left gluteus maximus",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA22331",
+   "label": "Left gluteus medius",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA22333",
+   "label": "Left gluteus minimus",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA43884",
+   "label": "Left gracilis",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA22323",
+   "label": "Left iliacus",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA45859",
+   "label": "Left iliococcygeus",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA22745",
+   "label": "Left iliocostalis cervicis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22741",
+   "label": "Left iliocostalis lumborum",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22743",
+   "label": "Left iliocostalis thoracis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA58777",
+   "label": "Left iliotibial tract",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA32548",
+   "label": "Left infraspinatus muscle",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA21965",
+   "label": "Left inguinal ligament",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA13893",
+   "label": "Left internal oblique",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA13359",
+   "label": "Left latissimus dorsi",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA46824",
+   "label": "Left levator anguli oris",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46807",
+   "label": "Left levator labii superioris",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46804",
+   "label": "Left levator labii superioris alaeque nasi",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA32541",
+   "label": "Left levator scapulae",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22756",
+   "label": "Left longissimus capitis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22758",
+   "label": "Left longissimus cervicis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22753",
+   "label": "Left longissimus thoracis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA46310",
+   "label": "Left longus capitis",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA23090",
+   "label": "Left lumbar rotator",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA49013",
+   "label": "Left medial pterygoid",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46827",
+   "label": "Left mentalis",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA22879",
+   "label": "Left multifidus",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA46322",
+   "label": "Left mylohyoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA55607",
+   "label": "Left nasalis",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA32537",
+   "label": "Left obliquus capitis inferior",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA32535",
+   "label": "Left obliquus capitis superior",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA22327",
+   "label": "Left obturator externus",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA22325",
+   "label": "Left obturator internus",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA46762",
+   "label": "Left occipitalis",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA13349",
+   "label": "Left omohyoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA37391",
+   "label": "Left opponens pollicis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38464",
+   "label": "Left palmaris longus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA22451",
+   "label": "Left pectineus",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA13376",
+   "label": "Left pectoralis minor",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA22341",
+   "label": "Left piriformis",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA22561",
+   "label": "Left plantaris",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA45740",
+   "label": "Left platysma",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA22592",
+   "label": "Left popliteus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA55611",
+   "label": "Left procerus",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA38455",
+   "label": "Left pronator quadratus",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA22343",
+   "label": "Left psoas major",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA45855",
+   "label": "Left pubococcygeus",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA45857",
+   "label": "Left puborectalis",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA22347",
+   "label": "Left pyramidalis",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA22339",
+   "label": "Left quadratus femoris",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA22349",
+   "label": "Left quadratus lumborum",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA13378",
+   "label": "Left rectus abdominis",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA46314",
+   "label": "Left rectus capitis anterior",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA46318",
+   "label": "Left rectus capitis lateralis",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA32531",
+   "label": "Left rectus capitis posterior major",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA32533",
+   "label": "Left rectus capitis posterior minor",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA38929",
+   "label": "Left rectus femoris",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA13382",
+   "label": "Left rhomboid major",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA13384",
+   "label": "Left rhomboid minor",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA46840",
+   "label": "Left risorius",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA22355",
+   "label": "Left sartorius",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA13393",
+   "label": "Left scalenus anterior",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA13391",
+   "label": "Left scalenus medius",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA13389",
+   "label": "Left scalenus posterior",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA22449",
+   "label": "Left semimembranosus",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA22877",
+   "label": "Left semispinalis capitis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22875",
+   "label": "Left semispinalis cervicis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22873",
+   "label": "Left semispinalis thoracis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22359",
+   "label": "Left semitendinosus",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA13399",
+   "label": "Left serratus anterior",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA13406",
+   "label": "Left serratus posterior inferior",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA13404",
+   "label": "Left serratus posterior superior",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22559",
+   "label": "Left soleus",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA22782",
+   "label": "Left spinalis cervicis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22780",
+   "label": "Left spinalis thoracis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22729",
+   "label": "Left splenius capitis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA22727",
+   "label": "Left splenius cervicis",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA13409",
+   "label": "Left sternocleidomastoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA13347",
+   "label": "Left sternohyoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA13351",
+   "label": "Left sternothyroid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA45827",
+   "label": "Left stylohyoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA13411",
+   "label": "Left subclavius",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA13415",
+   "label": "Left subscapularis",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA38514",
+   "label": "Left supinator",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA32545",
+   "label": "Left supraspinatus",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA49008",
+   "label": "Left temporalis",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46764",
+   "label": "Left temporoparietalis",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA22426",
+   "label": "Left tensor fasciae latae",
+   "group": "hip",
+   "side": "left"
+  },
+  {
+   "id": "FMA32552",
+   "label": "Left teres major",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA32554",
+   "label": "Left teres minor",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA13353",
+   "label": "Left thyrohyoid",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA22545",
+   "label": "Left tibialis anterior",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA65019",
+   "label": "Left tibialis posterior",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA22345",
+   "label": "Left transversus abdominis",
+   "group": "abdomen",
+   "side": "left"
+  },
+  {
+   "id": "FMA9762",
+   "label": "Left transversus thoracis",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA38935",
+   "label": "Left vastus intermedius",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA38931",
+   "label": "Left vastus lateralis",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA38933",
+   "label": "Left vastus medialis",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA46813",
+   "label": "Left zygomaticus major",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46815",
+   "label": "Left zygomaticus minor",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA11336",
+   "label": "Linea alba",
+   "group": "abdomen",
+   "side": "midline"
+  },
+  {
+   "id": "FMA37687",
+   "label": "Long head of left biceps brachii",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA45889",
+   "label": "Long head of left biceps femoris",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA37700",
+   "label": "Long head of left triceps brachii",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA37686",
+   "label": "Long head of right biceps brachii",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA45888",
+   "label": "Long head of right biceps femoris",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA37699",
+   "label": "Long head of right triceps brachii",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA49023",
+   "label": "Lower head of left lateral pterygoid",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA49022",
+   "label": "Lower head of right lateral pterygoid",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA45972",
+   "label": "Medial head of left flexor hallucis brevis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA45958",
+   "label": "Medial head of left gastrocnemius",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37696",
+   "label": "Medial head of left triceps brachii",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA45971",
+   "label": "Medial head of right flexor hallucis brevis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA45957",
+   "label": "Medial head of right gastrocnemius",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37695",
+   "label": "Medial head of right triceps brachii",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA46019",
+   "label": "Oblique head of left adductor hallucis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA46122",
+   "label": "Oblique head of left adductor pollicis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA46018",
+   "label": "Oblique head of right adductor hallucis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA46121",
+   "label": "Oblique head of right adductor pollicis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA86035",
+   "label": "Opponens digiti minimi of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37401",
+   "label": "Opponens digiti minimi of left hand",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA86034",
+   "label": "Opponens digiti minimi of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37400",
+   "label": "Opponens digiti minimi of right hand",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA46841",
+   "label": "Orbicularis oris",
+   "group": "head",
+   "side": "midline"
+  },
+  {
+   "id": "FMA46783",
+   "label": "Orbital part of left orbicularis oculi",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46782",
+   "label": "Orbital part of right orbicularis oculi",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46786",
+   "label": "Palpebral part of left orbicularis oculi",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA46785",
+   "label": "Palpebral part of right orbicularis oculi",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46307",
+   "label": "Posterior belly of left digastric",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA46306",
+   "label": "Posterior belly of right digastric",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA38641",
+   "label": "Radial head of left flexor digitorum superficialis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38640",
+   "label": "Radial head of right flexor digitorum superficialis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA37459",
+   "label": "Right abductor hallucis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37386",
+   "label": "Right abductor pollicis brevis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38516",
+   "label": "Right abductor pollicis longus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA22452",
+   "label": "Right adductor brevis",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA22456",
+   "label": "Right adductor longus",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA22459",
+   "label": "Right adductor magnus",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA43886",
+   "label": "Right adductor minimus",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA37705",
+   "label": "Right anconeus",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA37668",
+   "label": "Right brachialis",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38486",
+   "label": "Right brachioradialis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA46835",
+   "label": "Right buccinator",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA258847",
+   "label": "Right calcaneal tendon",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA81752",
+   "label": "Right cervical rotator",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA46443",
+   "label": "Right coccygeus",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA37665",
+   "label": "Right coracobrachialis",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA46796",
+   "label": "Right corrugator supercilii",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46829",
+   "label": "Right depressor anguli oris",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46817",
+   "label": "Right depressor labii inferioris",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA55608",
+   "label": "Right depressor septi nasi",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA38498",
+   "label": "Right extensor carpi radialis brevis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38495",
+   "label": "Right extensor carpi radialis longus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38504",
+   "label": "Right extensor digiti minimi",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38501",
+   "label": "Right extensor digitorum",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA51142",
+   "label": "Right extensor digitorum brevis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA22548",
+   "label": "Right extensor digitorum longus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA51144",
+   "label": "Right extensor hallucis brevis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA22546",
+   "label": "Right extensor hallucis longus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA38525",
+   "label": "Right extensor indicis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38519",
+   "label": "Right extensor pollicis brevis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38522",
+   "label": "Right extensor pollicis longus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA13336",
+   "label": "Right external oblique",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA22554",
+   "label": "Right fibularis brevis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA22552",
+   "label": "Right fibularis longus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA22550",
+   "label": "Right fibularis tertius",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37465",
+   "label": "Right flexor accessorius",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA38460",
+   "label": "Right flexor carpi radialis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA37461",
+   "label": "Right flexor digitorum brevis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA65016",
+   "label": "Right flexor digitorum longus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA38479",
+   "label": "Right flexor digitorum profundus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA65014",
+   "label": "Right flexor hallucis longus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA38482",
+   "label": "Right flexor pollicis longus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA46759",
+   "label": "Right frontalis",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA22336",
+   "label": "Right gemellus inferior",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA22334",
+   "label": "Right gemellus superior",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA46326",
+   "label": "Right geniohyoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA22328",
+   "label": "Right gluteus maximus",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA22330",
+   "label": "Right gluteus medius",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA22332",
+   "label": "Right gluteus minimus",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA43883",
+   "label": "Right gracilis",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA22322",
+   "label": "Right iliacus",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA45858",
+   "label": "Right iliococcygeus",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA22744",
+   "label": "Right iliocostalis cervicis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22740",
+   "label": "Right iliocostalis lumborum",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22742",
+   "label": "Right iliocostalis thoracis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA58776",
+   "label": "Right iliotibial tract",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA32547",
+   "label": "Right infraspinatus muscle",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA21964",
+   "label": "Right inguinal ligament",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA13892",
+   "label": "Right internal oblique",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA13358",
+   "label": "Right latissimus dorsi",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA46823",
+   "label": "Right levator anguli oris",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46806",
+   "label": "Right levator labii superioris",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46803",
+   "label": "Right levator labii superioris alaeque nasi",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA32540",
+   "label": "Right levator scapulae",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22754",
+   "label": "Right longissimus capitis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22757",
+   "label": "Right longissimus cervicis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22751",
+   "label": "Right longissimus thoracis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA46309",
+   "label": "Right longus capitis",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA23089",
+   "label": "Right lumbar rotator",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA49012",
+   "label": "Right medial pterygoid",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46826",
+   "label": "Right mentalis",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA22878",
+   "label": "Right multifidus",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA46321",
+   "label": "Right mylohyoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA55606",
+   "label": "Right nasalis",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA32536",
+   "label": "Right obliquus capitis inferior",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA32534",
+   "label": "Right obliquus capitis superior",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA22326",
+   "label": "Right obturator externus",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA22324",
+   "label": "Right obturator internus",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA46761",
+   "label": "Right occipitalis",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA13348",
+   "label": "Right omohyoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA37390",
+   "label": "Right opponens pollicis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38463",
+   "label": "Right palmaris longus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA22450",
+   "label": "Right pectineus",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA13375",
+   "label": "Right pectoralis minor",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA22340",
+   "label": "Right piriformis",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA22560",
+   "label": "Right plantaris",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA45739",
+   "label": "Right platysma",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA22591",
+   "label": "Right popliteus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA55610",
+   "label": "Right procerus",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA38454",
+   "label": "Right pronator quadratus",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA22342",
+   "label": "Right psoas major",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA45854",
+   "label": "Right pubococcygeus",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA45856",
+   "label": "Right puborectalis",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA22346",
+   "label": "Right pyramidalis",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA22338",
+   "label": "Right quadratus femoris",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA22348",
+   "label": "Right quadratus lumborum",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA13377",
+   "label": "Right rectus abdominis",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA46313",
+   "label": "Right rectus capitis anterior",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA46317",
+   "label": "Right rectus capitis lateralis",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA32530",
+   "label": "Right rectus capitis posterior major",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA32532",
+   "label": "Right rectus capitis posterior minor",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA38928",
+   "label": "Right rectus femoris",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA13381",
+   "label": "Right rhomboid major",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA13383",
+   "label": "Right rhomboid minor",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA46839",
+   "label": "Right risorius",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA22354",
+   "label": "Right sartorius",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA13392",
+   "label": "Right scalenus anterior",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA13390",
+   "label": "Right scalenus medius",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA13388",
+   "label": "Right scalenus posterior",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA22448",
+   "label": "Right semimembranosus",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA22876",
+   "label": "Right semispinalis capitis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22874",
+   "label": "Right semispinalis cervicis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22872",
+   "label": "Right semispinalis thoracis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22358",
+   "label": "Right semitendinosus",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA13398",
+   "label": "Right serratus anterior",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA13405",
+   "label": "Right serratus posterior inferior",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA13403",
+   "label": "Right serratus posterior superior",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22558",
+   "label": "Right soleus",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA22781",
+   "label": "Right spinalis cervicis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22779",
+   "label": "Right spinalis thoracis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22728",
+   "label": "Right splenius capitis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA22726",
+   "label": "Right splenius cervicis",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "FMA13408",
+   "label": "Right sternocleidomastoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA13346",
+   "label": "Right sternohyoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA13350",
+   "label": "Right sternothyroid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA45826",
+   "label": "Right stylohyoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA13412",
+   "label": "Right subclavius",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA13414",
+   "label": "Right subscapularis",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA38513",
+   "label": "Right supinator",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA32544",
+   "label": "Right supraspinatus",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA49007",
+   "label": "Right temporalis",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46763",
+   "label": "Right temporoparietalis",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA22425",
+   "label": "Right tensor fasciae latae",
+   "group": "hip",
+   "side": "right"
+  },
+  {
+   "id": "FMA32551",
+   "label": "Right teres major",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA32553",
+   "label": "Right teres minor",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA13352",
+   "label": "Right thyrohyoid",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA22544",
+   "label": "Right tibialis anterior",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA65018",
+   "label": "Right tibialis posterior",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA22344",
+   "label": "Right transversus abdominis",
+   "group": "abdomen",
+   "side": "right"
+  },
+  {
+   "id": "FMA9761",
+   "label": "Right transversus thoracis",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA38934",
+   "label": "Right vastus intermedius",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA38930",
+   "label": "Right vastus lateralis",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA38932",
+   "label": "Right vastus medialis",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA46812",
+   "label": "Right zygomaticus major",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46814",
+   "label": "Right zygomaticus minor",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA37720",
+   "label": "Second lumbrical of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37719",
+   "label": "Second lumbrical of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37744",
+   "label": "Second plantar interosseous of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37743",
+   "label": "Second plantar interosseous of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA71442",
+   "label": "Set of anterior cervical intertransversarii",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA74141",
+   "label": "Set of dorsal interossei of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA42405",
+   "label": "Set of dorsal interossei of left hand",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA74140",
+   "label": "Set of dorsal interossei of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA42404",
+   "label": "Set of dorsal interossei of right hand",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA71309",
+   "label": "Set of interspinales cervicis",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA71307",
+   "label": "Set of interspinales lumborum",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA71308",
+   "label": "Set of interspinales thoracis",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA71444",
+   "label": "Set of lateral lumbar intertransversarius muscles",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA74078",
+   "label": "Set of left levatores costarum breves",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA74076",
+   "label": "Set of left levatores costarum longi",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA42399",
+   "label": "Set of lumbricals of left hand",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA42398",
+   "label": "Set of lumbricals of right hand",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA76775",
+   "label": "Set of medial lumbar intertransversarius muscles",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA42403",
+   "label": "Set of palmar interossei of left hand",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA42402",
+   "label": "Set of palmar interossei of right hand",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA71443",
+   "label": "Set of posterior cervical intertransversarii",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA74077",
+   "label": "Set of right levatores costarum breves",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA74075",
+   "label": "Set of right levatores costarum longi",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA37685",
+   "label": "Short head of left biceps brachii",
+   "group": "arm",
+   "side": "left"
+  },
+  {
+   "id": "FMA45892",
+   "label": "Short head of left biceps femoris",
+   "group": "thigh",
+   "side": "left"
+  },
+  {
+   "id": "FMA37684",
+   "label": "Short head of right biceps brachii",
+   "group": "arm",
+   "side": "right"
+  },
+  {
+   "id": "FMA45891",
+   "label": "Short head of right biceps femoris",
+   "group": "thigh",
+   "side": "right"
+  },
+  {
+   "id": "FMA34685",
+   "label": "Spinal part of left deltoid",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "FMA34684",
+   "label": "Spinal part of right deltoid",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA79980",
+   "label": "Sternocostal part of left pectoralis major",
+   "group": "chest",
+   "side": "left"
+  },
+  {
+   "id": "FMA79979",
+   "label": "Sternocostal part of right pectoralis major",
+   "group": "chest",
+   "side": "right"
+  },
+  {
+   "id": "FMA65199",
+   "label": "Superficial head of left flexor pollicis brevis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA65198",
+   "label": "Superficial head of right flexor pollicis brevis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA49002",
+   "label": "Superficial part of left masseter",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA49001",
+   "label": "Superficial part of right masseter",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46284",
+   "label": "Superior oblique part of left longus colli",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA46283",
+   "label": "Superior oblique part of right longus colli",
+   "group": "neck",
+   "side": "right"
+  },
+  {
+   "id": "FMA46442",
+   "label": "Tendinous arch of levator ani",
+   "group": "abdomen",
+   "side": "midline"
+  },
+  {
+   "id": "FMA37486",
+   "label": "Third lumbrical of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37485",
+   "label": "Third lumbrical of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA37742",
+   "label": "Third plantar interosseous of left foot",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA37741",
+   "label": "Third plantar interosseous of right foot",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA23083",
+   "label": "Thoracic rotator",
+   "group": "back",
+   "side": "midline"
+  },
+  {
+   "id": "FMA46021",
+   "label": "Transverse head of left adductor hallucis",
+   "group": "leg",
+   "side": "left"
+  },
+  {
+   "id": "FMA46124",
+   "label": "Transverse head of left adductor pollicis",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA46020",
+   "label": "Transverse head of right adductor hallucis",
+   "group": "leg",
+   "side": "right"
+  },
+  {
+   "id": "FMA46123",
+   "label": "Transverse head of right adductor pollicis",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA33585",
+   "label": "Transverse part of left trapezius",
+   "group": "back",
+   "side": "left"
+  },
+  {
+   "id": "FMA33584",
+   "label": "Transverse part of right trapezius",
+   "group": "back",
+   "side": "right"
+  },
+  {
+   "id": "BP46",
+   "label": "Ulnar head of left extensor carpi ulnaris",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38620",
+   "label": "Ulnar head of left flexor carpi ulnaris",
+   "group": "forearm",
+   "side": "left"
+  },
+  {
+   "id": "FMA38563",
+   "label": "Ulnar head of left pronator teres",
+   "group": "shoulder",
+   "side": "left"
+  },
+  {
+   "id": "BP47",
+   "label": "Ulnar head of right extensor carpi ulnaris",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38619",
+   "label": "Ulnar head of right flexor carpi ulnaris",
+   "group": "forearm",
+   "side": "right"
+  },
+  {
+   "id": "FMA38562",
+   "label": "Ulnar head of right pronator teres",
+   "group": "shoulder",
+   "side": "right"
+  },
+  {
+   "id": "FMA49025",
+   "label": "Upper head of left lateral pterygoid",
+   "group": "head",
+   "side": "left"
+  },
+  {
+   "id": "FMA49024",
+   "label": "Upper head of right lateral pterygoid",
+   "group": "head",
+   "side": "right"
+  },
+  {
+   "id": "FMA46286",
+   "label": "Vertical intermediate part of left longus colli",
+   "group": "neck",
+   "side": "left"
+  },
+  {
+   "id": "FMA46285",
+   "label": "Vertical intermediate part of right longus colli",
+   "group": "neck",
+   "side": "right"
+  }
+ ]
+}

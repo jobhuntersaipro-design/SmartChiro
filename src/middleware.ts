@@ -36,6 +36,6 @@ export const config = {
   // globally (including any future /dashboard/*.png routes). Narrow to the
   // Next.js static asset prefixes plus the root favicon/logo files only.
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon\\.ico|logo\\.png|.*\\.(?:js|css|map|svg|ico)$).*)',
+    '/((?!api|_next/static|_next/image|models/|favicon\\.ico|logo\\.png|.*\\.(?:js|css|map|svg|ico)$).*)',
   ],
 }

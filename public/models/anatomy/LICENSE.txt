@@ -1,0 +1,16 @@
+3D anatomy models in this directory (skeleton.glb, muscles.glb)
+
+BodyParts3D, (c) The Database Center for Life Science,
+licensed under Creative Commons Attribution-Share Alike 2.1 Japan (CC BY-SA 2.1 JP).
+https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en
+https://dbarchive.biosciencedbc.jp/en/bodyparts3d/
+
+Mitsuhashi N, Fujieda K, Tamura T, Kawamoto S, Takagi T, Okubo K.
+BodyParts3D: 3D structure database for anatomical concepts.
+Nucleic Acids Res. 2009;37(Database issue):D782-5. https://doi.org/10.1093/nar/gkn613
+
+Modifications: converted from the STL mirror at
+https://github.com/Kevin-Mattheus-Moerman/BodyParts3D (release 3.0 / 20110915),
+re-oriented, simplified with meshoptimizer and packed as meshopt-compressed glTF
+by scripts/build-anatomy-models.mjs. These derived models are distributed under
+the same CC BY-SA 2.1 JP license.
