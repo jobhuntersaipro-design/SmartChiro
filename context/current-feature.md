@@ -2,7 +2,7 @@
 
 ## Status
 
-Built — all 8 phases done 2026-09-29 on `claude/zen-goodall-84f7kl`; awaiting owner testing and merge to `main`.
+Done — all 8 phases merged to `main` 2026-09-29. Owner to-do list: `context/owner-actions.md`.
 
 ## Spec
 
@@ -23,7 +23,7 @@ Built — all 8 phases done 2026-09-29 on `claude/zen-goodall-84f7kl`; awaiting 
 
 - **WhatsApp Reminders via Meta Cloud API** (`context/features/whatsapp-cloud-api-spec.md`) — pushed to `main` 2026-09-28, awaiting owner testing with Meta credentials. Legacy Baileys code is unused; delete after the owner confirms.
 - Vercel Hobby only runs crons daily; `*/5` reminder dispatch needs Vercel Pro (or an external scheduler).
-- Owner action: delete the two `TEST UX Patient` records created by the old wizard bug (ids in the plan spec).
+- Everything the owner still has to do (credentials, deploy, data clean-up, open decisions) lives in `context/owner-actions.md`.
 
 ### Deferred / Parked Features
 - **AI Landmark Detection (X-Ray Viewer)** — in progress on `main` (branch `feat/xray-ai-landmarks` merged 2026-09-24). Goals, locked decisions and privacy boundary preserved at `context/features/xray-ai-landmarks-goals.md`.

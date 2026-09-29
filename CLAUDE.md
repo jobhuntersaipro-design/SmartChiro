@@ -7,6 +7,7 @@ Read the following to get the full context of the project:
 - @context/coding-standard.md
 - @context/ai-interaction.md
 - @context/current-feature.md
+- @context/owner-actions.md (owner's to-do list — remind the user of open items and tick them off when done)
 
 ## Commands
 - `npm run dev` — start dev server
