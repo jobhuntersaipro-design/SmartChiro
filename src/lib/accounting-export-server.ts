@@ -21,17 +21,19 @@ import {
  * GET /api/exports/{invoices,payments,xero-invoices,journal}.csv
  * `?branchId=&from=&to=` like the reports (branch scope, clinic days, `to`
  * inclusive); `accounting.export` (OWNER / ADMIN). Invoices by issue date
- * (drafts excluded), payments by date received.
+ * (drafts excluded) — the journal also loads invoices cancelled in the range
+ * to reverse them — payments by date received.
  */
 
 const patientName = (p: { firstName: string; lastName: string }) => `${p.firstName} ${p.lastName}`.trim();
 
-async function loadInvoices(ctx: ReportRequest): Promise<ExportInvoice[]> {
+async function loadInvoices(ctx: ReportRequest, withCancellations = false): Promise<ExportInvoice[]> {
+  const inRange = { gte: ctx.range.start, lt: ctx.range.end };
   const rows = await prisma.invoice.findMany({
     where: {
       branchId: { in: ctx.branchIds },
       status: { not: "DRAFT" },
-      issuedAt: { gte: ctx.range.start, lt: ctx.range.end },
+      ...(withCancellations ? { OR: [{ issuedAt: inRange }, { cancelledAt: inRange }] } : { issuedAt: inRange }),
     },
     orderBy: [{ issuedAt: "asc" }, { invoiceNumber: "asc" }],
     select: {
@@ -46,6 +48,7 @@ async function loadInvoices(ctx: ReportRequest): Promise<ExportInvoice[]> {
       taxLabel: true,
       amountPaid: true,
       lineItems: true,
+      cancelledAt: true,
       patient: { select: { firstName: true, lastName: true, email: true } },
     },
   });
@@ -64,6 +67,7 @@ async function loadInvoices(ctx: ReportRequest): Promise<ExportInvoice[]> {
     taxLabel: r.taxLabel,
     amountPaid: Number(r.amountPaid),
     lineItems: parseLineItems(r.lineItems),
+    cancelledAt: r.cancelledAt,
   }));
 }
 
@@ -113,8 +117,8 @@ async function buildCsv(kind: AccountingExportKind, ctx: ReportRequest): Promise
       return xeroInvoicesCsv(invoices, codes);
     }
     case "journal": {
-      const [invoices, payments, codes] = await Promise.all([loadInvoices(ctx), loadPayments(ctx), loadCodes(ctx.branchIds)]);
-      return journalCsv(journalLines(invoices, payments, codes));
+      const [invoices, payments, codes] = await Promise.all([loadInvoices(ctx, true), loadPayments(ctx), loadCodes(ctx.branchIds)]);
+      return journalCsv(journalLines(invoices, payments, codes, ctx.range));
     }
   }
 }

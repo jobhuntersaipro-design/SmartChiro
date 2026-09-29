@@ -859,6 +859,9 @@ model Invoice {
   taxLabel   String?
   amountPaid Decimal  @default(0) @db.Decimal(10, 2)
   issuedAt   DateTime @default(now())
+  // When an issued invoice was cancelled; the accounting journal posts the
+  // reversal on this date. Null for a cancelled draft (never in the books).
+  cancelledAt DateTime?
 
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)

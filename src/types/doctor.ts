@@ -81,6 +81,8 @@ export interface DoctorListItem {
   phone: string | null;
   image: string | null;
   isActive: boolean;
+  /** Has a doctor profile — makes an ADMIN a clinician (src/lib/clinician.ts). */
+  hasDoctorProfile: boolean;
   specialties: string[];
   /** APC expiry "YYYY-MM-DD", or null when not recorded. */
   apcExpiresOn: string | null;

@@ -154,6 +154,36 @@ describe("journal", () => {
     expect(pick("RCP-3")).toEqual([["1200", 1235, 0], ["1030", 0, 1235]]);
   });
 
+  describe("cancelled invoices", () => {
+    const september = { start: clinicInstant(2026, 9, 1), end: clinicInstant(2026, 10, 1) };
+    const october = { start: clinicInstant(2026, 10, 1), end: clinicInstant(2026, 11, 1) };
+    const cancelledSst = { ...SST_INVOICE, status: "CANCELLED" as const, cancelledAt: clinicInstant(2026, 10, 2, 11) };
+    const pick = (ls: ReturnType<typeof journalLines>) => ls.map((l) => [l.account, l.debitSen, l.creditSen]);
+
+    it("keeps the sale in the period it was issued", () => {
+      expect(pick(journalLines([cancelledSst], [], codes, september))).toEqual([["1200", 26200, 0], ["4000", 0, 25000], ["2200", 0, 1200]]);
+    });
+
+    it("reverses it on the cancellation date", () => {
+      const ls = journalLines([cancelledSst], [], codes, october);
+      expect(pick(ls)).toEqual([["4000", 25000, 0], ["2200", 1200, 0], ["1200", 0, 26200]]);
+      expect(ls.every((l) => l.date.getTime() === cancelledSst.cancelledAt.getTime())).toBe(true);
+      expect(ls[0].description).toBe("Cancelled invoice INV-2 — John Smith");
+    });
+
+    it("posts both, netting to zero, when issued and cancelled in one period", () => {
+      const ls = journalLines([cancelledSst], [], codes, { start: september.start, end: october.end });
+      expect(ls).toHaveLength(6);
+      const net = new Map<string, number>();
+      for (const l of ls) net.set(l.account, (net.get(l.account) ?? 0) + l.debitSen - l.creditSen);
+      expect([...net.values()].every((v) => v === 0)).toBe(true);
+    });
+
+    it("skips a cancelled draft, which never reached the books", () => {
+      expect(journalLines([inv({ status: "CANCELLED", cancelledAt: null })], [], codes)).toEqual([]);
+    });
+  });
+
   it("writes the CSV", () => {
     const rows = parse(journalCsv(lines));
     expect(rows[0]).toEqual(JOURNAL_HEADERS);

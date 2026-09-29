@@ -8,6 +8,7 @@ import {
   canTransitionInvoice,
   effectiveInvoiceStatus,
   fromSen,
+  cancelInvoiceData,
   recordPayment,
   toSen,
   type AnyInvoiceStatus,
@@ -86,7 +87,10 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     } else {
       await prisma.invoice.update({
         where: { id: invoiceId },
-        data: { status: next, ...(next === "PAID" ? { paidAt: new Date() } : {}) },
+        data:
+          next === "CANCELLED"
+            ? cancelInvoiceData(invoice.status as AnyInvoiceStatus)
+            : { status: next, ...(next === "PAID" ? { paidAt: new Date() } : {}) },
       });
     }
   } catch (err) {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadBranchContext } from "@/lib/branch-context";
+import { isClinician } from "@/lib/clinician";
 import { AppointmentsPageShell } from "@/components/appointments/AppointmentsPageShell";
 
 export default async function AppointmentsPage() {
@@ -21,7 +22,7 @@ export default async function AppointmentsPage() {
           members: {
             select: {
               role: true,
-              user: { select: { id: true, name: true, image: true } },
+              user: { select: { id: true, name: true, image: true, doctorProfile: { select: { id: true } } } },
             },
           },
         },
@@ -35,9 +36,9 @@ export default async function AppointmentsPage() {
     name: m.branch.name,
     role: m.role,
     doctors: m.branch.members
-      // Calendar columns are clinicians: doctors and practising owners, not
-      // front-desk admins.
-      .filter((mem) => mem.role === "DOCTOR" || mem.role === "OWNER")
+      // Calendar columns are clinicians: doctors, practising owners and admins
+      // who treat patients, not office staff.
+      .filter((mem) => isClinician(mem.role, !!mem.user.doctorProfile))
       .map((mem) => ({
         id: mem.user.id,
         name: mem.user.name ?? "Unnamed",

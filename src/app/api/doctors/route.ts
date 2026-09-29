@@ -5,6 +5,7 @@ import { hash } from "bcryptjs";
 import type { DoctorListItem } from "@/types/doctor";
 import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
 import { expiryKey } from "@/lib/certificates";
+import { clinicianRoleWhere } from "@/lib/clinician";
 
 // ─── GET /api/doctors ─── List all doctors across caller's branches
 export async function GET(req: NextRequest) {
@@ -17,8 +18,8 @@ export async function GET(req: NextRequest) {
   const branchId = searchParams.get("branchId");
   const search = searchParams.get("search");
   const status = searchParams.get("status"); // "active" | "inactive" | "all"
-  // ?clinical=1 — people who see patients (DOCTOR/OWNER), for booking and
-  // doctor filters; front-desk ADMINs are staff but not bookable.
+  // ?clinical=1 — people who see patients (DOCTOR/OWNER, and ADMINs with a
+  // doctor profile), for booking and doctor filters; office staff aren't bookable.
   const clinicalOnly = searchParams.get("clinical") === "1";
 
   // 1. Get all caller's branch memberships
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
   const members = await prisma.branchMember.findMany({
     where: {
       branchId: { in: targetBranchIds },
-      ...(clinicalOnly ? { role: { in: ["DOCTOR", "OWNER"] } } : {}),
+      ...(clinicalOnly ? clinicianRoleWhere() : {}),
     },
     include: {
       user: {
@@ -151,6 +152,7 @@ export async function GET(req: NextRequest) {
     phone: e.user.phoneNumber,
     image: e.user.image,
     isActive: e.user.doctorProfile?.isActive !== false,
+    hasDoctorProfile: !!e.user.doctorProfile,
     specialties: e.user.doctorProfile?.specialties ?? [],
     apcExpiresOn: e.user.doctorProfile?.apcExpiresAt ? expiryKey(e.user.doctorProfile.apcExpiresAt) : null,
     branches: e.branches.map((b) => ({
@@ -319,6 +321,7 @@ async function buildDoctorListItem(userId: string): Promise<DoctorListItem> {
     phone: user.phoneNumber,
     image: user.image,
     isActive: user.doctorProfile?.isActive !== false,
+    hasDoctorProfile: !!user.doctorProfile,
     specialties: user.doctorProfile?.specialties ?? [],
     // A new account has no practising certificate recorded yet.
     apcExpiresOn: null,

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { billingAccess } from "@/lib/billing-access";
-import { createInvoice, parseLineItems, toSen } from "@/lib/invoices";
+import { cancelInvoiceData, createInvoice, parseLineItems, toSen, type AnyInvoiceStatus } from "@/lib/invoices";
 import { invoiceErrorResponse } from "@/lib/invoice-detail";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
@@ -79,7 +79,7 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
     newInvoice = await prisma.$transaction(async (tx) => {
       await tx.invoice.update({
         where: { id: invoiceId },
-        data: { status: "CANCELLED" },
+        data: cancelInvoiceData(original.status as AnyInvoiceStatus),
       });
       return createInvoice(tx, {
         branchId: original.branchId,

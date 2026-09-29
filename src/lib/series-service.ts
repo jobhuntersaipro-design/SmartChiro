@@ -16,7 +16,7 @@ import type {
   TreatmentTypeValue,
 } from "@/types/packages";
 import { can } from "@/lib/permissions";
-import { isClinicianRole } from "@/lib/clinician";
+import { isClinician } from "@/lib/clinician";
 
 /**
  * Database side of recurring appointment series (Phase 3): input schema,
@@ -92,12 +92,12 @@ export async function resolveBookingContext(
   }
   const member = await prisma.branchMember.findUnique({
     where: { userId_branchId: { userId: input.doctorId, branchId: input.branchId } },
-    select: { userId: true, role: true },
+    select: { userId: true, role: true, user: { select: { doctorProfile: { select: { id: true } } } } },
   });
   if (!member) {
     return { ok: false, status: 422, error: "doctor_not_in_branch", message: "The doctor is not a member of this branch." };
   }
-  if (!isClinicianRole(member.role)) {
+  if (!isClinician(member.role, !!member.user.doctorProfile)) {
     return { ok: false, status: 422, error: "not_a_clinician", message: "Appointments must be with a doctor." };
   }
   return { ok: true, ctx: { branchId: input.branchId, doctorId: input.doctorId, role, patient } };

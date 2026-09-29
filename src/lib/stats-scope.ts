@@ -1,26 +1,23 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { CLINICIAN_ROLES } from "@/lib/clinician";
+import { activeClinicianWhere } from "@/lib/clinician";
 
-export { CLINICIAN_ROLES, isClinicianRole } from "@/lib/clinician";
+export { isClinician } from "@/lib/clinician";
 
 /**
  * One definition of the headline counts, shared by the dashboard, branch
  * cards, branches list, doctors page and patients page so they always agree.
  *
  * - Clinician: a distinct user who is a DOCTOR or OWNER member of the scoped
- *   branches and whose doctor profile isn't deactivated. Front-desk ADMINs
- *   are staff, not clinicians. Same rule as `/api/doctors?clinical=1`.
+ *   branches, or an ADMIN with a doctor profile, and whose doctor profile
+ *   isn't deactivated (see `src/lib/clinician.ts`). Same rule as
+ *   `/api/doctors?clinical=1`.
  * - Patients: every patient in the scoped branches, whatever their status.
  *   "Active patients" is always labelled as such and filters status.
  */
 
 export function clinicianMemberWhere(branchIds: string[]): Prisma.BranchMemberWhereInput {
-  return {
-    branchId: { in: branchIds },
-    role: { in: CLINICIAN_ROLES },
-    user: { OR: [{ doctorProfile: null }, { doctorProfile: { isActive: true } }] },
-  };
+  return { branchId: { in: branchIds }, ...activeClinicianWhere() };
 }
 
 /** Distinct active clinicians across `branchIds`. */

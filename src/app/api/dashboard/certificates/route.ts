@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadBranchContext } from "@/lib/branch-context";
 import { can } from "@/lib/permissions";
-import { CLINICIAN_ROLES } from "@/lib/clinician";
+import { clinicianRoleWhere } from "@/lib/clinician";
 import { clinicDateKey } from "@/lib/clinic-time";
 import { addDaysToKey } from "@/lib/reports/range";
 import { daysUntilExpiry, expiryInstant, expiryKey, stageForDays } from "@/lib/certificates";
@@ -46,8 +46,7 @@ export async function GET(req: Request) {
   const members = await prisma.branchMember.findMany({
     where: {
       branchId: { in: branchIds },
-      role: { in: CLINICIAN_ROLES },
-      user: { doctorProfile: { apcExpiresAt: { not: null, lte: horizon } } },
+      AND: [clinicianRoleWhere(), { user: { doctorProfile: { apcExpiresAt: { not: null, lte: horizon } } } }],
     },
     orderBy: { createdAt: "asc" },
     select: {

@@ -4,7 +4,7 @@ import { Prisma, type TreatmentType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { isBranchManager } from "@/lib/branch-scope";
-import { CLINICIAN_ROLES } from "@/lib/clinician";
+import { clinicianRoleWhere } from "@/lib/clinician";
 import { displayDoctorName } from "@/lib/format";
 import { hasAnyHours, normalizeWorkingSchedule, parseOperatingHours } from "@/lib/operating-hours";
 import { hasWorkingSchedule } from "@/lib/reports/utilisation";
@@ -54,7 +54,7 @@ async function authorize(branchId: string): Promise<{ ok: true } | { ok: false; 
 
 async function loadClinicians(branchId: string) {
   const members = await prisma.branchMember.findMany({
-    where: { branchId, role: { in: CLINICIAN_ROLES } },
+    where: { branchId, ...clinicianRoleWhere() },
     select: { user: { select: { id: true, name: true, doctorProfile: { select: { workingSchedule: true } } } } },
   });
   return members

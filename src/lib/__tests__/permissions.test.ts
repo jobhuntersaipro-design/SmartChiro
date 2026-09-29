@@ -8,7 +8,7 @@ import {
   ROLE_CAPABILITIES,
   type Capability,
 } from "@/lib/permissions";
-import { CLINICIAN_ROLES } from "@/lib/clinician";
+import { isClinician } from "@/lib/clinician";
 
 const ROLES: BranchRole[] = ["OWNER", "ADMIN", "DOCTOR", "FRONT_DESK"];
 
@@ -63,7 +63,14 @@ describe("permissions matrix", () => {
   });
 
   it("front desk is never a clinician", () => {
-    expect(CLINICIAN_ROLES).not.toContain("FRONT_DESK");
+    expect(isClinician("FRONT_DESK", true)).toBe(false);
+  });
+
+  it("an admin is a clinician only with a doctor profile", () => {
+    expect(isClinician("ADMIN", true)).toBe(true);
+    expect(isClinician("ADMIN", false)).toBe(false);
+    expect(isClinician("DOCTOR", false)).toBe(true);
+    expect(isClinician("OWNER", false)).toBe(true);
   });
 });
 

@@ -1,16 +1,16 @@
 "use client";
 
 import type { DoctorListItem } from "@/types/doctor";
-import { isClinicianRole } from "@/lib/clinician";
+import { isClinician } from "@/lib/clinician";
 
 interface DoctorSummaryStatsProps {
   doctors: DoctorListItem[];
 }
 
 export function DoctorSummaryStats({ doctors }: DoctorSummaryStatsProps) {
-  // Front-desk ADMIN staff appear in the list but aren't doctors; counting
-  // them made this page disagree with the dashboard.
-  const clinicians = doctors.filter((d) => d.branches.some((b) => isClinicianRole(b.role)));
+  // Office staff appear in the list but aren't doctors; counting them made
+  // this page disagree with the dashboard.
+  const clinicians = doctors.filter((d) => d.branches.some((b) => isClinician(b.role, d.hasDoctorProfile)));
   const total = clinicians.length;
   const active = clinicians.filter((d) => d.isActive).length;
   const inactive = clinicians.filter((d) => !d.isActive).length;

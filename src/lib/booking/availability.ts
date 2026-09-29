@@ -1,6 +1,6 @@
 import type { Prisma, TreatmentType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { CLINICIAN_ROLES } from "@/lib/clinician";
+import { clinicianRoleWhere } from "@/lib/clinician";
 import { clinicDateKey, clinicDayBounds } from "@/lib/clinic-time";
 import { normalizeWorkingSchedule, parseOperatingHours } from "@/lib/operating-hours";
 import { defaultDurationFor } from "@/lib/treatment-colors";
@@ -56,7 +56,7 @@ export async function loadBookableDoctors(branch: BookingBranch, db: Db = prisma
   const members = await db.branchMember.findMany({
     where: {
       branchId: branch.id,
-      role: { in: CLINICIAN_ROLES },
+      ...clinicianRoleWhere(),
       ...(branch.bookingDoctorIds.length > 0 ? { userId: { in: branch.bookingDoctorIds } } : {}),
     },
     select: {

@@ -56,6 +56,15 @@ export function canTransitionInvoice(from: AnyInvoiceStatus, to: InvoiceStatus):
   return allowedInvoiceTransitions(from).includes(to);
 }
 
+/**
+ * Update data for cancelling an invoice. An issued invoice records when it
+ * was cancelled so the accounting journal can reverse it on that date; a
+ * draft never reached the books, so it gets none.
+ */
+export function cancelInvoiceData(from: AnyInvoiceStatus, now: Date = new Date()) {
+  return { status: "CANCELLED" as const, cancelledAt: from === "DRAFT" ? null : now };
+}
+
 const MYR = new Intl.NumberFormat("en-MY", { style: "currency", currency: "MYR", currencyDisplay: "code" });
 
 /** "RM 1,234.50" — the Malaysian convention, regardless of browser locale. */

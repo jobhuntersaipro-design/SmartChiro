@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { isManagerRole } from "@/lib/package-access";
 import { PATIENT_PACKAGE_INCLUDE, serializePatientPackage, userNamesFor } from "@/lib/package-service";
+import { cancelInvoiceData, type AnyInvoiceStatus } from "@/lib/invoices";
 
 type RouteCtx = { params: Promise<{ packageId: string }> };
 
@@ -55,8 +56,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   }
 
   const updated = await prisma.$transaction(async (tx) => {
-    if (d.status === "CANCELLED" && d.cancelInvoice && pkg.invoiceId) {
-      await tx.invoice.update({ where: { id: pkg.invoiceId }, data: { status: "CANCELLED" } });
+    if (d.status === "CANCELLED" && d.cancelInvoice && pkg.invoiceId && pkg.invoice && pkg.invoice.status !== "CANCELLED") {
+      await tx.invoice.update({ where: { id: pkg.invoiceId }, data: cancelInvoiceData(pkg.invoice.status as AnyInvoiceStatus) });
     }
     return tx.patientPackage.update({
       where: { id: packageId },

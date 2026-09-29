@@ -115,6 +115,8 @@ export interface ExportInvoice {
   taxLabel: string | null;
   amountPaid: number;
   lineItems: InvoiceLineItem[];
+  /** When an issued invoice was cancelled (null for a cancelled draft). */
+  cancelledAt?: Date | null;
 }
 
 export interface ExportPayment {
@@ -275,18 +277,41 @@ export const JOURNAL_HEADERS = ["Date", "Account", "Debit", "Credit", "Reference
 
 /**
  * Double-entry lines. An invoice: Dr receivable (total) / Cr sales (total
- * less SST) / Cr SST payable. A payment: Dr the method's account / Cr
- * receivable. A refund is the payment reversed. Every entry balances.
+ * less SST) / Cr SST payable, on its issue date. A cancelled invoice keeps
+ * that entry and is reversed on its cancellation date, so a period exported
+ * before the cancellation stays true and the later period carries the
+ * reversal. A payment: Dr the method's account / Cr receivable. A refund is
+ * the payment reversed. Every entry balances.
+ *
+ * `range` (end exclusive) picks which dates belong to the export; without
+ * it every entry is posted.
  */
-export function journalLines(invoices: ExportInvoice[], payments: ExportPayment[], codes: (branchId: string) => AccountCodes): JournalLine[] {
+export function journalLines(
+  invoices: ExportInvoice[],
+  payments: ExportPayment[],
+  codes: (branchId: string) => AccountCodes,
+  range?: { start: Date; end: Date },
+): JournalLine[] {
   const out: JournalLine[] = [];
-  for (const inv of invoices.filter(isPostedInvoice)) {
+  const inRange = (d: Date) => !range || (d >= range.start && d < range.end);
+  for (const inv of invoices) {
+    // A draft, or a draft that was cancelled, never reached the books.
+    if (inv.status === "DRAFT" || (inv.status === "CANCELLED" && !inv.cancelledAt)) continue;
     const c = codes(inv.branchId);
     const { totalSen, taxSen, salesSen } = invoiceSplit(inv);
-    const base = { date: inv.issuedAt, reference: inv.invoiceNumber, description: `Invoice ${inv.invoiceNumber} — ${inv.patientName}` };
-    out.push({ ...base, account: c.receivable, debitSen: totalSen, creditSen: 0 });
-    out.push({ ...base, account: c.sales, debitSen: 0, creditSen: salesSen });
-    if (taxSen !== 0) out.push({ ...base, account: c.sst, debitSen: 0, creditSen: taxSen, description: `${inv.taxLabel ?? "SST"} on ${inv.invoiceNumber}` });
+    const taxName = inv.taxLabel ?? "SST";
+    if (inRange(inv.issuedAt)) {
+      const base = { date: inv.issuedAt, reference: inv.invoiceNumber, description: `Invoice ${inv.invoiceNumber} — ${inv.patientName}` };
+      out.push({ ...base, account: c.receivable, debitSen: totalSen, creditSen: 0 });
+      out.push({ ...base, account: c.sales, debitSen: 0, creditSen: salesSen });
+      if (taxSen !== 0) out.push({ ...base, account: c.sst, debitSen: 0, creditSen: taxSen, description: `${taxName} on ${inv.invoiceNumber}` });
+    }
+    if (inv.status === "CANCELLED" && inv.cancelledAt && inRange(inv.cancelledAt)) {
+      const base = { date: inv.cancelledAt, reference: inv.invoiceNumber, description: `Cancelled invoice ${inv.invoiceNumber} — ${inv.patientName}` };
+      out.push({ ...base, account: c.sales, debitSen: salesSen, creditSen: 0 });
+      if (taxSen !== 0) out.push({ ...base, account: c.sst, debitSen: taxSen, creditSen: 0, description: `${taxName} reversed on cancelled ${inv.invoiceNumber}` });
+      out.push({ ...base, account: c.receivable, debitSen: 0, creditSen: totalSen });
+    }
   }
   for (const p of payments) {
     const c = codes(p.branchId);

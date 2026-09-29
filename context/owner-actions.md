@@ -7,8 +7,8 @@ as you go. Last updated 2026-09-29, after the Improvement Plan merge.
 ## 1. Before deploying this merge
 
 - [ ] **Deploy runs the migrations.** The deploy must run `prisma migrate deploy`.
-  It applies 10 new migrations, `20260928120000_whatsapp_cloud_api` to
-  `20260929100000_myinvois`. All of them are additive, and no data is deleted.
+  It applies 11 new migrations, `20260928120000_whatsapp_cloud_api` to
+  `20260929110000_invoice_cancelled_at`. All of them are additive, and no data is deleted.
 - [ ] **Vercel region matches Neon.** `vercel.json` pins `regions: ["sin1"]`
   (Singapore). Confirm the Neon project is in Singapore (`aws-ap-southeast-1`),
   or change the region to match.
@@ -99,13 +99,14 @@ Nothing has been sent to LHDN yet. Details are in the "8.4 owner actions" sectio
     Dr. Suresh Menon);
   - `cmul4rnmn000004l0k507qdyd`.
 
-## 8. Decisions waiting on you
+## 8. Decisions
 
-- [ ] **Should an ADMIN who treats patients count as a clinician?** Today only
-  DOCTOR and OWNER do. Dr. Tan Wei Hong is an ADMIN at KLCC with assigned patients,
-  so he has no calendar column, can't be booked online, and can't be picked for
-  care plans. Either answer "yes" (a code change), or make him a DOCTOR at that
-  branch.
-- [ ] **Accounting journal and later cancellations.** If an invoice is cancelled
-  after it was exported, the journal adds no reversing line, so post that one by
-  hand. Say if you want automatic reversals.
+- [x] **Admins who treat patients count as clinicians** (decided 2026-09-29). An
+  ADMIN with a doctor profile (filled in on the doctor page) now gets a calendar
+  column, can be booked online and picked for care plans, and counts in doctor
+  totals. Admins without a doctor profile stay office staff. Dr. Tan Wei Hong
+  already has a profile, so nothing to do for him.
+- [x] **The accounting journal reverses cancelled invoices automatically**
+  (decided 2026-09-29). The sale stays in the month it was issued; the reversal
+  is posted on the date it was cancelled. Invoices cancelled before this change
+  have no cancellation date and stay out of the journal as before.
