@@ -99,9 +99,9 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { text: string; dot: string; label: string }> = {
     active:     { text: "#15803d", dot: "#22c55e", label: "Active"     },
     inactive:   { text: "#854d0e", dot: "#eab308", label: "Inactive"   },
-    discharged: { text: "#64748d", dot: "#94a3b8", label: "Discharged" },
+    discharged: { text: "#585858", dot: "#7d7d7d", label: "Discharged" },
   };
-  const c = config[lower] ?? { text: "#64748d", dot: "#94a3b8", label: status };
+  const c = config[lower] ?? { text: "#585858", dot: "#7d7d7d", label: status };
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] font-medium" style={{ color: c.text }}>
       <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: c.dot }} />
@@ -252,7 +252,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   const mailtoHref = buildMailtoUrl(patient.email);
 
   const allStatCards = [
-    { label: "Total Visits", value: patient.totalVisits, icon: Users, color: "#533afd" },
+    { label: "Total Visits", value: patient.totalVisits, icon: Users, color: "#7747ff" },
     { label: "X-Rays", value: patient.totalXrays, icon: ImageIcon, color: "#0570DE" },
     {
       label: "Next Appointment",
@@ -287,7 +287,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       {/* Header card */}
       <div
         className="rounded-panel border border-border bg-white px-6 py-5"
-        style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
@@ -298,7 +298,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Avatar>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-[23px] font-light text-foreground">
+                <h1 className="text-[23px] font-medium text-foreground">
                   {fullName}
                 </h1>
                 <StatusBadge status={patient.status} />
@@ -426,7 +426,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
               <span className="text-[13px] text-fg-secondary">{s.label}</span>
             </div>
             <div
-              className="text-[22px] font-light text-foreground"
+              className="text-[22px] font-medium text-foreground"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
               {s.value}

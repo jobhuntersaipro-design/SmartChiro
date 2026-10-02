@@ -222,7 +222,7 @@ export function EditBranchDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-145 rounded-2xl border border-border p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-[18px] font-light tracking-[-0.18px] text-foreground">
+          <DialogTitle className="text-[18px] font-medium tracking-[-0.18px] text-foreground">
             Edit Clinic
           </DialogTitle>
         </DialogHeader>

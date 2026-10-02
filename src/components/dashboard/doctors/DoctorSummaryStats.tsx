@@ -34,11 +34,11 @@ export function DoctorSummaryStats({ doctors }: DoctorSummaryStatsProps) {
           className="rounded-panel border border-border bg-white px-5 py-4"
           style={{
             boxShadow:
-              "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+              "var(--shadow-lg)",
           }}
         >
           <div
-            className="text-[26px] font-light text-foreground tracking-[-0.26px]"
+            className="text-[26px] font-medium text-foreground tracking-[-0.26px]"
             style={{ fontFeatureSettings: '"tnum"' }}
           >
             {stat.value}

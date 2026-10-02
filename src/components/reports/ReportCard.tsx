@@ -110,7 +110,7 @@ export function StatTile({ label, value, hint }: StatTileProps) {
   return (
     <div className="min-w-0 rounded-control bg-surface-muted px-3 py-2.5">
       <p className="text-[13px] text-fg-secondary">{label}</p>
-      <p className="mt-0.5 truncate text-[23px] font-light whitespace-nowrap text-foreground" title={value}>
+      <p className="mt-0.5 truncate text-[23px] font-medium whitespace-nowrap text-foreground" title={value}>
         {value}
       </p>
       {hint && <p className="mt-0.5 text-[13px] text-fg-secondary">{hint}</p>}

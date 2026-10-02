@@ -26,7 +26,7 @@ export default async function ResetPasswordPage({
             <div className="mb-4 rounded-panel bg-brand px-3 py-2">
               <span className="text-[14px] font-bold text-white">Smart Chiro</span>
             </div>
-            <h1 className="text-[23px] font-light text-foreground">
+            <h1 className="text-[23px] font-medium text-foreground">
               Invalid reset link
             </h1>
             <p className="mt-2 text-[15px] text-foreground">

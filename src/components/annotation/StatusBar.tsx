@@ -64,7 +64,7 @@ export function StatusBar({
               <button
                 onClick={onRetrySave}
                 className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-surface-muted"
-                style={{ color: "#533afd" }}
+                style={{ color: "#7747ff" }}
               >
                 Retry
               </button>
@@ -78,7 +78,7 @@ export function StatusBar({
             <button
               onClick={() => window.location.reload()}
               className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-surface-muted"
-              style={{ color: "#533afd" }}
+              style={{ color: "#7747ff" }}
             >
               Reload
             </button>
@@ -109,7 +109,7 @@ export function StatusBar({
         backgroundColor: "#FFFFFF",
         borderTop: "1px solid #e5edf5",
         fontSize: 12,
-        color: "#64748d",
+        color: "#585858",
       }}
     >
       <div className="flex items-center gap-4">
@@ -140,7 +140,7 @@ export function StatusBar({
             disabled={!canUndo}
             aria-label="Undo"
             className="flex items-center justify-center rounded-md hover:bg-surface-muted disabled:cursor-not-allowed"
-            style={{ width: 24, height: 24, color: canUndo ? "#425466" : "#A3ACB9" }}
+            style={{ width: 24, height: 24, color: canUndo ? "#585858" : "#a4a4a4" }}
           >
             <Undo2 size={14} strokeWidth={1.5} />
           </button>
@@ -149,7 +149,7 @@ export function StatusBar({
             disabled={!canRedo}
             aria-label="Redo"
             className="flex items-center justify-center rounded-md hover:bg-surface-muted disabled:cursor-not-allowed"
-            style={{ width: 24, height: 24, color: canRedo ? "#425466" : "#A3ACB9" }}
+            style={{ width: 24, height: 24, color: canRedo ? "#585858" : "#a4a4a4" }}
           >
             <Redo2 size={14} strokeWidth={1.5} />
           </button>

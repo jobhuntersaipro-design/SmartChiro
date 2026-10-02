@@ -48,7 +48,7 @@ export function ReminderStatusBadge({ appointmentId }: Props) {
 
   const palette: Record<Summary, { bg: string; text: string; label: string }> = {
     none: { bg: "", text: "", label: "" },
-    pending: { bg: "#F0EEFF", text: "#635BFF", label: "Pending" },
+    pending: { bg: "#ede7ff", text: "#7747ff", label: "Pending" },
     sent: { bg: "#E5F8E5", text: "#30B130", label: "Reminded" },
     failed: { bg: "#FDE7EC", text: "#DF1B41", label: "Failed" },
   };

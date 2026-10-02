@@ -77,7 +77,7 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
         }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 id="delete-visit-title" className="text-[18px] font-light text-foreground">Delete Visit</h2>
+          <h2 id="delete-visit-title" className="text-[18px] font-medium text-foreground">Delete Visit</h2>
           <button
             onClick={handleClose}
             aria-label="Close"

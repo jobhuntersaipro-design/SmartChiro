@@ -240,7 +240,7 @@ export function ViewportCell({
         onClick={onClick}
         className="flex h-full w-full cursor-pointer items-center justify-center"
         style={{
-          backgroundColor: "#1A1F36",
+          backgroundColor: "#171717",
           border: isActive
             ? "2px solid #533afd"
             : "1px solid rgba(255,255,255,0.08)",
@@ -273,7 +273,7 @@ export function ViewportCell({
       onClick={onClick}
       className="relative h-full w-full overflow-hidden"
       style={{
-        backgroundColor: "#1A1F36",
+        backgroundColor: "#171717",
         border: isActive
           ? "2px solid #533afd"
           : "1px solid rgba(255,255,255,0.08)",
@@ -409,7 +409,7 @@ export function MultiViewGrid({
       style={{
         gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
         gridTemplateRows: `repeat(${gridRows}, 1fr)`,
-        backgroundColor: "#1A1F36",
+        backgroundColor: "#171717",
       }}
     >
       {Array.from({ length: totalSlots }).map((_, i) => {

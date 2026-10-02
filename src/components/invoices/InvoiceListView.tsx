@@ -45,7 +45,7 @@ function SummaryCard({ label, value, hint }: { label: string; value: string; hin
   return (
     <div className="rounded-panel border border-border bg-white p-4 shadow-(--shadow-card)">
       <p className="text-[14px] text-fg-secondary">{label}</p>
-      <p className="mt-1 text-[23px] font-light tabular-nums text-foreground whitespace-nowrap truncate" title={value}>{value}</p>
+      <p className="mt-1 text-[23px] font-medium tabular-nums text-foreground whitespace-nowrap truncate" title={value}>{value}</p>
       {hint && <p className="mt-0.5 text-[13px] text-fg-secondary">{hint}</p>}
     </div>
   );
@@ -140,7 +140,7 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-[23px] font-light tracking-[-0.18px] text-foreground">Invoices</h1>
+          <h1 className="text-[23px] font-medium tracking-[-0.18px] text-foreground">Invoices</h1>
           <p className="text-[15px] text-fg-secondary">{branchName ?? "Your branch"} · invoices, payments and receipts</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

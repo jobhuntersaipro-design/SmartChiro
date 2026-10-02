@@ -107,7 +107,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
   const specialties = doctor.profile?.specialties ?? [];
 
   const statCards = [
-    { label: "Patients", value: doctor.stats.patientCount, icon: Users, color: "#533afd" },
+    { label: "Patients", value: doctor.stats.patientCount, icon: Users, color: "#7747ff" },
     { label: "Visits (Month)", value: doctor.stats.visitsThisMonth ?? 0, icon: CalendarCheck, color: "#0570DE" },
     { label: "X-Rays", value: doctor.stats.totalXrays, icon: ImageIcon, color: "#30B130" },
     { label: "Avg Visits/Pt", value: doctor.stats.avgVisitsPerPatient ?? 0, icon: TrendingUp, color: "#F5A623" },
@@ -127,7 +127,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
       {/* Header card */}
       <div
         className="rounded-panel border border-border bg-white px-6 py-5"
-        style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
@@ -141,13 +141,13 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
             </Avatar>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-[23px] font-light text-foreground">
+                <h1 className="text-[23px] font-medium text-foreground">
                   {doctor.name ?? "Unnamed"}
                 </h1>
                 <span
-                  className={`rounded-md px-2 py-0.5 text-[11px] font-light ${
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${
                     doctor.profile?.isActive !== false
-                      ? "bg-[rgba(21,190,83,0.2)] text-success border border-[rgba(21,190,83,0.4)]"
+                      ? "bg-success/20 text-success border border-success/40"
                       : "bg-surface-hover text-fg-secondary"
                   }`}
                 >
@@ -209,7 +209,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
               <span className="text-[13px] text-fg-secondary">{s.label}</span>
             </div>
             <div
-              className="text-[22px] font-light text-foreground"
+              className="text-[22px] font-medium text-foreground"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
               {s.value}

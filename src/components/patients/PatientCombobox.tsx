@@ -88,7 +88,7 @@ export function PatientCombobox({ value, onChange, disabled, branchId }: Props) 
       {open && (
         <div
           className="absolute left-0 right-0 top-10 z-30 rounded-panel border border-border bg-white py-1"
-          style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
+          style={{ boxShadow: "var(--shadow-md)" }}
         >
           <div className="px-2 pb-1 border-b border-border">
             <div className="relative">

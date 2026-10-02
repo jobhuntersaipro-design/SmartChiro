@@ -1,7 +1,7 @@
 "use client";
 
 const SHADOW_CARD =
-  "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)";
+  "var(--shadow-card)";
 
 export function PatientTableSkeleton({ rows = 6 }: { rows?: number }) {
   return (

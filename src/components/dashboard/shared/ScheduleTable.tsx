@@ -23,7 +23,7 @@ const statusConfig: Record<string, { text: string; dot: string; label: string }>
   SCHEDULED:   { text: "#15803d", dot: "#22c55e", label: "Scheduled"   },
   CHECKED_IN:  { text: "#15803d", dot: "#22c55e", label: "Checked In"  },
   IN_PROGRESS: { text: "#854d0e", dot: "#eab308", label: "In Progress" },
-  COMPLETED:   { text: "#64748d", dot: "#94a3b8", label: "Completed"   },
+  COMPLETED:   { text: "#585858", dot: "#7d7d7d", label: "Completed"   },
   CANCELLED:   { text: "#b91c1c", dot: "#ef4444", label: "Cancelled"   },
   NO_SHOW:     { text: "#b91c1c", dot: "#ef4444", label: "No Show"     },
 };

@@ -14,7 +14,7 @@ export function OnboardingPrompt({ onCreateBranch }: OnboardingPromptProps) {
         className="max-w-120 w-full rounded-panel border border-border bg-white p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500"
         style={{
           boxShadow:
-            "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+            "var(--shadow-lg)",
         }}
       >
         <div className="flex justify-center mb-5">
@@ -22,7 +22,7 @@ export function OnboardingPrompt({ onCreateBranch }: OnboardingPromptProps) {
             <Building2 className="h-6 w-6 text-brand" strokeWidth={1.5} />
           </div>
         </div>
-        <h2 className="text-[23px] font-light tracking-[-0.23px] text-foreground mb-2">
+        <h2 className="text-[23px] font-medium tracking-[-0.23px] text-foreground mb-2">
           Welcome to SmartChiro
         </h2>
         <p className="text-[15px] text-foreground mb-6 leading-relaxed">

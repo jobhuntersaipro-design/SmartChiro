@@ -47,7 +47,7 @@ export function GreetingBar({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <h1 className="text-[23px] font-light tracking-[-0.23px] text-foreground" suppressHydrationWarning>
+        <h1 className="text-[23px] font-medium tracking-[-0.23px] text-foreground" suppressHydrationWarning>
           {greeting},{" "}
           <span className="font-medium">{displayName}</span>
         </h1>

@@ -18,7 +18,7 @@ export function NotFoundPanel({
         <Compass className="h-6 w-6 text-brand" strokeWidth={1.5} />
       </div>
       <p className="text-[14px] font-medium text-brand tabular-nums">404</p>
-      <h1 className="mt-1 text-[23px] font-light tracking-[-0.23px] text-foreground">
+      <h1 className="mt-1 text-[23px] font-medium tracking-[-0.23px] text-foreground">
         This page doesn&apos;t exist yet
       </h1>
       <p className="mt-2 text-[15px] text-fg-secondary">

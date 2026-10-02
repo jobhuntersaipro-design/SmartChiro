@@ -107,7 +107,7 @@ export function SelectionOverlay({
         width={screenW}
         height={screenH}
         fill="none"
-        stroke="#533afd"
+        stroke="#7747ff"
         strokeWidth={1}
         strokeDasharray="4 2"
       />
@@ -118,7 +118,7 @@ export function SelectionOverlay({
         y1={screenY}
         x2={screenX + screenW / 2}
         y2={rotateHandleY}
-        stroke="#533afd"
+        stroke="#7747ff"
         strokeWidth={1}
       />
 
@@ -128,7 +128,7 @@ export function SelectionOverlay({
         cy={rotateHandleY}
         r={4}
         fill="#FFFFFF"
-        stroke="#533afd"
+        stroke="#7747ff"
         strokeWidth={1.5}
         className="pointer-events-auto"
         style={{ cursor: "grab" }}
@@ -144,7 +144,7 @@ export function SelectionOverlay({
           height={7}
           rx={1}
           fill="#FFFFFF"
-          stroke="#533afd"
+          stroke="#7747ff"
           strokeWidth={1.5}
           className="pointer-events-auto"
           style={{ cursor: h.cursor }}

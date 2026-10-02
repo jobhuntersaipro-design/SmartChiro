@@ -11,14 +11,14 @@ import { formatRangeLabel } from "@/lib/reports/range";
  * orange pass lightness, chroma, colour-blind separation and 3:1 contrast.
  */
 export const SERIES = {
-  collected: "#635BFF",
+  collected: "#7747ff",
   invoiced: "#eb6834",
 } as const;
 const TRACK = "#E6E4FF"; // lighter step of the indigo ramp (meter track)
-const GRID = "#E3E8EE";
-const BASELINE = "#C1C9D2";
-const MUTED = "#697386";
-const INK = "#061b31";
+const GRID = "#e9e9e9";
+const BASELINE = "#c4c4c4";
+const MUTED = "#7d7d7d";
+const INK = "#0b0b0b";
 
 /** Width of an element, following resizes (0 until mounted). */
 function useElementWidth<T extends HTMLElement>() {
@@ -109,7 +109,7 @@ export function TrendChart({ points, granularity }: TrendChartProps) {
             </g>
           ))}
           {active !== null && (
-            <rect x={LEFT + slot * active} y={TOP} width={slot} height={plotH} fill="#F6F9FC" />
+            <rect x={LEFT + slot * active} y={TOP} width={slot} height={plotH} fill="#f8f8f8" />
           )}
           {points.map((p, i) => {
             const cx = LEFT + slot * (i + 0.5);

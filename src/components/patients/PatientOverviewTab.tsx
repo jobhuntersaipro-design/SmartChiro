@@ -67,20 +67,20 @@ interface AppointmentItem {
 }
 
 const visitTypeColors: Record<string, { bg: string; text: string }> = {
-  initial: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-brand" },
-  follow_up: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-info" },
-  emergency: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
-  reassessment: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-warning" },
-  discharge: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-success" },
+  initial: { bg: "bg-brand-subtle", text: "text-brand" },
+  follow_up: { bg: "bg-info-subtle", text: "text-info" },
+  emergency: { bg: "bg-danger-subtle", text: "text-danger" },
+  reassessment: { bg: "bg-warning-subtle", text: "text-warning" },
+  discharge: { bg: "bg-success-subtle", text: "text-success" },
 };
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  SCHEDULED: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-brand" },
-  CHECKED_IN: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-success" },
-  IN_PROGRESS: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-info" },
-  COMPLETED: { bg: "bg-[rgba(48,177,48,0.15)]", text: "text-success" },
+  SCHEDULED: { bg: "bg-brand-subtle", text: "text-brand" },
+  CHECKED_IN: { bg: "bg-success-subtle", text: "text-success" },
+  IN_PROGRESS: { bg: "bg-info-subtle", text: "text-info" },
+  COMPLETED: { bg: "bg-success-subtle", text: "text-success" },
   CANCELLED: { bg: "bg-surface-hover", text: "text-fg-secondary" },
-  NO_SHOW: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
+  NO_SHOW: { bg: "bg-danger-subtle", text: "text-danger" },
 };
 
 function formatShortDate(iso: string): string {
@@ -105,9 +105,9 @@ function formatVisitType(type: string): string {
 }
 
 const SCORE_PILL: Record<ScoreTone, { bg: string; text: string }> = {
-  good: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-success" },
-  fair: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-warning" },
-  poor: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
+  good: { bg: "bg-success-subtle", text: "text-success" },
+  fair: { bg: "bg-warning-subtle", text: "text-warning" },
+  poor: { bg: "bg-danger-subtle", text: "text-danger" },
 };
 
 /** Pill colours for the overall-improvement score (higher is better). */
@@ -179,7 +179,7 @@ function Sparkline({ visits }: { visits: VisitItem[] }) {
               y1={y}
               x2={width - padX}
               y2={y}
-              stroke="#e5edf5"
+              stroke="#e9e9e9"
               strokeWidth={1}
             />
             <text
@@ -187,7 +187,7 @@ function Sparkline({ visits }: { visits: VisitItem[] }) {
               y={y + 4}
               textAnchor="end"
               className="text-[10px]"
-              fill="#64748d"
+              fill="#585858"
             >
               {val % 1 === 0 ? val : ""}
             </text>
@@ -197,12 +197,12 @@ function Sparkline({ visits }: { visits: VisitItem[] }) {
 
       {/* Line */}
       {coords.length > 1 && (
-        <path d={pathD} fill="none" stroke="#533afd" strokeWidth={2} strokeLinejoin="round" />
+        <path d={pathD} fill="none" stroke="#7747ff" strokeWidth={2} strokeLinejoin="round" />
       )}
 
       {/* Dots */}
       {coords.map((c, i) => (
-        <circle key={i} cx={c.x} cy={c.y} r={4} fill="#533afd" />
+        <circle key={i} cx={c.x} cy={c.y} r={4} fill="#7747ff" />
       ))}
 
       {/* X-axis labels */}
@@ -213,7 +213,7 @@ function Sparkline({ visits }: { visits: VisitItem[] }) {
           y={height - 4}
           textAnchor="middle"
           className="text-[9px]"
-          fill="#64748d"
+          fill="#585858"
         >
           {new Date(c.date).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric" })}
         </text>

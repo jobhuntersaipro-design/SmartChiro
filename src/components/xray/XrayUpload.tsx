@@ -229,7 +229,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
 
       {/* Upload progress */}
       {stage !== 'idle' && (
-        <div className="rounded-panel border border-border bg-white p-4" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)' }}>
+        <div className="rounded-panel border border-border bg-white p-4" style={{ boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-start gap-3">
             {/* Preview */}
             <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-muted">

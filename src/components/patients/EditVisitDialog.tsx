@@ -317,7 +317,7 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
         }}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 id="edit-visit-title" className="text-[18px] font-light text-foreground">Edit Visit</h2>
+          <h2 id="edit-visit-title" className="text-[18px] font-medium text-foreground">Edit Visit</h2>
           <button
             onClick={handleClose}
             aria-label="Close"
@@ -390,7 +390,7 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
                   checked={questionnaireEnabled}
                   onChange={(e) => setQuestionnaireEnabled(e.target.checked)}
                   className="h-4 w-4 rounded border-border text-brand focus:ring-1 focus:ring-brand"
-                  style={{ accentColor: "#533afd" }}
+                  style={{ accentColor: "#7747ff" }}
                 />
                 <span className="text-[13px] text-foreground">Record recovery questionnaire for this visit</span>
               </label>

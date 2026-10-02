@@ -117,7 +117,7 @@ export function SlotPickerDialog({
             onClick={() => setTab("existing")}
             className="flex items-center gap-1.5 pb-2 text-[13px] font-medium transition-colors"
             style={{
-              color: tab === "existing" ? "#533afd" : "#64748d",
+              color: tab === "existing" ? "#7747ff" : "#585858",
               borderBottom: tab === "existing" ? "2px solid #533afd" : "2px solid transparent",
             }}
           >
@@ -128,7 +128,7 @@ export function SlotPickerDialog({
             onClick={() => setTab("upload")}
             className="flex items-center gap-1.5 pb-2 text-[13px] font-medium transition-colors"
             style={{
-              color: tab === "upload" ? "#533afd" : "#64748d",
+              color: tab === "upload" ? "#7747ff" : "#585858",
               borderBottom: tab === "upload" ? "2px solid #533afd" : "2px solid transparent",
             }}
           >

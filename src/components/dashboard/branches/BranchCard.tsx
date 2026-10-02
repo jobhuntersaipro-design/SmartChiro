@@ -39,7 +39,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
     <div
       className="rounded-panel border border-border bg-white transition-all duration-200 hover:border-border-strong cursor-pointer group"
       style={{
-        boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+        boxShadow: "var(--shadow-lg)",
       }}
       onClick={() => router.push(`/dashboard/branches/${branch.id}`)}
     >
@@ -73,7 +73,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
                   <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
                   <div
                     className="absolute right-0 top-full mt-1 w-40 rounded-panel border border-border bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
-                    style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+                    style={{ boxShadow: "var(--shadow-lg)" }}
                   >
                     <button
                       onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(branch.id); }}

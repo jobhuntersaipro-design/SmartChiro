@@ -20,7 +20,7 @@ interface BranchStatsResponse {
 }
 
 const SHADOW_CARD =
-  "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)";
+  "var(--shadow-card)";
 
 function StatRow({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent?: string }) {
   return (
@@ -29,7 +29,7 @@ function StatRow({ icon, label, value, accent }: { icon: React.ReactNode; label:
         {icon}
         {label}
       </span>
-      <span className="font-medium" style={{ color: accent ?? "#061b31" }}>{value}</span>
+      <span className="font-medium" style={{ color: accent ?? "#0b0b0b" }}>{value}</span>
     </div>
   );
 }
@@ -47,7 +47,7 @@ function BranchCard({ stat, scope }: { stat: BranchStat; scope: "all-branches" |
       <div className="flex items-start justify-between mb-2.5">
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-fg-secondary truncate">{stat.branchName}</p>
-          <p className="text-[28px] font-light leading-tight text-foreground mt-0.5">{stat.totalPatients}</p>
+          <p className="text-[28px] font-medium leading-tight text-foreground mt-0.5">{stat.totalPatients}</p>
           <p className="text-[12px] text-fg-secondary -mt-0.5">patients</p>
         </div>
         {scope === "all-branches" && (
@@ -73,7 +73,7 @@ function BranchCard({ stat, scope }: { stat: BranchStat; scope: "all-branches" |
           icon={<CalendarClock className="h-3 w-3" strokeWidth={1.75} />}
           label="Upcoming · 7d"
           value={stat.upcomingThisWeek}
-          accent={stat.upcomingThisWeek > 0 ? "#533afd" : undefined}
+          accent={stat.upcomingThisWeek > 0 ? "#7747ff" : undefined}
         />
       </div>
     </Link>
@@ -89,7 +89,7 @@ function PersonalCards({ stat }: { stat: BranchStat }) {
           <Users className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} />
           <span className="text-[13px] font-medium text-fg-secondary">My active patients</span>
         </div>
-        <p className="text-[28px] font-light text-foreground leading-tight">{stat.activePatients}</p>
+        <p className="text-[28px] font-medium text-foreground leading-tight">{stat.activePatients}</p>
         <p className="text-[12px] text-fg-secondary">in {stat.branchName}</p>
       </div>
       <div className="rounded-panel border border-border bg-white px-4 py-3.5" style={{ boxShadow: SHADOW_CARD }}>
@@ -97,7 +97,7 @@ function PersonalCards({ stat }: { stat: BranchStat }) {
           <TrendingUp className="h-3.5 w-3.5 text-success" strokeWidth={1.75} />
           <span className="text-[13px] font-medium text-fg-secondary">New this month</span>
         </div>
-        <p className="text-[28px] font-light text-foreground leading-tight">+{stat.newThisMonth}</p>
+        <p className="text-[28px] font-medium text-foreground leading-tight">+{stat.newThisMonth}</p>
         <p className="text-[12px] text-fg-secondary">patients added</p>
       </div>
       <div className="rounded-panel border border-border bg-white px-4 py-3.5" style={{ boxShadow: SHADOW_CARD }}>
@@ -105,7 +105,7 @@ function PersonalCards({ stat }: { stat: BranchStat }) {
           <CalendarClock className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} />
           <span className="text-[13px] font-medium text-fg-secondary">Upcoming · 7d</span>
         </div>
-        <p className="text-[28px] font-light text-foreground leading-tight">{stat.upcomingThisWeek}</p>
+        <p className="text-[28px] font-medium text-foreground leading-tight">{stat.upcomingThisWeek}</p>
         <p className="text-[12px] text-fg-secondary">appointments</p>
       </div>
     </div>

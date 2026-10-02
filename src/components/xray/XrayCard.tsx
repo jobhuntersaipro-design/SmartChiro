@@ -75,7 +75,7 @@ export function XrayCard({
   return (
     <div
       className="group relative rounded-panel border bg-white overflow-hidden transition-colors"
-      style={{ borderColor: selected ? '#533afd' : '#e5edf5' }}
+      style={{ borderColor: selected ? '#7747ff' : '#e9e9e9' }}
     >
       {batchMode && (
         <input

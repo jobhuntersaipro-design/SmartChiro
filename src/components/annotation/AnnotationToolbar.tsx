@@ -68,7 +68,7 @@ function ToolTooltip({
         top: anchorRect.top + anchorRect.height / 2,
         left: anchorRect.right + 8,
         transform: "translateY(-50%)",
-        backgroundColor: "#061b31",
+        backgroundColor: "#0b0b0b",
         color: "#FFFFFF",
         borderRadius: 4,
         fontSize: 12,
@@ -86,7 +86,7 @@ function ToolTooltip({
           {tool.shortcut}
         </span>
       </div>
-      <span style={{ color: "#A3ACB9" }}>{tool.description}</span>
+      <span style={{ color: "#a4a4a4" }}>{tool.description}</span>
     </div>
   );
 }
@@ -163,7 +163,7 @@ export function AnnotationToolbar({
                 height: 36,
                 borderRadius: 4,
                 backgroundColor: isActive
-                  ? "#533afd"
+                  ? "#7747ff"
                   : isHovered
                     ? "rgba(255,255,255,.14)"
                     : "rgba(255,255,255,.06)",

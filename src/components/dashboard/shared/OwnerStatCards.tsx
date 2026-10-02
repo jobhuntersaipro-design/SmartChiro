@@ -22,8 +22,8 @@ export function OwnerStatCards({ stats, branchLabel, showClinical = true }: Owne
     <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${showClinical ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
       <StatCard
         icon={Users}
-        iconColor="#533afd"
-        iconBg="#ededfc"
+        iconColor="#7747ff"
+        iconBg="#ede7ff"
         value={stats.totalPatients}
         label="Total Patients"
         subtitle={branchLabel}
@@ -57,8 +57,8 @@ export function OwnerStatCards({ stats, branchLabel, showClinical = true }: Owne
       )}
       <StatCard
         icon={Stethoscope}
-        iconColor="#64748d"
-        iconBg="#F6F9FC"
+        iconColor="#585858"
+        iconBg="#f8f8f8"
         value={stats.activeDoctors}
         label="Active Doctors"
         subtitle={branchLabel}

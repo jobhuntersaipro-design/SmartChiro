@@ -56,7 +56,7 @@ const COLS =
   "grid-cols-[160px_180px_140px_minmax(120px,1fr)_90px_160px_36px]";
 
 const SHADOW_CARD =
-  "0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(50,50,93,0.06), 0 1px 1px rgba(0,0,0,0.04)";
+  "var(--shadow-md)";
 
 function WeekdayBadge({
   label,
@@ -69,7 +69,7 @@ function WeekdayBadge({
     <span
       className="inline-flex items-center justify-center px-1 text-[10px] font-semibold uppercase tracking-[0.08em] leading-none flex-shrink-0 tabular-nums"
       style={{
-        color: isWeekend ? "#9b6829" : "#94a3b8",
+        color: isWeekend ? "#9b6829" : "#7d7d7d",
         minWidth: "26px",
       }}
     >
@@ -174,9 +174,9 @@ function InvoiceCell({
         case "OVERDUE":
           return { bg: "#fde8ec", text: "#ea2261", label: "Overdue" };
         case "CANCELLED":
-          return { bg: "#f1f5f9", text: "#64748d", label: "Cancelled" };
+          return { bg: "#f1f1f1", text: "#585858", label: "Cancelled" };
         default:
-          return { bg: "#f5f3ff", text: "#533afd", label: "Draft" };
+          return { bg: "#f5f3ff", text: "#7747ff", label: "Draft" };
       }
     })();
     return (

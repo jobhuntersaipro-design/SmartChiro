@@ -38,7 +38,7 @@ function formatAge(dateOfBirth: string | null): string | null {
 // From PatientVisitsTab.tsx
 const VISIT_TYPE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
   initial: { label: 'Initial', bg: 'bg-brand-subtle', text: 'text-brand', border: '#533afd' },
-  follow_up: { label: 'Follow-up', bg: 'bg-[rgba(5,112,222,0.1)]', text: 'text-info', border: '#0570DE' },
+  follow_up: { label: 'Follow-up', bg: 'bg-info-subtle', text: 'text-info', border: '#0570DE' },
   emergency: { label: 'Emergency', bg: 'bg-danger-subtle', text: 'text-danger', border: '#DF1B41' },
   reassessment: { label: 'Reassessment', bg: 'bg-warning-subtle', text: 'text-warning', border: '#9b6829' },
   discharge: { label: 'Discharge', bg: 'bg-success-subtle', text: 'text-success', border: '#30B130' },

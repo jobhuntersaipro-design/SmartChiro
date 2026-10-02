@@ -10,7 +10,7 @@ interface BranchSummaryStatsProps {
 
 export function BranchSummaryStats({ totalBranches, totalDoctors, totalPatients }: BranchSummaryStatsProps) {
   const stats = [
-    { label: "Total Branches", value: totalBranches, icon: Building2, color: "#533afd" },
+    { label: "Total Branches", value: totalBranches, icon: Building2, color: "#7747ff" },
     { label: "Active Doctors", value: totalDoctors, icon: Stethoscope, color: "#0570DE" },
     { label: "Total Patients", value: totalPatients, icon: Users, color: "#30B130" },
   ];
@@ -22,7 +22,7 @@ export function BranchSummaryStats({ totalBranches, totalDoctors, totalPatients 
           key={stat.label}
           className="rounded-panel border border-border bg-white px-5 py-4 transition-all duration-200 hover:border-border-strong"
           style={{
-            boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+            boxShadow: "var(--shadow-lg)",
           }}
         >
           <div className="flex items-center gap-3">

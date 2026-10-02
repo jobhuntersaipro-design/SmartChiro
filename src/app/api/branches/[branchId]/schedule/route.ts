@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
 
 const DOCTOR_COLORS = [
-  "#533afd", "#0570DE", "#30B130", "#DF1B41", "#F5A623",
+  "#7747ff", "#0570DE", "#30B130", "#DF1B41", "#F5A623",
   "#8B5CF6", "#EC4899", "#14B8A6", "#F97316", "#6366F1",
 ];
 

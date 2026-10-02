@@ -26,8 +26,8 @@ interface PatientVisitsTabProps {
 // ─── Visit type badge config ───
 
 const VISIT_TYPE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  initial: { label: "Initial", bg: "bg-brand-subtle", text: "text-brand", border: "#533afd" },
-  follow_up: { label: "Follow-up", bg: "bg-[rgba(5,112,222,0.1)]", text: "text-info", border: "#0570DE" },
+  initial: { label: "Initial", bg: "bg-brand-subtle", text: "text-brand", border: "#7747ff" },
+  follow_up: { label: "Follow-up", bg: "bg-info-subtle", text: "text-info", border: "#0570DE" },
   emergency: { label: "Emergency", bg: "bg-danger-subtle", text: "text-danger", border: "#DF1B41" },
   reassessment: { label: "Reassessment", bg: "bg-warning-subtle", text: "text-warning", border: "#9b6829" },
   discharge: { label: "Discharge", bg: "bg-success-subtle", text: "text-success", border: "#30B130" },
@@ -51,7 +51,7 @@ function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean 
     <span
       className="inline-flex items-center justify-center rounded-[3px] px-1 py-px text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
       style={{
-        background: isWeekend ? "#fef3c7" : "#f1f5f9",
+        background: isWeekend ? "#fef3c7" : "#f1f1f1",
         color: isWeekend ? "#854d0e" : "#475569",
       }}
     >
@@ -103,7 +103,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div
         className="flex h-14 w-14 items-center justify-center rounded-full mb-4"
-        style={{ backgroundColor: "#ededfc" }}
+        style={{ backgroundColor: "#ede7ff" }}
       >
         <FileText className="h-6 w-6 text-brand" strokeWidth={1.5} />
       </div>

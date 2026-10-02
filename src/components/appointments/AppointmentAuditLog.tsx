@@ -35,10 +35,10 @@ const ACTION_STYLE: Record<
   CREATE:          { bg: "#ECFDF5", text: "#108c3d", label: "Created" },
   UPDATE:          { bg: "#EFF6FF", text: "#1E40AF", label: "Updated" },
   RESCHEDULE:      { bg: "#FEF3C7", text: "#92400E", label: "Rescheduled" },
-  STATUS_CHANGE:   { bg: "#F0EEFF", text: "#635BFF", label: "Status changed" },
-  DOCTOR_REASSIGN: { bg: "#F0EEFF", text: "#635BFF", label: "Reassigned" },
+  STATUS_CHANGE:   { bg: "#ede7ff", text: "#7747ff", label: "Status changed" },
+  DOCTOR_REASSIGN: { bg: "#ede7ff", text: "#7747ff", label: "Reassigned" },
   CANCEL:          { bg: "#FEF2F2", text: "#DF1B41", label: "Cancelled" },
-  NOTE_EDIT:       { bg: "#F1F5F9", text: "#64748b", label: "Note edited" },
+  NOTE_EDIT:       { bg: "#f1f1f1", text: "#64748b", label: "Note edited" },
   DELETE:          { bg: "#FEF2F2", text: "#DF1B41", label: "Deleted" },
 };
 

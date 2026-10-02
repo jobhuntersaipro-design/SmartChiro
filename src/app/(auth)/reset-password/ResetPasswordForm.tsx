@@ -73,7 +73,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <div className="mb-4 rounded-panel bg-brand px-3 py-2">
             <span className="text-[14px] font-bold text-white">Smart Chiro</span>
           </div>
-          <h1 className="text-[23px] font-light text-foreground">{title}</h1>
+          <h1 className="text-[23px] font-medium text-foreground">{title}</h1>
           <p className="mt-2 text-[15px] text-foreground">{body}</p>
         </div>
 
@@ -93,7 +93,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <div className="mb-4 rounded-panel bg-brand px-3 py-2">
           <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
-        <h1 className="text-[23px] font-light text-foreground">Set a new password</h1>
+        <h1 className="text-[23px] font-medium text-foreground">Set a new password</h1>
         <p className="mt-1 text-[15px] text-fg-secondary">Enter a new password for your account</p>
       </div>
 
@@ -101,7 +101,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         className="rounded-panel border border-border bg-white p-6"
         style={{
           boxShadow:
-            'rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px',
+            'var(--shadow-lg)',
         }}
       >
         <form onSubmit={handleSubmit} className="space-y-4">

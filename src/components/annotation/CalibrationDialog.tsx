@@ -72,21 +72,21 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
         style={{
           backgroundColor: "#FFFFFF",
           borderRadius: 8,
-          boxShadow: "0 8px 24px rgba(18, 42, 66, 0.15)",
+          boxShadow: "var(--shadow-lg)",
         }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Ruler size={16} strokeWidth={1.75} style={{ color: "#533afd" }} />
-            <h3 id="calibration-dialog-title" className="text-sm font-semibold" style={{ color: "#0A2540" }}>
+            <Ruler size={16} strokeWidth={1.75} style={{ color: "#7747ff" }} />
+            <h3 id="calibration-dialog-title" className="text-sm font-semibold" style={{ color: "#0b0b0b" }}>
               Calibrate measurements
             </h3>
           </div>
           <button
             onClick={onCancel}
             className="flex items-center justify-center transition-colors"
-            style={{ width: 24, height: 24, borderRadius: 4, color: "#697386" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            style={{ width: 24, height: 24, borderRadius: 4, color: "#7d7d7d" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
             aria-label="Cancel calibration"
           >
@@ -94,14 +94,14 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
           </button>
         </div>
 
-        <p className="text-xs" style={{ color: "#425466" }}>
+        <p className="text-xs" style={{ color: "#585858" }}>
           You drew a {Math.round(pixelLength)} px line over a known reference.
           Enter the real-world length in millimeters and we&apos;ll convert all
           subsequent measurements automatically.
         </p>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium" style={{ color: "#0A2540" }}>
+          <span className="text-xs font-medium" style={{ color: "#0b0b0b" }}>
             Real-world length (mm)
           </span>
           <input
@@ -122,7 +122,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
               borderRadius: 4,
               border: error ? "1px solid #DF1B41" : "1px solid #e5edf5",
               outline: "none",
-              backgroundColor: "#F6F9FC",
+              backgroundColor: "#f8f8f8",
             }}
           />
           {error && <span className="text-[11px]" style={{ color: "#DF1B41" }}>{error}</span>}
@@ -132,8 +132,8 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
           <button
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#273951", backgroundColor: "#FFFFFF" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
           >
             Cancel
@@ -141,9 +141,9 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
           <button
             onClick={submit}
             className="px-3 py-1.5 text-xs font-medium text-white transition-colors"
-            style={{ borderRadius: 4, backgroundColor: "#533afd" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#4434d4"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#533afd"; }}
+            style={{ borderRadius: 4, backgroundColor: "#7747ff" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#5528ce"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#7747ff"; }}
           >
             Apply calibration
           </button>

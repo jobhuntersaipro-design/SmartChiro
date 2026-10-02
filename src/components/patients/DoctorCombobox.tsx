@@ -75,7 +75,7 @@ export function DoctorCombobox({ value, onChange, disabled, branchId }: Props) {
       {open && (
         <div
           className="absolute left-0 right-0 top-10 z-30 rounded-panel border border-border bg-white py-1 max-h-65 overflow-y-auto"
-          style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
+          style={{ boxShadow: "var(--shadow-md)" }}
         >
           {loading && (
             <div className="px-3 py-2 text-[13px] text-fg-secondary">Loading…</div>

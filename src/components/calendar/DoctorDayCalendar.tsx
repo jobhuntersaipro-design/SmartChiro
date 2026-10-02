@@ -445,15 +445,15 @@ function AppointmentBlock({
           onSelectEvent();
         }
       }}
-      className="absolute left-1 right-1 rounded-panel cursor-pointer transition-shadow hover:shadow-md group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand overflow-hidden"
+      className="absolute left-1 right-1 rounded-lg pl-0.75 cursor-pointer transition-shadow hover:shadow-md group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand overflow-hidden"
       style={{
         top,
         height,
         backgroundColor: treatment.bg,
-        borderLeft: `3px solid ${treatment.accent}`,
         zIndex: 5,
       }}
     >
+      <span aria-hidden className="absolute inset-y-0 left-0 w-0.75" style={{ backgroundColor: treatment.accent }} />
       {showWaitingBand && (
         <div
           className="absolute inset-x-0 top-0 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-warning bg-warning-subtle border-b border-warning/25 z-10"

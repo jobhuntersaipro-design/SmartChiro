@@ -39,7 +39,7 @@ export function PatientCard({ patient, showBranch = false }: PatientCardProps) {
     <div
       onClick={() => router.push(href)}
       className="rounded-panel border border-border bg-white p-4 cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:border-border-strong"
-      style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">

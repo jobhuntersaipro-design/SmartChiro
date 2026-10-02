@@ -71,7 +71,7 @@ export function DeleteAppointmentDialog({
         aria-labelledby="delete-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-115 rounded-2xl border border-border bg-white p-6"
-        style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <div className="flex items-start gap-3 mb-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-danger-subtle flex-shrink-0">

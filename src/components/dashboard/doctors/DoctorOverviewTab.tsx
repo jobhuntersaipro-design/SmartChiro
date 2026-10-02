@@ -52,11 +52,11 @@ function getTodayDayKey(): string {
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   SCHEDULED: { bg: "bg-brand-subtle", text: "text-brand" },
-  CHECKED_IN: { bg: "bg-[rgba(21,190,83,0.15)]", text: "text-success" },
-  IN_PROGRESS: { bg: "bg-[rgba(5,112,222,0.15)]", text: "text-info" },
-  COMPLETED: { bg: "bg-[rgba(21,190,83,0.2)]", text: "text-success" },
+  CHECKED_IN: { bg: "bg-success-subtle", text: "text-success" },
+  IN_PROGRESS: { bg: "bg-info-subtle", text: "text-info" },
+  COMPLETED: { bg: "bg-success/20", text: "text-success" },
   CANCELLED: { bg: "bg-surface-hover", text: "text-fg-secondary" },
-  NO_SHOW: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
+  NO_SHOW: { bg: "bg-danger-subtle", text: "text-danger" },
 };
 
 function formatTime(iso: string): string {
@@ -145,7 +145,7 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-[12px] text-fg-secondary">{a.duration}min</span>
-                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-medium ${colors.bg} ${colors.text}`}>
                         {a.status.replace("_", " ")}
                       </span>
                     </div>

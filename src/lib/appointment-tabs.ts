@@ -72,8 +72,8 @@ export const STATUS_TOKENS: Record<
 > = {
   SCHEDULED: {
     bg: "#EEF2FF",
-    text: "#635BFF",
-    accent: "#635BFF",
+    text: "#7747ff",
+    accent: "#7747ff",
     label: "Scheduled",
     pulse: true,
   },
@@ -103,9 +103,9 @@ export const STATUS_TOKENS: Record<
     label: "Cancelled",
   },
   NO_SHOW: {
-    bg: "#F1F5F9",
+    bg: "#f1f1f1",
     text: "#64748b",
-    accent: "#697386",
+    accent: "#7d7d7d",
     label: "No show",
   },
 };

@@ -95,7 +95,7 @@ function ExportMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors hover:bg-surface-muted disabled:opacity-60"
-        style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
+        style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#0b0b0b" }}
       >
         {exporting ? (
           <Loader2 size={14} strokeWidth={1.5} className="animate-spin" />
@@ -108,7 +108,7 @@ function ExportMenu({
         <div
           role="menu"
           className="absolute right-0 z-50 mt-1 w-60 overflow-hidden bg-white"
-          style={{ border: "1px solid #e5edf5", borderRadius: 6, boxShadow: "0 8px 24px rgba(18,42,66,.12)" }}
+          style={{ border: "1px solid #e5edf5", borderRadius: 6, boxShadow: "var(--shadow-md)" }}
         >
           {items.map((item) => (
             <button
@@ -147,7 +147,7 @@ function AdjustmentSlider({
     <div className="flex items-center gap-2">
       <span
         className="text-xs whitespace-nowrap"
-        style={{ color: "#273951", minWidth: 64 }}
+        style={{ color: "#0b0b0b", minWidth: 64 }}
       >
         {label}
       </span>
@@ -161,7 +161,7 @@ function AdjustmentSlider({
       />
       <span
         className="text-xs tabular-nums"
-        style={{ color: "#64748d", minWidth: 32, textAlign: "right" }}
+        style={{ color: "#585858", minWidth: 32, textAlign: "right" }}
       >
         {value}
       </span>
@@ -238,8 +238,8 @@ function InlineEditableTitle({
         onKeyDown={handleKeyDown}
         className="text-sm font-medium outline-none"
         style={{
-          color: "#061b31",
-          backgroundColor: "#f6f9fc",
+          color: "#0b0b0b",
+          backgroundColor: "#f8f8f8",
           border: "1px solid #533afd",
           borderRadius: 4,
           padding: "2px 8px",
@@ -257,7 +257,7 @@ function InlineEditableTitle({
         setIsEditing(true);
       }}
       className="group flex items-center gap-1.5 text-sm font-medium"
-      style={{ color: "#061b31", position: "relative" }}
+      style={{ color: "#0b0b0b", position: "relative" }}
     >
       <span
         className={isUntitled ? "animate-title-hint" : ""}
@@ -266,7 +266,7 @@ function InlineEditableTitle({
           transition: "border-color 150ms ease",
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.borderColor = "#A3ACB9";
+          (e.currentTarget as HTMLElement).style.borderColor = "#a4a4a4";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor = "transparent";
@@ -280,7 +280,7 @@ function InlineEditableTitle({
         <Pencil
           size={12}
           className="opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-          style={{ color: "#A3ACB9" }}
+          style={{ color: "#a4a4a4" }}
         />
       )}
     </button>
@@ -341,11 +341,11 @@ function AdjustPopover({
         border: "1px solid #e5edf5",
         borderRadius: 6,
         boxShadow:
-          "0 0 0 1px rgba(0,0,0,0.04), 0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)",
+          "var(--shadow-md)",
       }}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748d" }}>
+        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#585858" }}>
           Image Adjustments
         </span>
         {isAdjustmentsModified && (
@@ -373,40 +373,40 @@ function AdjustPopover({
         max={100}
         onChange={onContrastChange}
       />
-      <div style={{ height: 1, backgroundColor: "#e5edf5", margin: "2px 0" }} />
-      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#64748d" }}>
+      <div style={{ height: 1, backgroundColor: "#e9e9e9", margin: "2px 0" }} />
+      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#585858" }}>
         Orientation
       </span>
       <button
         onClick={onRotate90}
-        onMouseEnter={(e) => { if (rotation === 0) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseEnter={(e) => { if (rotation === 0) e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
         onMouseLeave={(e) => { if (rotation === 0) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
           borderRadius: 4,
           border: "1px solid #e5edf5",
-          backgroundColor: rotation !== 0 ? "#ededfc" : "#FFFFFF",
-          color: rotation !== 0 ? "#533afd" : "#273951",
+          backgroundColor: rotation !== 0 ? "#ede7ff" : "#FFFFFF",
+          color: rotation !== 0 ? "#7747ff" : "#0b0b0b",
         }}
       >
         <span className="flex items-center gap-1.5">
           <RotateCw size={13} strokeWidth={1.5} />
           Rotate 90°
         </span>
-        <span className="tabular-nums" style={{ color: rotation !== 0 ? "#533afd" : "#A3ACB9" }}>
+        <span className="tabular-nums" style={{ color: rotation !== 0 ? "#7747ff" : "#a4a4a4" }}>
           {rotation}°
         </span>
       </button>
       <button
         onClick={() => onFlipChange(!flipped)}
-        onMouseEnter={(e) => { if (!flipped) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseEnter={(e) => { if (!flipped) e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
         onMouseLeave={(e) => { if (!flipped) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
           borderRadius: 4,
           border: "1px solid #e5edf5",
-          backgroundColor: flipped ? "#ededfc" : "#FFFFFF",
-          color: flipped ? "#533afd" : "#273951",
+          backgroundColor: flipped ? "#ede7ff" : "#FFFFFF",
+          color: flipped ? "#7747ff" : "#0b0b0b",
         }}
       >
         <span className="flex items-center gap-1.5">
@@ -417,14 +417,14 @@ function AdjustPopover({
       </button>
       <button
         onClick={() => onFlipVChange(!flippedV)}
-        onMouseEnter={(e) => { if (!flippedV) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseEnter={(e) => { if (!flippedV) e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
         onMouseLeave={(e) => { if (!flippedV) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
           borderRadius: 4,
           border: "1px solid #e5edf5",
-          backgroundColor: flippedV ? "#ededfc" : "#FFFFFF",
-          color: flippedV ? "#533afd" : "#273951",
+          backgroundColor: flippedV ? "#ede7ff" : "#FFFFFF",
+          color: flippedV ? "#7747ff" : "#0b0b0b",
         }}
       >
         <span className="flex items-center gap-1.5">
@@ -435,14 +435,14 @@ function AdjustPopover({
       </button>
       <button
         onClick={() => onInvertChange(!inverted)}
-        onMouseEnter={(e) => { if (!inverted) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+        onMouseEnter={(e) => { if (!inverted) e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
         onMouseLeave={(e) => { if (!inverted) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
           borderRadius: 4,
           border: "1px solid #e5edf5",
-          backgroundColor: inverted ? "#ededfc" : "#FFFFFF",
-          color: inverted ? "#533afd" : "#273951",
+          backgroundColor: inverted ? "#ede7ff" : "#FFFFFF",
+          color: inverted ? "#7747ff" : "#0b0b0b",
         }}
       >
         <span className="flex items-center gap-1.5">
@@ -456,7 +456,7 @@ function AdjustPopover({
           <button
             onClick={() => { onShowShortcuts(); onClose(); }}
             className="text-[12px] hover:underline"
-            style={{ color: "#533afd" }}
+            style={{ color: "#7747ff" }}
           >
             Keyboard shortcuts (?)
           </button>
@@ -529,8 +529,8 @@ function SaveButton({
 
   const label = isSaving ? "Saving..." : showSaved ? "Saved" : "Save";
   const Icon = showSaved ? CheckCircle2 : Save;
-  const bg = showSaved ? "#30B130" : "#533afd";
-  const hoverBg = showSaved ? "#28A028" : "#4434d4";
+  const bg = showSaved ? "#30B130" : "#7747ff";
+  const hoverBg = showSaved ? "#28A028" : "#5528ce";
 
   return (
     <button
@@ -604,11 +604,11 @@ export function AnnotationHeader({
         <Link
           href={`/dashboard/patients/${patientId}/details`}
           className="text-sm transition-colors hover:underline"
-          style={{ color: "#64748d" }}
+          style={{ color: "#585858" }}
         >
           {patientName}
         </Link>
-        <ChevronRight size={14} style={{ color: "#A3ACB9" }} />
+        <ChevronRight size={14} style={{ color: "#a4a4a4" }} />
         <InlineEditableTitle title={xrayTitle} xrayId={xrayId} />
       </div>
 
@@ -617,14 +617,14 @@ export function AnnotationHeader({
         <div className="relative">
           <button
             onClick={() => setAdjustOpen((prev) => !prev)}
-            onMouseEnter={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            onMouseEnter={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{
               borderRadius: 4,
               border: "1px solid #e5edf5",
-              backgroundColor: adjustOpen ? "#ededfc" : "#FFFFFF",
-              color: adjustOpen ? "#533afd" : "#273951",
+              backgroundColor: adjustOpen ? "#ede7ff" : "#FFFFFF",
+              color: adjustOpen ? "#7747ff" : "#0b0b0b",
               position: "relative",
             }}
             aria-label="Image adjustments"
@@ -661,10 +661,10 @@ export function AnnotationHeader({
         {onOpenNotes && (
           <button
             onClick={onOpenNotes}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f6f9fc")}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8f8f8")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
+            style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#0b0b0b" }}
           >
             <FileText size={14} strokeWidth={1.5} />
             Notes{notesCount > 0 ? ` · ${notesCount}` : ""}
@@ -678,14 +678,14 @@ export function AnnotationHeader({
         />
         <button
           onClick={onClose}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#64748d"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; e.currentTarget.style.color = "#0b0b0b"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#585858"; }}
           className="flex items-center justify-center transition-colors"
           style={{
             width: 32,
             height: 32,
             borderRadius: 4,
-            color: "#64748d",
+            color: "#585858",
           }}
           aria-label="Close and return to the patient"
           title="Close and return to the patient"

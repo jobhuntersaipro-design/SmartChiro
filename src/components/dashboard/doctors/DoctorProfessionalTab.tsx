@@ -118,7 +118,7 @@ export function DoctorProfessionalTab({ doctor, canEdit = false, onDoctorChange 
             {profile.languages.map((l) => (
               <span
                 key={l}
-                className="text-[13px] text-info bg-[rgba(5,112,222,0.1)] rounded-full px-3 py-1"
+                className="text-[13px] text-info bg-info-subtle rounded-full px-3 py-1"
               >
                 {l}
               </span>

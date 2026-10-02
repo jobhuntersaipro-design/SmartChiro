@@ -1656,7 +1656,7 @@ export function AnnotationCanvas({
     : null;
 
   return (
-    <div className="flex h-screen w-screen flex-col" style={{ backgroundColor: "#1A1F36" }}>
+    <div className="flex h-screen w-screen flex-col" style={{ backgroundColor: "#171717" }}>
       {/* Notes Drawer (portal-style sheet, rendered outside canvas) */}
       <NotesDrawer
         xrayId={xrayId}
@@ -1749,7 +1749,7 @@ export function AnnotationCanvas({
                 ref={viewport.containerRef}
                 className="relative flex-1 overflow-hidden"
                 style={{
-                  backgroundColor: "#1A1F36",
+                  backgroundColor: "#171717",
                   cursor: getCursor(),
                   // Touch goes to the canvas (draw / pinch), not page scroll/zoom.
                   touchAction: "none",
@@ -1835,7 +1835,7 @@ export function AnnotationCanvas({
                         width={displayMarquee.width}
                         height={displayMarquee.height}
                         fill="rgba(83, 58, 253, 0.10)"
-                        stroke="#533afd"
+                        stroke="#7747ff"
                         strokeWidth={1 / viewport.transform.zoom}
                         strokeDasharray={`${4 / viewport.transform.zoom} ${3 / viewport.transform.zoom}`}
                         pointerEvents="none"
@@ -2000,7 +2000,7 @@ export function AnnotationCanvas({
                 style={{
                   gridTemplateColumns: "repeat(2, 1fr)",
                   gridTemplateRows: `repeat(${viewMode === "side-by-side" ? 1 : 2}, 1fr)`,
-                  backgroundColor: "#1A1F36",
+                  backgroundColor: "#171717",
                 }}
               >
                 {Array.from({ length: viewMode === "side-by-side" ? 2 : 4 }).map((_, i) => {
@@ -2014,7 +2014,7 @@ export function AnnotationCanvas({
                         ref={viewport.containerRef}
                         className="relative overflow-hidden"
                         style={{
-                          backgroundColor: "#1A1F36",
+                          backgroundColor: "#171717",
                           border: "2px solid #533afd",
                           borderRadius: 4,
                           cursor: getCursor(),
@@ -2157,7 +2157,7 @@ export function AnnotationCanvas({
                         onClick={() => setPickerSlotIndex(i)}
                         className="group flex cursor-pointer items-center justify-center transition-all duration-150 hover:bg-canvas-raised hover:border-brand"
                         style={{
-                          backgroundColor: "#1A1F36",
+                          backgroundColor: "#171717",
                           border: i === activeSlotIndex
                             ? "2px dashed #533afd"
                             : "2px dashed rgba(255,255,255,0.18)",

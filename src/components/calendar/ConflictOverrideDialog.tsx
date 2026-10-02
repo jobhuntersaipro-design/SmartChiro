@@ -32,7 +32,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
         aria-labelledby="conflict-override-title"
         onClick={(e) => e.stopPropagation()}
         className="w-120 rounded-2xl border border-border bg-white p-6"
-        style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <div className="flex items-start gap-3 mb-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning-subtle">

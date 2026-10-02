@@ -46,7 +46,7 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
           height: 36,
           borderRadius: 4,
           backgroundColor: open
-            ? "#533afd"
+            ? "#7747ff"
             : hovered
               ? "rgba(255,255,255,.14)"
               : "rgba(255,255,255,.06)",
@@ -66,7 +66,7 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
             backgroundColor: "#FFFFFF",
             border: "1px solid #e5edf5",
             borderRadius: 6,
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(18, 42, 66, 0.06)",
+            boxShadow: "var(--shadow-md)",
             minWidth: 140,
             overflow: "hidden",
           }}
@@ -83,16 +83,16 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
                 className="flex w-full items-center gap-2 transition-colors"
                 style={{
                   padding: "8px 12px",
-                  backgroundColor: isActive ? "#ededfc" : "transparent",
-                  color: isActive ? "#533afd" : "#273951",
+                  backgroundColor: isActive ? "#ede7ff" : "transparent",
+                  color: isActive ? "#7747ff" : "#0b0b0b",
                   fontSize: 12,
                   fontWeight: isActive ? 600 : 400,
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.backgroundColor = "#f6f9fc";
+                  if (!isActive) e.currentTarget.style.backgroundColor = "#f8f8f8";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isActive ? "#ededfc" : "transparent";
+                  e.currentTarget.style.backgroundColor = isActive ? "#ede7ff" : "transparent";
                 }}
               >
                 {mode.icon}

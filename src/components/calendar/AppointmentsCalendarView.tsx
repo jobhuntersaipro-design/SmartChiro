@@ -531,7 +531,7 @@ export function AppointmentsCalendarView({
       {!hideHeader && (
         <div className="flex items-baseline justify-between gap-3">
           <div>
-            <h1 className="text-[23px] font-light tracking-[-0.18px] text-foreground">Appointments</h1>
+            <h1 className="text-[23px] font-medium tracking-[-0.18px] text-foreground">Appointments</h1>
             <p className="text-[14px] text-fg-secondary">Schedule, reschedule, and manage all bookings.</p>
           </div>
           <Button
@@ -656,7 +656,7 @@ export function AppointmentsCalendarView({
                 backgroundColor: `${color}1A`, // 10% opacity bg
                 borderLeft: `3px solid ${color}`,
                 borderRadius: "4px",
-                color: "#061b31",
+                color: "#0b0b0b",
                 fontSize: "12px",
                 padding: "2px 6px",
               },
@@ -666,7 +666,7 @@ export function AppointmentsCalendarView({
             d.getFullYear() === todayParts.year &&
             d.getMonth() + 1 === todayParts.month &&
             d.getDate() === todayParts.day
-              ? { style: { backgroundColor: "#F0EEFF" } }
+              ? { style: { backgroundColor: "#ede7ff" } }
               : {}
           }
           toolbar={false}

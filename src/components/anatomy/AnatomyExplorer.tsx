@@ -170,7 +170,7 @@ export function AnatomyExplorer() {
     <div className="flex h-full min-h-150 flex-col">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-light tracking-[-0.22px] text-foreground">Anatomy</h1>
+          <h1 className="text-[22px] font-medium tracking-[-0.22px] text-foreground">Anatomy</h1>
           <p className="mt-0.5 text-[14px] text-fg-secondary">
             Explore the skeleton and muscle groups in 3D — click a structure to select it
           </p>

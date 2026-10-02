@@ -4,7 +4,7 @@ export function SkeletonCard() {
       className="rounded-panel border border-border bg-white p-5 animate-pulse"
       style={{
         boxShadow:
-          "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+          "var(--shadow-lg)",
       }}
     >
       <div className="flex items-start justify-between mb-3">

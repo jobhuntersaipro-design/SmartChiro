@@ -144,7 +144,7 @@ export function AppointmentsPageShell({
       {/* Top bar */}
       <div className="flex flex-col gap-3 px-4 pt-4 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
         <div className="min-w-0">
-          <h1 className="text-[23px] font-light tracking-[-0.18px] text-foreground">
+          <h1 className="text-[23px] font-medium tracking-[-0.18px] text-foreground">
             Appointments
           </h1>
           <p className="text-[14px] text-fg-secondary">

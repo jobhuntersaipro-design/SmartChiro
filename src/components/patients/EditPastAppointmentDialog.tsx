@@ -94,7 +94,7 @@ export function EditPastAppointmentDialog({
         className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-border overflow-hidden"
         style={{
           boxShadow:
-            "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.08)",
+            "var(--shadow-md)",
         }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">

@@ -23,7 +23,7 @@ interface DoctorPatientsTabProps {
 }
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  active: { bg: "bg-[rgba(21,190,83,0.15)]", text: "text-success" },
+  active: { bg: "bg-success-subtle", text: "text-success" },
   inactive: { bg: "bg-surface-hover", text: "text-fg-secondary" },
 };
 
@@ -152,7 +152,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
                       {p.gender ?? "-"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light whitespace-nowrap ${colors.bg} ${colors.text}`}>
+                      <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-medium whitespace-nowrap ${colors.bg} ${colors.text}`}>
                         {p.status ?? "active"}
                       </span>
                     </td>

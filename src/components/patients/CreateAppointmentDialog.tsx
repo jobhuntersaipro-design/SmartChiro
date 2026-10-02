@@ -335,7 +335,7 @@ export function CreateAppointmentDialog({
         aria-labelledby="create-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6"
-        style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <h2 id="create-appointment-title" className="text-[18px] font-medium text-foreground mb-4">Schedule appointment</h2>
 
@@ -550,7 +550,7 @@ export function CreateAppointmentDialog({
           <div
             onClick={(e) => e.stopPropagation()}
             className="w-105 rounded-2xl border border-border bg-white p-6"
-            style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
+            style={{ boxShadow: "var(--shadow-lg)" }}
           >
             <div className="flex items-center gap-2 mb-2">
               <Coffee className="h-5 w-5 text-warning" strokeWidth={1.75} />
@@ -601,7 +601,7 @@ export function CreateAppointmentDialog({
             aria-labelledby="outside-hours-title"
             onClick={(e) => e.stopPropagation()}
             className="w-105 rounded-2xl border border-border bg-white p-6"
-            style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
+            style={{ boxShadow: "var(--shadow-lg)" }}
           >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-5 w-5 text-warning" strokeWidth={1.75} />

@@ -137,7 +137,7 @@ export function CreateDoctorDialog({
     >
       <DialogContent className="max-w-140 rounded-2xl p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-[18px] font-light text-foreground">
+          <DialogTitle className="text-[18px] font-medium text-foreground">
             Add Staff Member
           </DialogTitle>
         </DialogHeader>

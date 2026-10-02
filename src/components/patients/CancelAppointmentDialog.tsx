@@ -90,7 +90,7 @@ export function CancelAppointmentDialog({
         aria-labelledby="cancel-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-110 rounded-2xl border border-border bg-white p-6"
-        style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <h2 id="cancel-appointment-title" className="text-[18px] font-medium text-foreground mb-2">Cancel appointment?</h2>
         <p className="text-[14px] text-fg-secondary mb-1">

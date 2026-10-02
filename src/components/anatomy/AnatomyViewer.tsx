@@ -63,7 +63,7 @@ const PART_LOOKUP: Record<AnatomyLayer, Map<string, AnatomyPart>> = {
 const HOME_POSITION = [0, 0.95, 3.7] as const;
 const HOME_TARGET = [0, 0.85, 0] as const;
 const CLICK_DRAG_TOLERANCE_PX = 5;
-const BRAND = "#635BFF";
+const BRAND = "#7747ff";
 
 function createMaterials(): MaterialSet {
   const tones: Record<Tone, () => THREE.MeshStandardMaterial> = {

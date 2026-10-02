@@ -243,7 +243,7 @@ export function EditAppointmentDialog({
         aria-labelledby="edit-appointment-title"
         onClick={(e) => e.stopPropagation()}
         className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6"
-        style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <h2 id="edit-appointment-title" className="text-[18px] font-medium text-foreground mb-1">Edit appointment</h2>
         {appt && (

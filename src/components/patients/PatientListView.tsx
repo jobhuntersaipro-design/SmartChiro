@@ -47,7 +47,7 @@ function EmptyPatientState({
   return (
     <div
       className="rounded-panel border border-border bg-white p-12 text-center"
-      style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-subtle">
         {hasFilters ? (
@@ -88,7 +88,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-3 fade-in duration-300">
       <div className="rounded-panel border border-border bg-white px-4 py-2.5 text-[14px] text-foreground"
-        style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}>
+        style={{ boxShadow: "var(--shadow-md)" }}>
         {message}
       </div>
     </div>
@@ -269,7 +269,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[22px] font-light tracking-[-0.22px] text-foreground">Patients</h1>
+          <h1 className="text-[22px] font-medium tracking-[-0.22px] text-foreground">Patients</h1>
           <p className="text-[14px] text-fg-secondary mt-0.5">Manage your clinic&apos;s patient records</p>
         </div>
         <Button
@@ -362,7 +362,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
       {/* Error state */}
       {error && !loading && (
         <div className="rounded-panel border border-border bg-white p-8 text-center"
-          style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
+          style={{ boxShadow: "var(--shadow-card)" }}
         >
           <p className="text-[15px] text-danger mb-2">{error}</p>
           <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-md">

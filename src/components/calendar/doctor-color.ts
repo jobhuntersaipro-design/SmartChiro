@@ -2,7 +2,7 @@
 // to not visually scream when many events are stacked. 12 entries; collisions
 // possible with >12 doctors per branch (acceptable for v1, see spec §12 risk note).
 export const DOCTOR_PALETTE = [
-  "#635BFF", // Indigo (primary)
+  "#7747ff", // Indigo (primary)
   "#0570DE", // Info blue
   "#15BE53", // Green
   "#F5A623", // Amber

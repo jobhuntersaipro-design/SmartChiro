@@ -86,7 +86,7 @@ export function OwnerSignalsCard({ branchParam, refreshKey = 0 }: OwnerSignalsCa
           />
           <Signal
             icon={PhoneCall}
-            tone="#635BFF"
+            tone="#7747ff"
             label="Due for recall"
             value={signals ? String(signals.recallDue) : null}
             hint={signals ? (signals.recallDue === 0 ? "No lapsed patients" : "30+ days, nothing booked") : null}
@@ -153,7 +153,7 @@ function Signal({
       {value === null ? (
         <div className="mt-2 h-7 w-20 animate-pulse rounded bg-border" />
       ) : (
-        <p className="mt-1 text-[23px] font-light tabular-nums text-foreground whitespace-nowrap truncate" title={value}>
+        <p className="mt-1 text-[23px] font-medium tabular-nums text-foreground whitespace-nowrap truncate" title={value}>
           {value}
         </p>
       )}

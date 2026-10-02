@@ -114,7 +114,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
         style={{
           backgroundColor: "#FFFFFF",
           borderRadius: 8,
-          boxShadow: "0 8px 24px rgba(18, 42, 66, 0.12)",
+          boxShadow: "var(--shadow-md)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -127,14 +127,14 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
             borderRadius: "8px 8px 0 0",
           }}
         >
-          <h2 id="keyboard-shortcuts-title" style={{ fontSize: 18, fontWeight: 600, color: "#061b31" }}>
+          <h2 id="keyboard-shortcuts-title" style={{ fontSize: 18, fontWeight: 600, color: "#0b0b0b" }}>
             Keyboard Shortcuts
           </h2>
           <button
             onClick={onClose}
             aria-label="Close"
             className="flex items-center justify-center transition-colors hover:bg-surface-muted"
-            style={{ width: 32, height: 32, borderRadius: 4, color: "#64748d" }}
+            style={{ width: 32, height: 32, borderRadius: 4, color: "#585858" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18" /><path d="M6 6l12 12" />
@@ -148,7 +148,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
             <div key={category.title}>
               <h3
                 className="mb-3"
-                style={{ fontSize: 13, fontWeight: 600, color: "#64748d", textTransform: "uppercase", letterSpacing: "0.05em" }}
+                style={{ fontSize: 13, fontWeight: 600, color: "#585858", textTransform: "uppercase", letterSpacing: "0.05em" }}
               >
                 {category.title}
               </h3>
@@ -158,7 +158,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
                     key={shortcut.description}
                     className="flex items-center justify-between py-1"
                   >
-                    <span style={{ fontSize: 14, color: "#061b31" }}>
+                    <span style={{ fontSize: 14, color: "#0b0b0b" }}>
                       {shortcut.description}
                     </span>
                     <div className="flex items-center gap-1">
@@ -173,8 +173,8 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
                             fontSize: 12,
                             fontFamily: "inherit",
                             fontWeight: 500,
-                            color: "#273951",
-                            backgroundColor: "#f6f9fc",
+                            color: "#0b0b0b",
+                            backgroundColor: "#f8f8f8",
                             border: "1px solid #e5edf5",
                             borderRadius: 4,
                             boxShadow: "0 1px 1px rgba(0,0,0,0.04)",
@@ -197,11 +197,11 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
           style={{
             borderTop: "1px solid #e5edf5",
             fontSize: 12,
-            color: "#64748d",
+            color: "#585858",
             textAlign: "center",
           }}
         >
-          Press <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f6f9fc", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>?</kbd> or <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f6f9fc", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>Esc</kbd> to close
+          Press <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f8f8f8", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>?</kbd> or <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f8f8f8", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>Esc</kbd> to close
         </div>
       </div>
     </div>

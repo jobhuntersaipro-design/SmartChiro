@@ -43,7 +43,7 @@ export default async function VerifyEmailPage({
     icon: <Mail size={24} className="text-brand" />,
     title: 'Check your email',
     message: 'We sent you a verification link. Please check your inbox and click the link to verify your account.',
-    color: '#533afd',
+    color: '#7747ff',
   }
 
   return (

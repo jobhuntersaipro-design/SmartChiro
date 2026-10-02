@@ -92,7 +92,7 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
         {/* Today's Schedule */}
         <div
           className="rounded-panel border border-border bg-white"
-          style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+          style={{ boxShadow: "var(--shadow-lg)" }}
         >
           <div className="px-5 py-4 border-b border-border">
             <h3 className="text-[16px] font-normal text-foreground">{"Today's Schedule"}</h3>
@@ -112,7 +112,7 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
         {/* Quick Info */}
         <div
           className="rounded-panel border border-border bg-white"
-          style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+          style={{ boxShadow: "var(--shadow-lg)" }}
         >
           <div className="px-5 py-4 border-b border-border">
             <h3 className="text-[16px] font-normal text-foreground">Quick Info</h3>
@@ -181,7 +181,7 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
         {/* Top Doctors */}
         <div
           className="rounded-panel border border-border bg-white"
-          style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+          style={{ boxShadow: "var(--shadow-lg)" }}
         >
           <div className="px-5 py-4 border-b border-border">
             <h3 className="text-[16px] font-normal text-foreground">Top Doctors</h3>

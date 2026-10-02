@@ -295,7 +295,7 @@ function RulerRenderer({
             height={fontSize + pillPadY * 2}
             rx={pillRadius}
             ry={pillRadius}
-            fill="#1A1F36"
+            fill="#171717"
             fillOpacity={0.8}
           />
           <text
@@ -439,7 +439,7 @@ function AngleRenderer({
             width={label.length * fontSize * 0.64 + pillPadX * 2}
             height={fontSize + pillPadY * 2}
             rx={pillRadius} ry={pillRadius}
-            fill="#1A1F36" fillOpacity={0.8}
+            fill="#171717" fillOpacity={0.8}
           />
           <text
             x={vertex.x + 16 / zoom + (label.length * fontSize * 0.32)}
@@ -543,7 +543,7 @@ function CobbAngleRenderer({ shape, zoom, sw, vertexLabels }: { shape: BaseShape
             width={shape.measurement.label.length * fontSize * 0.42 + pillPadX * 2}
             height={fontSize + pillPadY * 2}
             rx={pillRadius} ry={pillRadius}
-            fill="#1A1F36" fillOpacity={0.8}
+            fill="#171717" fillOpacity={0.8}
           />
           <text
             x={shape.intersection[0] + 12 / zoom + (shape.measurement.label.length * fontSize * 0.21)}

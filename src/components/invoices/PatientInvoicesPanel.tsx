@@ -27,7 +27,7 @@ function Figure({ label, value, tone }: { label: string; value: string; tone?: s
   return (
     <div className="rounded-panel border border-border bg-white px-4 py-3">
       <p className="text-[13px] text-fg-secondary">{label}</p>
-      <p className={`mt-0.5 whitespace-nowrap text-[22px] font-light tabular-nums ${tone ?? "text-foreground"}`}>{value}</p>
+      <p className={`mt-0.5 whitespace-nowrap text-[22px] font-medium tabular-nums ${tone ?? "text-foreground"}`}>{value}</p>
     </div>
   );
 }

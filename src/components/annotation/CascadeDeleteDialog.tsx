@@ -85,21 +85,21 @@ export function CascadeDeleteDialog({
         style={{
           backgroundColor: "#FFFFFF",
           borderRadius: 8,
-          boxShadow: "0 8px 24px rgba(18, 42, 66, 0.15)",
+          boxShadow: "var(--shadow-lg)",
         }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle size={16} strokeWidth={1.75} style={{ color: "#F5A623" }} />
-            <h3 id="cascade-delete-title" className="text-sm font-semibold" style={{ color: "#0A2540" }}>
+            <h3 id="cascade-delete-title" className="text-sm font-semibold" style={{ color: "#0b0b0b" }}>
               Delete linked landmark
             </h3>
           </div>
           <button
             onClick={onCancel}
             className="flex items-center justify-center transition-colors"
-            style={{ width: 24, height: 24, borderRadius: 4, color: "#697386" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            style={{ width: 24, height: 24, borderRadius: 4, color: "#7d7d7d" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
             aria-label="Cancel"
           >
@@ -107,7 +107,7 @@ export function CascadeDeleteDialog({
           </button>
         </div>
 
-        <p className="text-xs" style={{ color: "#425466" }}>
+        <p className="text-xs" style={{ color: "#585858" }}>
           {dependentCount === 1
             ? `1 measurement is anchored on ${targetLabel}:`
             : `${dependentCount} measurements are anchored on ${targetLabel}:`}
@@ -115,20 +115,20 @@ export function CascadeDeleteDialog({
 
         <ul
           className="flex flex-col gap-1 max-h-40 overflow-y-auto rounded px-2 py-1.5"
-          style={{ backgroundColor: "#F6F9FC", border: "1px solid #E3E8EE" }}
+          style={{ backgroundColor: "#f8f8f8", border: "1px solid #E3E8EE" }}
         >
           {dependents.map((d) => (
             <li
               key={d.shape.id}
               className="text-xs"
-              style={{ color: "#425466" }}
+              style={{ color: "#585858" }}
             >
               • {d.displayName}
             </li>
           ))}
         </ul>
 
-        <p className="text-xs" style={{ color: "#697386" }}>
+        <p className="text-xs" style={{ color: "#7d7d7d" }}>
           Choose how to handle them:
         </p>
 
@@ -136,8 +136,8 @@ export function CascadeDeleteDialog({
           <button
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#273951", backgroundColor: "#FFFFFF" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
           >
             Cancel
@@ -145,8 +145,8 @@ export function CascadeDeleteDialog({
           <button
             onClick={onKeepDependents}
             className="px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0A2540", backgroundColor: "#FFFFFF" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
             title="Dependents stay drawn at their last-known position."
           >

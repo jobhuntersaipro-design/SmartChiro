@@ -10,7 +10,7 @@ interface PastAppointmentStatCardsProps {
 }
 
 const SHADOW_CARD =
-  "0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(50,50,93,0.06), 0 1px 1px rgba(0,0,0,0.04)";
+  "var(--shadow-md)";
 
 function StatCard({
   label,
@@ -53,7 +53,7 @@ function StatCard({
       {subline && (
         <div
           className="mt-1.5 text-[12px] tabular-nums"
-          style={{ color: sublineColor ?? "#64748d" }}
+          style={{ color: sublineColor ?? "#585858" }}
         >
           {subline}
         </div>
@@ -81,33 +81,33 @@ export function PastAppointmentStatCards({
         icon={CheckCircle2}
         iconColor="#108c3d"
         headline={String(stats.completed)}
-        headlineColor="#061b31"
+        headlineColor="#0b0b0b"
         subline="appointments"
       />
       <StatCard
         label="Cancelled"
         icon={XCircle}
-        iconColor="#94a3b8"
+        iconColor="#7d7d7d"
         headline={String(stats.cancelled)}
-        headlineColor="#64748d"
+        headlineColor="#585858"
         subline="appointments"
       />
       <StatCard
         label="No-show"
         icon={AlertTriangle}
-        iconColor={stats.noShow > 0 ? "#ea2261" : "#94a3b8"}
+        iconColor={stats.noShow > 0 ? "#ea2261" : "#7d7d7d"}
         headline={String(stats.noShow)}
-        headlineColor={stats.noShow > 0 ? "#ea2261" : "#64748d"}
+        headlineColor={stats.noShow > 0 ? "#ea2261" : "#585858"}
         subline="appointments"
       />
       <StatCard
         label="Stale"
         icon={Clock}
-        iconColor={stats.stale > 0 ? "#d99c45" : "#94a3b8"}
+        iconColor={stats.stale > 0 ? "#d99c45" : "#7d7d7d"}
         headline={String(stats.stale)}
-        headlineColor={stats.stale > 0 ? "#9b6829" : "#64748d"}
+        headlineColor={stats.stale > 0 ? "#9b6829" : "#585858"}
         subline={stats.stale > 0 ? "needs review" : "all clear"}
-        sublineColor={stats.stale > 0 ? "#9b6829" : "#94a3b8"}
+        sublineColor={stats.stale > 0 ? "#9b6829" : "#7d7d7d"}
         action={
           stats.stale > 0 && onShowStale ? (
             <button
@@ -127,7 +127,7 @@ export function PastAppointmentStatCards({
         headline={formatMYR(stats.paid)}
         headlineColor="#108c3d"
         subline={outstandingLine}
-        sublineColor="#64748d"
+        sublineColor="#585858"
       />
     </div>
   );

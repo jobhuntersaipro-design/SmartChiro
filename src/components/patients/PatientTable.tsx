@@ -27,7 +27,7 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { text: string; dot: string; label: string }> = {
     active:     { text: "#15803d", dot: "#22c55e", label: "Active"     },
     inactive:   { text: "#854d0e", dot: "#eab308", label: "Inactive"   },
-    discharged: { text: "#64748d", dot: "#94a3b8", label: "Discharged" },
+    discharged: { text: "#585858", dot: "#7d7d7d", label: "Discharged" },
   };
   const c = config[status] || config.active;
   return (
@@ -43,7 +43,7 @@ function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean 
     <span
       className="inline-flex items-center justify-center rounded-[3px] px-1 py-px text-[10px] font-semibold uppercase tracking-wider flex-shrink-0"
       style={{
-        background: isWeekend ? "#fef3c7" : "#f1f5f9",
+        background: isWeekend ? "#fef3c7" : "#f1f1f1",
         color: isWeekend ? "#854d0e" : "#475569",
       }}
     >
@@ -126,7 +126,7 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
       {open && (
         <div
           className="absolute right-0 top-8 z-20 w-35 rounded-panel border border-border bg-white py-1"
-          style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
+          style={{ boxShadow: "var(--shadow-md)" }}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onView(); }}
@@ -199,7 +199,7 @@ export function PatientTable({
     return (
       <div
         className="rounded-panel border border-border bg-white p-12 text-center"
-        style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <p className="text-[15px] text-fg-secondary">No patients found</p>
       </div>
@@ -214,7 +214,7 @@ export function PatientTable({
     <div
       // No overflow-hidden: it clipped the row actions menu.
       className="rounded-panel border border-border bg-white transition-all duration-200 hover:border-border-strong"
-      style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+      style={{ boxShadow: "var(--shadow-lg)" }}
     >
       {/* Header */}
       <div className={`${COL_GRID} px-4 py-2.5 border-b border-border bg-surface-muted rounded-t-panel`}>

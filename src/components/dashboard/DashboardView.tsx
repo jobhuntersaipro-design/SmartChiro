@@ -259,7 +259,7 @@ export function DashboardView({
           className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
-              "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+              "var(--shadow-lg)",
           }}
         >
           <div className="px-5 py-4 border-b border-border">
@@ -283,7 +283,7 @@ export function DashboardView({
           className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
-              "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+              "var(--shadow-lg)",
           }}
         >
           <div className="px-5 py-4 border-b border-border">
@@ -308,7 +308,7 @@ export function DashboardView({
           className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
-              "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
+              "var(--shadow-lg)",
           }}
         >
           <div className="px-5 py-4 border-b border-border">

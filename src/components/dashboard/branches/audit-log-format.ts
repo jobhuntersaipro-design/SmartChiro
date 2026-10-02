@@ -33,7 +33,7 @@ export function actionStyle(action: BranchAuditAction): ActionStyle {
     case "UPDATE":
       return {
         label: "Updated",
-        bg: "bg-[rgba(5,112,222,0.1)] text-info blue-pill",
+        bg: "bg-info-subtle text-info blue-pill",
         text: "text-info",
         dot: "bg-info",
       };

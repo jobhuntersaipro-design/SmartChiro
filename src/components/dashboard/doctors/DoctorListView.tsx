@@ -205,7 +205,7 @@ export function DoctorListView({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-light text-foreground tracking-[-0.22px]">
+          <h1 className="text-[22px] font-medium text-foreground tracking-[-0.22px]">
             {pageTitle}
           </h1>
           <p className="text-[14px] text-fg-secondary mt-0.5">{pageSubtitle}</p>
@@ -459,9 +459,9 @@ function DoctorTable({
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`rounded-md px-1.5 py-0.25 text-[10px] font-light ${
+                  className={`rounded-md px-1.5 py-0.25 text-[10px] font-medium ${
                     d.isActive
-                      ? "bg-[rgba(21,190,83,0.2)] text-success border border-[rgba(21,190,83,0.4)]"
+                      ? "bg-success/20 text-success border border-success/40"
                       : "bg-surface-hover text-fg-secondary"
                   }`}
                 >

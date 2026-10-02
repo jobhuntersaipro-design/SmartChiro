@@ -62,7 +62,7 @@ export function DeletePatientDialog({ patient, open, onOpenChange, onDelete }: D
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 id="delete-patient-title" className="text-[18px] font-light text-foreground">Delete Patient</h2>
+          <h2 id="delete-patient-title" className="text-[18px] font-medium text-foreground">Delete Patient</h2>
           <button
             onClick={() => onOpenChange(false)}
             aria-label="Close"

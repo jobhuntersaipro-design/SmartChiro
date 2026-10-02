@@ -74,7 +74,7 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
   return (
     <div
       className="rounded-panel border border-border bg-white overflow-auto"
-      style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+      style={{ boxShadow: "var(--shadow-lg)" }}
     >
       <div className="min-w-175">
         {/* Day headers */}
@@ -135,8 +135,8 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
                       } ${closed ? "bg-surface-subtle" : ""} ${isToday && !closed ? "bg-surface-subtle" : ""}`}
                     >
                       {slotAppts.map((appt) => {
-                        const docColor = appt.doctor ? doctorColorMap.get(appt.doctor.id) ?? "#64748d" : "#64748d";
-                        const statusColor = STATUS_COLORS[appt.status] ?? "#64748d";
+                        const docColor = appt.doctor ? doctorColorMap.get(appt.doctor.id) ?? "#585858" : "#585858";
+                        const statusColor = STATUS_COLORS[appt.status] ?? "#585858";
                         const patientName = appt.patient
                           ? `${appt.patient.firstName} ${appt.patient.lastName[0]}.`
                           : "Unknown";

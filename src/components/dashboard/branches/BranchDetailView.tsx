@@ -107,7 +107,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       {/* Header card */}
       <div
         className="rounded-panel border border-border bg-white px-6 py-5"
-        style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+        style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -158,7 +158,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Doctors", value: stats.doctorCount, icon: Stethoscope, color: "#533afd" },
+            { label: "Doctors", value: stats.doctorCount, icon: Stethoscope, color: "#7747ff" },
             { label: "Patients", value: stats.patientCount, icon: Users, color: "#0570DE" },
             { label: "Today's Appts", value: stats.todayAppointments, icon: CalendarDays, color: "#30B130" },
             { label: "X-Rays (Month)", value: stats.xraysThisMonth, icon: ImageIcon, color: "#F5A623" },
@@ -166,7 +166,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
             <div
               key={s.label}
               className="rounded-panel border border-border bg-white px-4 py-3"
-              style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
+              style={{ boxShadow: "var(--shadow-lg)" }}
             >
               <div className="flex items-center gap-2.5">
                 <s.icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.5} />

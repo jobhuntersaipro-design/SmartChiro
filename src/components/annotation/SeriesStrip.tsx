@@ -130,7 +130,7 @@ function SeriesStripView({
                       href={`/dashboard/xrays/${patientId}/${x.id}/annotate`}
                       onClick={() => onBeforeNavigate?.()}
                       className="block rounded-md overflow-hidden border"
-                      style={{ borderColor: active ? '#533afd' : 'transparent' }}
+                      style={{ borderColor: active ? '#7747ff' : 'transparent' }}
                       title={x.title ?? 'X-ray'}
                     >
                       <div className="w-20 h-20 bg-canvas">

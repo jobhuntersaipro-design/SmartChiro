@@ -29,11 +29,11 @@ interface Props {
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   SCHEDULED:    { bg: "#EFF6FF", text: "#1D4ED8", label: "Scheduled" },
-  CHECKED_IN:   { bg: "#F0EEFF", text: "#635BFF", label: "Checked in" },
+  CHECKED_IN:   { bg: "#ede7ff", text: "#7747ff", label: "Checked in" },
   IN_PROGRESS:  { bg: "#FFF8E1", text: "#9b6829", label: "In progress" },
   COMPLETED:    { bg: "#ECFDF5", text: "#15be53", label: "Completed" },
   CANCELLED:    { bg: "#FEF2F2", text: "#DF1B41", label: "Cancelled" },
-  NO_SHOW:      { bg: "#F1F5F9", text: "#64748b", label: "No show" },
+  NO_SHOW:      { bg: "#f1f1f1", text: "#64748b", label: "No show" },
 };
 
 export function AppointmentEventPopover({
@@ -77,7 +77,7 @@ export function AppointmentEventPopover({
     <div
       ref={ref}
       className="fixed z-40 w-80 rounded-panel border border-border bg-white"
-      style={{ top, left, boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
+      style={{ top, left, boxShadow: "var(--shadow-lg)" }}
     >
       <div className="px-4 pt-3 pb-2 border-b border-border">
         <div className="flex items-center justify-between gap-2">

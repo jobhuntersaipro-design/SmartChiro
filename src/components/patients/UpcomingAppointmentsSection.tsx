@@ -45,7 +45,7 @@ interface UpcomingAppointment {
 }
 
 const SHADOW_CARD =
-  "0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(50,50,93,0.06), 0 1px 1px rgba(0,0,0,0.04)";
+  "var(--shadow-md)";
 
 const RANGE_LABELS: Record<Range, string> = {
   today: "Today",
@@ -65,7 +65,7 @@ function StatusCell({ status }: { status: string }) {
     SCHEDULED:   { text: "#108c3d", dot: "#15be53", label: "Scheduled"   },
     CHECKED_IN:  { text: "#108c3d", dot: "#15be53", label: "Checked-in"  },
     IN_PROGRESS: { text: "#9b6829", dot: "#d99c45", label: "In progress" },
-    COMPLETED:   { text: "#64748d", dot: "#94a3b8", label: "Completed"   },
+    COMPLETED:   { text: "#585858", dot: "#7d7d7d", label: "Completed"   },
     CANCELLED:   { text: "#ea2261", dot: "#ea2261", label: "Cancelled"   },
     NO_SHOW:     { text: "#ea2261", dot: "#ea2261", label: "No-show"     },
   };
@@ -93,7 +93,7 @@ function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean 
     <span
       className="inline-flex items-center justify-center px-1 text-[10px] font-semibold uppercase tracking-[0.08em] leading-none flex-shrink-0 tabular-nums"
       style={{
-        color: isWeekend ? "#9b6829" : "#94a3b8",
+        color: isWeekend ? "#9b6829" : "#7d7d7d",
         minWidth: "26px",
       }}
     >

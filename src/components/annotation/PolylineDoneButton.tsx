@@ -39,7 +39,7 @@ export function PolylineDoneButton({
         border: "1px solid #e5edf5",
         borderRadius: 6,
         padding: 4,
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(18, 42, 66, 0.08)",
+        boxShadow: "var(--shadow-md)",
       }}
       onPointerDown={stop}
       onPointerUp={stop}
@@ -67,9 +67,9 @@ export function PolylineDoneButton({
         onMouseDown={stop}
         onClick={(e) => { e.stopPropagation(); onCancel(); }}
         className="flex items-center justify-center transition-colors"
-        style={{ width: 24, height: 24, borderRadius: 4, color: "#697386" }}
+        style={{ width: 24, height: 24, borderRadius: 4, color: "#7d7d7d" }}
         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#FDE8EC"; e.currentTarget.style.color = "#DF1B41"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#697386"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#7d7d7d"; }}
         title="Cancel polyline (Esc)"
       >
         <X size={14} strokeWidth={2} />

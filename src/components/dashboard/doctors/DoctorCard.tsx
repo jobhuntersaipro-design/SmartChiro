@@ -66,9 +66,9 @@ export function DoctorCard({
                 {doctor.name ?? "Unnamed"}
               </span>
               <span
-                className={`shrink-0 rounded-md px-1.5 py-0.25 text-[10px] font-light ${
+                className={`shrink-0 rounded-md px-1.5 py-0.25 text-[10px] font-medium ${
                   doctor.isActive
-                    ? "bg-[rgba(21,190,83,0.2)] text-success border border-[rgba(21,190,83,0.4)]"
+                    ? "bg-success/20 text-success border border-success/40"
                     : "bg-surface-hover text-fg-secondary"
                 }`}
               >

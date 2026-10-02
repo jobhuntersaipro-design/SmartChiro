@@ -162,7 +162,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between p-5 pb-0">
-          <h2 id="edit-patient-title" className="text-[18px] font-light text-foreground">Edit Patient</h2>
+          <h2 id="edit-patient-title" className="text-[18px] font-medium text-foreground">Edit Patient</h2>
           <button
             onClick={() => onOpenChange(false)}
             aria-label="Close"

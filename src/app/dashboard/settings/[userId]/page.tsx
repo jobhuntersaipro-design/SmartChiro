@@ -55,7 +55,7 @@ export default async function SettingsPage({
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           Back to Dashboard
         </Link>
-        <h1 className="text-[23px] font-light text-foreground mt-1">
+        <h1 className="text-[23px] font-medium text-foreground mt-1">
           Settings
         </h1>
         <p className="text-[14px] text-fg-secondary mt-0.5">

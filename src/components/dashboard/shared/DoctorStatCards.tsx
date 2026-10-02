@@ -20,8 +20,8 @@ export function DoctorStatCards({ stats, branchName }: DoctorStatCardsProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <StatCard
         icon={Users}
-        iconColor="#533afd"
-        iconBg="#ededfc"
+        iconColor="#7747ff"
+        iconBg="#ede7ff"
         value={stats.myPatients}
         label="My Patients"
         subtitle={`in ${branchName}`}

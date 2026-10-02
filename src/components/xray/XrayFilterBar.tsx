@@ -30,9 +30,9 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       className="rounded-full border px-2.5 py-1 text-[12px] transition-colors"
       style={{
-        borderColor: active ? '#533afd' : '#e5edf5',
-        backgroundColor: active ? '#ededfc' : '#FFFFFF',
-        color: active ? '#533afd' : '#425466',
+        borderColor: active ? '#7747ff' : '#e9e9e9',
+        backgroundColor: active ? '#ede7ff' : '#FFFFFF',
+        color: active ? '#7747ff' : '#585858',
       }}
     >
       {children}

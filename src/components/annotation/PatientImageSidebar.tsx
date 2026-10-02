@@ -360,8 +360,8 @@ export function PatientImageSidebar({
               }}
             >
               <div className="text-center">
-                <Upload size={24} style={{ color: "#533afd", margin: "0 auto" }} />
-                <p className="mt-1 text-xs font-medium" style={{ color: "#533afd" }}>
+                <Upload size={24} style={{ color: "#7747ff", margin: "0 auto" }} />
+                <p className="mt-1 text-xs font-medium" style={{ color: "#7747ff" }}>
                   Drop X-rays here
                 </p>
               </div>
@@ -373,14 +373,14 @@ export function PatientImageSidebar({
             className="flex items-center gap-2 px-3 py-2"
             style={{ borderBottom: "1px solid #e5edf5" }}
           >
-            <ImageIcon size={14} style={{ color: "#64748d" }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#061b31" }}>
+            <ImageIcon size={14} style={{ color: "#585858" }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#0b0b0b" }}>
               Patient X-Rays
             </span>
             <span
               style={{
                 fontSize: 11,
-                color: "#64748d",
+                color: "#585858",
                 marginLeft: "auto",
               }}
             >
@@ -397,10 +397,10 @@ export function PatientImageSidebar({
                 borderRadius: 4,
                 border: "1px solid #e5edf5",
                 backgroundColor: "#FFFFFF",
-                color: "#273951",
+                color: "#0b0b0b",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = "#f6f9fc";
+                (e.currentTarget as HTMLElement).style.backgroundColor = "#f8f8f8";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.backgroundColor = "#FFFFFF";
@@ -428,7 +428,7 @@ export function PatientImageSidebar({
                 borderRadius: 4,
                 border: "1px solid #e5edf5",
                 padding: 6,
-                backgroundColor: "#f6f9fc",
+                backgroundColor: "#f8f8f8",
               }}
             >
               {uploadFiles.map((entry) => (
@@ -446,7 +446,7 @@ export function PatientImageSidebar({
                       size={10}
                       className="animate-spin"
                       style={{
-                        color: entry.status === "pending" ? "#A3ACB9" : "#533afd",
+                        color: entry.status === "pending" ? "#a4a4a4" : "#7747ff",
                         flexShrink: 0,
                       }}
                     />
@@ -454,20 +454,20 @@ export function PatientImageSidebar({
                   <div className="min-w-0 flex-1">
                     <p
                       className="truncate"
-                      style={{ fontSize: 10, color: "#061b31" }}
+                      style={{ fontSize: 10, color: "#0b0b0b" }}
                     >
                       {entry.file.name}
                     </p>
                     {entry.status === "uploading" && (
                       <div
                         className="mt-0.5 h-1 overflow-hidden rounded-full"
-                        style={{ backgroundColor: "#e5edf5" }}
+                        style={{ backgroundColor: "#e9e9e9" }}
                       >
                         <div
                           className="h-full rounded-full transition-all duration-300"
                           style={{
                             width: `${entry.progress}%`,
-                            backgroundColor: "#533afd",
+                            backgroundColor: "#7747ff",
                           }}
                         />
                       </div>
@@ -484,7 +484,7 @@ export function PatientImageSidebar({
                     <button
                       onClick={() => removeFromQueue(entry.id)}
                       className="shrink-0"
-                      style={{ color: "#A3ACB9" }}
+                      style={{ color: "#a4a4a4" }}
                     >
                       <X size={10} />
                     </button>
@@ -498,7 +498,7 @@ export function PatientImageSidebar({
                     setShowUpload(false);
                   }}
                   className="mt-1 text-center text-xs font-medium"
-                  style={{ color: "#533afd" }}
+                  style={{ color: "#7747ff" }}
                 >
                   Clear
                 </button>
@@ -515,13 +515,13 @@ export function PatientImageSidebar({
           >
             {loading && (
               <div className="flex items-center justify-center py-8">
-                <span style={{ fontSize: 12, color: "#64748d" }}>Loading...</span>
+                <span style={{ fontSize: 12, color: "#585858" }}>Loading...</span>
               </div>
             )}
 
             {!loading && xrays.length === 0 && (
               <div className="flex items-center justify-center py-8">
-                <span style={{ fontSize: 12, color: "#64748d" }}>
+                <span style={{ fontSize: 12, color: "#585858" }}>
                   No X-rays found
                 </span>
               </div>
@@ -545,7 +545,7 @@ export function PatientImageSidebar({
                   ? "2px solid rgba(83, 58, 253, 0.4)"
                   : "1px solid #e5edf5";
               const bgColor = isActive
-                ? "#ededfc"
+                ? "#ede7ff"
                 : isLoadedInGrid
                   ? "#f5f3ff"
                   : "#FFFFFF";
@@ -554,7 +554,7 @@ export function PatientImageSidebar({
                 <button
                   key={xray.id}
                   onClick={() => onSelectXray(xray)}
-                  onMouseEnter={(e) => { if (!isActive && !isLoadedInGrid) e.currentTarget.style.backgroundColor = "#f6f9fc"; }}
+                  onMouseEnter={(e) => { if (!isActive && !isLoadedInGrid) e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
                   onMouseLeave={(e) => { if (!isActive && !isLoadedInGrid) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
                   className="flex flex-col overflow-hidden text-left transition-colors"
                   style={{
@@ -570,7 +570,7 @@ export function PatientImageSidebar({
                     className="relative flex items-center justify-center overflow-hidden"
                     style={{
                       height: 160,
-                      backgroundColor: "#1A1F36",
+                      backgroundColor: "#171717",
                     }}
                   >
                     {/* `unoptimized` so Next.js doesn't transcode X-ray
@@ -596,14 +596,14 @@ export function PatientImageSidebar({
                       style={{
                         fontSize: 12,
                         fontWeight: 500,
-                        color: "#061b31",
+                        color: "#0b0b0b",
                       }}
                     >
                       {xray.title ?? "Untitled"}
                     </div>
                     <div
                       className="flex items-center gap-1"
-                      style={{ fontSize: 11, color: "#64748d" }}
+                      style={{ fontSize: 11, color: "#585858" }}
                     >
                       {xray.bodyRegion && (
                         <span className="capitalize">
@@ -623,7 +623,7 @@ export function PatientImageSidebar({
             {/* Loading more indicator */}
             {loadingMore && (
               <div className="flex items-center justify-center py-3" style={{ flexShrink: 0 }}>
-                <Loader2 size={14} className="animate-spin" style={{ color: "#64748d" }} />
+                <Loader2 size={14} className="animate-spin" style={{ color: "#585858" }} />
               </div>
             )}
           </div>
@@ -633,8 +633,8 @@ export function PatientImageSidebar({
       {/* Toggle Button (right edge) */}
       <button
         onClick={onToggle}
-        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f6f9fc"; e.currentTarget.style.color = "#0A2540"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; e.currentTarget.style.color = "#64748d"; }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; e.currentTarget.style.color = "#0b0b0b"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; e.currentTarget.style.color = "#585858"; }}
         className="absolute top-3 flex items-center justify-center transition-colors"
         style={{
           right: -16,
@@ -645,7 +645,7 @@ export function PatientImageSidebar({
           borderTop: "1px solid #e5edf5",
           borderRight: "1px solid #e5edf5",
           borderBottom: "1px solid #e5edf5",
-          color: "#64748d",
+          color: "#585858",
           zIndex: 10,
         }}
         title={isOpen ? "Hide patient images" : "Show patient images"}
