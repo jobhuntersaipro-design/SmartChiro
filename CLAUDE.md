@@ -14,6 +14,9 @@ Read the following to get the full context of the project:
 - `npm run build` — production build
 - `npm run lint` — run ESLint (flat config, `eslint.config.mjs`)
 
+## Coding Mode
+Use the `ponytail` skill (full) for every coding task: YAGNI, reuse existing code, stdlib/native before new deps, shortest working diff.
+
 ## Proof & Shipping
 These override the ask-before-commit/merge rules in `context/ai-interaction.md`.
 - **Always show screenshots as proof.** For any UI or behaviour change, capture a screenshot of it working and show it to the user. Don't claim something works without one.
