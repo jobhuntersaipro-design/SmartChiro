@@ -14,4 +14,10 @@ Read the following to get the full context of the project:
 - `npm run build` — production build
 - `npm run lint` — run ESLint (flat config, `eslint.config.mjs`)
 
+## Proof & Shipping
+These override the ask-before-commit/merge rules in `context/ai-interaction.md`.
+- **Always show screenshots as proof.** For any UI or behaviour change, capture a screenshot of it working and show it to the user. Don't claim something works without one.
+- **Merge when confident.** If the build, lint and tests pass and you are confident in the change, merge it to `main` straight away without asking.
+- **Prove it in production.** After the merge deploys, show proof from production, such as a screenshot of the live page.
+
 
