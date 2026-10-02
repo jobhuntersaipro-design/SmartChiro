@@ -107,7 +107,7 @@ export function StatusBar({
       style={{
         height: 28,
         backgroundColor: "#FFFFFF",
-        borderTop: "1px solid #e5edf5",
+        borderTop: "1px solid #e9e9e9",
         fontSize: 12,
         color: "#585858",
       }}

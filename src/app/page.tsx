@@ -1,58 +1,21 @@
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div
-      className="flex min-h-screen flex-col items-center justify-center px-6"
-      style={{ backgroundColor: "#1c1e54" }}
-    >
-      <h1
-        className="max-w-4xl text-center"
-        style={{
-          fontSize: 56,
-          fontWeight: 300,
-          lineHeight: 1.03,
-          letterSpacing: "-1.4px",
-          color: "#ffffff",
-        }}
-      >
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[linear-gradient(135deg,oklch(97.5%_.016_300),oklch(98%_.016_65))] px-6">
+      <h1 className="max-w-4xl text-center text-[44px] font-medium leading-[1.1] tracking-[-0.03em] text-foreground sm:text-[64px]">
         See More. Treat Better.
       </h1>
-      <p
-        className="mt-6 max-w-2xl text-center"
-        style={{
-          fontSize: 18,
-          fontWeight: 300,
-          lineHeight: 1.4,
-          color: "rgba(255,255,255,0.7)",
-        }}
-      >
+      <p className="mt-6 max-w-2xl text-center text-[18px] leading-[1.5] text-fg-secondary">
         The modern chiropractic platform with Adobe-grade X-ray annotation,
         patient management, and clinical workflow — all in one place.
       </p>
-      <div className="mt-10 flex gap-4">
-        <Link
-          href="/register"
-          className="inline-flex items-center justify-center px-4 py-2 text-[15px] font-medium text-white transition-colors hover:opacity-90"
-          style={{
-            backgroundColor: "#7747ff",
-            borderRadius: 4,
-            padding: "8px 16px",
-          }}
-        >
+      <div className="mt-10 flex gap-3">
+        <Link href="/register" className={buttonVariants({ size: "lg" })}>
           Get Started
         </Link>
-        <Link
-          href="/login"
-          className="inline-flex items-center justify-center px-4 py-2 text-[15px] font-medium transition-colors hover:opacity-90"
-          style={{
-            backgroundColor: "transparent",
-            borderRadius: 4,
-            padding: "8px 16px",
-            color: "rgba(255,255,255,0.7)",
-            border: "1px solid rgba(255,255,255,0.25)",
-          }}
-        >
+        <Link href="/login" className={buttonVariants({ variant: "outline", size: "lg" })}>
           Sign In
         </Link>
       </div>

@@ -766,7 +766,7 @@ function MeasurementLabel({
         height={fontSize + padY * 2}
         rx={radius}
         ry={radius}
-        fill="#0a1220"
+        fill="#0f0f0f"
         fillOpacity={0.85}
         stroke={color}
         strokeWidth={Math.max(1 / 8, fontSize / 24)}
@@ -1114,7 +1114,7 @@ function VertexMarker({
       {/* Solid backing for label legibility — semi-transparent dark fill so the
           underlying anatomy is still hinted at through the ring. */}
       {label != null && (
-        <circle cx={x} cy={y} r={ringRadius} fill="#0a1220" fillOpacity={0.7} />
+        <circle cx={x} cy={y} r={ringRadius} fill="#0f0f0f" fillOpacity={0.7} />
       )}
       {/* Hollow ring */}
       <circle

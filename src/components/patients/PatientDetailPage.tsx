@@ -289,8 +289,8 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         className="rounded-panel border border-border bg-white px-6 py-5"
         style={{ boxShadow: "var(--shadow-card)" }}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-4">
             <Avatar className="h-14 w-14 shrink-0">
               <AvatarFallback className="bg-brand-subtle text-brand text-[16px] font-medium">
                 {initials}
@@ -358,7 +358,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               className="h-9 rounded-control text-[14px] border-border gap-1.5"

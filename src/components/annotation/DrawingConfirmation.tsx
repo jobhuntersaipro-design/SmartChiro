@@ -27,8 +27,8 @@ export function DrawingConfirmation({
         top: screenY + 12,
         transform: "translateX(-50%)",
         backgroundColor: "#FFFFFF",
-        border: "1px solid #e5edf5",
-        borderRadius: 6,
+        border: "1px solid #e9e9e9",
+        borderRadius: 14,
         padding: 4,
         boxShadow: "var(--shadow-card)",
         animation: "confirmFadeIn 150ms ease-out",
@@ -49,7 +49,7 @@ export function DrawingConfirmation({
         style={{
           width: 28,
           height: 28,
-          borderRadius: 4,
+          borderRadius: 10,
           color: "#30B130",
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#E8F5E8"; }}
@@ -67,7 +67,7 @@ export function DrawingConfirmation({
         style={{
           width: 28,
           height: 28,
-          borderRadius: 4,
+          borderRadius: 10,
           color: "#DF1B41",
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#FDE8EC"; }}

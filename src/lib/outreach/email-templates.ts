@@ -141,19 +141,19 @@ export function renderOutreachEmail(
   const htmlParts = copy.paragraphs.map((para) => p(fill(para, ctx, true)));
   if (link && copy.cta) {
     htmlParts.push(
-      `<p style="margin:20px 0;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#635BFF;color:#FFFFFF;text-decoration:none;padding:10px 20px;border-radius:4px;font-size:15px;">${escapeHtml(copy.cta)}</a></p>`,
+      `<p style="margin:20px 0;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#7747ff;color:#FFFFFF;text-decoration:none;padding:10px 20px;border-radius:4px;font-size:15px;">${escapeHtml(copy.cta)}</a></p>`,
     );
   }
   htmlParts.push(p(`${escapeHtml(copy.signOff)}<br/>${escapeHtml(ctx.branchName)}`, "margin-top:24px;"));
   htmlParts.push(
-    `<p style="font-size:14px;line-height:1.5;color:#697386;margin:24px 0 0;">${fill(copy.optOut, ctx, true)}</p>`,
+    `<p style="font-size:14px;line-height:1.5;color:#7d7d7d;margin:24px 0 0;">${fill(copy.optOut, ctx, true)}</p>`,
   );
 
   return {
     subject: fill(copy.subject, ctx, false),
     text: textParts.join("\n\n"),
-    html: `<!doctype html><html><body style="font-family:Helvetica Neue,Arial,sans-serif;color:#0A2540;background:#F6F9FC;padding:32px;">
-<table style="background:#FFFFFF;border:1px solid #E3E8EE;border-radius:6px;padding:24px;max-width:560px;margin:0 auto;"><tr><td>
+    html: `<!doctype html><html><body style="font-family:Helvetica Neue,Arial,sans-serif;color:#0b0b0b;background:#f8f8f8;padding:32px;">
+<table style="background:#FFFFFF;border:1px solid #e9e9e9;border-radius:6px;padding:24px;max-width:560px;margin:0 auto;"><tr><td>
 ${htmlParts.join("\n")}
 </td></tr></table></body></html>`,
   };

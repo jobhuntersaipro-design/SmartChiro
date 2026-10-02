@@ -51,7 +51,7 @@ export function ZoomBar({
         style={{
           width: 28,
           height: 24,
-          borderRadius: 4,
+          borderRadius: 10,
           color: "rgba(255, 255, 255, 0.7)",
         }}
         aria-label="Zoom out"
@@ -100,7 +100,7 @@ export function ZoomBar({
         style={{
           width: 28,
           height: 24,
-          borderRadius: 4,
+          borderRadius: 10,
           color: "rgba(255, 255, 255, 0.7)",
         }}
         aria-label="Zoom in"
@@ -118,7 +118,7 @@ export function ZoomBar({
         className="flex items-center gap-1 px-2 text-xs transition-opacity hover:opacity-80"
         style={{
           height: 24,
-          borderRadius: 4,
+          borderRadius: 10,
           color: "rgba(255, 255, 255, 0.7)",
         }}
         title="Fit to viewport (Ctrl+0)"
@@ -132,7 +132,7 @@ export function ZoomBar({
         className="px-2 text-xs transition-opacity hover:opacity-80"
         style={{
           height: 24,
-          borderRadius: 4,
+          borderRadius: 10,
           color: "rgba(255, 255, 255, 0.7)",
         }}
         title="Zoom to 100% (Ctrl+1)"

@@ -113,7 +113,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
         className="relative max-h-[85vh] w-full max-w-180 overflow-y-auto"
         style={{
           backgroundColor: "#FFFFFF",
-          borderRadius: 8,
+          borderRadius: 20,
           boxShadow: "var(--shadow-md)",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -123,7 +123,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
           className="sticky top-0 z-10 flex items-center justify-between px-6 py-4"
           style={{
             backgroundColor: "#FFFFFF",
-            borderBottom: "1px solid #e5edf5",
+            borderBottom: "1px solid #e9e9e9",
             borderRadius: "8px 8px 0 0",
           }}
         >
@@ -134,7 +134,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
             onClick={onClose}
             aria-label="Close"
             className="flex items-center justify-center transition-colors hover:bg-surface-muted"
-            style={{ width: 32, height: 32, borderRadius: 4, color: "#585858" }}
+            style={{ width: 32, height: 32, borderRadius: 10, color: "#585858" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18" /><path d="M6 6l12 12" />
@@ -175,8 +175,8 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
                             fontWeight: 500,
                             color: "#0b0b0b",
                             backgroundColor: "#f8f8f8",
-                            border: "1px solid #e5edf5",
-                            borderRadius: 4,
+                            border: "1px solid #e9e9e9",
+                            borderRadius: 10,
                             boxShadow: "0 1px 1px rgba(0,0,0,0.04)",
                           }}
                         >
@@ -195,13 +195,13 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
         <div
           className="px-6 py-3"
           style={{
-            borderTop: "1px solid #e5edf5",
+            borderTop: "1px solid #e9e9e9",
             fontSize: 12,
             color: "#585858",
             textAlign: "center",
           }}
         >
-          Press <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f8f8f8", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>?</kbd> or <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f8f8f8", border: "1px solid #e5edf5", borderRadius: 3, fontFamily: "inherit" }}>Esc</kbd> to close
+          Press <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f8f8f8", border: "1px solid #e9e9e9", borderRadius: 6, fontFamily: "inherit" }}>?</kbd> or <kbd style={{ fontSize: 11, padding: "1px 5px", backgroundColor: "#f8f8f8", border: "1px solid #e9e9e9", borderRadius: 6, fontFamily: "inherit" }}>Esc</kbd> to close
         </div>
       </div>
     </div>

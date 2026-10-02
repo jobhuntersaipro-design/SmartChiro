@@ -64,7 +64,7 @@ export const TREATMENT_COLORS: Record<TreatmentType, TreatmentTokens> = {
   SPORTS_REHAB: { bg: "#F0FDF4", pillBg: "#86EFAC", pillText: "#14532D", accent: "#16A34A" },
 
   // Neutral grey for OTHER
-  OTHER: { bg: "#F8FAFC", pillBg: "#E2E8F0", pillText: "#334155", accent: "#64748B" },
+  OTHER: { bg: "#F8FAFC", pillBg: "#E2E8F0", pillText: "#334155", accent: "#585858" },
 };
 
 /** Safe accessor — returns OTHER tokens if the type is null/missing. */

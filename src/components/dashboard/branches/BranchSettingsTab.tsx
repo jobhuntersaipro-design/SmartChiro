@@ -348,14 +348,15 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       <style jsx>{`
         :global(.settings-input) {
           height: 36px;
-          border-radius: 4px;
-          border-color: #e5edf5;
+          border-radius: 1.125rem;
+          border-color: var(--border);
           font-size: 14px;
-          background: #f6f9fc;
+          background: var(--surface-muted);
         }
         :global(.settings-input:focus) {
-          border-color: #533afd;
-          box-shadow: 0 0 0 1px #533afd;
+          border-color: var(--brand);
+          background: var(--surface);
+          box-shadow: 0 0 0 3px rgb(119 71 255 / .15);
         }
       `}</style>
     </div>

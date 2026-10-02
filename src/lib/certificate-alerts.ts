@@ -63,15 +63,15 @@ export function buildCertificateAlertEmail(args: {
   const apcLine = args.apcNumber ? ` (APC ${args.apcNumber})` : "";
   const text = `${name}'s Annual Practising Certificate${apcLine} — ${when.toLowerCase()}, on ${date}.\n\nUnder the T&CM Act 2016 a practitioner may not practise without a valid APC. Record the renewed certificate on their profile:\n${url}`;
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #061b31;">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #0b0b0b;">
       <p style="margin: 0 0 16px; font-size: 15px;"><strong>${escapeHtml(name)}</strong>'s Annual Practising Certificate${escapeHtml(apcLine)}:</p>
-      <div style="background: #F6F9FC; border: 1px solid #e5edf5; border-radius: 6px; padding: 16px; margin: 16px 0;">
+      <div style="background: #f8f8f8; border: 1px solid #e9e9e9; border-radius: 6px; padding: 16px; margin: 16px 0;">
         <p style="margin: 0; font-size: 17px; font-weight: 600; color: ${args.daysLeft <= 7 ? "#B41A36" : "#A35F00"};">${escapeHtml(when)}</p>
-        <p style="margin: 6px 0 0; color: #425466;">Expiry date: ${escapeHtml(date)}</p>
+        <p style="margin: 6px 0 0; color: #585858;">Expiry date: ${escapeHtml(date)}</p>
       </div>
-      <p style="margin: 0 0 16px; font-size: 14px; color: #425466;">Under the T&amp;CM Act 2016 a practitioner may not practise without a valid APC. Record the renewed certificate on their profile to stop these reminders.</p>
-      <p style="margin: 24px 0 0;"><a href="${url}" style="background: #635BFF; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">Open profile</a></p>
-      <p style="margin: 32px 0 0; font-size: 12px; color: #697386;">SmartChiro · Practising certificate alert</p>
+      <p style="margin: 0 0 16px; font-size: 14px; color: #585858;">Under the T&amp;CM Act 2016 a practitioner may not practise without a valid APC. Record the renewed certificate on their profile to stop these reminders.</p>
+      <p style="margin: 24px 0 0;"><a href="${url}" style="background: #7747ff; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">Open profile</a></p>
+      <p style="margin: 32px 0 0; font-size: 12px; color: #7d7d7d;">SmartChiro · Practising certificate alert</p>
     </div>`;
   return { to: args.to, subject, html, text };
 }

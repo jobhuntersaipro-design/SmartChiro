@@ -59,8 +59,8 @@ function SeriesStripView({
       className="absolute right-0 top-0 bottom-0 z-10 flex flex-col"
       style={{
         width,
-        backgroundColor: '#0a1220',
-        borderLeft: '1px solid #1c2738',
+        backgroundColor: '#0f0f0f',
+        borderLeft: '1px solid #171717',
         transition: 'width 150ms ease',
       }}
       onPointerDown={stop}

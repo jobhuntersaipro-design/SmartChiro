@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }>
   IN_PROGRESS:  { bg: "#FFF8E1", text: "#9b6829", label: "In progress" },
   COMPLETED:    { bg: "#ECFDF5", text: "#15be53", label: "Completed" },
   CANCELLED:    { bg: "#FEF2F2", text: "#DF1B41", label: "Cancelled" },
-  NO_SHOW:      { bg: "#f1f1f1", text: "#64748b", label: "No show" },
+  NO_SHOW:      { bg: "#f1f1f1", text: "#585858", label: "No show" },
 };
 
 export function AppointmentEventPopover({

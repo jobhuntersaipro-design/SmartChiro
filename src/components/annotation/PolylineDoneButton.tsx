@@ -36,8 +36,8 @@ export function PolylineDoneButton({
         top: screenY + 18,
         transform: "translateX(-50%)",
         backgroundColor: "#FFFFFF",
-        border: "1px solid #e5edf5",
-        borderRadius: 6,
+        border: "1px solid #e9e9e9",
+        borderRadius: 14,
         padding: 4,
         boxShadow: "var(--shadow-md)",
       }}
@@ -53,7 +53,7 @@ export function PolylineDoneButton({
         onMouseDown={stop}
         onClick={(e) => { e.stopPropagation(); onDone(); }}
         className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium transition-colors"
-        style={{ borderRadius: 4, color: "#FFFFFF", backgroundColor: "#30B130" }}
+        style={{ borderRadius: 10, color: "#FFFFFF", backgroundColor: "#30B130" }}
         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#28A028")}
         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#30B130")}
         title="Finish polyline (Enter)"
@@ -67,7 +67,7 @@ export function PolylineDoneButton({
         onMouseDown={stop}
         onClick={(e) => { e.stopPropagation(); onCancel(); }}
         className="flex items-center justify-center transition-colors"
-        style={{ width: 24, height: 24, borderRadius: 4, color: "#7d7d7d" }}
+        style={{ width: 24, height: 24, borderRadius: 10, color: "#7d7d7d" }}
         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#FDE8EC"; e.currentTarget.style.color = "#DF1B41"; }}
         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#7d7d7d"; }}
         title="Cancel polyline (Esc)"

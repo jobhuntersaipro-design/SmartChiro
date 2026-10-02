@@ -60,26 +60,26 @@ export async function sendVerificationEmail(email: string, name: string) {
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: #533afd; border-radius: 6px; padding: 8px 12px; text-align: center;">
+          <div style="display: inline-block; background: #7747ff; border-radius: 6px; padding: 8px 12px; text-align: center;">
             <span style="color: white; font-size: 14px; font-weight: bold;">Smart Chiro</span>
           </div>
         </div>
-        <h1 style="color: #061b31; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
+        <h1 style="color: #0b0b0b; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
           Verify your email
         </h1>
-        <p style="color: #273951; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
+        <p style="color: #0b0b0b; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
           Hi ${escapeHtml(name)}, thanks for signing up for SmartChiro. Please verify your email address to get started.
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
-          <a href="${verifyUrl}" style="display: inline-block; background: #533afd; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
+          <a href="${verifyUrl}" style="display: inline-block; background: #7747ff; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
             Verify email address
           </a>
         </div>
-        <p style="color: #64748d; font-size: 13px; line-height: 1.5; text-align: center;">
+        <p style="color: #585858; font-size: 13px; line-height: 1.5; text-align: center;">
           This link expires in ${TOKEN_EXPIRY_HOURS} hours. If you didn't create a SmartChiro account, you can safely ignore this email.
         </p>
-        <hr style="border: none; border-top: 1px solid #e5edf5; margin: 32px 0;" />
-        <p style="color: #64748d; font-size: 13px; text-align: center;">
+        <hr style="border: none; border-top: 1px solid #e9e9e9; margin: 32px 0;" />
+        <p style="color: #585858; font-size: 13px; text-align: center;">
           SmartChiro — See More. Treat Better.
         </p>
       </div>
@@ -130,26 +130,26 @@ export async function sendPasswordResetEmail(
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: #533afd; border-radius: 6px; padding: 8px 12px; text-align: center;">
+          <div style="display: inline-block; background: #7747ff; border-radius: 6px; padding: 8px 12px; text-align: center;">
             <span style="color: white; font-size: 14px; font-weight: bold;">Smart Chiro</span>
           </div>
         </div>
-        <h1 style="color: #061b31; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
+        <h1 style="color: #0b0b0b; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
           Reset your password
         </h1>
-        <p style="color: #273951; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
+        <p style="color: #0b0b0b; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 32px;">
           Hi ${escapeHtml(name)}, we received a request to reset your SmartChiro password. Click the button below to choose a new one. If you didn't request this, you can safely ignore this email — your password won't change.
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
-          <a href="${resetUrl}" style="display: inline-block; background: #533afd; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
+          <a href="${resetUrl}" style="display: inline-block; background: #7747ff; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 4px;">
             Reset password
           </a>
         </div>
-        <p style="color: #64748d; font-size: 13px; line-height: 1.5; text-align: center;">
+        <p style="color: #585858; font-size: 13px; line-height: 1.5; text-align: center;">
           This link expires in ${PASSWORD_RESET_EXPIRY_HOURS} hour. If you didn't request a reset, you can safely ignore this email.
         </p>
-        <hr style="border: none; border-top: 1px solid #e5edf5; margin: 32px 0;" />
-        <p style="color: #64748d; font-size: 13px; text-align: center;">
+        <hr style="border: none; border-top: 1px solid #e9e9e9; margin: 32px 0;" />
+        <p style="color: #585858; font-size: 13px; text-align: center;">
           SmartChiro — See More. Treat Better.
         </p>
       </div>
@@ -202,10 +202,10 @@ export async function sendDoctorBookingNotification(args: {
   const patientNameSafe = escapeHtml(args.patientName)
   const branchNameSafe = escapeHtml(args.branchName)
   const treatmentLine = args.treatmentLabel
-    ? `<p style="margin: 6px 0; color: #425466;"><strong>Treatment:</strong> ${escapeHtml(args.treatmentLabel)}</p>`
+    ? `<p style="margin: 6px 0; color: #585858;"><strong>Treatment:</strong> ${escapeHtml(args.treatmentLabel)}</p>`
     : ''
   const bookedByLine = args.bookedByName
-    ? `<p style="margin: 6px 0; color: #697386; font-size: 13px;">Booked by ${escapeHtml(args.bookedByName)}</p>`
+    ? `<p style="margin: 6px 0; color: #7d7d7d; font-size: 13px;">Booked by ${escapeHtml(args.bookedByName)}</p>`
     : ''
   try {
     await resend().emails.send({
@@ -213,20 +213,20 @@ export async function sendDoctorBookingNotification(args: {
       to: args.to,
       subject: `New appointment with ${args.patientName} — ${dateStr}`,
       html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #061b31;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #0b0b0b;">
           <p style="margin: 0 0 16px; font-size: 15px;">${greeting}</p>
           <p style="margin: 0 0 16px; font-size: 15px;">A new appointment has just been booked on your calendar.</p>
-          <div style="background: #F6F9FC; border: 1px solid #e5edf5; border-radius: 6px; padding: 16px; margin: 16px 0;">
+          <div style="background: #f8f8f8; border: 1px solid #e9e9e9; border-radius: 6px; padding: 16px; margin: 16px 0;">
             <p style="margin: 0 0 8px; font-size: 17px; font-weight: 600;">${patientNameSafe}</p>
-            <p style="margin: 6px 0; color: #425466;"><strong>When:</strong> ${dateStr} (${args.duration} min)</p>
-            <p style="margin: 6px 0; color: #425466;"><strong>Branch:</strong> ${branchNameSafe}</p>
+            <p style="margin: 6px 0; color: #585858;"><strong>When:</strong> ${dateStr} (${args.duration} min)</p>
+            <p style="margin: 6px 0; color: #585858;"><strong>Branch:</strong> ${branchNameSafe}</p>
             ${treatmentLine}
             ${bookedByLine}
           </div>
           <p style="margin: 24px 0 0;">
-            <a href="${args.appointmentUrl}" style="background: #635BFF; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">View appointment</a>
+            <a href="${args.appointmentUrl}" style="background: #7747ff; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">View appointment</a>
           </p>
-          <p style="margin: 32px 0 0; font-size: 12px; color: #697386;">SmartChiro · Appointment notification</p>
+          <p style="margin: 32px 0 0; font-size: 12px; color: #7d7d7d;">SmartChiro · Appointment notification</p>
         </div>
       `,
       text: `${greetingName ? `Hi ${greetingName},` : 'Hi,'}\n\nA new appointment has been booked.\n\nPatient: ${args.patientName}\nWhen: ${dateStr} (${args.duration} min)\nBranch: ${args.branchName}${args.treatmentLabel ? `\nTreatment: ${args.treatmentLabel}` : ''}${args.bookedByName ? `\nBooked by: ${args.bookedByName}` : ''}\n\nView: ${args.appointmentUrl}`,

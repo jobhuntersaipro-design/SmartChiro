@@ -118,7 +118,7 @@ export function SlotPickerDialog({
             className="flex items-center gap-1.5 pb-2 text-[13px] font-medium transition-colors"
             style={{
               color: tab === "existing" ? "#7747ff" : "#585858",
-              borderBottom: tab === "existing" ? "2px solid #533afd" : "2px solid transparent",
+              borderBottom: tab === "existing" ? "2px solid #7747ff" : "2px solid transparent",
             }}
           >
             <ScanLine className="h-4 w-4" /> Patient X-rays
@@ -129,7 +129,7 @@ export function SlotPickerDialog({
             className="flex items-center gap-1.5 pb-2 text-[13px] font-medium transition-colors"
             style={{
               color: tab === "upload" ? "#7747ff" : "#585858",
-              borderBottom: tab === "upload" ? "2px solid #533afd" : "2px solid transparent",
+              borderBottom: tab === "upload" ? "2px solid #7747ff" : "2px solid transparent",
             }}
           >
             <Upload className="h-4 w-4" /> Upload new

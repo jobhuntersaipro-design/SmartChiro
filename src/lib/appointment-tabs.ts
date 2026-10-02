@@ -104,7 +104,7 @@ export const STATUS_TOKENS: Record<
   },
   NO_SHOW: {
     bg: "#f1f1f1",
-    text: "#64748b",
+    text: "#585858",
     accent: "#7d7d7d",
     label: "No show",
   },

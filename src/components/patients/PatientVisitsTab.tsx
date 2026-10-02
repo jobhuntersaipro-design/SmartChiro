@@ -81,7 +81,7 @@ function VisitSkeleton() {
         <div
           key={i}
           className="rounded-panel border border-border bg-white p-4"
-          style={{ borderLeft: "4px solid #e5edf5" }}
+          style={{ borderLeft: "4px solid #e9e9e9" }}
         >
           <div className="flex items-center gap-3 animate-pulse">
             <div className="h-4 w-24 rounded bg-border" />

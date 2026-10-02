@@ -38,7 +38,7 @@ const ACTION_STYLE: Record<
   STATUS_CHANGE:   { bg: "#ede7ff", text: "#7747ff", label: "Status changed" },
   DOCTOR_REASSIGN: { bg: "#ede7ff", text: "#7747ff", label: "Reassigned" },
   CANCEL:          { bg: "#FEF2F2", text: "#DF1B41", label: "Cancelled" },
-  NOTE_EDIT:       { bg: "#f1f1f1", text: "#64748b", label: "Note edited" },
+  NOTE_EDIT:       { bg: "#f1f1f1", text: "#585858", label: "Note edited" },
   DELETE:          { bg: "#FEF2F2", text: "#DF1B41", label: "Deleted" },
 };
 

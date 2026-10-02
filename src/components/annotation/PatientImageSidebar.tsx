@@ -343,7 +343,7 @@ export function PatientImageSidebar({
           style={{
             width: 280,
             backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #e5edf5",
+            borderRight: "1px solid #e9e9e9",
           }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -355,8 +355,8 @@ export function PatientImageSidebar({
               className="absolute inset-0 z-20 flex items-center justify-center"
               style={{
                 backgroundColor: "rgba(240, 238, 255, 0.9)",
-                border: "2px dashed #533afd",
-                borderRadius: 4,
+                border: "2px dashed #7747ff",
+                borderRadius: 10,
               }}
             >
               <div className="text-center">
@@ -371,7 +371,7 @@ export function PatientImageSidebar({
           {/* Header */}
           <div
             className="flex items-center gap-2 px-3 py-2"
-            style={{ borderBottom: "1px solid #e5edf5" }}
+            style={{ borderBottom: "1px solid #e9e9e9" }}
           >
             <ImageIcon size={14} style={{ color: "#585858" }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: "#0b0b0b" }}>
@@ -394,8 +394,8 @@ export function PatientImageSidebar({
               onClick={() => fileInputRef.current?.click()}
               className="flex w-full items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-colors"
               style={{
-                borderRadius: 4,
-                border: "1px solid #e5edf5",
+                borderRadius: 10,
+                border: "1px solid #e9e9e9",
                 backgroundColor: "#FFFFFF",
                 color: "#0b0b0b",
               }}
@@ -425,8 +425,8 @@ export function PatientImageSidebar({
               className="mx-2 mt-2 flex flex-col gap-1 overflow-y-auto"
               style={{
                 maxHeight: 160,
-                borderRadius: 4,
-                border: "1px solid #e5edf5",
+                borderRadius: 10,
+                border: "1px solid #e9e9e9",
                 padding: 6,
                 backgroundColor: "#f8f8f8",
               }}
@@ -540,10 +540,10 @@ export function PatientImageSidebar({
 
               // Active = purple border + bg, loaded in grid = subtle purple border, default = gray border
               const borderStyle = isActive
-                ? "2px solid #533afd"
+                ? "2px solid #7747ff"
                 : isLoadedInGrid
                   ? "2px solid rgba(83, 58, 253, 0.4)"
-                  : "1px solid #e5edf5";
+                  : "1px solid #e9e9e9";
               const bgColor = isActive
                 ? "#ede7ff"
                 : isLoadedInGrid
@@ -558,7 +558,7 @@ export function PatientImageSidebar({
                   onMouseLeave={(e) => { if (!isActive && !isLoadedInGrid) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
                   className="flex flex-col overflow-hidden text-left transition-colors"
                   style={{
-                    borderRadius: 4,
+                    borderRadius: 10,
                     border: borderStyle,
                     backgroundColor: bgColor,
                     padding: 0,
@@ -642,9 +642,9 @@ export function PatientImageSidebar({
           height: 32,
           backgroundColor: "#FFFFFF",
           borderRadius: "0 4px 4px 0",
-          borderTop: "1px solid #e5edf5",
-          borderRight: "1px solid #e5edf5",
-          borderBottom: "1px solid #e5edf5",
+          borderTop: "1px solid #e9e9e9",
+          borderRight: "1px solid #e9e9e9",
+          borderBottom: "1px solid #e9e9e9",
           color: "#585858",
           zIndex: 10,
         }}

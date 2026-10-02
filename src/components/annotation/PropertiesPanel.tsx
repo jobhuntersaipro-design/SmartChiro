@@ -150,8 +150,8 @@ function LayerNameEditor({
         style={{
           color: "#0b0b0b",
           background: "#FFFFFF",
-          border: "1px solid #533afd",
-          borderRadius: 3,
+          border: "1px solid #7747ff",
+          borderRadius: 6,
           padding: "1px 4px",
           outline: "none",
           minWidth: 0,
@@ -349,7 +349,7 @@ function PropertiesPanelView({
         style={{
           width: 32,
           backgroundColor: "#FFFFFF",
-          borderLeft: "1px solid #e5edf5",
+          borderLeft: "1px solid #e9e9e9",
           paddingTop: 8,
           gap: 6,
         }}
@@ -362,7 +362,7 @@ function PropertiesPanelView({
           style={{
             width: 24,
             height: 24,
-            borderRadius: 4,
+            borderRadius: 10,
             color: "#585858",
           }}
           title="Show layers panel (\\)"
@@ -396,14 +396,14 @@ function PropertiesPanelView({
       style={{
         width: 280,
         backgroundColor: "#FFFFFF",
-        borderLeft: "1px solid #e5edf5",
+        borderLeft: "1px solid #e9e9e9",
       }}
     >
       {/* Tab Header — content-sized tabs, evenly distributed with gap, with
           a right-margin breathing room before the close-icon separator. */}
       <div
         className="flex items-center"
-        style={{ borderBottom: "1px solid #e5edf5" }}
+        style={{ borderBottom: "1px solid #e9e9e9" }}
       >
         <div
           className="flex flex-1 items-center"
@@ -416,7 +416,7 @@ function PropertiesPanelView({
             className="py-2 text-xs font-medium transition-colors"
             style={{
               color: activeTab === "layers" ? "#7747ff" : "#585858",
-              borderBottom: activeTab === "layers" ? "2px solid #533afd" : "2px solid transparent",
+              borderBottom: activeTab === "layers" ? "2px solid #7747ff" : "2px solid transparent",
             }}
           >
             Layers
@@ -428,7 +428,7 @@ function PropertiesPanelView({
             className="py-2 text-xs font-medium transition-colors"
             style={{
               color: activeTab === "properties" ? "#7747ff" : "#585858",
-              borderBottom: activeTab === "properties" ? "2px solid #533afd" : "2px solid transparent",
+              borderBottom: activeTab === "properties" ? "2px solid #7747ff" : "2px solid transparent",
             }}
           >
             Properties
@@ -440,7 +440,7 @@ function PropertiesPanelView({
             className="py-2 text-xs font-medium transition-colors"
             style={{
               color: activeTab === "measurements" ? "#7747ff" : "#585858",
-              borderBottom: activeTab === "measurements" ? "2px solid #533afd" : "2px solid transparent",
+              borderBottom: activeTab === "measurements" ? "2px solid #7747ff" : "2px solid transparent",
             }}
           >
             Measurements
@@ -455,7 +455,7 @@ function PropertiesPanelView({
             width: 32,
             height: 32,
             color: "#585858",
-            borderLeft: "1px solid #e5edf5",
+            borderLeft: "1px solid #e9e9e9",
           }}
           title="Hide panel (\\)"
           aria-label="Hide properties panel"
@@ -530,7 +530,7 @@ function PropertiesPanelView({
                         height: 14,
                         flexShrink: 0,
                         cursor: "pointer",
-                        borderRadius: 3,
+                        borderRadius: 6,
                         border: `1.5px solid ${isSelected ? "#7747ff" : "#a4a4a4"}`,
                         backgroundColor: isSelected ? "#7747ff" : "transparent",
                         color: "#FFFFFF",
@@ -569,7 +569,7 @@ function PropertiesPanelView({
                           height: 16,
                           minWidth: 16,
                           padding: "0 5px",
-                          borderRadius: 8,
+                          borderRadius: 20,
                           backgroundColor: "#FEF6E6",
                           color: "#9A6712",
                           border: "1px solid #F5E0B5",
@@ -774,8 +774,8 @@ function ShapeProperties({
           placeholder="Add label..."
           className="w-full text-xs px-2 py-1"
           style={{
-            border: "1px solid #e5edf5",
-            borderRadius: 4,
+            border: "1px solid #e9e9e9",
+            borderRadius: 10,
             backgroundColor: "#f8f8f8",
             color: "#0b0b0b",
           }}
@@ -810,8 +810,8 @@ function ShapeProperties({
               }
               className="text-xs px-2 py-1 transition-colors"
               style={{
-                border: "1px solid #e5edf5",
-                borderRadius: 4,
+                border: "1px solid #e9e9e9",
+                borderRadius: 10,
                 backgroundColor: "#ffffff",
                 color: "#7747ff",
               }}
@@ -920,8 +920,8 @@ function ShapeProperties({
           }
           className="w-full text-xs px-2 py-1"
           style={{
-            border: "1px solid #e5edf5",
-            borderRadius: 4,
+            border: "1px solid #e9e9e9",
+            borderRadius: 10,
             backgroundColor: "#f8f8f8",
             color: "#0b0b0b",
           }}
@@ -1007,8 +1007,8 @@ function ShapeProperties({
               }
               className="w-full text-xs px-2 py-1"
               style={{
-                border: "1px solid #e5edf5",
-                borderRadius: 4,
+                border: "1px solid #e9e9e9",
+                borderRadius: 10,
                 backgroundColor: "#f8f8f8",
                 color: "#0b0b0b",
               }}
@@ -1037,8 +1037,8 @@ function ShapeProperties({
                   onClick={() => onUpdate({ textAlign: align })}
                   className="flex-1 py-1 text-xs capitalize"
                   style={{
-                    border: "1px solid #e5edf5",
-                    borderRadius: 4,
+                    border: "1px solid #e9e9e9",
+                    borderRadius: 10,
                     backgroundColor: (shape.textAlign ?? "left") === align ? "#ede7ff" : "#f8f8f8",
                     color: (shape.textAlign ?? "left") === align ? "#7747ff" : "#0b0b0b",
                   }}
@@ -1101,7 +1101,7 @@ function ShapeProperties({
               value={shape.labelPosition ?? "auto"}
               onChange={(e) => onUpdate({ labelPosition: e.target.value as "above" | "below" | "auto" })}
               className="w-full text-xs px-2 py-1"
-              style={{ border: "1px solid #e5edf5", borderRadius: 4, backgroundColor: "#f8f8f8", color: "#0b0b0b" }}
+              style={{ border: "1px solid #e9e9e9", borderRadius: 10, backgroundColor: "#f8f8f8", color: "#0b0b0b" }}
             >
               <option value="auto">Auto</option>
               <option value="above">Above</option>
@@ -1251,7 +1251,7 @@ function MeasurementSummary({
           style={{
             backgroundColor: "#FEF6E6",
             border: "1px solid #F5E0B5",
-            borderRadius: 4,
+            borderRadius: 10,
             fontSize: 11,
             color: "#9A6712",
           }}
@@ -1309,7 +1309,7 @@ function MeasurementSummary({
       ) : (
         <div className="space-y-0.5">
           {/* Header */}
-          <div className="flex items-center gap-2 pb-1 mb-1" style={{ borderBottom: "1px solid #e5edf5" }}>
+          <div className="flex items-center gap-2 pb-1 mb-1" style={{ borderBottom: "1px solid #e9e9e9" }}>
             <span className="w-5 text-xs font-medium" style={{ color: "#585858" }}>#</span>
             <span className="flex-1 text-xs font-medium" style={{ color: "#585858" }}>Type</span>
             <span className="text-xs font-medium text-right" style={{ color: "#585858", minWidth: 60 }}>Value</span>
@@ -1351,7 +1351,7 @@ function MeasurementSummary({
                     height: 14,
                     flexShrink: 0,
                     cursor: "pointer",
-                    borderRadius: 3,
+                    borderRadius: 6,
                     border: `1.5px solid ${isSelected ? "#7747ff" : "#a4a4a4"}`,
                     backgroundColor: isSelected ? "#7747ff" : "transparent",
                     color: "#FFFFFF",
@@ -1396,7 +1396,7 @@ function MeasurementSummary({
                       height: 18,
                       flexShrink: 0,
                       color: "#9A6712",
-                      borderRadius: 3,
+                      borderRadius: 6,
                       cursor: "pointer",
                       background: "transparent",
                       border: "none",
@@ -1501,9 +1501,9 @@ function ColorPicker({
           style={{
             width: 24,
             height: 24,
-            borderRadius: 4,
+            borderRadius: 10,
             backgroundColor: color,
-            border: value === color ? "2px solid #533afd" : "1px solid #e5edf5",
+            border: value === color ? "2px solid #7747ff" : "1px solid #e9e9e9",
           }}
         />
       ))}
@@ -1542,8 +1542,8 @@ function NumberInput({
         }}
         className="w-16 text-xs px-1.5 py-1 tabular-nums"
         style={{
-          border: "1px solid #e5edf5",
-          borderRadius: 4,
+          border: "1px solid #e9e9e9",
+          borderRadius: 10,
           backgroundColor: "#f8f8f8",
           color: "#0b0b0b",
         }}
@@ -1609,7 +1609,7 @@ function PelvicAnalysisSection({
   return (
     <div
       className="p-3"
-      style={{ borderBottom: "1px solid #e5edf5" }}
+      style={{ borderBottom: "1px solid #e9e9e9" }}
     >
       <div className="flex items-baseline justify-between mb-2 gap-2">
         <p className="text-xs font-medium" style={{ color: "#0b0b0b" }}>
@@ -1638,7 +1638,7 @@ function PelvicAnalysisSection({
           style={{
             backgroundColor: "#FEF6E6",
             border: "1px solid #F5E0B5",
-            borderRadius: 4,
+            borderRadius: 10,
             color: "#9A6712",
           }}
         >
@@ -1663,8 +1663,8 @@ function PelvicParamRow({ result }: { result: ParamResult }) {
       className="flex items-baseline justify-between gap-2 px-2 py-1"
       style={{
         backgroundColor: isMissing ? "#f8f8f8" : "#ffffff",
-        border: "1px solid #e5edf5",
-        borderRadius: 4,
+        border: "1px solid #e9e9e9",
+        borderRadius: 10,
       }}
     >
       <div className="min-w-0 flex-1">

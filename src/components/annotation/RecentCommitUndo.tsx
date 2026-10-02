@@ -39,8 +39,8 @@ export function RecentCommitUndo({ screenX, screenY, onUndo, onAccept }: RecentC
         top: screenY + 14,
         transform: "translateX(-50%)",
         backgroundColor: "#FFFFFF",
-        border: "1px solid #e5edf5",
-        borderRadius: 4,
+        border: "1px solid #e9e9e9",
+        borderRadius: 10,
         padding: 2,
         boxShadow: "var(--shadow-card)",
         animation: "undoFadeIn 150ms ease-out",
@@ -54,7 +54,7 @@ export function RecentCommitUndo({ screenX, screenY, onUndo, onAccept }: RecentC
           style={{
             width: 24,
             height: 24,
-            borderRadius: 3,
+            borderRadius: 6,
             color: "#30B130",
             cursor: "pointer",
             border: "none",
@@ -75,7 +75,7 @@ export function RecentCommitUndo({ screenX, screenY, onUndo, onAccept }: RecentC
         style={{
           width: 24,
           height: 24,
-          borderRadius: 3,
+          borderRadius: 6,
           color: "#DF1B41",
           cursor: "pointer",
           border: "none",

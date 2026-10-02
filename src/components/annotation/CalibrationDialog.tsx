@@ -71,7 +71,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
         onMouseUp={stopAll}
         style={{
           backgroundColor: "#FFFFFF",
-          borderRadius: 8,
+          borderRadius: 20,
           boxShadow: "var(--shadow-card)",
         }}
       >
@@ -85,7 +85,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
           <button
             onClick={onCancel}
             className="flex items-center justify-center transition-colors"
-            style={{ width: 24, height: 24, borderRadius: 4, color: "#7d7d7d" }}
+            style={{ width: 24, height: 24, borderRadius: 10, color: "#7d7d7d" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
             aria-label="Cancel calibration"
@@ -119,8 +119,8 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
             }}
             className="px-2.5 py-1.5 text-sm transition-colors"
             style={{
-              borderRadius: 4,
-              border: error ? "1px solid #DF1B41" : "1px solid #e5edf5",
+              borderRadius: 10,
+              border: error ? "1px solid #DF1B41" : "1px solid #e9e9e9",
               outline: "none",
               backgroundColor: "#f8f8f8",
             }}
@@ -132,7 +132,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
           <button
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
+            style={{ borderRadius: 10, border: "1px solid #e9e9e9", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
           >
@@ -141,7 +141,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
           <button
             onClick={submit}
             className="px-3 py-1.5 text-xs font-medium text-white transition-colors"
-            style={{ borderRadius: 4, backgroundColor: "#7747ff" }}
+            style={{ borderRadius: 10, backgroundColor: "#7747ff" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#5528ce"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#7747ff"; }}
           >

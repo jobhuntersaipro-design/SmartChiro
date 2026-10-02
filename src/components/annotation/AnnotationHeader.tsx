@@ -95,7 +95,7 @@ function ExportMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors hover:bg-surface-muted disabled:opacity-60"
-        style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#0b0b0b" }}
+        style={{ borderRadius: 9999, border: "1px solid #e9e9e9", backgroundColor: "#FFFFFF", color: "#0b0b0b" }}
       >
         {exporting ? (
           <Loader2 size={14} strokeWidth={1.5} className="animate-spin" />
@@ -108,7 +108,7 @@ function ExportMenu({
         <div
           role="menu"
           className="absolute right-0 z-50 mt-1 w-60 overflow-hidden bg-white"
-          style={{ border: "1px solid #e5edf5", borderRadius: 6, boxShadow: "var(--shadow-md)" }}
+          style={{ border: "1px solid #e9e9e9", borderRadius: 14, boxShadow: "var(--shadow-md)" }}
         >
           {items.map((item) => (
             <button
@@ -240,8 +240,8 @@ function InlineEditableTitle({
         style={{
           color: "#0b0b0b",
           backgroundColor: "#f8f8f8",
-          border: "1px solid #533afd",
-          borderRadius: 4,
+          border: "1px solid #7747ff",
+          borderRadius: 9999,
           padding: "2px 8px",
           width: Math.max(120, editValue.length * 8 + 32),
           transition: "width 200ms ease",
@@ -338,8 +338,8 @@ function AdjustPopover({
       className="absolute right-0 top-full z-50 mt-1 flex w-70 flex-col gap-3 p-4"
       style={{
         backgroundColor: "#FFFFFF",
-        border: "1px solid #e5edf5",
-        borderRadius: 6,
+        border: "1px solid #e9e9e9",
+        borderRadius: 14,
         boxShadow:
           "var(--shadow-md)",
       }}
@@ -383,8 +383,8 @@ function AdjustPopover({
         onMouseLeave={(e) => { if (rotation === 0) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
-          borderRadius: 4,
-          border: "1px solid #e5edf5",
+          borderRadius: 9999,
+          border: "1px solid #e9e9e9",
           backgroundColor: rotation !== 0 ? "#ede7ff" : "#FFFFFF",
           color: rotation !== 0 ? "#7747ff" : "#0b0b0b",
         }}
@@ -403,8 +403,8 @@ function AdjustPopover({
         onMouseLeave={(e) => { if (!flipped) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
-          borderRadius: 4,
-          border: "1px solid #e5edf5",
+          borderRadius: 9999,
+          border: "1px solid #e9e9e9",
           backgroundColor: flipped ? "#ede7ff" : "#FFFFFF",
           color: flipped ? "#7747ff" : "#0b0b0b",
         }}
@@ -421,8 +421,8 @@ function AdjustPopover({
         onMouseLeave={(e) => { if (!flippedV) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
-          borderRadius: 4,
-          border: "1px solid #e5edf5",
+          borderRadius: 9999,
+          border: "1px solid #e9e9e9",
           backgroundColor: flippedV ? "#ede7ff" : "#FFFFFF",
           color: flippedV ? "#7747ff" : "#0b0b0b",
         }}
@@ -439,8 +439,8 @@ function AdjustPopover({
         onMouseLeave={(e) => { if (!inverted) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
         className="flex items-center justify-between px-3 py-1.5 text-xs transition-colors"
         style={{
-          borderRadius: 4,
-          border: "1px solid #e5edf5",
+          borderRadius: 9999,
+          border: "1px solid #e9e9e9",
           backgroundColor: inverted ? "#ede7ff" : "#FFFFFF",
           color: inverted ? "#7747ff" : "#0b0b0b",
         }}
@@ -529,8 +529,8 @@ function SaveButton({
 
   const label = isSaving ? "Saving..." : showSaved ? "Saved" : "Save";
   const Icon = showSaved ? CheckCircle2 : Save;
-  const bg = showSaved ? "#30B130" : "#7747ff";
-  const hoverBg = showSaved ? "#28A028" : "#5528ce";
+  const bg = showSaved ? "#30B130" : "#0b0b0b";
+  const hoverBg = showSaved ? "#28A028" : "#2a2a2a";
 
   return (
     <button
@@ -540,7 +540,7 @@ function SaveButton({
       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = bg; }}
       className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white transition-colors"
       style={{
-        borderRadius: 4,
+        borderRadius: 9999,
         backgroundColor: bg,
         opacity: isSaving ? 0.6 : 1,
         position: "relative",
@@ -596,7 +596,7 @@ export function AnnotationHeader({
       style={{
         height: 48,
         backgroundColor: "#FFFFFF",
-        borderBottom: "1px solid #e5edf5",
+        borderBottom: "1px solid #e9e9e9",
       }}
     >
       {/* Left: Breadcrumb */}
@@ -621,8 +621,8 @@ export function AnnotationHeader({
             onMouseLeave={(e) => { if (!adjustOpen) e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
             style={{
-              borderRadius: 4,
-              border: "1px solid #e5edf5",
+              borderRadius: 9999,
+              border: "1px solid #e9e9e9",
               backgroundColor: adjustOpen ? "#ede7ff" : "#FFFFFF",
               color: adjustOpen ? "#7747ff" : "#0b0b0b",
               position: "relative",
@@ -664,7 +664,7 @@ export function AnnotationHeader({
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8f8f8")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FFFFFF")}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#0b0b0b" }}
+            style={{ borderRadius: 9999, border: "1px solid #e9e9e9", backgroundColor: "#FFFFFF", color: "#0b0b0b" }}
           >
             <FileText size={14} strokeWidth={1.5} />
             Notes{notesCount > 0 ? ` · ${notesCount}` : ""}
@@ -684,7 +684,7 @@ export function AnnotationHeader({
           style={{
             width: 32,
             height: 32,
-            borderRadius: 4,
+            borderRadius: 9999,
             color: "#585858",
           }}
           aria-label="Close and return to the patient"

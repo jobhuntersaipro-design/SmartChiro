@@ -242,9 +242,9 @@ export function ViewportCell({
         style={{
           backgroundColor: "#171717",
           border: isActive
-            ? "2px solid #533afd"
+            ? "2px solid #7747ff"
             : "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 4,
+          borderRadius: 10,
         }}
       >
         <div className="flex flex-col items-center gap-2">
@@ -275,9 +275,9 @@ export function ViewportCell({
       style={{
         backgroundColor: "#171717",
         border: isActive
-          ? "2px solid #533afd"
+          ? "2px solid #7747ff"
           : "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 4,
+        borderRadius: 10,
         cursor: isPanning.current ? "grabbing" : "grab",
       }}
       onPointerDown={handlePointerDown}
@@ -357,7 +357,7 @@ export function ViewportCell({
             fontSize: 10,
             color: "rgba(255,255,255,0.6)",
             backgroundColor: "rgba(0,0,0,0.5)",
-            borderRadius: 4,
+            borderRadius: 10,
             padding: "4px 10px",
             whiteSpace: "nowrap",
             pointerEvents: "none",
@@ -375,7 +375,7 @@ export function ViewportCell({
           fontWeight: 500,
           color: "rgba(255,255,255,0.7)",
           backgroundColor: "rgba(0,0,0,0.5)",
-          borderRadius: 3,
+          borderRadius: 6,
           padding: "1px 6px",
           maxWidth: "80%",
           overflow: "hidden",

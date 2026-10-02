@@ -44,13 +44,13 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
         style={{
           width: 36,
           height: 36,
-          borderRadius: 4,
+          borderRadius: 10,
           backgroundColor: open
             ? "#7747ff"
             : hovered
               ? "rgba(255,255,255,.14)"
               : "rgba(255,255,255,.06)",
-          color: open ? "#FFFFFF" : hovered ? "#FFFFFF" : "#cdd5e2",
+          color: open ? "#FFFFFF" : hovered ? "#FFFFFF" : "#c4c4c4",
         }}
       >
         {current.icon}
@@ -64,8 +64,8 @@ export function ViewModeSwitcher({ viewMode, onViewModeChange }: ViewModeSwitche
             left: "100%",
             marginLeft: 8,
             backgroundColor: "#FFFFFF",
-            border: "1px solid #e5edf5",
-            borderRadius: 6,
+            border: "1px solid #e9e9e9",
+            borderRadius: 14,
             boxShadow: "var(--shadow-md)",
             minWidth: 140,
             overflow: "hidden",

@@ -37,18 +37,18 @@ async function sendManagerEmail(to: string, n: OnlineBookingNotice, doctorLabel:
     to,
     subject: `Online booking: ${n.patientName} — ${when}`,
     html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #061b31;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #0b0b0b;">
         <p style="margin: 0 0 16px; font-size: 15px;">A patient booked online at ${escapeHtml(n.branchName)}.</p>
-        <div style="background: #F6F9FC; border: 1px solid #e5edf5; border-radius: 6px; padding: 16px; margin: 16px 0;">
+        <div style="background: #f8f8f8; border: 1px solid #e9e9e9; border-radius: 6px; padding: 16px; margin: 16px 0;">
           <p style="margin: 0 0 8px; font-size: 17px; font-weight: 600;">${escapeHtml(patientLine)}</p>
-          <p style="margin: 6px 0; color: #425466;"><strong>When:</strong> ${escapeHtml(when)} (${n.duration} min)</p>
-          <p style="margin: 6px 0; color: #425466;"><strong>Treatment:</strong> ${escapeHtml(n.treatmentLabel)}</p>
-          <p style="margin: 6px 0; color: #425466;"><strong>Doctor:</strong> ${escapeHtml(doctorLabel)}</p>
+          <p style="margin: 6px 0; color: #585858;"><strong>When:</strong> ${escapeHtml(when)} (${n.duration} min)</p>
+          <p style="margin: 6px 0; color: #585858;"><strong>Treatment:</strong> ${escapeHtml(n.treatmentLabel)}</p>
+          <p style="margin: 6px 0; color: #585858;"><strong>Doctor:</strong> ${escapeHtml(doctorLabel)}</p>
         </div>
         <p style="margin: 24px 0 0;">
-          <a href="${url}" style="background: #635BFF; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">View appointment</a>
+          <a href="${url}" style="background: #7747ff; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">View appointment</a>
         </p>
-        <p style="margin: 32px 0 0; font-size: 12px; color: #697386;">SmartChiro · Online booking notification</p>
+        <p style="margin: 32px 0 0; font-size: 12px; color: #7d7d7d;">SmartChiro · Online booking notification</p>
       </div>
     `,
     text: `A patient booked online at ${n.branchName}.\n\nPatient: ${patientLine}\nWhen: ${when} (${n.duration} min)\nTreatment: ${n.treatmentLabel}\nDoctor: ${doctorLabel}\n\nView: ${url}`,

@@ -84,7 +84,7 @@ export function CascadeDeleteDialog({
         onMouseUp={stopAll}
         style={{
           backgroundColor: "#FFFFFF",
-          borderRadius: 8,
+          borderRadius: 20,
           boxShadow: "var(--shadow-card)",
         }}
       >
@@ -98,7 +98,7 @@ export function CascadeDeleteDialog({
           <button
             onClick={onCancel}
             className="flex items-center justify-center transition-colors"
-            style={{ width: 24, height: 24, borderRadius: 4, color: "#7d7d7d" }}
+            style={{ width: 24, height: 24, borderRadius: 10, color: "#7d7d7d" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
             aria-label="Cancel"
@@ -115,7 +115,7 @@ export function CascadeDeleteDialog({
 
         <ul
           className="flex flex-col gap-1 max-h-40 overflow-y-auto rounded px-2 py-1.5"
-          style={{ backgroundColor: "#f8f8f8", border: "1px solid #E3E8EE" }}
+          style={{ backgroundColor: "#f8f8f8", border: "1px solid #e9e9e9" }}
         >
           {dependents.map((d) => (
             <li
@@ -136,7 +136,7 @@ export function CascadeDeleteDialog({
           <button
             onClick={onCancel}
             className="px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
+            style={{ borderRadius: 10, border: "1px solid #e9e9e9", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
           >
@@ -145,7 +145,7 @@ export function CascadeDeleteDialog({
           <button
             onClick={onKeepDependents}
             className="px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ borderRadius: 4, border: "1px solid #e5edf5", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
+            style={{ borderRadius: 10, border: "1px solid #e9e9e9", color: "#0b0b0b", backgroundColor: "#FFFFFF" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f8f8f8"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#FFFFFF"; }}
             title="Dependents stay drawn at their last-known position."
@@ -155,7 +155,7 @@ export function CascadeDeleteDialog({
           <button
             onClick={onDeleteAll}
             className="px-3 py-1.5 text-xs font-medium text-white transition-colors"
-            style={{ borderRadius: 4, backgroundColor: "#DF1B41" }}
+            style={{ borderRadius: 10, backgroundColor: "#DF1B41" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#C8163A"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#DF1B41"; }}
           >

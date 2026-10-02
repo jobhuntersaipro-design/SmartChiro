@@ -70,7 +70,7 @@ function ToolTooltip({
         transform: "translateY(-50%)",
         backgroundColor: "#0b0b0b",
         color: "#FFFFFF",
-        borderRadius: 4,
+        borderRadius: 10,
         fontSize: 12,
         lineHeight: 1.4,
         maxWidth: 220,
@@ -146,7 +146,7 @@ export function AnnotationToolbar({
           <div key={tool.id} className="flex flex-col items-center">
             {prevTool?.separator && (
               <div
-                style={{ width: 24, height: 1, backgroundColor: "#1c2738", margin: "4px 0" }}
+                style={{ width: 24, height: 1, backgroundColor: "#171717", margin: "4px 0" }}
               />
             )}
             <button
@@ -161,13 +161,13 @@ export function AnnotationToolbar({
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 4,
+                borderRadius: 10,
                 backgroundColor: isActive
                   ? "#7747ff"
                   : isHovered
                     ? "rgba(255,255,255,.14)"
                     : "rgba(255,255,255,.06)",
-                color: isActive ? "#FFFFFF" : isHovered ? "#FFFFFF" : "#cdd5e2",
+                color: isActive ? "#FFFFFF" : isHovered ? "#FFFFFF" : "#c4c4c4",
               }}
             >
               {tool.icon}
@@ -186,7 +186,7 @@ export function AnnotationToolbar({
       {onDetectLandmarks && (
         <>
           <div
-            style={{ width: 24, height: 1, backgroundColor: "#1c2738", margin: "8px 0 4px" }}
+            style={{ width: 24, height: 1, backgroundColor: "#171717", margin: "8px 0 4px" }}
           />
           <button
             onClick={onDetectLandmarks}
@@ -201,7 +201,7 @@ export function AnnotationToolbar({
             style={{
               width: 36,
               height: 36,
-              borderRadius: 4,
+              borderRadius: 10,
               backgroundColor: detectingLandmarks
                 ? "rgba(34, 211, 238, 0.18)"
                 : "rgba(255, 255, 255, 0.06)",

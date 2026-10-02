@@ -70,7 +70,7 @@ export function TextInput({ x, y, zoom, onCommit, onCancel }: TextInputProps) {
           padding: 4,
           minWidth: 60,
           minHeight: 24,
-          borderRadius: 2,
+          borderRadius: 4,
           caretColor: "#FFFFFF",
         }}
         rows={1}

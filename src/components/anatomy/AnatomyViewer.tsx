@@ -534,7 +534,7 @@ export default function AnatomyViewer({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full cursor-grab overflow-hidden bg-[radial-gradient(ellipse_at_center,#2a3157_0%,#1A1F36_55%,#10132a_100%)]"
+      className="relative h-full w-full cursor-grab overflow-hidden bg-[radial-gradient(ellipse_at_center,#333333_0%,#1c1c1c_55%,#0f0f0f_100%)]"
     >
       <Canvas
         frameloop="demand"

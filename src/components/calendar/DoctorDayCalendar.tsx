@@ -314,8 +314,8 @@ export function DoctorDayCalendar({
                       height,
                       zIndex: 1,
                       backgroundImage:
-                        "repeating-linear-gradient(45deg, transparent, transparent 8px, #e5edf5 8px, #e5edf5 9px)",
-                      backgroundColor: "#fafbfd",
+                        "repeating-linear-gradient(45deg, transparent, transparent 8px, #e9e9e9 8px, #e9e9e9 9px)",
+                      backgroundColor: "#fcfcfc",
                     }}
                   >
                     <span className="text-[11px] uppercase tracking-wider font-semibold text-fg-muted">
@@ -445,7 +445,7 @@ function AppointmentBlock({
           onSelectEvent();
         }
       }}
-      className="absolute left-1 right-1 rounded-lg pl-0.75 cursor-pointer transition-shadow hover:shadow-md group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand overflow-hidden"
+      className="absolute left-1 right-1 rounded-md pl-0.75 cursor-pointer transition-shadow hover:shadow-md group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand overflow-hidden"
       style={{
         top,
         height,

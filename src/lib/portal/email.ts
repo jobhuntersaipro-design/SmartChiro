@@ -34,11 +34,11 @@ export async function sendPortalCodeEmail(to: string, code: string, clinicName: 
       subject: `${code} is your sign-in code`,
       text: `Your patient portal sign-in code is ${code}.\n\nIt expires in ${minutes} minutes. If you didn't ask for it, you can ignore this email — nobody can sign in without the code.`,
       html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #0A2540;">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #0b0b0b;">
           <p style="margin: 0 0 16px; font-size: 15px;">Your patient portal sign-in code:</p>
           <p style="margin: 0 0 16px; font-size: 32px; font-weight: 600; letter-spacing: 6px; font-family: 'SF Mono', Menlo, Consolas, monospace;">${code}</p>
-          <p style="margin: 0 0 8px; font-size: 14px; color: #425466;">It expires in ${minutes} minutes and works once.</p>
-          <p style="margin: 0; font-size: 13px; color: #697386;">If you didn't ask for it, you can ignore this email — nobody can sign in without the code.</p>
+          <p style="margin: 0 0 8px; font-size: 14px; color: #585858;">It expires in ${minutes} minutes and works once.</p>
+          <p style="margin: 0; font-size: 13px; color: #7d7d7d;">If you didn't ask for it, you can ignore this email — nobody can sign in without the code.</p>
         </div>
       `,
     });

@@ -1699,7 +1699,7 @@ export function AnnotationCanvas({
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Vertical Left Rail Toolbar */}
         <aside
-          style={{ width: 44, backgroundColor: "#0a1220", borderRight: "1px solid #1c2738", flexShrink: 0 }}
+          style={{ width: 44, backgroundColor: "#0f0f0f", borderRight: "1px solid #171717", flexShrink: 0 }}
           className="flex flex-col"
         >
           <AnnotationToolbar
@@ -2015,8 +2015,8 @@ export function AnnotationCanvas({
                         className="relative overflow-hidden"
                         style={{
                           backgroundColor: "#171717",
-                          border: "2px solid #533afd",
-                          borderRadius: 4,
+                          border: "2px solid #7747ff",
+                          borderRadius: 10,
                           cursor: getCursor(),
                           touchAction: "none",
                         }}
@@ -2136,7 +2136,7 @@ export function AnnotationCanvas({
                         )}
                         <div
                           className="absolute bottom-1 left-1"
-                          style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.7)", backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 3, padding: "1px 6px" }}
+                          style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.7)", backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 6, padding: "1px 6px" }}
                         >
                           {slot.title}
                         </div>
@@ -2159,9 +2159,9 @@ export function AnnotationCanvas({
                         style={{
                           backgroundColor: "#171717",
                           border: i === activeSlotIndex
-                            ? "2px dashed #533afd"
+                            ? "2px dashed #7747ff"
                             : "2px dashed rgba(255,255,255,0.18)",
-                          borderRadius: 4,
+                          borderRadius: 10,
                         }}
                         aria-label={`Add X-ray to slot ${i + 1}`}
                       >

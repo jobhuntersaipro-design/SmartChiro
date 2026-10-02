@@ -21,7 +21,7 @@ export function EmptyCanvasHint() {
         transform: "translateX(-50%)",
         backgroundColor: "rgba(6, 27, 49, 0.85)",
         backdropFilter: "blur(8px)",
-        borderRadius: 6,
+        borderRadius: 14,
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
         animation: "emptyHintFadeIn 400ms ease-out",
       }}
