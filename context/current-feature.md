@@ -1,23 +1,21 @@
-# Current Feature: Improvement Plan (UX review + Malaysian competitor gaps)
+# Current Feature: Arc UI Revamp (site-wide)
 
 ## Status
 
-Done — all 8 phases merged to `main` 2026-09-29. Owner to-do list: `context/owner-actions.md`.
+In progress — started 2026-10-02 on `claude/compassionate-cannon-7zxi64`.
 
 ## Spec
 
-`context/features/improvement-plan-spec.md` (master plan; each phase is detailed there before it is built and recorded after)
+`context/features/arc-ui-revamp-spec.md`
 
 ## Goals
 
-1. Trust bugs — done
-2. Front desk role, global branch context, dd/mm dates, table/mobile fixes — done
-3. Treatment plans, packages, recurring bookings — done
-4. Payments, manual invoices, SST, receipts — done
-5. Reports — done
-6. WhatsApp recall + review requests (BM/Chinese templates) — done
-7. Online booking link, then patient portal — done
-8. MyInvois, commissions, T&CM expiry, accounting export — done (MyInvois untested against LHDN: needs credentials)
+1. Foundation — Arc tokens, fonts, shadcn variable mapping
+2. Primitives — restyle `src/components/ui/*`
+3. Token sweep — hardcoded hex/radius/shadow classes → tokens
+4. Shell — sidebar, top bar, mobile drawer, auth pages
+5. Page polish — every dashboard area, booking, portal
+6. Docs — design sections in project-overview, coding-standard, DESIGN.md
 
 ## Notes
 
