@@ -27,13 +27,13 @@ export function TopBar({ onOpenMenu }: { onOpenMenu?: () => void }) {
   }
 
   return (
-    <header className="flex h-13 shrink-0 items-center justify-center gap-2 border-b border-border bg-white px-3 md:px-5">
+    <header className="flex h-13 shrink-0 items-center justify-center gap-2 border-b border-border bg-surface px-3 md:px-5">
       {onOpenMenu && (
         <button
           type="button"
           onClick={onOpenMenu}
           aria-label="Open navigation"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-fg-secondary hover:bg-surface-muted md:hidden"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-fg-secondary hover:bg-surface-hover md:hidden"
         >
           <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
@@ -46,7 +46,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu?: () => void }) {
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Search patients"
           placeholder={placeholder}
-          className="flex h-8 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200"
+          className="flex h-9 w-full rounded-control border border-transparent bg-surface-muted pl-9 pr-3 text-[15px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-3 focus:ring-ring/15 focus:border-brand focus:bg-surface transition-colors duration-150"
         />
       </form>
     </header>

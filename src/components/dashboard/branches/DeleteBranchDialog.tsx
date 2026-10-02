@@ -97,7 +97,7 @@ export function DeleteBranchDialog({
             autoFocus
             disabled={loading}
             aria-invalid={showMismatch}
-            className={`h-9 rounded-md text-[14px] focus:ring-1 transition-all duration-200 ${
+            className={`h-9 rounded-control text-[14px] focus:ring-1 transition-all duration-200 ${
               showMismatch
                 ? "border-danger bg-danger-subtle/30 focus:ring-danger focus:border-danger"
                 : "border-border bg-surface-muted focus:ring-danger focus:border-danger"

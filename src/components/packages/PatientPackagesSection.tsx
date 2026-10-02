@@ -99,7 +99,7 @@ export function PatientPackagesSection({
         {canSell && (
           <Button
             onClick={() => setSellOpen(true)}
-            className="h-8 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
+            className="h-8 gap-1.5 rounded-control bg-primary text-[14px] text-white hover:bg-primary/90"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} /> Sell package
           </Button>
@@ -288,7 +288,7 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-7 gap-1 rounded-md border-border px-2 text-[12px] text-danger"
+            className="h-7 gap-1 rounded-control border-border px-2 text-[12px] text-danger"
           >
             <XCircle className="h-3 w-3" strokeWidth={1.75} /> Cancel package
           </Button>

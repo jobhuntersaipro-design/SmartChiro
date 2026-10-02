@@ -88,13 +88,13 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search patients..."
-            className="w-full h-9 pl-9 pr-3 rounded-md border border-border bg-surface-muted text-[14px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+            className="w-full h-9 pl-9 pr-3 rounded-control border border-border bg-surface-muted text-[14px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 px-3 rounded-md border border-border bg-white text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+          className="h-9 px-3 rounded-control border border-border bg-white text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -182,7 +182,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="h-8 w-8 flex items-center justify-center rounded-md border border-border hover:bg-surface-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-control border border-border hover:bg-surface-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
               </button>
@@ -192,7 +192,7 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="h-8 w-8 flex items-center justify-center rounded-md border border-border hover:bg-surface-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-control border border-border hover:bg-surface-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
               </button>

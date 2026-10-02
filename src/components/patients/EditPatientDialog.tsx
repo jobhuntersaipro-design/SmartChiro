@@ -45,8 +45,8 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-const inputClass = "flex h-8 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
-const selectClass = "flex h-8 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none";
+const inputClass = "flex h-8 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+const selectClass = "flex h-8 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none";
 const textareaClass = "flex w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200 resize-none";
 
 const MALAYSIAN_STATES = [
@@ -158,7 +158,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-patient-title"
-        className="relative z-10 w-full max-w-160 max-h-[90vh] rounded-2xl border border-border bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-160 max-h-[90vh] rounded-surface border border-border bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between p-5 pb-0">
@@ -166,7 +166,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
           <button
             onClick={() => onOpenChange(false)}
             aria-label="Close"
-            className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
+            className="flex items-center justify-center h-7 w-7 rounded-control text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -394,10 +394,10 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
             </div>
 
             <div className="flex justify-end gap-2 pt-5">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-8 px-3 text-[15px] font-medium rounded-md border-border text-foreground hover:bg-surface-muted">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-8 px-3 text-[15px] font-medium rounded-control border-border text-foreground hover:bg-surface-muted">
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting || !!dobError || !!channelError} className="h-8 px-3 text-[15px] font-medium rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+              <Button type="submit" disabled={submitting || !!dobError || !!channelError} className="h-8 px-3 text-[15px] font-medium rounded-control transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
                 Save Changes
               </Button>

@@ -107,7 +107,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       {/* Header card */}
       <div
         className="rounded-panel border border-border bg-white px-6 py-5"
-        style={{ boxShadow: "var(--shadow-lg)" }}
+        style={{ boxShadow: "var(--shadow-card)" }}
       >
         <div className="flex items-start justify-between mb-3">
           <div>
@@ -166,7 +166,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
             <div
               key={s.label}
               className="rounded-panel border border-border bg-white px-4 py-3"
-              style={{ boxShadow: "var(--shadow-lg)" }}
+              style={{ boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center gap-2.5">
                 <s.icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.5} />

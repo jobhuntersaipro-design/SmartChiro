@@ -172,18 +172,18 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-border bg-white transition-all duration-200",
+        "flex h-screen flex-col border-r border-border bg-surface-subtle transition-all duration-200",
         collapsed ? "w-17" : "w-55"
       )}
     >
       {/* Logo */}
       <div className="flex h-13 items-center gap-2.5 px-4 border-b border-border">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-[15px] font-semibold">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-[13px] font-semibold tracking-tight">
           SC
         </div>
         {!collapsed && (
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[15px] font-semibold leading-tight text-foreground">
+            <span className="font-heading text-[15px] font-semibold leading-tight tracking-tight text-foreground">
               SmartChiro
             </span>
             <BranchSwitcher user={user} />
@@ -211,10 +211,10 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
                 title={collapsed ? item.label : undefined}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[15px] transition-all duration-200",
+                  "flex items-center gap-2.5 rounded-control px-3 py-1.75 text-[15px] transition-colors duration-150 ease-standard",
                   isActive
-                    ? "bg-brand-subtle text-brand font-normal"
-                    : "text-foreground hover:bg-surface-muted hover:text-foreground font-normal hover:translate-x-0.5"
+                    ? "bg-surface text-foreground font-medium shadow-(--shadow-resting) ring-1 ring-border"
+                    : "text-fg-secondary hover:bg-surface-hover hover:text-foreground"
                 )}
               >
                 <item.icon
@@ -237,7 +237,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
           title={collapsed ? "New Appointment" : undefined}
           className={cn(
             buttonVariants({ size: collapsed ? "icon" : "default" }),
-            "w-full justify-start gap-2 text-[15px] font-medium rounded-md",
+            "w-full justify-start gap-2 text-[15px] font-medium",
             collapsed && "justify-center px-0"
           )}
         >
@@ -251,7 +251,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-all duration-200 hover:bg-surface-muted outline-none",
+              "flex w-full items-center gap-2.5 rounded-control px-2 py-1.5 transition-colors duration-150 hover:bg-surface-hover outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
               collapsed && "justify-center px-0"
             )}
           >
@@ -282,7 +282,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
           <DropdownMenuContent
             side="top"
             align="start"
-            className="w-50 rounded-panel border border-border shadow-md"
+            className="w-50"
           >
             <div className="px-3 py-2">
               <p className="text-[14px] font-medium text-foreground truncate">
@@ -316,7 +316,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <button
           onClick={onToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex w-full items-center justify-center rounded-md p-1.5 text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 active:scale-95"
+          className="flex w-full items-center justify-center rounded-control p-1.5 text-fg-secondary transition-colors duration-150 hover:bg-surface-hover hover:text-foreground active:scale-95"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />

@@ -42,7 +42,7 @@ export function NationalitySelect({ value, onChange, hint, className, id }: Nati
         <PopoverTrigger
           id={id}
           className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-border bg-surface-muted px-3 text-left text-[15px] text-foreground transition-colors focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand",
+            "flex h-9 w-full items-center justify-between gap-2 rounded-control border border-border bg-surface-muted px-3 text-left text-[15px] text-foreground transition-colors focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand",
             className,
           )}
         >

@@ -181,7 +181,7 @@ export function AppointmentEventPopover({
             variant="outline"
             size="sm"
             onClick={onEdit}
-            className="h-7 rounded-md border-border text-[12px] gap-1"
+            className="h-7 rounded-control border-border text-[12px] gap-1"
           >
             <Pencil className="h-3 w-3" strokeWidth={1.75} /> Edit
           </Button>
@@ -191,7 +191,7 @@ export function AppointmentEventPopover({
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-7 rounded-md border-border text-[12px] text-warning gap-1"
+            className="h-7 rounded-control border-border text-[12px] text-warning gap-1"
           >
             <X className="h-3 w-3" strokeWidth={1.75} /> Cancel
           </Button>
@@ -201,7 +201,7 @@ export function AppointmentEventPopover({
             variant="outline"
             size="sm"
             onClick={onDelete}
-            className="h-7 rounded-md border-border text-[12px] text-danger gap-1"
+            className="h-7 rounded-control border-border text-[12px] text-danger gap-1"
           >
             <Trash2 className="h-3 w-3" strokeWidth={1.75} /> Delete
           </Button>

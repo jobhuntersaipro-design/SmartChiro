@@ -111,10 +111,10 @@ export function CommissionRuleDialog({ open, branchId, rule, staff, onClose, onS
       busy={saving}
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-control text-[14px]">
             Cancel
           </Button>
-          <Button type="submit" form="commission-rule-form" disabled={!valid || saving} className="h-8 gap-1.5 rounded-md text-[14px]">
+          <Button type="submit" form="commission-rule-form" disabled={!valid || saving} className="h-8 gap-1.5 rounded-control text-[14px]">
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {rule ? "Save changes" : "Add rule"}
           </Button>
@@ -182,7 +182,7 @@ export function CommissionRuleDialog({ open, branchId, rule, staff, onClose, onS
               value={form.effectiveFrom}
               onChange={(iso) => set("effectiveFrom", iso)}
               onErrorChange={setDateError}
-              inputClassName="h-9 rounded-md text-[14px]"
+              inputClassName="h-9 rounded-control text-[14px]"
             />
           </div>
         </div>

@@ -150,7 +150,7 @@ export function BranchListView({ userName }: BranchListViewProps) {
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="h-9 px-4 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
+          className="h-9 px-4 bg-primary hover:bg-primary/90 text-white rounded-control text-[14px] font-medium cursor-pointer"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
           Create Branch
@@ -175,7 +175,7 @@ export function BranchListView({ userName }: BranchListViewProps) {
               placeholder="Search branches..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 rounded-md border-border bg-surface-muted text-[14px] placeholder:text-fg-secondary focus:border-brand focus:ring-1 focus:ring-brand"
+              className="pl-9 h-9 rounded-control border-border bg-surface-muted text-[14px] placeholder:text-fg-secondary focus:border-brand focus:ring-1 focus:ring-brand"
             />
           </div>
           <div className="flex rounded-md border border-border overflow-hidden">
@@ -234,7 +234,7 @@ export function BranchListView({ userName }: BranchListViewProps) {
         /* List / Table view */
         <div
           className="rounded-panel border border-border bg-white overflow-hidden"
-          style={{ boxShadow: "var(--shadow-lg)" }}
+          style={{ boxShadow: "var(--shadow-card)" }}
         >
           <table className="w-full">
             <thead>

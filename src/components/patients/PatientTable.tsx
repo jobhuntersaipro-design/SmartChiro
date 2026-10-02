@@ -119,7 +119,7 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
     <div ref={ref} className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-colors"
+        className="flex items-center justify-center h-7 w-7 rounded-control text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-colors"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
       </button>
@@ -199,7 +199,7 @@ export function PatientTable({
     return (
       <div
         className="rounded-panel border border-border bg-white p-12 text-center"
-        style={{ boxShadow: "var(--shadow-lg)" }}
+        style={{ boxShadow: "var(--shadow-card)" }}
       >
         <p className="text-[15px] text-fg-secondary">No patients found</p>
       </div>
@@ -214,7 +214,7 @@ export function PatientTable({
     <div
       // No overflow-hidden: it clipped the row actions menu.
       className="rounded-panel border border-border bg-white transition-all duration-200 hover:border-border-strong"
-      style={{ boxShadow: "var(--shadow-lg)" }}
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
       {/* Header */}
       <div className={`${COL_GRID} px-4 py-2.5 border-b border-border bg-surface-muted rounded-t-panel`}>

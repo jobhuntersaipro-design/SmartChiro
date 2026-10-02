@@ -113,14 +113,14 @@ export function RemoveDoctorDialog({
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-md text-[14px]"
+            className="h-9 rounded-control text-[14px]"
           >
             Cancel
           </Button>
           <Button
             onClick={handleRemove}
             disabled={loading}
-            className="h-9 rounded-md bg-danger hover:bg-danger/90 text-white text-[14px] font-medium px-4"
+            className="h-9 rounded-control bg-danger hover:bg-danger/90 text-white text-[14px] font-medium px-4"
           >
             {loading ? "Removing..." : "Remove Doctor"}
           </Button>

@@ -38,13 +38,13 @@ const DAYS = [
 ] as const;
 
 const inputClass =
-  "h-9 rounded-md border-border bg-surface-muted text-[15px] focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+  "h-9 rounded-control border-border bg-surface-muted text-[15px] focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const inputErrorClass =
-  "h-9 rounded-md border-danger bg-danger-subtle/30 text-[15px] focus:ring-1 focus:ring-danger focus:border-danger focus:bg-white transition-all duration-200";
+  "h-9 rounded-control border-danger bg-danger-subtle/30 text-[15px] focus:ring-1 focus:ring-danger focus:border-danger focus:bg-white transition-all duration-200";
 
 const timeInputClass =
-  "h-8 w-22.5 rounded-md border border-border bg-surface-muted px-2 text-[14px] text-foreground text-center focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+  "h-8 w-22.5 rounded-control border border-border bg-surface-muted px-2 text-[14px] text-foreground text-center focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -301,7 +301,7 @@ export function CreateBranchDialog({
                   value={ownerName ?? ""}
                   readOnly
                   disabled
-                  className="h-9 rounded-md border-border bg-border/50 text-[15px] text-fg-secondary cursor-not-allowed"
+                  className="h-9 rounded-control border-border bg-border/50 text-[15px] text-fg-secondary cursor-not-allowed"
                 />
                 <p className="text-[12px] text-fg-secondary mt-1">Auto-filled from your account</p>
               </div>
@@ -394,7 +394,7 @@ export function CreateBranchDialog({
                         <button
                           type="button"
                           onClick={() => toggleDay(key)}
-                          className={`flex items-center justify-center w-10 h-7 rounded-md text-[13px] font-medium transition-all duration-200 cursor-pointer ${
+                          className={`flex items-center justify-center w-10 h-7 rounded-control text-[13px] font-medium transition-all duration-200 cursor-pointer ${
                             isOpen
                               ? "bg-brand-subtle text-brand"
                               : "bg-surface-muted text-fg-secondary hover:bg-border"
@@ -486,7 +486,7 @@ export function CreateBranchDialog({
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="h-9 px-4 rounded-md border-border text-[14px] text-foreground cursor-pointer transition-all duration-200 hover:translate-x-[-2px]"
+                  className="h-9 px-4 rounded-control border-border text-[14px] text-foreground cursor-pointer transition-all duration-200 hover:translate-x-[-2px]"
                 >
                   <ChevronLeft className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                   Back
@@ -501,7 +501,7 @@ export function CreateBranchDialog({
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="h-9 px-4 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-4 bg-primary hover:bg-primary/90 text-white rounded-control text-[14px] font-medium cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5 ml-1" strokeWidth={1.5} />
@@ -511,7 +511,7 @@ export function CreateBranchDialog({
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="h-9 px-5 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 bg-primary hover:bg-primary/90 text-white rounded-control text-[14px] font-medium cursor-pointer disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? "Creating..." : "Create Clinic"}
                 </Button>

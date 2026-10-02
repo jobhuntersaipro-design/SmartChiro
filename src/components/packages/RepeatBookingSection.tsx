@@ -89,7 +89,7 @@ export function RepeatBookingSection({
                 id="create-appointment-package"
                 value={packageId}
                 onChange={(e) => onPackageChange(e.target.value)}
-                className="h-9 w-full rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-9 w-full rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               >
                 <option value="">Any matching package (automatic)</option>
                 {eligible.map((p) => (

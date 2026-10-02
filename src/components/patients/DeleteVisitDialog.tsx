@@ -81,7 +81,7 @@ export function DeleteVisitDialog({ open, onOpenChange, patientId, visit, onDele
           <button
             onClick={handleClose}
             aria-label="Close"
-            className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary transition-colors hover:bg-surface-muted hover:text-foreground"
+            className="flex items-center justify-center h-7 w-7 rounded-control text-fg-secondary transition-colors hover:bg-surface-muted hover:text-foreground"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>

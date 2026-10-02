@@ -74,7 +74,7 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
   return (
     <div
       className="rounded-panel border border-border bg-white overflow-auto"
-      style={{ boxShadow: "var(--shadow-lg)" }}
+      style={{ boxShadow: "var(--shadow-card)" }}
     >
       <div className="min-w-175">
         {/* Day headers */}

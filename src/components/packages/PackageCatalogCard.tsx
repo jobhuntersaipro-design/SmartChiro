@@ -83,7 +83,7 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
               setEditing(null);
               setDialogOpen(true);
             }}
-            className="h-8 shrink-0 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
+            className="h-8 shrink-0 gap-1.5 rounded-control bg-primary text-[14px] text-white hover:bg-primary/90"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New package
           </Button>
@@ -145,7 +145,7 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
                       setEditing(t);
                       setDialogOpen(true);
                     }}
-                    className="h-7 gap-1 rounded-md border-border px-2 text-[12px]"
+                    className="h-7 gap-1 rounded-control border-border px-2 text-[12px]"
                   >
                     <Pencil className="h-3 w-3" strokeWidth={1.75} /> Edit
                   </Button>
@@ -154,7 +154,7 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
                     size="sm"
                     disabled={busyId === t.id}
                     onClick={() => void setActive(t, !t.isActive)}
-                    className={`h-7 gap-1 rounded-md border-border px-2 text-[12px] ${t.isActive ? "text-warning" : "text-success"}`}
+                    className={`h-7 gap-1 rounded-control border-border px-2 text-[12px] ${t.isActive ? "text-warning" : "text-success"}`}
                   >
                     {busyId === t.id ? (
                       <Loader2 className="h-3 w-3 animate-spin" strokeWidth={1.75} />

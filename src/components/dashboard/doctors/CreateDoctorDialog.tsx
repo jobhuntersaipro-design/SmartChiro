@@ -164,7 +164,7 @@ export function CreateDoctorDialog({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Dr. Sarah Chen"
-                  className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                  className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
 
@@ -178,7 +178,7 @@ export function CreateDoctorDialog({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="sarah@clinic.com"
-                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                    className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div>
@@ -189,7 +189,7 @@ export function CreateDoctorDialog({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+60 12-345 6789"
-                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                    className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
@@ -204,7 +204,7 @@ export function CreateDoctorDialog({
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-9 rounded-md border-border bg-white text-[14px] pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="h-9 rounded-control border-border bg-white text-[14px] pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                     <button
                       type="button"
@@ -233,7 +233,7 @@ export function CreateDoctorDialog({
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-9 rounded-md border-border bg-white text-[14px] pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="h-9 rounded-control border-border bg-white text-[14px] pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                     <button
                       type="button"
@@ -263,7 +263,7 @@ export function CreateDoctorDialog({
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-border bg-white px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                    className="flex h-9 w-full rounded-control border border-border bg-white px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -281,7 +281,7 @@ export function CreateDoctorDialog({
                     onChange={(e) =>
                       setRole(e.target.value as StaffRole)
                     }
-                    className="flex h-9 w-full rounded-md border border-border bg-white px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+                    className="flex h-9 w-full rounded-control border border-border bg-white px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
                   >
                     {ASSIGNABLE_STAFF_ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -311,7 +311,7 @@ export function CreateDoctorDialog({
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
                     placeholder="DC-12345"
-                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                    className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div>
@@ -325,7 +325,7 @@ export function CreateDoctorDialog({
                     value={yearsExperience}
                     onChange={(e) => setYearsExperience(e.target.value)}
                     placeholder="8"
-                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                    className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
@@ -338,7 +338,7 @@ export function CreateDoctorDialog({
                   value={specialties}
                   onChange={(e) => setSpecialties(e.target.value)}
                   placeholder="Sports Chiro, Pediatric"
-                  className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                  className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
 
@@ -350,7 +350,7 @@ export function CreateDoctorDialog({
                   value={education}
                   onChange={(e) => setEducation(e.target.value)}
                   placeholder="Doctor of Chiropractic, Palmer College"
-                  className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+                  className="h-9 rounded-control border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -369,14 +369,14 @@ export function CreateDoctorDialog({
                   reset();
                   onOpenChange(false);
                 }}
-                className="h-9 rounded-md text-[14px]"
+                className="h-9 rounded-control text-[14px]"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={!isValid || loading}
-                className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
+                className="h-9 rounded-control bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
               >
                 {loading ? "Creating..." : "Create Doctor"}
               </Button>

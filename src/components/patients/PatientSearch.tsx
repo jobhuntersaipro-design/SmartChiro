@@ -16,7 +16,7 @@ export function PatientSearch({ value, onChange }: PatientSearchProps) {
         placeholder="Search patients by name, email, or phone..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex h-8 w-full rounded-md border border-border bg-surface-muted pl-8 pr-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors"
+        className="flex h-8 w-full rounded-control border border-border bg-surface-muted pl-8 pr-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors"
       />
     </div>
   );

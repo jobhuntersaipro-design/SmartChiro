@@ -65,13 +65,13 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
             placeholder="Search patients..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-9 h-9 rounded-md border-border bg-surface-muted text-[14px] placeholder:text-fg-secondary focus:border-brand focus:ring-1 focus:ring-brand"
+            className="pl-9 h-9 rounded-control border-border bg-surface-muted text-[14px] placeholder:text-fg-secondary focus:border-brand focus:ring-1 focus:ring-brand"
           />
         </div>
         <select
           value={doctorFilter}
           onChange={(e) => { setDoctorFilter(e.target.value); setPage(1); }}
-          className="h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand cursor-pointer"
+          className="h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand cursor-pointer"
         >
           <option value="">All Doctors</option>
           {members.map((m) => (
@@ -88,7 +88,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
       {/* Table */}
       <div
         className="rounded-panel border border-border bg-white overflow-x-auto"
-        style={{ boxShadow: "var(--shadow-lg)" }}
+        style={{ boxShadow: "var(--shadow-card)" }}
       >
         {loading ? (
           <div className="p-5 space-y-3">
@@ -154,7 +154,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
               size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="h-8 w-8 p-0 rounded-md border-border cursor-pointer"
+              className="h-8 w-8 p-0 rounded-control border-border cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
             </Button>
@@ -166,7 +166,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPage(pageNum)}
-                  className={`h-8 w-8 p-0 rounded-md text-[13px] cursor-pointer ${
+                  className={`h-8 w-8 p-0 rounded-control text-[13px] cursor-pointer ${
                     page === pageNum
                       ? "bg-primary hover:bg-primary/90 text-white"
                       : "border-border text-foreground"
@@ -181,7 +181,7 @@ export function BranchPatientsTab({ branchId, members }: BranchPatientsTabProps)
               size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="h-8 w-8 p-0 rounded-md border-border cursor-pointer"
+              className="h-8 w-8 p-0 rounded-control border-border cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
             </Button>

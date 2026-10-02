@@ -90,7 +90,7 @@ export function DoctorCard({
         {isAdmin && (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-surface-muted transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-control hover:bg-surface-muted transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4 text-fg-secondary" />

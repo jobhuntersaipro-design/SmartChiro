@@ -539,7 +539,7 @@ export function AppointmentsCalendarView({
               setCreatePrefill(null);
               setCreateOpen(true);
             }}
-            className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] gap-1.5"
+            className="h-9 rounded-control bg-primary hover:bg-primary/90 text-white text-[14px] gap-1.5"
           >
             New Appointment
           </Button>

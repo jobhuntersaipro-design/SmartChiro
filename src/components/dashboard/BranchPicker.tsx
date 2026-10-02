@@ -36,7 +36,7 @@ export function BranchPicker({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         title={label}
-        className="flex max-w-full items-center gap-2 h-9 px-3 rounded-md border border-border bg-white text-[15px] font-medium text-foreground whitespace-nowrap hover:bg-surface-muted transition-all duration-200 cursor-pointer hover:border-border-strong active:scale-[0.98]"
+        className="flex max-w-full items-center gap-2 h-9 px-3 rounded-control border border-border bg-white text-[15px] font-medium text-foreground whitespace-nowrap hover:bg-surface-muted transition-all duration-200 cursor-pointer hover:border-border-strong active:scale-[0.98]"
       >
         <Building2 className="h-4 w-4 shrink-0 text-fg-secondary" strokeWidth={1.5} />
         <span className="truncate">{label}</span>

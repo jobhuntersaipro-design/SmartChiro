@@ -58,7 +58,7 @@ export function DeletePatientDialog({ patient, open, onOpenChange, onDelete }: D
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-patient-title"
-        className="relative z-10 w-full max-w-110 rounded-2xl border border-border bg-white p-6 animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-110 rounded-surface border border-border bg-white p-6 animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -66,7 +66,7 @@ export function DeletePatientDialog({ patient, open, onOpenChange, onDelete }: D
           <button
             onClick={() => onOpenChange(false)}
             aria-label="Close"
-            className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
+            className="flex items-center justify-center h-7 w-7 rounded-control text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -117,14 +117,14 @@ export function DeletePatientDialog({ patient, open, onOpenChange, onDelete }: D
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="h-8 px-3 text-[15px] font-medium rounded-md border-border text-foreground hover:bg-surface-muted"
+            className="h-8 px-3 text-[15px] font-medium rounded-control border-border text-foreground hover:bg-surface-muted"
           >
             Cancel
           </Button>
           <Button
             onClick={handleDelete}
             disabled={deleting || !confirmed}
-            className="h-8 px-3 text-[15px] font-medium rounded-md bg-danger hover:bg-danger/90 text-white transition-all duration-200"
+            className="h-8 px-3 text-[15px] font-medium rounded-control bg-danger hover:bg-danger/90 text-white transition-all duration-200"
           >
             {deleting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
             Delete Patient

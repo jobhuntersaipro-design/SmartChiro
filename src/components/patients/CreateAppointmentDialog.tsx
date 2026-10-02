@@ -77,7 +77,7 @@ function pickBranch(list: BranchOption[], preferred: (string | null | undefined)
 }
 
 const FIELD_CLASS =
-  "w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand";
+  "w-full h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand";
 
 /** Confirmation gates the user has accepted — sent as bypass flags on retry. */
 interface SubmitOpts {
@@ -334,7 +334,7 @@ export function CreateAppointmentDialog({
         aria-modal="true"
         aria-labelledby="create-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6"
+        className="w-120 max-h-[90vh] overflow-y-auto rounded-surface border border-border bg-white p-6"
         style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <h2 id="create-appointment-title" className="text-[18px] font-medium text-foreground mb-4">Schedule appointment</h2>
@@ -527,10 +527,10 @@ export function CreateAppointmentDialog({
         <p className="text-[11px] text-fg-muted mb-3">Clinic time (GMT{clinicUtcOffsetLabel()})</p>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">
+          <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-control text-[14px]">
             Cancel
           </Button>
-          <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
+          <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-control text-[14px] gap-1.5">
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {submitting
               ? "Scheduling…"
@@ -549,7 +549,7 @@ export function CreateAppointmentDialog({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-105 rounded-2xl border border-border bg-white p-6"
+            className="w-105 rounded-surface border border-border bg-white p-6"
             style={{ boxShadow: "var(--shadow-lg)" }}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -568,7 +568,7 @@ export function CreateAppointmentDialog({
                 variant="outline"
                 onClick={() => setBreakConfirm(null)}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px]"
+                className="h-8 rounded-control text-[13px]"
               >
                 Pick another time
               </Button>
@@ -579,7 +579,7 @@ export function CreateAppointmentDialog({
                   submit({ ...confirmed, forceBookOnBreak: true });
                 }}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px] bg-warning hover:bg-warning text-white gap-1.5"
+                className="h-8 rounded-control text-[13px] bg-warning hover:bg-warning text-white gap-1.5"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 Book on break
@@ -600,7 +600,7 @@ export function CreateAppointmentDialog({
             aria-modal="true"
             aria-labelledby="outside-hours-title"
             onClick={(e) => e.stopPropagation()}
-            className="w-105 rounded-2xl border border-border bg-white p-6"
+            className="w-105 rounded-surface border border-border bg-white p-6"
             style={{ boxShadow: "var(--shadow-lg)" }}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -623,7 +623,7 @@ export function CreateAppointmentDialog({
                 variant="outline"
                 onClick={() => setHoursConfirm(null)}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px]"
+                className="h-8 rounded-control text-[13px]"
               >
                 Pick another time
               </Button>
@@ -634,7 +634,7 @@ export function CreateAppointmentDialog({
                   submit({ ...confirmed, forceOutsideHours: true });
                 }}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px] bg-warning hover:bg-warning text-white gap-1.5"
+                className="h-8 rounded-control text-[13px] bg-warning hover:bg-warning text-white gap-1.5"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 Book anyway

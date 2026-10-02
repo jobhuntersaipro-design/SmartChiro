@@ -65,7 +65,7 @@ export function CarePlanSection({ patientId, patientName, branchId, defaultDocto
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="h-8 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
+          className="h-8 gap-1.5 rounded-control bg-primary text-[14px] text-white hover:bg-primary/90"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New care plan
         </Button>
@@ -145,7 +145,7 @@ function CarePlanCard({ plan, onCancel }: { plan: CarePlanJson; onCancel: () => 
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-7 gap-1 rounded-md border-border px-2 text-[12px] text-warning"
+            className="h-7 gap-1 rounded-control border-border px-2 text-[12px] text-warning"
           >
             <XCircle className="h-3 w-3" strokeWidth={1.75} /> Cancel plan
           </Button>
@@ -245,14 +245,14 @@ function CancelCarePlanDialog({
       widthClass="max-w-md"
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-control text-[14px]">
             Keep plan
           </Button>
           <Button
             type="button"
             onClick={() => void submit()}
             disabled={saving}
-            className="h-8 gap-1.5 rounded-md bg-danger text-[14px] hover:bg-danger/90"
+            className="h-8 gap-1.5 rounded-control bg-danger text-[14px] hover:bg-danger/90"
           >
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             Cancel plan

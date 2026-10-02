@@ -131,7 +131,7 @@ export function BranchActivityLog({ branchId }: BranchActivityLogProps) {
             variant="outline"
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="h-8 px-4 rounded-md border-border text-[13px] text-foreground cursor-pointer hover:bg-surface-muted transition-colors duration-200"
+            className="h-8 px-4 rounded-control border-border text-[13px] text-foreground cursor-pointer hover:bg-surface-muted transition-colors duration-200"
           >
             {loadingMore ? (
               <>

@@ -98,7 +98,7 @@ export function AppointmentSidebarFilters({
             items={branches.map((b) => ({ value: b.id, label: b.name }))}
             onValueChange={(v) => v && onBranchChange(v)}
           >
-            <SelectTrigger className="h-9 w-full rounded-md text-[13px]">
+            <SelectTrigger className="h-9 w-full rounded-control text-[13px]">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>
             <SelectContent>
@@ -118,7 +118,7 @@ export function AppointmentSidebarFilters({
           Doctor
         </label>
         <Popover>
-          <PopoverTrigger className="inline-flex items-center w-full h-9 px-3 rounded-md border border-border bg-white text-[13px] text-foreground hover:bg-surface-subtle transition-colors">
+          <PopoverTrigger className="inline-flex items-center w-full h-9 px-3 rounded-control border border-border bg-white text-[13px] text-foreground hover:bg-surface-subtle transition-colors">
             <span className="truncate">
               {doctorIds.length === 0
                 ? "All doctors"

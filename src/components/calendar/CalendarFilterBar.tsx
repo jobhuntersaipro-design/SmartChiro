@@ -101,7 +101,7 @@ export function CalendarFilterBar({
           variant="outline"
           size="sm"
           onClick={onToday}
-          className="h-8 rounded-md border-border text-[13px]"
+          className="h-8 rounded-control border-border text-[13px]"
         >
           Today
         </Button>
@@ -110,7 +110,7 @@ export function CalendarFilterBar({
           size="icon"
           onClick={onPrev}
           aria-label="Previous"
-          className="h-8 w-8 rounded-md border-border"
+          className="h-8 w-8 rounded-control border-border"
         >
           <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
         </Button>
@@ -119,13 +119,13 @@ export function CalendarFilterBar({
           size="icon"
           onClick={onNext}
           aria-label="Next"
-          className="h-8 w-8 rounded-md border-border"
+          className="h-8 w-8 rounded-control border-border"
         >
           <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
         </Button>
         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
           <PopoverTrigger
-            className="inline-flex items-center h-8 px-3 rounded-md border border-border bg-white text-[13px] font-medium text-foreground gap-1.5 min-w-42.5 hover:bg-surface-subtle transition-colors"
+            className="inline-flex items-center h-8 px-3 rounded-control border border-border bg-white text-[13px] font-medium text-foreground gap-1.5 min-w-42.5 hover:bg-surface-subtle transition-colors"
           >
             {dateLabel}
             <ChevronDown className="h-3.5 w-3.5 ml-auto opacity-50" strokeWidth={2} />
@@ -173,7 +173,7 @@ export function CalendarFilterBar({
             items={branches.map((b) => ({ value: b.id, label: b.name }))}
             onValueChange={(v) => v && onBranchChange(v)}
           >
-            <SelectTrigger className="h-8 w-50 rounded-md text-[13px]">
+            <SelectTrigger className="h-8 w-50 rounded-control text-[13px]">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>
             <SelectContent>
@@ -189,7 +189,7 @@ export function CalendarFilterBar({
         {/* Doctor multi-select */}
         <Popover open={doctorPickerOpen} onOpenChange={setDoctorPickerOpen}>
           <PopoverTrigger
-            className="inline-flex items-center h-8 px-3 rounded-md border border-border bg-white text-[13px] gap-1.5 min-w-40 hover:bg-surface-subtle transition-colors"
+            className="inline-flex items-center h-8 px-3 rounded-control border border-border bg-white text-[13px] gap-1.5 min-w-40 hover:bg-surface-subtle transition-colors"
           >
             {doctorIds.length === 0
               ? "All doctors"

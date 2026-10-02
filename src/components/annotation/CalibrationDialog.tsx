@@ -72,7 +72,7 @@ export function CalibrationDialog({ pixelLength, defaultMm, onConfirm, onCancel 
         style={{
           backgroundColor: "#FFFFFF",
           borderRadius: 8,
-          boxShadow: "var(--shadow-lg)",
+          boxShadow: "var(--shadow-card)",
         }}
       >
         <div className="flex items-start justify-between">

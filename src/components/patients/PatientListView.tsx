@@ -65,12 +65,12 @@ function EmptyPatientState({
           : "Add your first patient to start tracking visits, X-rays, and appointments."}
       </p>
       {hasFilters ? (
-        <Button variant="outline" onClick={onClearFilters} className="h-8 px-3 text-[13px] rounded-md gap-1.5">
+        <Button variant="outline" onClick={onClearFilters} className="h-8 px-3 text-[13px] rounded-control gap-1.5">
           <X className="h-3.5 w-3.5" strokeWidth={2} />
           Clear filters
         </Button>
       ) : (
-        <Button onClick={onAddPatient} className="h-8 px-3 text-[13px] rounded-md gap-1.5">
+        <Button onClick={onAddPatient} className="h-8 px-3 text-[13px] rounded-control gap-1.5">
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Add Patient
         </Button>
@@ -262,7 +262,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
     setToast("Patient deleted");
   }
 
-  const selectClass = "h-8 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand appearance-none";
+  const selectClass = "h-8 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand appearance-none";
 
   return (
     <div>
@@ -274,7 +274,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="gap-1.5 h-8 px-3 text-[15px] font-medium rounded-md"
+          className="gap-1.5 h-8 px-3 text-[15px] font-medium rounded-control"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
           Add Patient
@@ -295,7 +295,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search patients by name, IC, phone, email…"
-              className="w-full h-8 rounded-md border border-border bg-white pl-8 pr-12 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
+              className="w-full h-8 rounded-control border border-border bg-white pl-8 pr-12 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
             <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-4.5 px-1 rounded border border-border bg-surface-muted text-[10px] font-medium text-fg-muted pointer-events-none">/</kbd>
           </div>
@@ -319,7 +319,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[13px] text-fg-secondary hover:text-foreground hover:bg-white transition-colors"
+              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-control text-[13px] text-fg-secondary hover:text-foreground hover:bg-white transition-colors"
               title="Clear all filters"
             >
               <X className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -365,7 +365,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
           style={{ boxShadow: "var(--shadow-card)" }}
         >
           <p className="text-[15px] text-danger mb-2">{error}</p>
-          <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-md">
+          <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-control">
             Retry
           </Button>
         </div>

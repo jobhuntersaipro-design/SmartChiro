@@ -31,7 +31,7 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
         aria-modal="true"
         aria-labelledby="conflict-override-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-120 rounded-2xl border border-border bg-white p-6"
+        className="w-120 rounded-surface border border-border bg-white p-6"
         style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <div className="flex items-start gap-3 mb-3">
@@ -67,13 +67,13 @@ export function ConflictOverrideDialog({ conflicts, onOverride, onCancel }: Prop
           <Button
             variant="outline"
             onClick={onCancel}
-            className="h-8 rounded-md border-border text-[14px]"
+            className="h-8 rounded-control border-border text-[14px]"
           >
             Cancel
           </Button>
           <Button
             onClick={onOverride}
-            className="h-8 rounded-md bg-warning hover:bg-warning text-white text-[14px]"
+            className="h-8 rounded-control bg-warning hover:bg-warning text-white text-[14px]"
           >
             Override and double-book
           </Button>

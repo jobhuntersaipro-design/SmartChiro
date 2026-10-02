@@ -69,14 +69,14 @@ export function CancelPackageDialog({ pkg, onClose, onCancelled }: Props) {
       busy={saving}
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-control text-[14px]">
             Keep package
           </Button>
           <Button
             type="submit"
             form="cancel-package-form"
             disabled={!reason.trim() || saving}
-            className="h-8 gap-1.5 rounded-md bg-danger text-[14px] hover:bg-danger/90"
+            className="h-8 gap-1.5 rounded-control bg-danger text-[14px] hover:bg-danger/90"
           >
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             Cancel package

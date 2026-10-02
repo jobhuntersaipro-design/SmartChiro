@@ -21,10 +21,10 @@ interface CreateVisitDialogProps {
 // ─── Shared Styles ───
 
 const inputClass =
-  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const textareaClass =
   "flex w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200 resize-none";
@@ -117,7 +117,7 @@ function SliderField({
               key={n}
               type="button"
               onClick={() => onChange(n)}
-              className={`h-9 rounded-md border text-[13px] font-medium transition-all duration-150 ${
+              className={`h-9 rounded-control border text-[13px] font-medium transition-all duration-150 ${
                 selected
                   ? `${colorFor(n)} scale-105 shadow-sm`
                   : "bg-white text-foreground border-border hover:border-border-strong hover:bg-surface-muted"
@@ -286,7 +286,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           <button
             onClick={handleClose}
             aria-label="Close"
-            className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
+            className="flex items-center justify-center h-7 w-7 rounded-control text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>

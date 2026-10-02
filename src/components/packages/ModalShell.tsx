@@ -73,7 +73,7 @@ export function ModalShell({
         role={role}
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`flex max-h-[90vh] w-full ${widthClass} flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-(--shadow-lg)`}
+        className={`flex max-h-[90vh] w-full ${widthClass} flex-col overflow-hidden rounded-surface border border-border bg-white shadow-(--shadow-lg)`}
       >
         <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
@@ -103,7 +103,7 @@ export function ModalShell({
 }
 
 export const FIELD_CLASS =
-  "w-full h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white disabled:opacity-60";
+  "w-full h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white disabled:opacity-60";
 
 export const LABEL_CLASS = "mb-1 block text-[13px] font-medium text-foreground";
 

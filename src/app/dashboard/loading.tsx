@@ -6,7 +6,7 @@ import { SkeletonTable } from "@/components/dashboard/shared/SkeletonTable";
 export default function DashboardLoading() {
   return (
     <div className="space-y-6" aria-busy="true" aria-label="Loading">
-      <div className="h-7 w-48 animate-pulse rounded-md bg-surface-hover" />
+      <div className="h-7 w-48 animate-pulse rounded-control bg-surface-hover" />
       <SkeletonStatCards />
       <div className="rounded-panel border border-border bg-white">
         <SkeletonTable rows={6} />

@@ -86,7 +86,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           </p>
         </div>
 
-        <div className="rounded-panel border border-border bg-white p-6" style={{ boxShadow: "var(--shadow-lg)" }}>
+        <div className="rounded-panel border border-border bg-white p-6" style={{ boxShadow: "var(--shadow-card)" }}>
           <p className="text-[14px] text-foreground leading-relaxed text-center">
             Click the link in your email to verify your account. If you don&apos;t see it, check your spam folder.
           </p>
@@ -95,7 +95,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             <button
               onClick={handleResend}
               disabled={resending}
-              className="flex h-10 w-full items-center justify-center rounded-md border border-border bg-white text-[15px] font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
+              className="flex h-10 w-full items-center justify-center rounded-control border border-border bg-white text-[15px] font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
             >
               {resending ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -132,7 +132,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
       </div>
 
       {/* Auth Card */}
-      <div className="rounded-panel border border-border bg-white p-6" style={{ boxShadow: "var(--shadow-lg)" }}>
+      <div className="rounded-panel border border-border bg-white p-6" style={{ boxShadow: "var(--shadow-card)" }}>
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -149,7 +149,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Dr. Jane Smith"
-              className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="h-10 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="h-10 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -186,7 +186,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-10 w-full rounded-control border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <button
                 type="button"
@@ -219,7 +219,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-10 w-full rounded-control border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <button
                 type="button"
@@ -244,7 +244,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-control bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />

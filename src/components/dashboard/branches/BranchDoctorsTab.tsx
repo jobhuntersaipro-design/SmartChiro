@@ -76,7 +76,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
           <Button
             onClick={() => setSheetOpen(true)}
             size="sm"
-            className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
+            className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-control text-[14px] font-medium cursor-pointer"
           >
             <UserPlus className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
             Add Doctor
@@ -100,7 +100,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
               <div
                 key={member.id}
                 className="rounded-panel border border-border bg-white px-5 py-4 transition-all duration-200 hover:border-border-strong"
-                style={{ boxShadow: "var(--shadow-lg)" }}
+                style={{ boxShadow: "var(--shadow-card)" }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -160,7 +160,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                           onClick={async () => {
                             await handleRemoveDoctor(branchId, member.id);
                           }}
-                          className="flex h-7 w-7 items-center justify-center rounded-md text-fg-secondary hover:bg-danger-subtle hover:text-danger transition-colors cursor-pointer"
+                          className="flex h-7 w-7 items-center justify-center rounded-control text-fg-secondary hover:bg-danger-subtle hover:text-danger transition-colors cursor-pointer"
                           title="Remove doctor"
                         >
                           <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />

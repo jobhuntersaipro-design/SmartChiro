@@ -22,7 +22,7 @@ export function QuickActionsPanel({
       className="rounded-panel border border-border bg-white p-4 transition-all duration-200 ease-out hover:border-border-strong"
       style={{
         boxShadow:
-          "var(--shadow-lg)",
+          "var(--shadow-card)",
       }}
     >
       <h3 className="text-[14px] font-normal text-foreground mb-3 px-1">Quick Actions</h3>

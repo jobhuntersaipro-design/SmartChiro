@@ -79,7 +79,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
         <Link
           href="/forgot-password"
-          className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90"
+          className="flex h-10 w-full items-center justify-center rounded-control bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90"
         >
           Request a new reset link
         </Link>
@@ -121,7 +121,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-10 w-full rounded-control border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <button
                 type="button"
@@ -155,7 +155,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-10 w-full rounded-control border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <button
                 type="button"
@@ -178,7 +178,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-control bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : 'Update password'}
           </button>

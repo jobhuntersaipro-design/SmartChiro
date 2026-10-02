@@ -116,7 +116,7 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
         <XrayFilterBar state={filters} onChange={handleFiltersChange} count={filtered.length} />
         <Button
           onClick={() => setShowUpload((v) => !v)}
-          className="ml-3 h-8 rounded-md bg-primary text-white text-[13px] font-medium hover:bg-primary/90 px-3"
+          className="ml-3 h-8 rounded-control bg-primary text-white text-[13px] font-medium hover:bg-primary/90 px-3"
         >
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload X-Ray
         </Button>

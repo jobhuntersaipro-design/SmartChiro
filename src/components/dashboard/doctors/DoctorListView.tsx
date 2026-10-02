@@ -213,7 +213,7 @@ export function DoctorListView({
         {isAdmin && (
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
+            className="h-9 rounded-control bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
           >
             <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
             Add staff
@@ -232,14 +232,14 @@ export function DoctorListView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search doctors..."
-            className="h-9 rounded-md border-border bg-surface-muted pl-9 text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
+            className="h-9 rounded-control border-border bg-surface-muted pl-9 text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
           />
         </div>
 
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          className="h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+          className="h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
         >
           <option value="all">All Branches</option>
           {branchOptions.map((b) => (
@@ -252,7 +252,7 @@ export function DoctorListView({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+          className="h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -262,7 +262,7 @@ export function DoctorListView({
         <div className="flex gap-1">
           <button
             onClick={() => setViewMode("grid")}
-            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
+            className={`h-9 w-9 flex items-center justify-center rounded-control transition-colors ${
               viewMode === "grid"
                 ? "bg-brand-subtle text-brand"
                 : "text-fg-secondary hover:bg-surface-muted"
@@ -272,7 +272,7 @@ export function DoctorListView({
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
+            className={`h-9 w-9 flex items-center justify-center rounded-control transition-colors ${
               viewMode === "list"
                 ? "bg-brand-subtle text-brand"
                 : "text-fg-secondary hover:bg-surface-muted"
@@ -369,7 +369,7 @@ function EmptyState({
       {!hasSearch && isAdmin && (
         <Button
           onClick={onAdd}
-          className="mt-4 h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
+          className="mt-4 h-9 rounded-control bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
           Add staff

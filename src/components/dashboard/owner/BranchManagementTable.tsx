@@ -27,7 +27,7 @@ export function BranchManagementTable({
       className="rounded-panel border border-border bg-white transition-all duration-200 ease-out hover:border-border-strong"
       style={{
         boxShadow:
-          "var(--shadow-lg)",
+          "var(--shadow-card)",
       }}
     >
       {/* Header */}
@@ -36,7 +36,7 @@ export function BranchManagementTable({
         <Button
           onClick={onCreateBranch}
           size="sm"
-          className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
+          className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-control text-[14px] font-medium cursor-pointer"
         >
           <Building2 className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
           Create Branch
@@ -175,7 +175,7 @@ function BranchRow({
               e.stopPropagation();
               setMenuOpen(!menuOpen);
             }}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-control text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
           </button>

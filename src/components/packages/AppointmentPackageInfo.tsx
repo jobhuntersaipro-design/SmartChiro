@@ -112,7 +112,7 @@ export function AppointmentPackageInfo({
   }
 
   const text = compact ? "text-[12px]" : "text-[13px]";
-  const button = `inline-flex items-center gap-1 rounded-md border border-border bg-white px-2 font-medium transition-colors hover:bg-surface-muted disabled:opacity-60 ${compact ? "h-6 text-[11px]" : "h-7 text-[12px]"}`;
+  const button = `inline-flex items-center gap-1 rounded-control border border-border bg-white px-2 font-medium transition-colors hover:bg-surface-muted disabled:opacity-60 ${compact ? "h-6 text-[11px]" : "h-7 text-[12px]"}`;
 
   if (redemption) {
     return (
@@ -143,7 +143,7 @@ export function AppointmentPackageInfo({
           aria-label="Package to use"
           value={choice}
           onChange={(e) => setChoice(e.target.value)}
-          className="h-7 min-w-0 flex-1 rounded-md border border-border bg-white px-1.5 text-[12px] text-foreground"
+          className="h-7 min-w-0 flex-1 rounded-control border border-border bg-white px-1.5 text-[12px] text-foreground"
         >
           <option value="">Best match (automatic)</option>
           {eligible.map((p) => (

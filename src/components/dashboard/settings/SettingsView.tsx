@@ -278,7 +278,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name"
                   maxLength={100}
-                  className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
+                  className="h-9 rounded-control border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div>
@@ -290,7 +290,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +60 12 345 6789"
                   maxLength={20}
-                  className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
+                  className="h-9 rounded-control border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -301,7 +301,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               <Input
                 value={user.email}
                 disabled
-                className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-fg-secondary"
+                className="h-9 rounded-control border-border bg-surface-muted text-[14px] text-fg-secondary"
               />
               <p className="text-[12px] text-fg-disabled mt-1">
                 Email cannot be changed.
@@ -398,7 +398,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
+                      className="h-9 rounded-control border-border bg-surface-muted text-[14px] text-foreground pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                     <button
                       type="button"
@@ -427,7 +427,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
+                    className="h-9 rounded-control border-border bg-surface-muted text-[14px] text-foreground pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                   <button
                     type="button"
@@ -452,7 +452,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password"
-                  className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
+                  className="h-9 rounded-control border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -508,7 +508,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             {/* Google */}
             <div className="flex items-center justify-between p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-muted">
+                <div className="flex h-9 w-9 items-center justify-center rounded-control bg-surface-muted">
                   <svg
                     className="h-5 w-5"
                     viewBox="0 0 24 24"
@@ -560,7 +560,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             {/* Email/Password */}
             <div className="flex items-center justify-between p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-muted">
+                <div className="flex h-9 w-9 items-center justify-center rounded-control bg-surface-muted">
                   <Lock
                     className="h-5 w-5 text-fg-secondary"
                     strokeWidth={1.5}

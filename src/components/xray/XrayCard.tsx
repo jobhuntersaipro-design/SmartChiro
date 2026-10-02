@@ -167,7 +167,7 @@ export function XrayCard({
 
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="absolute top-2 right-2 z-10 hidden group-hover:flex h-7 w-7 items-center justify-center rounded-md bg-white/90 hover:bg-white text-fg-secondary"
+          className="absolute top-2 right-2 z-10 hidden group-hover:flex h-7 w-7 items-center justify-center rounded-control bg-white/90 hover:bg-white text-fg-secondary"
           aria-label="More actions"
         >
           <MoreVertical className="w-4 h-4" />

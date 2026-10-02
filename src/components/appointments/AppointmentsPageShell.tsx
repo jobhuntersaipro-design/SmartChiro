@@ -189,7 +189,7 @@ export function AppointmentsPageShell({
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] gap-1.5"
+            className="h-9 rounded-control bg-primary hover:bg-primary/90 text-white text-[14px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             New Appointment

@@ -34,7 +34,7 @@ export function DoctorSummaryStats({ doctors }: DoctorSummaryStatsProps) {
           className="rounded-panel border border-border bg-white px-5 py-4"
           style={{
             boxShadow:
-              "var(--shadow-lg)",
+              "var(--shadow-card)",
           }}
         >
           <div

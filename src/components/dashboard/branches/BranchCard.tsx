@@ -39,7 +39,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
     <div
       className="rounded-panel border border-border bg-white transition-all duration-200 hover:border-border-strong cursor-pointer group"
       style={{
-        boxShadow: "var(--shadow-lg)",
+        boxShadow: "var(--shadow-card)",
       }}
       onClick={() => router.push(`/dashboard/branches/${branch.id}`)}
     >
@@ -47,7 +47,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
       <div className="px-5 pt-5 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-subtle">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-subtle">
               <Building2 className="h-4.5 w-4.5 text-brand" strokeWidth={1.5} />
             </div>
             <div className="min-w-0">
@@ -64,7 +64,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-control text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
               >
                 <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
               </button>

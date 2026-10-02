@@ -316,7 +316,7 @@ export function AppointmentsListView({
                 <Button
                   size="sm"
                   onClick={onOpenCreate}
-                  className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
+                  className="h-8 rounded-control bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" strokeWidth={2} />
                   New appointment

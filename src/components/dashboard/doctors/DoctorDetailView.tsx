@@ -127,7 +127,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
       {/* Header card */}
       <div
         className="rounded-panel border border-border bg-white px-6 py-5"
-        style={{ boxShadow: "var(--shadow-lg)" }}
+        style={{ boxShadow: "var(--shadow-card)" }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
@@ -186,7 +186,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
               <Link href={`/dashboard/settings/${doctorId}`}>
                 <Button
                   variant="outline"
-                  className="h-9 rounded-md text-[14px] border-border gap-1.5"
+                  className="h-9 rounded-control text-[14px] border-border gap-1.5"
                 >
                   <Settings className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Settings

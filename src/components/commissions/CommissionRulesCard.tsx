@@ -75,7 +75,7 @@ export function CommissionRulesCard({ branchId }: Props) {
             setEditing(null);
             setDialogOpen(true);
           }}
-          className="h-8 shrink-0 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
+          className="h-8 shrink-0 gap-1.5 rounded-control bg-primary text-[14px] text-white hover:bg-primary/90"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New rule
         </Button>
@@ -131,7 +131,7 @@ export function CommissionRulesCard({ branchId }: Props) {
                           setEditing(r);
                           setDialogOpen(true);
                         }}
-                        className="h-7 gap-1 rounded-md border-border px-2 text-[12px]"
+                        className="h-7 gap-1 rounded-control border-border px-2 text-[12px]"
                       >
                         <Pencil className="h-3 w-3" strokeWidth={1.75} /> Edit
                       </Button>
@@ -141,7 +141,7 @@ export function CommissionRulesCard({ branchId }: Props) {
                         aria-label="Delete rule"
                         disabled={busyId === r.id}
                         onClick={() => void remove(r)}
-                        className="h-7 rounded-md border-border px-2 text-[12px] text-danger"
+                        className="h-7 rounded-control border-border px-2 text-[12px] text-danger"
                       >
                         {busyId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" strokeWidth={1.75} />}
                       </Button>

@@ -242,7 +242,7 @@ export function EditAppointmentDialog({
         aria-modal="true"
         aria-labelledby="edit-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6"
+        className="w-120 max-h-[90vh] overflow-y-auto rounded-surface border border-border bg-white p-6"
         style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <h2 id="edit-appointment-title" className="text-[18px] font-medium text-foreground mb-1">Edit appointment</h2>
@@ -267,7 +267,7 @@ export function EditAppointmentDialog({
                   id="edit-appointment-date"
                   value={date}
                   onChange={setDate}
-                  inputClassName="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                  inputClassName="w-full h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div>
@@ -277,7 +277,7 @@ export function EditAppointmentDialog({
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -294,7 +294,7 @@ export function EditAppointmentDialog({
                 step={15}
                 value={duration}
                 onChange={(e) => setDuration(parseInt(e.target.value || "30", 10))}
-                className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                className="w-full h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
@@ -312,7 +312,7 @@ export function EditAppointmentDialog({
                   id="edit-appointment-status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
                 >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -335,7 +335,7 @@ export function EditAppointmentDialog({
                 maxLength={60}
                 onChange={(e) => setRoom(e.target.value)}
                 placeholder="e.g. Room 2"
-                className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
+                className="w-full h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
@@ -384,10 +384,10 @@ export function EditAppointmentDialog({
             <p className="text-[11px] text-fg-muted mb-3">Your local time · {tz}</p>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">
+              <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-control text-[14px]">
                 Cancel
               </Button>
-              <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-md text-[14px] gap-1.5">
+              <Button onClick={() => submit()} disabled={!canSave} className="h-8 rounded-control text-[14px] gap-1.5">
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 {submitting ? "Saving…" : "Save changes"}
               </Button>

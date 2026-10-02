@@ -278,7 +278,7 @@ export function AnatomyExplorer() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={layer === "skeleton" ? "Search bones, e.g. L5, femur…" : "Search muscles, e.g. psoas…"}
-                className="h-8 w-full rounded-md border border-border bg-surface-muted pl-8 pr-3 text-[14px] text-foreground placeholder:text-fg-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-8 w-full rounded-control border border-border bg-surface-muted pl-8 pr-3 text-[14px] text-foreground placeholder:text-fg-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
           </div>

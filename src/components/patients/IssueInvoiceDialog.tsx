@@ -152,7 +152,7 @@ export function IssueInvoiceDialog({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground tabular-nums placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200"
+              className="w-full h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground tabular-nums placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200"
             />
           </div>
 
@@ -169,7 +169,7 @@ export function IssueInvoiceDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={200}
-              className="w-full h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200"
+              className="w-full h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200"
             />
           </div>
 
@@ -187,7 +187,7 @@ export function IssueInvoiceDialog({
               step="1"
               value={dueDays}
               onChange={(e) => setDueDays(e.target.value)}
-              className="w-full h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground tabular-nums focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200"
+              className="w-full h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground tabular-nums focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200"
             />
           </div>
         </form>
@@ -198,14 +198,14 @@ export function IssueInvoiceDialog({
             type="button"
             disabled={submitting}
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-md text-[14px] border-border cursor-pointer"
+            className="h-9 rounded-control text-[14px] border-border cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={submitting || !valid}
-            className="h-9 rounded-md text-[14px] bg-primary hover:bg-primary/90 text-white cursor-pointer disabled:opacity-60"
+            className="h-9 rounded-control text-[14px] bg-primary hover:bg-primary/90 text-white cursor-pointer disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />

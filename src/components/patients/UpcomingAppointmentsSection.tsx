@@ -177,7 +177,7 @@ function FilterSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="appearance-none cursor-pointer text-[13px] text-foreground bg-white border border-border rounded-md h-7 pl-2.5 pr-7 hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+        className="appearance-none cursor-pointer text-[13px] text-foreground bg-white border border-border rounded-control h-7 pl-2.5 pr-7 hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
       >
         <option value={ALL}>All {label.toLowerCase()}s</option>
         {options.map((o) => (
@@ -501,7 +501,7 @@ export function UpcomingAppointmentsSection({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-fg-muted hover:text-[#25D366] hover:bg-surface-muted transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center h-7 w-7 rounded-control text-fg-muted hover:text-[#25D366] hover:bg-surface-muted transition-colors cursor-pointer"
                         title={`WhatsApp ${a.patient.phone}`}
                         aria-label={`Open WhatsApp chat with ${a.patient.firstName} ${a.patient.lastName}`}
                       >
@@ -533,7 +533,7 @@ export function UpcomingAppointmentsSection({
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     aria-label="Previous page"
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-control border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
                   </button>
@@ -546,7 +546,7 @@ export function UpcomingAppointmentsSection({
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     aria-label="Next page"
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-control border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
                   >
                     <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
                   </button>

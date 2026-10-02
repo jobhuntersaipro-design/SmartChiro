@@ -550,7 +550,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="h-8 rounded-md border border-border bg-white pl-8 pr-6 text-[13px] text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+              className="h-8 rounded-control border border-border bg-white pl-8 pr-6 text-[13px] text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
             >
               {FILTER_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -563,7 +563,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
           {/* Sort Toggle */}
           <button
             onClick={() => setSortNewest(!sortNewest)}
-            className="flex items-center gap-1 h-8 px-2.5 rounded-md border border-border bg-white text-[13px] text-foreground hover:bg-surface-muted transition-colors"
+            className="flex items-center gap-1 h-8 px-2.5 rounded-control border border-border bg-white text-[13px] text-foreground hover:bg-surface-muted transition-colors"
           >
             <ArrowUpDown className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
             {sortNewest ? "Newest" : "Oldest"}
@@ -573,7 +573,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
         {/* Add Visit Button */}
         <Button
           onClick={() => setCreateOpen(true)}
-          className="rounded-md bg-primary text-white hover:bg-primary/90 text-[13px] h-8"
+          className="rounded-control bg-primary text-white hover:bg-primary/90 text-[13px] h-8"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
           Add Visit

@@ -198,14 +198,14 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
                       type="time"
                       value={hours[day]?.open ?? "09:00"}
                       onChange={(e) => updateDayHours(day, "open", e.target.value)}
-                      className="w-28 h-8 rounded-md border-border text-[14px]"
+                      className="w-28 h-8 rounded-control border-border text-[14px]"
                     />
                     <span className="text-[13px] text-fg-secondary">to</span>
                     <Input
                       type="time"
                       value={hours[day]?.close ?? "18:00"}
                       onChange={(e) => updateDayHours(day, "close", e.target.value)}
-                      className="w-28 h-8 rounded-md border-border text-[14px]"
+                      className="w-28 h-8 rounded-control border-border text-[14px]"
                     />
                     <button
                       onClick={() => toggleDay(day)}
@@ -239,7 +239,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
               aria-label="Clinic Type"
               value={form.clinicType}
               onChange={(e) => updateField("clinicType", e.target.value)}
-              className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
+              className="h-8 w-full rounded-control border border-input bg-transparent px-2 text-[15px] outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
             >
               <option value="">Not set</option>
               {[...CLINIC_TYPE_OPTIONS, ...(form.clinicType && !(CLINIC_TYPE_OPTIONS as readonly string[]).includes(form.clinicType) ? [form.clinicType] : [])].map((t) => (
@@ -280,7 +280,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="h-9 px-6 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
+            className="h-9 px-6 bg-primary hover:bg-primary/90 text-white rounded-control text-[14px] font-medium cursor-pointer"
           >
             {saving ? "Saving..." : "Save Changes"}
           </Button>

@@ -259,7 +259,7 @@ export function DashboardView({
           className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
-              "var(--shadow-lg)",
+              "var(--shadow-card)",
           }}
         >
           <div className="px-5 py-4 border-b border-border">
@@ -283,7 +283,7 @@ export function DashboardView({
           className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
-              "var(--shadow-lg)",
+              "var(--shadow-card)",
           }}
         >
           <div className="px-5 py-4 border-b border-border">
@@ -308,7 +308,7 @@ export function DashboardView({
           className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
-              "var(--shadow-lg)",
+              "var(--shadow-card)",
           }}
         >
           <div className="px-5 py-4 border-b border-border">

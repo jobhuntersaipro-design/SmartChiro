@@ -83,10 +83,10 @@ export function SeriesScopeDialog({ open, title, verb, onChoose, onClose }: Dial
       elevated
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} className="h-8 rounded-control text-[14px]">
             Cancel
           </Button>
-          <Button type="button" onClick={() => onChoose(scope)} className="h-8 gap-1.5 rounded-md text-[14px]">
+          <Button type="button" onClick={() => onChoose(scope)} className="h-8 gap-1.5 rounded-control text-[14px]">
             <Repeat className="h-3.5 w-3.5" strokeWidth={2} /> Continue
           </Button>
         </>
@@ -121,7 +121,7 @@ export function SeriesProblemsDialog({ problems, message, canManageAll, busy = f
       elevated
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={busy} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} disabled={busy} className="h-8 rounded-control text-[14px]">
             Go back
           </Button>
           {option && (
@@ -129,7 +129,7 @@ export function SeriesProblemsDialog({ problems, message, canManageAll, busy = f
               type="button"
               disabled={busy}
               onClick={() => onApplyAnyway(option === "force" ? { force: true } : { forceOutsideHours: true })}
-              className="h-8 gap-1.5 rounded-md bg-warning text-[14px] text-white hover:bg-warning"
+              className="h-8 gap-1.5 rounded-control bg-warning text-[14px] text-white hover:bg-warning"
             >
               {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               {option === "force" ? "Apply anyway" : "Apply outside hours"}

@@ -89,7 +89,7 @@ export function CancelAppointmentDialog({
         aria-modal="true"
         aria-labelledby="cancel-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-110 rounded-2xl border border-border bg-white p-6"
+        className="w-110 rounded-surface border border-border bg-white p-6"
         style={{ boxShadow: "var(--shadow-lg)" }}
       >
         <h2 id="cancel-appointment-title" className="text-[18px] font-medium text-foreground mb-2">Cancel appointment?</h2>
@@ -126,14 +126,14 @@ export function CancelAppointmentDialog({
             variant="outline"
             onClick={onClose}
             disabled={submitting}
-            className="h-8 rounded-md text-[14px]"
+            className="h-8 rounded-control text-[14px]"
           >
             Keep appointment
           </Button>
           <Button
             onClick={submit}
             disabled={submitting}
-            className="h-8 rounded-md text-[14px] bg-danger hover:bg-danger/90 gap-1.5"
+            className="h-8 rounded-control text-[14px] bg-danger hover:bg-danger/90 gap-1.5"
           >
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {submitting ? "Cancelling…" : "Cancel appointment"}

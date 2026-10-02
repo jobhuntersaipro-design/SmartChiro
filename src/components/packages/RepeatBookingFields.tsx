@@ -21,7 +21,7 @@ interface Props {
 }
 
 const INPUT =
-  "h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground tabular-nums focus:outline-none focus:ring-1 focus:ring-brand";
+  "h-9 rounded-control border border-border bg-white px-2 text-[14px] text-foreground tabular-nums focus:outline-none focus:ring-1 focus:ring-brand";
 
 /** Weekly repeat: weekdays, every N weeks, ends after N visits or on a date. */
 export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hideEnd = false }: Props) {

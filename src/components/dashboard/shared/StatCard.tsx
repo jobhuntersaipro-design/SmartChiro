@@ -30,7 +30,7 @@ export function StatCard({
       className="rounded-panel border border-border bg-white p-5 transition-all duration-200 ease-out hover:scale-[1.02] hover:border-border-strong"
       style={{
         boxShadow:
-          "var(--shadow-lg)",
+          "var(--shadow-card)",
       }}
     >
       <div className="flex items-start justify-between mb-3">

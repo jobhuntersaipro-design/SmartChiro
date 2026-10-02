@@ -177,7 +177,7 @@ export function AppointmentDetailPanel({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-fg-muted hover:bg-surface-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
+            className="flex h-7 w-7 items-center justify-center rounded-control text-fg-muted hover:bg-surface-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
@@ -357,7 +357,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onEdit}
-              className="h-8 rounded-md border-border text-[13px] gap-1.5"
+              className="h-8 rounded-control border-border text-[13px] gap-1.5"
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} /> Edit
             </Button>
@@ -375,7 +375,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onCancel}
-              className="h-8 rounded-md border-border text-[13px] text-warning gap-1.5"
+              className="h-8 rounded-control border-border text-[13px] text-warning gap-1.5"
             >
               <XCircle className="h-3.5 w-3.5" strokeWidth={1.75} /> Cancel
             </Button>
@@ -385,7 +385,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onDelete}
-              className="h-8 rounded-md border-border text-[13px] text-danger gap-1.5"
+              className="h-8 rounded-control border-border text-[13px] text-danger gap-1.5"
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Delete
             </Button>
@@ -396,7 +396,7 @@ export function AppointmentDetailPanel({
               href={`/dashboard/patients/${appointment.patient.id}/details?tab=history&visit=${linkedVisit.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 h-8 rounded-md border border-border px-3 text-[13px] text-brand hover:bg-surface-muted transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 rounded-control border border-border px-3 text-[13px] text-brand hover:bg-surface-muted transition-colors"
             >
               <ClipboardList className="h-3.5 w-3.5" strokeWidth={1.75} /> View visit
             </Link>
@@ -409,7 +409,7 @@ export function AppointmentDetailPanel({
                 size="sm"
                 onClick={handleCreateVisit}
                 disabled={creatingVisit}
-                className="h-8 rounded-md border-border text-[13px] text-brand gap-1.5"
+                className="h-8 rounded-control border-border text-[13px] text-brand gap-1.5"
               >
                 {creatingVisit ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />

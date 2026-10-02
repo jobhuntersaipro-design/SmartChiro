@@ -79,7 +79,7 @@ export function PatientCombobox({ value, onChange, disabled, branchId }: Props) 
         type="button"
         disabled={disabled}
         onClick={() => setOpen(!open)}
-        className="flex w-full h-9 items-center justify-between rounded-md border border-border bg-white px-3 text-[14px] text-foreground hover:border-border-strong focus:outline-none focus:ring-1 focus:ring-brand disabled:opacity-60 disabled:cursor-not-allowed"
+        className="flex w-full h-9 items-center justify-between rounded-control border border-border bg-white px-3 text-[14px] text-foreground hover:border-border-strong focus:outline-none focus:ring-1 focus:ring-brand disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <span className={value ? "" : "text-fg-muted"}>{label}</span>
         <ChevronsUpDown className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.75} />

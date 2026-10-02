@@ -178,14 +178,14 @@ export function EditPastAppointmentDialog({
             type="button"
             disabled={submitting}
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-md text-[14px] border-border cursor-pointer"
+            className="h-9 rounded-control text-[14px] border-border cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={submitting || !dirty}
-            className="h-9 rounded-md text-[14px] bg-primary hover:bg-primary/90 text-white cursor-pointer disabled:opacity-60"
+            className="h-9 rounded-control text-[14px] bg-primary hover:bg-primary/90 text-white cursor-pointer disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />

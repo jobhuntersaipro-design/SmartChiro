@@ -68,7 +68,7 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
         role="dialog"
         aria-modal="true"
         aria-label="Connect WhatsApp"
-        className="w-105 rounded-2xl border border-border bg-white p-6 shadow-lg"
+        className="w-105 rounded-surface border border-border bg-white p-6 shadow-lg"
       >
         <div className="mb-3 text-[18px] font-medium text-foreground">Connect WhatsApp</div>
         <p className="mb-4 text-[15px] text-fg-secondary">

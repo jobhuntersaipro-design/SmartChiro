@@ -214,10 +214,10 @@ export function CreateCarePlanDialog({
       widthClass="max-w-2xl"
       footer={
         <>
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-control text-[14px]">
             Cancel
           </Button>
-          <Button type="submit" form="care-plan-form" disabled={!valid || saving} className="h-8 gap-1.5 rounded-md text-[14px]">
+          <Button type="submit" form="care-plan-form" disabled={!valid || saving} className="h-8 gap-1.5 rounded-control text-[14px]">
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {book && series.preview ? `Create plan & book ${series.preview.summary.ok}` : "Create plan"}
           </Button>

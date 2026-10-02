@@ -22,12 +22,12 @@ export function BranchSummaryStats({ totalBranches, totalDoctors, totalPatients 
           key={stat.label}
           className="rounded-panel border border-border bg-white px-5 py-4 transition-all duration-200 hover:border-border-strong"
           style={{
-            boxShadow: "var(--shadow-lg)",
+            boxShadow: "var(--shadow-card)",
           }}
         >
           <div className="flex items-center gap-3">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-md"
+              className="flex h-9 w-9 items-center justify-center rounded-control"
               style={{ backgroundColor: `${stat.color}10` }}
             >
               <stat.icon className="h-4.5 w-4.5" style={{ color: stat.color }} strokeWidth={1.5} />

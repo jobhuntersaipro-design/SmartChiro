@@ -287,7 +287,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       {/* Header card */}
       <div
         className="rounded-panel border border-border bg-white px-6 py-5"
-        style={{ boxShadow: "var(--shadow-lg)" }}
+        style={{ boxShadow: "var(--shadow-card)" }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
@@ -361,7 +361,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
           <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-border gap-1.5"
+              className="h-9 rounded-control text-[14px] border-border gap-1.5"
               onClick={handleToggleStatus}
             >
               {isActive ? (
@@ -373,7 +373,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-border gap-1.5"
+              className="h-9 rounded-control text-[14px] border-border gap-1.5"
               onClick={() => setCreateAppointmentOpen(true)}
             >
               <CalendarCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -382,7 +382,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             {canBill && (
               <Button
                 variant="outline"
-                className="h-9 rounded-md text-[14px] border-border gap-1.5"
+                className="h-9 rounded-control text-[14px] border-border gap-1.5"
                 onClick={() => {
                   handleTabChange("billing");
                   setNewInvoiceRequested(true);
@@ -394,7 +394,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             )}
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-border gap-1.5"
+              className="h-9 rounded-control text-[14px] border-border gap-1.5"
               onClick={() => setEditOpen(true)}
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -403,7 +403,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             {can(branchRole, "patient.delete") && (
               <Button
                 variant="outline"
-                className="h-9 rounded-md text-[14px] border-border gap-1.5 text-danger hover:text-danger hover:bg-red-50"
+                className="h-9 rounded-control text-[14px] border-border gap-1.5 text-danger hover:text-danger hover:bg-red-50"
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />

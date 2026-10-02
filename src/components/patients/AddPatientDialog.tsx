@@ -35,16 +35,16 @@ interface AddPatientDialogProps {
 // ─── Shared Styles ───
 
 const inputClass =
-  "flex h-9 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const inputNoIconClass =
-  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const selectNoIconClass =
-  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const textareaClass =
   "flex w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 py-2 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200 resize-none";
@@ -265,7 +265,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-patient-title"
-        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-2xl border border-border bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-surface border border-border bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)" }}
       >
         {/* ─── Header ─── */}
@@ -282,7 +282,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
           <button
             type="button"
             onClick={requestClose}
-            className="flex items-center justify-center h-8 w-8 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground"
+            className="flex items-center justify-center h-8 w-8 rounded-control text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -741,7 +741,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="h-9 px-4 text-[14px] font-medium rounded-md border-border text-foreground hover:bg-surface-muted gap-1.5"
+                  className="h-9 px-4 text-[14px] font-medium rounded-control border-border text-foreground hover:bg-surface-muted gap-1.5"
                 >
                   <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
                   Back
@@ -754,7 +754,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 type="button"
                 variant="ghost"
                 onClick={requestClose}
-                className="h-9 px-4 text-[14px] font-medium rounded-md text-fg-secondary hover:text-foreground hover:bg-surface-muted"
+                className="h-9 px-4 text-[14px] font-medium rounded-control text-fg-secondary hover:text-foreground hover:bg-surface-muted"
               >
                 Cancel
               </Button>
@@ -769,7 +769,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                     e.preventDefault();
                     handleNext();
                   }}
-                  className="h-9 px-5 text-[14px] font-medium rounded-md gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 text-[14px] font-medium rounded-control gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Next
                   <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
@@ -779,7 +779,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   key="submit"
                   type="submit"
                   disabled={submitting}
-                  className="h-9 px-5 text-[14px] font-medium rounded-md gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 text-[14px] font-medium rounded-control gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {submitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

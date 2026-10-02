@@ -126,10 +126,10 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
               Invoice total <span className="font-medium text-foreground tabular-nums">{formatMYR(total)}</span>
             </span>
           )}
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-md text-[14px]">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-control text-[14px]">
             Cancel
           </Button>
-          <Button type="submit" form="sell-package-form" disabled={!valid || saving} className="h-8 gap-1.5 rounded-md text-[14px]">
+          <Button type="submit" form="sell-package-form" disabled={!valid || saving} className="h-8 gap-1.5 rounded-control text-[14px]">
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             Sell package
           </Button>

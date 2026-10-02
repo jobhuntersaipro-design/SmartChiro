@@ -163,7 +163,7 @@ function TimeOffSection({
           <Button
             size="sm"
             onClick={() => setAdding(true)}
-            className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
+            className="h-8 rounded-control bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             Add leave
@@ -181,7 +181,7 @@ function TimeOffSection({
                 items={LEAVE_TYPES}
                 onValueChange={(v) => setDraft({ ...draft, type: v as typeof draft.type })}
               >
-                <SelectTrigger className="h-9 rounded-md text-[13px]">
+                <SelectTrigger className="h-9 rounded-control text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +204,7 @@ function TimeOffSection({
                   setDraft({ ...draft, branchId: v === "all" || v == null ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 rounded-md text-[13px]">
+                <SelectTrigger className="h-9 rounded-control text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -227,7 +227,7 @@ function TimeOffSection({
                 aria-label="From"
                 value={draft.startDate}
                 onChange={(iso) => setDraft((d) => ({ ...d, startDate: iso }))}
-                inputClassName="w-full h-9 rounded-md border border-border bg-white px-2 text-[13px]"
+                inputClassName="w-full h-9 rounded-control border border-border bg-white px-2 text-[13px]"
               />
             </div>
             <div>
@@ -237,7 +237,7 @@ function TimeOffSection({
                 value={draft.endDate}
                 min={draft.startDate || undefined}
                 onChange={(iso) => setDraft((d) => ({ ...d, endDate: iso }))}
-                inputClassName="w-full h-9 rounded-md border border-border bg-white px-2 text-[13px]"
+                inputClassName="w-full h-9 rounded-control border border-border bg-white px-2 text-[13px]"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ function TimeOffSection({
               size="sm"
               onClick={() => setAdding(false)}
               disabled={submitting}
-              className="h-8 rounded-md text-[13px]"
+              className="h-8 rounded-control text-[13px]"
             >
               Cancel
             </Button>
@@ -266,7 +266,7 @@ function TimeOffSection({
               size="sm"
               onClick={add}
               disabled={submitting || !draft.startDate || !draft.endDate || draft.endDate < draft.startDate}
-              className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
+              className="h-8 rounded-control bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
             >
               {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               Add
@@ -310,7 +310,7 @@ function TimeOffSection({
                 {canEdit && (
                   <button
                     onClick={() => remove(r.id)}
-                    className="text-fg-muted hover:text-danger transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-danger-subtle"
+                    className="text-fg-muted hover:text-danger transition-colors h-7 w-7 flex items-center justify-center rounded-control hover:bg-danger-subtle"
                     aria-label="Delete leave"
                   >
                     <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -417,7 +417,7 @@ function BreakTimeSection({
             items={doctor.branches.map((b) => ({ value: b.id, label: b.name }))}
             onValueChange={(v) => v && setActiveBranch(v)}
           >
-            <SelectTrigger className="h-8 w-45 rounded-md text-[13px]">
+            <SelectTrigger className="h-8 w-45 rounded-control text-[13px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -452,7 +452,7 @@ function BreakTimeSection({
                 }
                 disabled={!canEdit}
               >
-                <SelectTrigger className="h-8 w-20 rounded-md text-[12px]">
+                <SelectTrigger className="h-8 w-20 rounded-control text-[12px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -470,7 +470,7 @@ function BreakTimeSection({
                   updateSlot(idx, { startMinute: timeStrToMinutes(e.target.value) })
                 }
                 disabled={!canEdit}
-                className="h-8 rounded-md border border-border bg-white px-2 text-[12px] tabular-nums"
+                className="h-8 rounded-control border border-border bg-white px-2 text-[12px] tabular-nums"
               />
               <span className="text-[12px] text-fg-muted">→</span>
               <input
@@ -480,7 +480,7 @@ function BreakTimeSection({
                   updateSlot(idx, { endMinute: timeStrToMinutes(e.target.value) })
                 }
                 disabled={!canEdit}
-                className="h-8 rounded-md border border-border bg-white px-2 text-[12px] tabular-nums"
+                className="h-8 rounded-control border border-border bg-white px-2 text-[12px] tabular-nums"
               />
               <input
                 type="text"
@@ -488,12 +488,12 @@ function BreakTimeSection({
                 value={s.label ?? ""}
                 onChange={(e) => updateSlot(idx, { label: e.target.value })}
                 disabled={!canEdit}
-                className="flex-1 h-8 rounded-md border border-border bg-white px-2 text-[12px]"
+                className="flex-1 h-8 rounded-control border border-border bg-white px-2 text-[12px]"
               />
               {canEdit && (
                 <button
                   onClick={() => removeSlot(idx)}
-                  className="text-fg-muted hover:text-danger transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-danger-subtle"
+                  className="text-fg-muted hover:text-danger transition-colors h-7 w-7 flex items-center justify-center rounded-control hover:bg-danger-subtle"
                   aria-label="Remove slot"
                 >
                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -510,7 +510,7 @@ function BreakTimeSection({
             variant="outline"
             size="sm"
             onClick={addSlot}
-            className="h-8 rounded-md text-[13px] gap-1.5"
+            className="h-8 rounded-control text-[13px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             Add break
@@ -523,7 +523,7 @@ function BreakTimeSection({
               size="sm"
               onClick={save}
               disabled={saving}
-              className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
+              className="h-8 rounded-control bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               Save break times
