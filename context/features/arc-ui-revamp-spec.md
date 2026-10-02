@@ -129,3 +129,18 @@ New features, Arc Pro components, dark-mode toggle, data/schema/API changes.
 - Lint, tests and build pass.
 - Screenshots of each area in the PR/merge notes; production screenshot after the
   merge deploys.
+
+## Result (2026-10-02)
+
+- Phase order changed: the token sweep (P3) ran before the primitives (P2), because
+  until the sweep the hardcoded hex classes hid every token change.
+- Codemod coverage: every arbitrary hex class mapped except WhatsApp's brand green
+  `#25D366` (kept on purpose). A second pass mapped Stripe neutrals/indigo in string
+  literals, styled-jsx and inline styles (charts, SVG, annotation viewer), Stripe
+  inline box-shadows (cards → resting, dialogs/menus → floating) and rgba tint
+  classes. 260 hand-rolled controls (`h-6`–`h-11`) moved from `rounded-md` to
+  `rounded-control`.
+- Radius kept at Arc values (panel 1.625rem); dense tables read fine inside panels.
+  Day-calendar event cards use `rounded-md` with a clipped accent bar instead.
+- Headings and metrics moved from Stripe's weight 300 to 500.
+- Also fixed in passing: patient header actions overflowing on mobile (pre-existing).

@@ -411,7 +411,7 @@ model PatientDocument {
 | Language | TypeScript |
 | Database | Neon PostgreSQL + Prisma 7 |
 | File Storage | Cloudflare R2 |
-| CSS / UI | Tailwind CSS v4 + shadcn/ui |
+| CSS / UI | Tailwind CSS v4 + shadcn/ui, Arc UI design tokens |
 | Auth | NextAuth v5 (email + Gmail/Google) |
 | Canvas Library | **TBD** (evaluating Konva.js, Fabric.js, or custom) |
 | AI | Claude Vision API (landmark detection & analysis) |
@@ -434,138 +434,81 @@ model PatientDocument {
 
 ---
 
-## 🎨 UI / UX — Stripe‑Inspired Design System
+## 🎨 UI / UX — Arc UI Design System
 
-Design language modeled after the **Stripe Dashboard** — clean, professional, light‑background interface with accessible color contrast. All font sizes are 15% larger than Stripe's defaults for improved readability in a clinical setting.
+Design language from [Arc UI](https://uiarc.dev): neutral grays, black primary
+buttons, pill‑shaped controls, rounded panels, Geist headings, soft shadows, violet
+accent. Full spec and token mapping: `context/features/arc-ui-revamp-spec.md`.
 
 ### Design Tokens
 
-**Typography:**
+All tokens live in `src/app/globals.css` (`:root` values, exposed to Tailwind in
+`@theme inline`). Use the token classes, never raw hex, in components.
 
-```css
---font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont,
-               "Segoe UI", Roboto, Arial, sans-serif;
---font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+| Purpose | Token class | Value |
+| --- | --- | --- |
+| Primary text / headings | `text-foreground` | oklch(15% 0 0) |
+| Secondary text | `text-fg-secondary` | oklch(46% 0 0) |
+| Muted text, placeholders | `text-fg-muted` | oklch(59% 0 0) |
+| Disabled text | `text-fg-disabled` | oklch(72% 0 0) |
+| Surfaces | `bg-surface`, `bg-surface-subtle`, `bg-surface-muted`, `bg-surface-hover` | white → oklch(95.8%) |
+| Borders | `border-border`, `border-border-subtle`, `border-border-strong` | oklch(93.5% / 96.5% / 82%) |
+| Primary button | `bg-primary` | foreground (black) |
+| Accent (links, active, focus) | `text-brand`, `bg-brand-subtle`, `ring-ring` | violet `#7747ff` |
+| Status | `success`, `warning`, `danger`, `info` (+ `-subtle` tints) | Arc semantic colors |
+| X‑ray viewer chrome | `bg-canvas`, `bg-canvas-raised` | oklch(19% / 24%) |
 
-/* Base sizes (Stripe defaults + 15% bump) */
---font-size-xs:    14px;   /* Stripe 12px → 14px — badges, tooltips */
---font-size-sm:    15px;   /* Stripe 13px → 15px — nav items, labels, secondary text */
---font-size-base:  16px;   /* Stripe 14px → 16px — body default */
---font-size-md:    18px;   /* Stripe 16px → 18px */
---font-size-lg:    23px;   /* Stripe 20px → 23px — page headings */
---font-size-xl:    28px;   /* Stripe 24px → 28px */
---font-size-2xl:   34px;   /* Stripe 30px → 34px */
+**Radius:** `rounded-control` (1.125rem — pills at control heights) for buttons,
+inputs, selects, chips and nav items; `rounded-panel` (1.625rem) for cards;
+`rounded-surface` (2.125rem) for dialogs; Tailwind's `rounded-sm…xl` scale is based
+on `--radius: 0.75rem`.
 
---font-weight-normal:   400;
---font-weight-medium:   500;   /* Primary for UI labels */
---font-weight-semibold: 600;
---font-weight-bold:     700;
+**Type:** Geist for headings (`font-heading`, tracking −0.02em), Inter for body
+(tracking −0.01em). Font sizes keep the 15%‑bumped clinical scale (`text-[14px]`,
+`text-[15px]`, `text-[23px]`…). Headings and metrics use weight 500.
 
---line-height-tight:  1.2;
---line-height-normal: 1.5;
---line-height-relaxed: 1.625;
-```
+**Shadows:** Arc `--shadow-resting` / `--shadow-raised` / `--shadow-floating`. Cards
+use `shadow-(--shadow-card)` (= resting), menus and dialogs floating.
 
-**Color Palette:**
-
-```css
-/* ─── Brand ─── */
---color-primary:        #635BFF;  /* Stripe Indigo — buttons, active states, links */
---color-primary-hover:  #5851EB;
---color-primary-light:  #F0EEFF;  /* Indigo tint for selected row / active bg */
-
-/* ─── Backgrounds ─── */
---color-bg-page:        #F6F9FC;  /* Main page background (light gray‑blue) */
---color-bg-surface:     #FFFFFF;  /* Cards, panels, modals, sidebar, top bar */
---color-bg-hover:       #F0F3F7;  /* Row / item hover state */
---color-bg-selected:    #F0EEFF;  /* Selected / active item */
-
-/* ─── Text ─── */
---color-text-primary:   #0A2540;  /* Headings, primary labels */
---color-text-secondary: #425466;  /* Body text, descriptions, inactive nav */
---color-text-muted:     #697386;  /* Placeholder, hints, timestamps */
---color-text-disabled:  #A3ACB9;
-
-/* ─── Borders ─── */
---color-border:         #E3E8EE;  /* Default border (subtle gray) */
---color-border-hover:   #C1C9D2;
---color-border-focus:   #635BFF;  /* Focus ring uses primary */
-
-/* ─── Semantic ─── */
---color-success:        #30B130;  /* Paid, completed, active */
---color-warning:        #F5A623;  /* Pending, overdue */
---color-danger:         #DF1B41;  /* Error, cancelled, destructive */
---color-info:           #0570DE;  /* Informational badges */
-```
-
-**Spacing & Radius:**
-
-```css
-/* Stripe uses tight 4px radius — NOT rounded-lg (8px) */
---radius-sm:   4px;    /* Inputs, buttons, nav items, hover targets */
---radius-md:   6px;    /* Cards, dropdowns */
---radius-lg:   8px;    /* Modals, panels */
---radius-full: 9999px; /* Pill badges, avatars */
-
---spacing-xs:  4px;
---spacing-sm:  8px;
---spacing-md:  12px;
---spacing-lg:  16px;
---spacing-xl:  24px;
---spacing-2xl: 32px;
---spacing-3xl: 48px;
-```
-
-**Shadows (Stripe‑grade — ultra‑subtle with blue‑gray tint):**
-
-```css
---shadow-xs:   0 1px 1px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
---shadow-sm:   0 1px 1px rgba(0, 0, 0, 0.03), 0 3px 6px rgba(18, 42, 66, 0.02);
---shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03), 0 3px 6px rgba(18, 42, 66, 0.02);
---shadow-md:   0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(18, 42, 66, 0.04);
---shadow-lg:   0 4px 6px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(18, 42, 66, 0.06);
-```
+**Motion:** 150–240ms transitions with `ease-standard`; buttons scale to .97 on press.
 
 ### Design Principles
 
-- **Light mode first** — white surfaces (`#FFFFFF`) on `#F6F9FC` page background
-- **Readable density** — 16px base font (15% bump from Stripe's 14px), compact rows, efficient use of space
-- **Subtle depth** — borders + faint blue‑gray tinted shadows (`rgba(18, 42, 66, ...)`) over bold drop shadows
-- **Tight radius** — 4px border‑radius on buttons, inputs, nav items (not rounded‑lg)
-- **Accessible contrast** — all text colors pass WCAG 2.0 AA on their respective backgrounds
-- **Consistent iconography** — Lucide icons (matches shadcn/ui defaults), 16px size, strokeWidth 1.5 (2 for active)
-- **Muted color usage** — semantic colors for status only, never decorative
-- **Explicit colors** — use hardcoded hex values (`#0A2540`, `#425466`, `#697386`, `#F0F3F7`) in components, not abstract CSS variable names, for precision control
+- **Light mode first** — white surfaces, muted gray rails; no dark‑mode toggle yet
+  (tokens are ready for one)
+- **Calm neutrals, one accent** — color only for state (status, active, focus)
+- **Pills and soft panels** — controls are pills, containers are generously rounded
+- **Readable density** — 16px base font, compact rows
+- **Visible focus** — unlike Arc, keep `focus-visible` rings (keyboard use at the front desk)
+- **Tokens, not hex** — hex only for data colors (status palettes, charts, doctor colors)
 
 ### Layout
 
-- **Collapsible sidebar** (220px expanded / 68px collapsed, white bg, `border-r border-[#E3E8EE]`): nav items with icons, clinic branding at top with `border-b`, profile/logout at bottom
-- **Top bar** (52px height, white bg, `border-b`): search input with `#F6F9FC` background, center nav tabs, notification bell, user avatar
-- **Main workspace** (`px-8 py-6`): patient detail, visit timeline, or annotation canvas
-- **Full‑screen annotation mode**: canvas takes over viewport with floating toolbars (dark bg for contrast with X‑ray images)
-- **Split view**: side‑by‑side X‑ray comparison
+- **Sidebar** (220px / 68px collapsed, `bg-surface-subtle`): pill nav items, active
+  item is a raised white pill; clinic switcher at top, profile at bottom
+- **Top bar** (52px): pill search on muted surface
+- **Main workspace** (`px-8 py-6`)
+- **Full‑screen annotation mode**: dark neutral canvas (`canvas` tokens) with floating toolbars
 
 ### Annotation Canvas UX
 
-- Floating toolbar (left): drawing tools, shapes, measurement tools
-- Top bar: image adjustments (brightness, contrast, invert)
-- Right panel (collapsible): layers, annotation list, measurements summary
-- Bottom bar: zoom controls, fit‑to‑screen, grid toggle
-- **Exception: annotation canvas uses dark background** (`#1A1F36`) for optimal X‑ray contrast
+- Floating toolbar (left), image adjustments (top), collapsible right panel,
+  zoom bar (bottom)
+- **Exception: annotation canvas stays dark** (`#171717`) for X‑ray contrast
 
-### Component Patterns (Stripe‑Style)
+### Component Patterns
 
-- **Tables**: white rows, no zebra stripes, hover with `#F0F3F7`, thin `#E3E8EE` horizontal separators
-- **Cards**: white bg, 1px border `#E3E8EE`, `rounded-[6px]`, `--shadow-card`
-- **Buttons**: `rounded-[4px]`; primary = solid `#635BFF` + white text; secondary = white bg + `#E3E8EE` border; ghost = no bg/border
-- **Inputs**: 1px border `#E3E8EE`, `rounded-[4px]`, 32px height, bg `#F6F9FC`, focus ring `#635BFF` with `ring-1`
-- **Badges/Pills**: `rounded-full`, tinted bg with matching text (e.g., success: green bg + green text)
-- **Sidebar nav items**: text + icon, `rounded-[4px]`, 6px vertical padding, active = `#F0EEFF` bg + `#635BFF` text, inactive = `#425466` text, hover = `#F0F3F7` bg + `#0A2540` text
-- **Avatar fallback**: `rounded-full`, `#F0EEFF` bg + `#635BFF` text
+- **Buttons** (`src/components/ui/button.tsx`): primary black pill; `outline` = white
+  pill with border; `ghost`; `destructive` = bordered with red text
+- **Inputs**: pill, `bg-surface-muted`, brand focus border + soft ring
+- **Cards**: white, `border-border`, `rounded-panel`, resting shadow
+- **Tabs**: pill segmented control (primitive) or underline tabs with brand indicator
+- **Badges/Pills**: `rounded-full`, `-subtle` tint background with matching text
+- **Tables**: no zebra, `hover:bg-surface-muted`, `border-border` separators
 
 ### Responsive
 
-- Desktop‑first (primary use case is clinic workstations)
+- Desktop‑first (clinic workstations)
 - Tablet‑optimized for annotation (stylus support)
 - Mobile: patient lookup, schedule view, visit notes (no annotation on mobile)
 
