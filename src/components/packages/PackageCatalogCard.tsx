@@ -69,11 +69,11 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
   }
 
   return (
-    <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
+    <div className="rounded-panel border border-border bg-white p-6 shadow-(--shadow-card)">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <div className="text-[18px] font-medium text-[#0A2540]">Packages</div>
-          <div className="text-[14px] text-[#697386]">
+          <div className="text-[18px] font-medium text-foreground">Packages</div>
+          <div className="text-[14px] text-fg-muted">
             Prepaid session bundles. Completing a visit uses a session automatically.
           </div>
         </div>
@@ -83,42 +83,42 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
               setEditing(null);
               setDialogOpen(true);
             }}
-            className="h-8 shrink-0 gap-1.5 rounded-md bg-[#533afd] text-[14px] text-white hover:bg-[#4434d4]"
+            className="h-8 shrink-0 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New package
           </Button>
         )}
       </div>
 
-      {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
+      {error && <p className="text-[14px] text-danger">{error}</p>}
       {!templates && !error && (
-        <div className="flex items-center gap-2 py-4 text-[14px] text-[#697386]">
+        <div className="flex items-center gap-2 py-4 text-[14px] text-fg-muted">
           <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Loading packages…
         </div>
       )}
       {templates && templates.length === 0 && (
         <div className="flex flex-col items-center py-8 text-center">
-          <Package className="mb-2 h-8 w-8 text-[#c1c9d2]" strokeWidth={1.25} />
-          <p className="text-[14px] text-[#697386]">No packages yet.</p>
-          {canManage && <p className="text-[13px] text-[#94a3b8]">Create one, e.g. &ldquo;12 Adjustments&rdquo;.</p>}
+          <Package className="mb-2 h-8 w-8 text-border-strong" strokeWidth={1.25} />
+          <p className="text-[14px] text-fg-muted">No packages yet.</p>
+          {canManage && <p className="text-[13px] text-fg-muted">Create one, e.g. &ldquo;12 Adjustments&rdquo;.</p>}
         </div>
       )}
       {templates && templates.length > 0 && (
-        <ul className="-mx-6 divide-y divide-[#e5edf5] border-y border-[#e5edf5]">
+        <ul className="-mx-6 divide-y divide-border border-y border-border">
           {templates.map((t) => (
-            <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 hover:bg-[#F0F3F7]">
+            <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 hover:bg-surface-hover">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-[15px] font-medium ${t.isActive ? "text-[#061b31]" : "text-[#94a3b8]"}`}>{t.name}</span>
+                  <span className={`text-[15px] font-medium ${t.isActive ? "text-foreground" : "text-fg-muted"}`}>{t.name}</span>
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-[12px] font-medium ${
-                      t.isActive ? "bg-[#E8F7EE] text-[#108c3d]" : "bg-[#F1F5F9] text-[#64748b]"
+                      t.isActive ? "bg-success-subtle text-success" : "bg-surface-hover text-fg-secondary"
                     }`}
                   >
                     {t.isActive ? "On sale" : "Off sale"}
                   </span>
                 </div>
-                <div className="mt-0.5 text-[13px] text-[#697386]">
+                <div className="mt-0.5 text-[13px] text-fg-muted">
                   <span className="tabular-nums">{t.sessions} sessions</span> ·{" "}
                   {t.validityDays ? `valid ${t.validityDays} days` : "no expiry"} ·{" "}
                   <span title={t.treatmentTypes.map(labelFor).join(", ") || "Any treatment"}>
@@ -126,14 +126,14 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
                   </span>
                 </div>
                 {t.description && (
-                  <div className="truncate text-[12px] text-[#94a3b8]" title={t.description}>
+                  <div className="truncate text-[12px] text-fg-muted" title={t.description}>
                     {t.description}
                   </div>
                 )}
               </div>
               <div className="whitespace-nowrap text-right tabular-nums">
-                <div className="text-[15px] text-[#061b31]">{formatMYR(t.price)}</div>
-                <div className="text-[12px] text-[#697386]">{formatMYR(t.unitValue)} / session</div>
+                <div className="text-[15px] text-foreground">{formatMYR(t.price)}</div>
+                <div className="text-[12px] text-fg-muted">{formatMYR(t.unitValue)} / session</div>
               </div>
               {canManage && (
                 <div className="flex gap-1.5">
@@ -145,7 +145,7 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
                       setEditing(t);
                       setDialogOpen(true);
                     }}
-                    className="h-7 gap-1 rounded-md border-[#e5edf5] px-2 text-[12px]"
+                    className="h-7 gap-1 rounded-md border-border px-2 text-[12px]"
                   >
                     <Pencil className="h-3 w-3" strokeWidth={1.75} /> Edit
                   </Button>
@@ -154,7 +154,7 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
                     size="sm"
                     disabled={busyId === t.id}
                     onClick={() => void setActive(t, !t.isActive)}
-                    className={`h-7 gap-1 rounded-md border-[#e5edf5] px-2 text-[12px] ${t.isActive ? "text-[#9b6829]" : "text-[#108c3d]"}`}
+                    className={`h-7 gap-1 rounded-md border-border px-2 text-[12px] ${t.isActive ? "text-warning" : "text-success"}`}
                   >
                     {busyId === t.id ? (
                       <Loader2 className="h-3 w-3 animate-spin" strokeWidth={1.75} />

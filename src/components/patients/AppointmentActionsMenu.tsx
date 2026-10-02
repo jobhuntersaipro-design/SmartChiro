@@ -32,14 +32,14 @@ export function AppointmentActionsMenu({ canEdit, canDelete, onEdit, onCancel, o
           e.stopPropagation();
           setOpen(!open);
         }}
-        className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors"
+        className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-colors"
         aria-label="Appointment actions"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
       </button>
       {open && (
         <div
-          className="absolute right-0 top-8 z-30 w-45 rounded-[6px] border border-[#e5edf5] bg-white py-1"
+          className="absolute right-0 top-8 z-30 w-45 rounded-panel border border-border bg-white py-1"
           style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
         >
           <button
@@ -48,7 +48,7 @@ export function AppointmentActionsMenu({ canEdit, canDelete, onEdit, onCancel, o
               setOpen(false);
               onEdit();
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-foreground hover:bg-surface-muted transition-colors"
           >
             <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} /> Edit appointment
           </button>
@@ -58,20 +58,20 @@ export function AppointmentActionsMenu({ canEdit, canDelete, onEdit, onCancel, o
               setOpen(false);
               onCancel();
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[#9b6829] hover:bg-[#FFF8E1] transition-colors"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-warning hover:bg-warning-subtle transition-colors"
           >
             <X className="h-3.5 w-3.5" strokeWidth={1.5} /> Cancel appointment
           </button>
           {canDelete && onDelete && (
             <>
-              <div className="my-1 h-px bg-[#e5edf5]" />
+              <div className="my-1 h-px bg-border" />
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpen(false);
                   onDelete();
                 }}
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[#DF1B41] hover:bg-[#FDE8EC] transition-colors"
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-danger hover:bg-danger-subtle transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} /> Delete permanently
               </button>

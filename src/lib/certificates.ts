@@ -95,11 +95,11 @@ export const STAGE_LABEL: Record<CertificateStage, string> = {
 
 /** Pill colours: red once expired or within a week, amber within 30, blue within 60. */
 export const STAGE_TONE: Record<CertificateStage, string> = {
-  expired: "bg-[#FDECEF] text-[#B41A36] border-[#F5C2CC]",
-  d7: "bg-[#FDECEF] text-[#B41A36] border-[#F5C2CC]",
-  d30: "bg-[#FEF5E7] text-[#A35F00] border-[#F8DDB0]",
-  d60: "bg-[#EAF3FD] text-[#0558B0] border-[#C4DDF7]",
-  ok: "bg-[#E9F7EF] text-[#108C3D] border-[#BFE8CF]",
+  expired: "bg-danger-subtle text-danger border-danger/25",
+  d7: "bg-danger-subtle text-danger border-danger/25",
+  d30: "bg-warning-subtle text-warning border-warning/25",
+  d60: "bg-info-subtle text-info border-info/25",
+  ok: "bg-success-subtle text-success border-success/25",
 };
 
 // ─── Profile input (PUT /api/doctors/[userId]) ───

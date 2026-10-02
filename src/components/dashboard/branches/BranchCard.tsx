@@ -37,7 +37,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white transition-all duration-200 hover:border-[#c1c9d2] cursor-pointer group"
+      className="rounded-panel border border-border bg-white transition-all duration-200 hover:border-border-strong cursor-pointer group"
       style={{
         boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
       }}
@@ -47,12 +47,12 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
       <div className="px-5 pt-5 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#ededfc]">
-              <Building2 className="h-4.5 w-4.5 text-[#533afd]" strokeWidth={1.5} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-subtle">
+              <Building2 className="h-4.5 w-4.5 text-brand" strokeWidth={1.5} />
             </div>
             <div className="min-w-0">
-              <h3 className="text-[16px] font-medium text-[#061b31] truncate">{branch.name}</h3>
-              <div className="flex items-center gap-1 text-[13px] text-[#64748d]">
+              <h3 className="text-[16px] font-medium text-foreground truncate">{branch.name}</h3>
+              <div className="flex items-center gap-1 text-[13px] text-fg-secondary">
                 <MapPin className="h-3 w-3 shrink-0" strokeWidth={1.5} />
                 <span className="truncate">{getFullAddress(branch)}</span>
               </div>
@@ -64,7 +64,7 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
               >
                 <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
               </button>
@@ -72,20 +72,20 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
                 <>
                   <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }} />
                   <div
-                    className="absolute right-0 top-full mt-1 w-40 rounded-[6px] border border-[#e5edf5] bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+                    className="absolute right-0 top-full mt-1 w-40 rounded-panel border border-border bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
                     style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
                   >
                     <button
                       onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(branch.id); }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] cursor-pointer"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-foreground hover:bg-surface-muted cursor-pointer"
                     >
-                      <Pencil className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+                      <Pencil className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
                       Edit Branch
                     </button>
                     {isOwner && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(branch.id); }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#DF1B41] hover:bg-[#FEF2F4] cursor-pointer"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-danger hover:bg-danger-subtle cursor-pointer"
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                         Delete Branch
@@ -102,16 +102,16 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
       {/* Stats */}
       <div className="px-5 pb-3">
         <div className="grid grid-cols-3 gap-3">
-          <div className="flex items-center gap-1.5 text-[14px] text-[#273951]">
-            <Stethoscope className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+          <div className="flex items-center gap-1.5 text-[14px] text-foreground">
+            <Stethoscope className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
             <span>{branch.doctorCount} Doctor{branch.doctorCount !== 1 ? "s" : ""}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[14px] text-[#273951]">
-            <Users className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+          <div className="flex items-center gap-1.5 text-[14px] text-foreground">
+            <Users className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
             <span>{branch.patientCount} Patient{branch.patientCount !== 1 ? "s" : ""}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[14px] text-[#273951]">
-            <CalendarDays className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+          <div className="flex items-center gap-1.5 text-[14px] text-foreground">
+            <CalendarDays className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
             <span>{branch.todayAppointments} today</span>
           </div>
         </div>
@@ -125,23 +125,23 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
               const initials = (doc.name ?? "?").split(" ").map((n) => n[0]).join("").slice(0, 2);
               return (
                 <Avatar key={doc.id} className="h-7 w-7 border-2 border-white" style={{ marginLeft: i > 0 ? "-6px" : 0 }}>
-                  <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[11px] font-medium">
+                  <AvatarFallback className="bg-brand-subtle text-brand text-[11px] font-medium">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
               );
             })}
             {branch.doctorCount > 4 && (
-              <span className="ml-1.5 text-[13px] text-[#64748d]">+{branch.doctorCount - 4}</span>
+              <span className="ml-1.5 text-[13px] text-fg-secondary">+{branch.doctorCount - 4}</span>
             )}
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-[#e5edf5]">
+      <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-border">
         {hoursSummary ? (
-          <div className="flex min-w-0 items-center gap-1.5 text-[13px] text-[#64748d]" title={hoursSummary}>
+          <div className="flex min-w-0 items-center gap-1.5 text-[13px] text-fg-secondary" title={hoursSummary}>
             <Clock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
             <span className="truncate">{hoursSummary}</span>
           </div>
@@ -149,13 +149,13 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
           <Link
             href={`/dashboard/branches/${branch.id}?tab=settings`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 text-[13px] font-medium text-[#8A5A00] hover:underline"
+            className="flex items-center gap-1.5 text-[13px] font-medium text-warning hover:underline"
           >
             <Clock className="h-3 w-3" strokeWidth={1.5} />
             Set hours
           </Link>
         ) : (
-          <div className="flex items-center gap-1.5 text-[13px] text-[#64748d]">
+          <div className="flex items-center gap-1.5 text-[13px] text-fg-secondary">
             <Clock className="h-3 w-3" strokeWidth={1.5} />
             <span>No hours set</span>
           </div>
@@ -164,8 +164,8 @@ export function BranchCard({ branch, userRole, onEdit, onDelete }: BranchCardPro
           <span
             className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[12px] font-medium ${
               open
-                ? "bg-[#ECFDF5] text-[#15be53]"
-                : "bg-[#FEF2F4] text-[#DF1B41]"
+                ? "bg-success-subtle text-success"
+                : "bg-danger-subtle text-danger"
             }`}
           >
             {open ? "Open" : "Closed Today"}

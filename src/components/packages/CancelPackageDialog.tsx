@@ -76,7 +76,7 @@ export function CancelPackageDialog({ pkg, onClose, onCancelled }: Props) {
             type="submit"
             form="cancel-package-form"
             disabled={!reason.trim() || saving}
-            className="h-8 gap-1.5 rounded-md bg-[#DF1B41] text-[14px] hover:bg-[#b3162f]"
+            className="h-8 gap-1.5 rounded-md bg-danger text-[14px] hover:bg-danger/90"
           >
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             Cancel package
@@ -99,12 +99,12 @@ export function CancelPackageDialog({ pkg, onClose, onCancelled }: Props) {
           />
         </div>
         {invoice && invoiceCancellable && (
-          <label className="flex items-start gap-2 text-[14px] text-[#273951]">
+          <label className="flex items-start gap-2 text-[14px] text-foreground">
             <input
               type="checkbox"
               checked={cancelInvoice}
               onChange={(e) => setCancelInvoice(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-[#533afd]"
+              className="mt-0.5 h-4 w-4 accent-brand"
             />
             <span>
               Also cancel the unpaid sale invoice <span className="font-medium tabular-nums">{invoice.invoiceNumber}</span>
@@ -112,7 +112,7 @@ export function CancelPackageDialog({ pkg, onClose, onCancelled }: Props) {
           </label>
         )}
         {invoice && !invoiceCancellable && invoice.status !== "CANCELLED" && (
-          <p className="text-[13px] text-[#64748d]">
+          <p className="text-[13px] text-fg-secondary">
             The sale invoice {invoice.invoiceNumber} has payments — refund it from Invoices if needed.
           </p>
         )}

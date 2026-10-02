@@ -84,12 +84,12 @@ export function PatientPackagesSection({
   const past = packages?.filter((p) => p.effectiveStatus !== "ACTIVE") ?? [];
 
   return (
-    <section className="rounded-[6px] border border-[#e5edf5] bg-white" aria-labelledby="patient-packages-title">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5edf5] px-5 py-3">
+    <section className="rounded-panel border border-border bg-white" aria-labelledby="patient-packages-title">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
         <div>
-          <h2 id="patient-packages-title" className="text-[16px] font-medium text-[#061b31]">Packages</h2>
+          <h2 id="patient-packages-title" className="text-[16px] font-medium text-foreground">Packages</h2>
           {summary && (
-            <p className="text-[13px] text-[#64748d]">
+            <p className="text-[13px] text-fg-secondary">
               {summary.activeCount === 0
                 ? "No active package"
                 : `${summary.activeCount} active · ${summary.sessionsLeft} session${summary.sessionsLeft === 1 ? "" : "s"} left`}
@@ -99,7 +99,7 @@ export function PatientPackagesSection({
         {canSell && (
           <Button
             onClick={() => setSellOpen(true)}
-            className="h-8 gap-1.5 rounded-md bg-[#533afd] text-[14px] text-white hover:bg-[#4434d4]"
+            className="h-8 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} /> Sell package
           </Button>
@@ -107,21 +107,21 @@ export function PatientPackagesSection({
       </div>
 
       <div className="px-5 py-4">
-        {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
+        {error && <p className="text-[14px] text-danger">{error}</p>}
         {!packages && !error && (
-          <div className="flex items-center gap-2 text-[14px] text-[#64748d]">
+          <div className="flex items-center gap-2 text-[14px] text-fg-secondary">
             <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Loading packages…
           </div>
         )}
         {packages && packages.length === 0 && (
           <div className="flex flex-col items-center py-6 text-center">
-            <Package className="mb-2 h-8 w-8 text-[#c1c9d2]" strokeWidth={1.25} />
-            <p className="text-[14px] text-[#64748d]">No packages sold to {patientName} yet.</p>
+            <Package className="mb-2 h-8 w-8 text-border-strong" strokeWidth={1.25} />
+            <p className="text-[14px] text-fg-secondary">No packages sold to {patientName} yet.</p>
           </div>
         )}
         {packages && packages.length > 0 && (
           <div className="space-y-3">
-            {current.length === 0 && <p className="text-[14px] text-[#64748d]">No active package.</p>}
+            {current.length === 0 && <p className="text-[14px] text-fg-secondary">No active package.</p>}
             {current.map((p) => (
               <PackageCard
                 key={p.id}
@@ -138,7 +138,7 @@ export function PatientPackagesSection({
                   type="button"
                   onClick={() => setShowPast((v) => !v)}
                   aria-expanded={showPast}
-                  className="inline-flex items-center gap-1 text-[13px] font-medium text-[#533afd] hover:underline"
+                  className="inline-flex items-center gap-1 text-[13px] font-medium text-brand hover:underline"
                 >
                   {showPast ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                   {showPast ? "Hide" : "Show"} {past.length} past package{past.length === 1 ? "" : "s"}
@@ -212,28 +212,28 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
   const active = pkg.effectiveStatus === "ACTIVE";
 
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] px-4 py-3">
+    <div className="rounded-panel border border-border px-4 py-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[15px] font-medium text-[#061b31]">{pkg.name}</span>
+            <span className="text-[15px] font-medium text-foreground">{pkg.name}</span>
             <span className={`inline-flex rounded-full px-2 py-0.5 text-[12px] font-medium ${style.className}`}>
               {style.label}
             </span>
           </div>
-          <p className="mt-0.5 text-[13px] text-[#64748d]">
+          <p className="mt-0.5 text-[13px] text-fg-secondary">
             {treatmentTypesSummary(pkg.treatmentTypes, labelFor)} · bought {clinicDateLabel(new Date(pkg.purchasedAt))}
             {pkg.soldBy?.name ? ` by ${pkg.soldBy.name}` : ""}
           </p>
         </div>
         <div className="text-right">
-          <div className="whitespace-nowrap text-[15px] tabular-nums text-[#061b31]">{formatMYR(pkg.price)}</div>
+          <div className="whitespace-nowrap text-[15px] tabular-nums text-foreground">{formatMYR(pkg.price)}</div>
           {pkg.invoice && (
-            <div className="text-[12px] text-[#64748d]">
+            <div className="text-[12px] text-fg-secondary">
               {canOpenInvoices ? (
                 <Link
                   href={`/dashboard/invoices?invoice=${encodeURIComponent(pkg.invoice.id)}`}
-                  className="tabular-nums text-[#533afd] hover:underline"
+                  className="tabular-nums text-brand hover:underline"
                 >
                   {pkg.invoice.invoiceNumber}
                 </Link>
@@ -248,37 +248,37 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
 
       <div className="mt-3">
         <div className="flex items-baseline justify-between text-[13px]">
-          <span className="font-medium text-[#061b31] tabular-nums">{sessionsUsedLabel(pkg.sessionsUsed, pkg.sessionsTotal)}</span>
-          <span className="text-[#64748d] tabular-nums">
+          <span className="font-medium text-foreground tabular-nums">{sessionsUsedLabel(pkg.sessionsUsed, pkg.sessionsTotal)}</span>
+          <span className="text-fg-secondary tabular-nums">
             {pkg.sessionsLeft} left
             {pkg.expiresAt ? ` · ${active ? "expires" : "expired"} ${clinicDateLabel(new Date(pkg.expiresAt))}` : " · no expiry"}
           </span>
         </div>
         <div
-          className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#eef2f7]"
+          className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-hover"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={pkg.sessionsTotal}
           aria-valuenow={pkg.sessionsUsed}
           aria-label={`${pkg.name} sessions used`}
         >
-          <div className="h-full rounded-full bg-[#533afd]" style={{ width: `${pct}%` }} />
+          <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
         </div>
       </div>
 
       {pkg.cancelReason && (
-        <p className="mt-2 text-[13px] text-[#DF1B41]">
+        <p className="mt-2 text-[13px] text-danger">
           Cancelled{pkg.cancelledAt ? ` ${clinicDateLabel(new Date(pkg.cancelledAt))}` : ""}: {pkg.cancelReason}
         </p>
       )}
-      {pkg.notes && <p className="mt-2 text-[13px] text-[#425466]">{pkg.notes}</p>}
+      {pkg.notes && <p className="mt-2 text-[13px] text-fg-secondary">{pkg.notes}</p>}
 
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="inline-flex items-center gap-1 text-[13px] font-medium text-[#533afd] hover:underline"
+          className="inline-flex items-center gap-1 text-[13px] font-medium text-brand hover:underline"
         >
           {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
           Sessions used ({redemptions.filter((r) => !r.reversedAt).length})
@@ -288,7 +288,7 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-7 gap-1 rounded-md border-[#e5edf5] px-2 text-[12px] text-[#DF1B41]"
+            className="h-7 gap-1 rounded-md border-border px-2 text-[12px] text-danger"
           >
             <XCircle className="h-3 w-3" strokeWidth={1.75} /> Cancel package
           </Button>
@@ -298,11 +298,11 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
       {open && (
         <div className="mt-2 overflow-x-auto">
           {redemptions.length === 0 ? (
-            <p className="text-[13px] text-[#64748d]">No sessions used yet.</p>
+            <p className="text-[13px] text-fg-secondary">No sessions used yet.</p>
           ) : (
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-[#e5edf5] text-left text-[12px] text-[#697386]">
+                <tr className="border-b border-border text-left text-[12px] text-fg-muted">
                   <th className="py-1.5 pr-3 font-medium">Visit</th>
                   <th className="py-1.5 pr-3 font-medium">Treatment</th>
                   <th className="py-1.5 pr-3 font-medium">Doctor</th>
@@ -313,31 +313,31 @@ function PackageCard({ pkg, branchId, canCancel, canOpenInvoices, onCancel }: Ca
                 {redemptions.map((r) => {
                   const when = r.appointment?.dateTime ?? r.redeemedAt;
                   return (
-                    <tr key={r.id} className="border-b border-[#f0f3f7] last:border-b-0">
+                    <tr key={r.id} className="border-b border-border-subtle last:border-b-0">
                       <td className="whitespace-nowrap py-1.5 pr-3 tabular-nums">
                         <Link
                           href={appointmentHref(r.appointmentId, when, branchId)}
-                          className={r.reversedAt ? "text-[#94a3b8] line-through" : "text-[#533afd] hover:underline"}
+                          className={r.reversedAt ? "text-fg-muted line-through" : "text-brand hover:underline"}
                         >
                           {clinicDateLabel(new Date(when), "day")}
                         </Link>
                       </td>
-                      <td className="py-1.5 pr-3 text-[#425466]">
+                      <td className="py-1.5 pr-3 text-fg-secondary">
                         {r.appointment?.treatmentType ? labelFor(r.appointment.treatmentType) : "—"}
                       </td>
-                      <td className="py-1.5 pr-3 text-[#425466]">
+                      <td className="py-1.5 pr-3 text-fg-secondary">
                         {r.appointment?.doctorName ? displayDoctorName(r.appointment.doctorName) : "—"}
                       </td>
                       <td className="py-1.5">
                         {r.reversedAt ? (
                           <span
-                            className="inline-flex items-center gap-1 text-[12px] text-[#9b6829]"
+                            className="inline-flex items-center gap-1 text-[12px] text-warning"
                             title={`Undone ${clinicDateLabel(new Date(r.reversedAt))}${r.reversedBy?.name ? ` by ${r.reversedBy.name}` : ""}`}
                           >
                             <Undo2 className="h-3 w-3" strokeWidth={1.75} /> Undone
                           </span>
                         ) : (
-                          <span className="text-[12px] text-[#108c3d]">Used</span>
+                          <span className="text-[12px] text-success">Used</span>
                         )}
                       </td>
                     </tr>

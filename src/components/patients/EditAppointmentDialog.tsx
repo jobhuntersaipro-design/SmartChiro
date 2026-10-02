@@ -242,18 +242,18 @@ export function EditAppointmentDialog({
         aria-modal="true"
         aria-labelledby="edit-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#e5edf5] bg-white p-6"
+        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
-        <h2 id="edit-appointment-title" className="text-[18px] font-medium text-[#0A2540] mb-1">Edit appointment</h2>
+        <h2 id="edit-appointment-title" className="text-[18px] font-medium text-foreground mb-1">Edit appointment</h2>
         {appt && (
-          <p className="text-[13px] text-[#64748d] mb-4">
+          <p className="text-[13px] text-fg-secondary mb-4">
             {appt.patient.firstName} {appt.patient.lastName}
           </p>
         )}
 
         {loading && (
-          <div className="flex items-center gap-2 py-6 text-[13px] text-[#64748d]">
+          <div className="flex items-center gap-2 py-6 text-[13px] text-fg-secondary">
             <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Loading…
           </div>
         )}
@@ -262,28 +262,28 @@ export function EditAppointmentDialog({
           <>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label htmlFor="edit-appointment-date" className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
+                <label htmlFor="edit-appointment-date" className="block text-[12px] font-medium text-fg-secondary mb-1">Date</label>
                 <DateInput
                   id="edit-appointment-date"
                   value={date}
                   onChange={setDate}
-                  inputClassName="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  inputClassName="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div>
-                <label htmlFor="edit-appointment-time" className="block text-[12px] font-medium text-[#425466] mb-1">Time</label>
+                <label htmlFor="edit-appointment-time" className="block text-[12px] font-medium text-fg-secondary mb-1">Time</label>
                 <input
                   id="edit-appointment-time"
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
 
             <div className="mb-4">
-              <label htmlFor="edit-appointment-duration" className="block text-[12px] font-medium text-[#425466] mb-1">
+              <label htmlFor="edit-appointment-duration" className="block text-[12px] font-medium text-fg-secondary mb-1">
                 Duration (minutes)
               </label>
               <input
@@ -294,25 +294,25 @@ export function EditAppointmentDialog({
                 step={15}
                 value={duration}
                 onChange={(e) => setDuration(parseInt(e.target.value || "30", 10))}
-                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
             {isAdmin && (
               <div className="mb-4">
-                <label className="block text-[12px] font-medium text-[#425466] mb-1">Doctor</label>
+                <label className="block text-[12px] font-medium text-fg-secondary mb-1">Doctor</label>
                 <DoctorCombobox value={doctor} onChange={setDoctor} branchId={appt.branchId} />
               </div>
             )}
 
             {isAdmin && (
               <div className="mb-4">
-                <label htmlFor="edit-appointment-status" className="block text-[12px] font-medium text-[#425466] mb-1">Status</label>
+                <label htmlFor="edit-appointment-status" className="block text-[12px] font-medium text-fg-secondary mb-1">Status</label>
                 <select
                   id="edit-appointment-status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                  className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
                 >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -320,14 +320,14 @@ export function EditAppointmentDialog({
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-[#94a3b8] mt-1">
+                <p className="text-[11px] text-fg-muted mt-1">
                   Cancel via the discrete Cancel action.
                 </p>
               </div>
             )}
 
             <div className="mb-4">
-              <label htmlFor="edit-appointment-room" className="block text-[12px] font-medium text-[#425466] mb-1">Room (optional)</label>
+              <label htmlFor="edit-appointment-room" className="block text-[12px] font-medium text-fg-secondary mb-1">Room (optional)</label>
               <input
                 id="edit-appointment-room"
                 type="text"
@@ -335,30 +335,30 @@ export function EditAppointmentDialog({
                 maxLength={60}
                 onChange={(e) => setRoom(e.target.value)}
                 placeholder="e.g. Room 2"
-                className="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
             <div className="mb-4">
-              <label htmlFor="edit-appointment-notes" className="block text-[12px] font-medium text-[#425466] mb-1">Notes</label>
+              <label htmlFor="edit-appointment-notes" className="block text-[12px] font-medium text-fg-secondary mb-1">Notes</label>
               <textarea
                 id="edit-appointment-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-1.5 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="w-full rounded-md border border-border bg-white px-2 py-1.5 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
             {isPast && (
-              <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41] inline-flex items-start gap-2">
+              <div className="mb-3 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger inline-flex items-start gap-2">
                 <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" strokeWidth={2} />
                 <span>Selected time is in the past.</span>
               </div>
             )}
 
             {conflicts.length > 0 && (
-              <div className="mb-3 rounded-md bg-[#FDE7EC] border border-[#DF1B41]/20 px-3 py-2 text-[13px] text-[#DF1B41]">
+              <div className="mb-3 rounded-md bg-danger-subtle border border-danger/20 px-3 py-2 text-[13px] text-danger">
                 <div className="flex items-center gap-1.5 font-medium mb-1">
                   <AlertCircle className="h-3.5 w-3.5" strokeWidth={2} />
                   Conflicts with existing appointment
@@ -376,12 +376,12 @@ export function EditAppointmentDialog({
             )}
 
             {error && !conflicts.length && (
-              <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+              <div className="mb-3 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger">
                 {error}
               </div>
             )}
 
-            <p className="text-[11px] text-[#94a3b8] mb-3">Your local time · {tz}</p>
+            <p className="text-[11px] text-fg-muted mb-3">Your local time · {tz}</p>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">

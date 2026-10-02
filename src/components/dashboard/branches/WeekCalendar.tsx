@@ -73,12 +73,12 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white overflow-auto"
+      className="rounded-panel border border-border bg-white overflow-auto"
       style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
     >
       <div className="min-w-175">
         {/* Day headers */}
-        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-[#e5edf5] sticky top-0 bg-white z-10">
+        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border sticky top-0 bg-white z-10">
           <div className="px-2 py-2" />
           {days.map((day, i) => {
             const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
@@ -89,12 +89,12 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
             return (
               <div
                 key={i}
-                className={`px-2 py-2 text-center border-l border-[#e5edf5] ${
-                  isToday ? "bg-[#F0EEFF]" : ""
+                className={`px-2 py-2 text-center border-l border-border ${
+                  isToday ? "bg-brand-subtle" : ""
                 }`}
               >
-                <div className="text-[12px] text-[#64748d] font-medium">{dayName}</div>
-                <div className={`text-[16px] font-medium ${isToday ? "text-[#533afd]" : "text-[#061b31]"}`}>
+                <div className="text-[12px] text-fg-secondary font-medium">{dayName}</div>
+                <div className={`text-[16px] font-medium ${isToday ? "text-brand" : "text-foreground"}`}>
                   {dayNum}
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
                 style={{ height: SLOT_HEIGHT }}
               >
                 {/* Time label */}
-                <div className="px-2 flex items-start pt-0.5 text-[11px] text-[#64748d] border-r border-[#e5edf5]">
+                <div className="px-2 flex items-start pt-0.5 text-[11px] text-fg-secondary border-r border-border">
                   {isHourMark && (
                     <span>{parseInt(slot) > 12 ? `${parseInt(slot) - 12} PM` : parseInt(slot) === 12 ? "12 PM" : `${parseInt(slot)} AM`}</span>
                   )}
@@ -130,9 +130,9 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
                   return (
                     <div
                       key={dayIdx}
-                      className={`border-l border-[#e5edf5] relative ${
-                        isHourMark ? "border-t border-[#e5edf5]" : "border-t border-dashed border-[#f0f3f7]"
-                      } ${closed ? "bg-[#f9fafb]" : ""} ${isToday && !closed ? "bg-[#FAFAFE]" : ""}`}
+                      className={`border-l border-border relative ${
+                        isHourMark ? "border-t border-border" : "border-t border-dashed border-border-subtle"
+                      } ${closed ? "bg-surface-subtle" : ""} ${isToday && !closed ? "bg-surface-subtle" : ""}`}
                     >
                       {slotAppts.map((appt) => {
                         const docColor = appt.doctor ? doctorColorMap.get(appt.doctor.id) ?? "#64748d" : "#64748d";
@@ -153,8 +153,8 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
                             }}
                             title={`${appt.doctor?.name ?? "Unassigned"} — ${patientName} (${appt.status})`}
                           >
-                            <div className="font-medium text-[#061b31] truncate">{patientName}</div>
-                            <div className="text-[#64748d] truncate">{appt.doctor?.name ?? "Unassigned"}</div>
+                            <div className="font-medium text-foreground truncate">{patientName}</div>
+                            <div className="text-fg-secondary truncate">{appt.doctor?.name ?? "Unassigned"}</div>
                           </div>
                         );
                       })}

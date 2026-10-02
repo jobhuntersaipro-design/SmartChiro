@@ -55,17 +55,17 @@ export function PortalCancelDialog({ appointment, onClose, onCancelled }: Props)
 
   return (
     <Dialog open={!!appointment} onOpenChange={(open) => !open && !busy && onClose()}>
-      <DialogContent className="gap-0 rounded-[8px] bg-white p-5 sm:max-w-md" showCloseButton={false}>
-        <DialogTitle className="text-[18px] font-medium text-[#0A2540]">Cancel this appointment?</DialogTitle>
+      <DialogContent className="gap-0 rounded-surface bg-white p-5 sm:max-w-md" showCloseButton={false}>
+        <DialogTitle className="text-[18px] font-medium text-foreground">Cancel this appointment?</DialogTitle>
         {appointment && (
-          <DialogDescription className="mt-2 text-[15px] text-[#425466]">
+          <DialogDescription className="mt-2 text-[15px] text-fg-secondary">
             {appointment.treatment} with {appointment.doctorName} on {portalDay(appointment.dateTime)} at{" "}
             {portalTime(appointment.dateTime)} (Malaysia time), {appointment.branch.name}.
           </DialogDescription>
         )}
         <div className="mt-4">
           <label htmlFor="portal-cancel-reason" className={LABEL}>
-            Reason <span className="font-normal text-[#697386]">(optional)</span>
+            Reason <span className="font-normal text-fg-muted">(optional)</span>
           </label>
           <textarea
             id="portal-cancel-reason"
@@ -73,7 +73,7 @@ export function PortalCancelDialog({ appointment, onClose, onCancelled }: Props)
             maxLength={300}
             rows={3}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full resize-none rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 py-2 text-[16px] text-[#0A2540] focus:border-[#635BFF] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+            className="w-full resize-none rounded-control border border-border bg-surface-muted px-3 py-2 text-[16px] text-foreground focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
           />
         </div>
         {error && (
@@ -89,7 +89,7 @@ export function PortalCancelDialog({ appointment, onClose, onCancelled }: Props)
             type="button"
             onClick={() => void confirm()}
             disabled={busy}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[4px] bg-[#DF1B41] px-4 text-[15px] font-medium text-white transition-colors hover:bg-[#C4153A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DF1B41] focus-visible:ring-offset-2 disabled:opacity-60"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control bg-danger px-4 text-[15px] font-medium text-white transition-colors hover:bg-danger/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 disabled:opacity-60"
           >
             {busy && <Loader2 className="size-4 animate-spin" aria-hidden />}
             Cancel appointment

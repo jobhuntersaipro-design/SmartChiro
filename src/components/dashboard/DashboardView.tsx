@@ -200,7 +200,7 @@ export function DashboardView({
   if (hasBranch === null) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 rounded bg-[#e5edf5] animate-pulse" />
+        <div className="h-8 w-64 rounded bg-border animate-pulse" />
         <SkeletonStatCards />
         <SkeletonTable rows={5} />
       </div>
@@ -256,14 +256,14 @@ export function DashboardView({
       {/* Schedule + Activity */}
       <div className="grid grid-cols-1 2xl:grid-cols-[1fr_320px] gap-6 [&>*]:min-w-0">
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
               "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
           }}
         >
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h3 className="text-[16px] font-normal text-[#061b31]">
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-[16px] font-normal text-foreground">
               {isDoctor ? "My Schedule Today" : "Today's Schedule"}
             </h3>
           </div>
@@ -280,14 +280,14 @@ export function DashboardView({
         </div>
 
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
               "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
           }}
         >
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h3 className="text-[16px] font-normal text-[#061b31]">
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-[16px] font-normal text-foreground">
               {isDoctor ? "Recent Patients" : "Recent Activity"}
             </h3>
           </div>
@@ -305,14 +305,14 @@ export function DashboardView({
       {/* Doctor: Recent X-Rays */}
       {isDoctor && (
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="rounded-panel border border-border bg-white"
           style={{
             boxShadow:
               "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
           }}
         >
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h3 className="text-[16px] font-normal text-[#061b31]">
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-[16px] font-normal text-foreground">
               Recent X-Rays
             </h3>
           </div>

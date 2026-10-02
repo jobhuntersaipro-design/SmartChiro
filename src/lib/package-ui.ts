@@ -187,10 +187,10 @@ export function seriesBookedMessage(created: number, skipped: number): string {
 // ─── Packages ───
 
 export const PACKAGE_STATUS_STYLE: Record<PackageStatusValue, { label: string; className: string }> = {
-  ACTIVE: { label: "Active", className: "bg-[#E8F7EE] text-[#108c3d]" },
-  COMPLETED: { label: "Used up", className: "bg-[#F0EEFF] text-[#533afd]" },
-  EXPIRED: { label: "Expired", className: "bg-[#FFF8E1] text-[#9b6829]" },
-  CANCELLED: { label: "Cancelled", className: "bg-[#FDE7EC] text-[#DF1B41]" },
+  ACTIVE: { label: "Active", className: "bg-success-subtle text-success" },
+  COMPLETED: { label: "Used up", className: "bg-brand-subtle text-brand" },
+  EXPIRED: { label: "Expired", className: "bg-warning-subtle text-warning" },
+  CANCELLED: { label: "Cancelled", className: "bg-danger-subtle text-danger" },
 };
 
 /** "5 of 12 used" */

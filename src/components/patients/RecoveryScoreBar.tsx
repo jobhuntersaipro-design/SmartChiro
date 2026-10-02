@@ -23,13 +23,13 @@ export function RecoveryScoreBar({ metric, score }: RecoveryScoreBarProps) {
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[13px] font-medium text-[#273951] truncate">{label}</span>
+        <span className="text-[13px] font-medium text-foreground truncate">{label}</span>
         <span className="text-[13px] font-medium whitespace-nowrap" style={{ color }}>
           {clamped}/10
         </span>
       </div>
-      <p className="text-[11px] text-[#64748d] mb-1 truncate">{directionHint(direction)}</p>
-      <div className="w-full h-1.5 rounded-full overflow-hidden bg-[#e5edf5]">
+      <p className="text-[11px] text-fg-secondary mb-1 truncate">{directionHint(direction)}</p>
+      <div className="w-full h-1.5 rounded-full overflow-hidden bg-border">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${widthPercent}%`, backgroundColor: color }}

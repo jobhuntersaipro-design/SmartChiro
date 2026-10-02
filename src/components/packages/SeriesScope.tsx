@@ -38,7 +38,7 @@ export function SeriesScopeChoice({ value, onChange, verb, name }: ChoiceProps) 
         <label
           key={o.id}
           className={`flex cursor-pointer items-start gap-2.5 rounded-md border px-3 py-2 transition-colors ${
-            value === o.id ? "border-[#533afd] bg-[#F7F5FF]" : "border-[#e5edf5] hover:bg-[#f6f9fc]"
+            value === o.id ? "border-brand bg-brand-subtle" : "border-border hover:bg-surface-muted"
           }`}
         >
           <input
@@ -46,11 +46,11 @@ export function SeriesScopeChoice({ value, onChange, verb, name }: ChoiceProps) 
             name={name}
             checked={value === o.id}
             onChange={() => onChange(o.id)}
-            className="mt-1 accent-[#533afd]"
+            className="mt-1 accent-brand"
           />
           <span>
-            <span className="block text-[14px] font-medium text-[#061b31]">{o.label}</span>
-            <span className="block text-[12px] text-[#64748d]">{o.hint}</span>
+            <span className="block text-[14px] font-medium text-foreground">{o.label}</span>
+            <span className="block text-[12px] text-fg-secondary">{o.hint}</span>
           </span>
         </label>
       ))}
@@ -129,7 +129,7 @@ export function SeriesProblemsDialog({ problems, message, canManageAll, busy = f
               type="button"
               disabled={busy}
               onClick={() => onApplyAnyway(option === "force" ? { force: true } : { forceOutsideHours: true })}
-              className="h-8 gap-1.5 rounded-md bg-[#F59E0B] text-[14px] text-white hover:bg-[#D97706]"
+              className="h-8 gap-1.5 rounded-md bg-warning text-[14px] text-white hover:bg-warning"
             >
               {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               {option === "force" ? "Apply anyway" : "Apply outside hours"}
@@ -138,16 +138,16 @@ export function SeriesProblemsDialog({ problems, message, canManageAll, busy = f
         </>
       }
     >
-      <ul className="divide-y divide-[#f0f3f7] rounded-md border border-[#e5edf5]">
+      <ul className="divide-y divide-border-subtle rounded-md border border-border">
         {(problems ?? []).map((p) => (
           <li key={p.appointmentId} className="px-3 py-2 text-[13px]">
             <div className="flex items-baseline gap-2">
               {p.seriesIndex !== null && (
-                <span className="text-[12px] tabular-nums text-[#94a3b8]">#{p.seriesIndex}</span>
+                <span className="text-[12px] tabular-nums text-fg-muted">#{p.seriesIndex}</span>
               )}
-              <span className="font-medium tabular-nums text-[#061b31]">{occurrenceWhen(p.dateTime)}</span>
+              <span className="font-medium tabular-nums text-foreground">{occurrenceWhen(p.dateTime)}</span>
             </div>
-            <ul className="mt-0.5 list-disc pl-5 text-[#9b6829]">
+            <ul className="mt-0.5 list-disc pl-5 text-warning">
               {describeOccurrenceProblems(p).map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -156,7 +156,7 @@ export function SeriesProblemsDialog({ problems, message, canManageAll, busy = f
         ))}
       </ul>
       {!option && (
-        <p className="mt-3 text-[13px] text-[#64748d]">
+        <p className="mt-3 text-[13px] text-fg-secondary">
           {problems?.some((p) => p.problems.includes("past"))
             ? "Visits can't be moved into the past."
             : "Only owners, admins and front desk can override these. Pick another time or change this visit only."}

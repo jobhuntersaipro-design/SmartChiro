@@ -81,9 +81,9 @@ export function ConsolidatedEInvoicePanel({ branchId }: { branchId: string }) {
   }
 
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] p-4">
-      <p className="text-[15px] font-medium text-[#0A2540]">Monthly consolidated e-invoice</p>
-      <p className="mb-3 text-[13px] text-[#64748d]">
+    <div className="rounded-panel border border-border p-4">
+      <p className="text-[15px] font-medium text-foreground">Monthly consolidated e-invoice</p>
+      <p className="mb-3 text-[13px] text-fg-secondary">
         For patients who didn&apos;t ask for their own e-invoice: the month&apos;s invoices go to LHDN as one &quot;General Public&quot; e-invoice,
         within 7 days after month end. Invoices over RM10,000 must be issued individually.
       </p>
@@ -104,20 +104,20 @@ export function ConsolidatedEInvoicePanel({ branchId }: { branchId: string }) {
 
       {preview && (
         <div className="mt-3 space-y-3 text-[14px]">
-          <p className="text-[#425466]">
+          <p className="text-fg-secondary">
             {preview.included.length} invoice{preview.included.length === 1 ? "" : "s"} · {formatMYR(preview.totals.subtotal)} + SST{" "}
-            {formatMYR(preview.totals.taxAmount)} = <span className="font-medium text-[#061b31]">{formatMYR(preview.totals.total)}</span>
+            {formatMYR(preview.totals.taxAmount)} = <span className="font-medium text-foreground">{formatMYR(preview.totals.total)}</span>
             {preview.totals.documents > 1 && <> · {preview.totals.documents} documents</>}
             {" · "}due by {clinicDateLabel(new Date(`${preview.dueBy}T12:00:00+08:00`))}
-            {preview.late && <span className="text-[#b41a36]"> (late)</span>}
+            {preview.late && <span className="text-danger"> (late)</span>}
           </p>
           {preview.excluded.length > 0 && (
-            <p className="text-[13px] text-[#9b6829]">
+            <p className="text-[13px] text-warning">
               Not included: {preview.excluded.map((e) => `${e.invoiceNumber} (${e.reason === "over_limit" ? "over RM10,000 — issue individually" : "zero amount"})`).join(", ")}
             </p>
           )}
           {!preview.supplier.ok && (
-            <ul className="list-disc pl-5 text-[13px] text-[#b41a36]">
+            <ul className="list-disc pl-5 text-[13px] text-danger">
               {preview.supplier.errors.map((e, i) => (
                 <li key={i}>{e.message}</li>
               ))}
@@ -130,11 +130,11 @@ export function ConsolidatedEInvoicePanel({ branchId }: { branchId: string }) {
                   <span className="font-mono">{s.codeNumber}</span>
                   <EInvoiceStatusPill status={s.status} />
                   {s.validationUrl && (
-                    <a href={s.validationUrl} target="_blank" rel="noopener noreferrer" className="text-[#533afd] hover:underline">
+                    <a href={s.validationUrl} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
                       Validation link
                     </a>
                   )}
-                  {s.errors[0] && <span className="text-[#b41a36]">{s.errors[0].message}</span>}
+                  {s.errors[0] && <span className="text-danger">{s.errors[0].message}</span>}
                 </li>
               ))}
             </ul>
@@ -158,9 +158,9 @@ export function ConsolidatedEInvoicePanel({ branchId }: { branchId: string }) {
             )}
           </div>
           {!preview.configured && (
-            <p className="text-[13px] text-[#64748d]">MyInvois isn&apos;t connected, so submitting will be refused — download the JSON instead.</p>
+            <p className="text-[13px] text-fg-secondary">MyInvois isn&apos;t connected, so submitting will be refused — download the JSON instead.</p>
           )}
-          {!preview.einvoiceEnabled && <p className="text-[13px] text-[#64748d]">Turn on e-invoicing for this branch to submit.</p>}
+          {!preview.einvoiceEnabled && <p className="text-[13px] text-fg-secondary">Turn on e-invoicing for this branch to submit.</p>}
         </div>
       )}
     </div>

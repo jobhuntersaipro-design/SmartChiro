@@ -6,10 +6,10 @@ import { CARD, LINK, PILL } from "@/components/portal/styles";
 import { cn } from "@/lib/utils";
 
 const STATUS_CLASS: Record<string, string> = {
-  PAID: "bg-[#E8F7EE] text-[#1E7A35]",
-  PARTIALLY_PAID: "bg-[#FFF4E0] text-[#8A5A12]",
-  OVERDUE: "bg-[#FDE8EC] text-[#B41A36]",
-  SENT: "bg-[#F0EEFF] text-[#635BFF]",
+  PAID: "bg-success-subtle text-success",
+  PARTIALLY_PAID: "bg-warning-subtle text-warning",
+  OVERDUE: "bg-danger-subtle text-danger",
+  SENT: "bg-brand-subtle text-brand",
 };
 
 interface Props {
@@ -20,8 +20,8 @@ interface Props {
 function Money({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
   return (
     <div>
-      <dt className="text-[14px] text-[#697386]">{label}</dt>
-      <dd className={cn("whitespace-nowrap text-[15px]", strong ? "font-medium text-[#0A2540]" : "text-[#425466]")}>
+      <dt className="text-[14px] text-fg-muted">{label}</dt>
+      <dd className={cn("whitespace-nowrap text-[15px]", strong ? "font-medium text-foreground" : "text-fg-secondary")}>
         {formatMYR(value)}
       </dd>
     </div>
@@ -31,7 +31,7 @@ function Money({ label, value, strong }: { label: string; value: number; strong?
 /** Invoices with totals, balance, and PDF links for the invoice and each receipt. */
 export function PortalInvoices({ invoices, showPatientName }: Props) {
   if (invoices.length === 0) {
-    return <p className={cn(CARD, "p-4 text-[15px] text-[#425466]")}>You have no invoices.</p>;
+    return <p className={cn(CARD, "p-4 text-[15px] text-fg-secondary")}>You have no invoices.</p>;
   }
   return (
     <ul className="space-y-3">
@@ -39,20 +39,20 @@ export function PortalInvoices({ invoices, showPatientName }: Props) {
         <li key={inv.id} className={cn(CARD, "p-4")}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-mono text-[15px] font-medium text-[#0A2540]">{inv.invoiceNumber}</p>
-              <p className="text-[14px] text-[#697386]">
+              <p className="font-mono text-[15px] font-medium text-foreground">{inv.invoiceNumber}</p>
+              <p className="text-[14px] text-fg-muted">
                 {portalDate(inv.issuedAt)} · {inv.branchName}
                 {showPatientName && ` · ${inv.patientFirstName}`}
               </p>
             </div>
-            <span className={cn(PILL, STATUS_CLASS[inv.status] ?? "bg-[#F0F3F7] text-[#425466]")}>{inv.statusLabel}</span>
+            <span className={cn(PILL, STATUS_CLASS[inv.status] ?? "bg-surface-hover text-fg-secondary")}>{inv.statusLabel}</span>
           </div>
           <dl className="mt-3 grid grid-cols-3 gap-2">
             <Money label="Total" value={inv.total} strong />
             <Money label="Paid" value={inv.paid} />
             <Money label="Balance" value={inv.balance} strong={inv.balance > 0} />
           </dl>
-          <div className="mt-3 border-t border-[#E3E8EE] pt-3">
+          <div className="mt-3 border-t border-border pt-3">
             <a
               href={`/api/portal/invoices/${encodeURIComponent(inv.id)}/pdf`}
               target="_blank"
@@ -65,7 +65,7 @@ export function PortalInvoices({ invoices, showPatientName }: Props) {
             {inv.receipts.length > 0 && (
               <ul className="mt-2 space-y-1.5" aria-label={`Payments on ${inv.invoiceNumber}`}>
                 {inv.receipts.map((r) => (
-                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-x-3 text-[14px] text-[#425466]">
+                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-x-3 text-[14px] text-fg-secondary">
                     <span>
                       {portalDate(r.receivedAt)} · {r.method} · <span className="whitespace-nowrap">{formatMYR(r.amount)}</span>
                     </span>

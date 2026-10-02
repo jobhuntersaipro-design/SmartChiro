@@ -22,10 +22,10 @@ export function AppointmentEventCard({ event }: Props) {
 
   return (
     <div className={`flex flex-col leading-tight ${isCancelled ? "opacity-60 line-through" : ""}`}>
-      <span className="text-[12px] font-medium text-[#061b31] truncate">
+      <span className="text-[12px] font-medium text-foreground truncate">
         {a.patient.firstName} {a.patient.lastName}
       </span>
-      <span className="text-[11px] text-[#64748d] tabular-nums">
+      <span className="text-[11px] text-fg-secondary tabular-nums">
         {time} · {a.duration}m
       </span>
     </div>

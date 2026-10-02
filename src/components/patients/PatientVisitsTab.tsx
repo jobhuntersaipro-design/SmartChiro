@@ -26,11 +26,11 @@ interface PatientVisitsTabProps {
 // ─── Visit type badge config ───
 
 const VISIT_TYPE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  initial: { label: "Initial", bg: "bg-[#ededfc]", text: "text-[#533afd]", border: "#533afd" },
-  follow_up: { label: "Follow-up", bg: "bg-[rgba(5,112,222,0.1)]", text: "text-[#0570DE]", border: "#0570DE" },
-  emergency: { label: "Emergency", bg: "bg-[#FDE8EC]", text: "text-[#DF1B41]", border: "#DF1B41" },
-  reassessment: { label: "Reassessment", bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", border: "#9b6829" },
-  discharge: { label: "Discharge", bg: "bg-[#E8F5E8]", text: "text-[#30B130]", border: "#30B130" },
+  initial: { label: "Initial", bg: "bg-brand-subtle", text: "text-brand", border: "#533afd" },
+  follow_up: { label: "Follow-up", bg: "bg-[rgba(5,112,222,0.1)]", text: "text-info", border: "#0570DE" },
+  emergency: { label: "Emergency", bg: "bg-danger-subtle", text: "text-danger", border: "#DF1B41" },
+  reassessment: { label: "Reassessment", bg: "bg-warning-subtle", text: "text-warning", border: "#9b6829" },
+  discharge: { label: "Discharge", bg: "bg-success-subtle", text: "text-success", border: "#30B130" },
 };
 
 function getVisitConfig(type: string | null) {
@@ -65,7 +65,7 @@ function VisitDateCell({ iso }: { iso: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
       {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
-      <time dateTime={iso} className="text-[14px] font-medium text-[#061b31] tabular-nums">
+      <time dateTime={iso} className="text-[14px] font-medium text-foreground tabular-nums">
         {formatAppointmentDateTime(iso)}
       </time>
     </span>
@@ -80,15 +80,15 @@ function VisitSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="rounded-[6px] border border-[#e5edf5] bg-white p-4"
+          className="rounded-panel border border-border bg-white p-4"
           style={{ borderLeft: "4px solid #e5edf5" }}
         >
           <div className="flex items-center gap-3 animate-pulse">
-            <div className="h-4 w-24 rounded bg-[#e5edf5]" />
-            <div className="h-5 w-16 rounded-full bg-[#e5edf5]" />
-            <div className="h-4 w-28 rounded bg-[#e5edf5]" />
+            <div className="h-4 w-24 rounded bg-border" />
+            <div className="h-5 w-16 rounded-full bg-border" />
+            <div className="h-4 w-28 rounded bg-border" />
             <div className="flex-1" />
-            <div className="h-4 w-40 rounded bg-[#e5edf5]" />
+            <div className="h-4 w-40 rounded bg-border" />
           </div>
         </div>
       ))}
@@ -105,15 +105,15 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         className="flex h-14 w-14 items-center justify-center rounded-full mb-4"
         style={{ backgroundColor: "#ededfc" }}
       >
-        <FileText className="h-6 w-6 text-[#533afd]" strokeWidth={1.5} />
+        <FileText className="h-6 w-6 text-brand" strokeWidth={1.5} />
       </div>
-      <h3 className="text-[16px] font-medium text-[#061b31] mb-1">No visits yet</h3>
-      <p className="text-[14px] text-[#64748d] mb-4 max-w-xs">
+      <h3 className="text-[16px] font-medium text-foreground mb-1">No visits yet</h3>
+      <p className="text-[14px] text-fg-secondary mb-4 max-w-xs">
         Record the first visit to start tracking this patient&apos;s treatment history.
       </p>
       <Button
         onClick={onAdd}
-        className="rounded-md bg-[#533afd] text-white hover:bg-[#4530d4]"
+        className="rounded-md bg-primary text-white hover:bg-primary/90"
       >
         <Plus className="mr-1.5 h-4 w-4" strokeWidth={1.5} />
         Add First Visit
@@ -159,7 +159,7 @@ function VisitCard({
   return (
     <div
       ref={cardRef}
-      className={`rounded-[6px] border border-[#e5edf5] bg-white transition-shadow duration-200 hover:shadow-sm ${initiallyExpanded ? "ring-2 ring-[#533afd]/30" : ""}`}
+      className={`rounded-panel border border-border bg-white transition-shadow duration-200 hover:shadow-sm ${initiallyExpanded ? "ring-2 ring-brand/30" : ""}`}
       style={{ borderLeft: `4px solid ${config.border}` }}
     >
       {/* Collapsed Header */}
@@ -192,13 +192,13 @@ function VisitCard({
               {displayDoctorName(visit.doctor.name)}
             </ExternalLink>
           ) : (
-            <span className="text-[#64748d]">{displayDoctorName(visit.doctor.name)}</span>
+            <span className="text-fg-secondary">{displayDoctorName(visit.doctor.name)}</span>
           )}
         </span>
 
         {/* Chief Complaint (truncated) */}
         {visit.chiefComplaint && (
-          <span className="text-[13px] text-[#273951] truncate flex-1 min-w-0">
+          <span className="text-[13px] text-foreground truncate flex-1 min-w-0">
             {visit.chiefComplaint}
           </span>
         )}
@@ -224,32 +224,32 @@ function VisitCard({
           {areaTags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-[#f6f9fc] text-[#273951] border border-[#e5edf5]"
+              className="rounded-full px-2 py-0.5 text-[11px] font-medium bg-surface-muted text-foreground border border-border"
             >
               {tag}
             </span>
           ))}
           {areaTags.length > 3 && (
-            <span className="text-[11px] text-[#64748d]">+{areaTags.length - 3}</span>
+            <span className="text-[11px] text-fg-secondary">+{areaTags.length - 3}</span>
           )}
         </div>
 
         {/* Expand icon */}
         {expanded ? (
-          <ChevronUp className="h-4 w-4 text-[#64748d] flex-shrink-0" strokeWidth={1.5} />
+          <ChevronUp className="h-4 w-4 text-fg-secondary flex-shrink-0" strokeWidth={1.5} />
         ) : (
-          <ChevronDown className="h-4 w-4 text-[#64748d] flex-shrink-0" strokeWidth={1.5} />
+          <ChevronDown className="h-4 w-4 text-fg-secondary flex-shrink-0" strokeWidth={1.5} />
         )}
       </div>
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="px-4 pb-4 space-y-5 border-t border-[#e5edf5]">
+        <div className="px-4 pb-4 space-y-5 border-t border-border">
           {/* 1. Recovery Questionnaire */}
           {q && (
             <div className="pt-4">
-              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-3">
-                <Activity className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-foreground mb-3">
+                <Activity className="h-4 w-4 text-brand" strokeWidth={1.5} />
                 Recovery Questionnaire
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -258,7 +258,7 @@ function VisitCard({
                 ))}
               </div>
               {q.patientComments && (
-                <p className="mt-2 text-[13px] text-[#64748d] italic">
+                <p className="mt-2 text-[13px] text-fg-secondary italic">
                   &ldquo;{q.patientComments}&rdquo;
                 </p>
               )}
@@ -268,8 +268,8 @@ function VisitCard({
           {/* 2. SOAP Notes */}
           {(visit.subjective || visit.objective || visit.assessment || visit.plan) && (
             <div>
-              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-3">
-                <FileText className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-foreground mb-3">
+                <FileText className="h-4 w-4 text-brand" strokeWidth={1.5} />
                 SOAP Notes
               </h4>
               <div className="grid grid-cols-2 gap-3">
@@ -281,14 +281,14 @@ function VisitCard({
                 ].map(
                   (item) =>
                     item.value && (
-                      <div key={item.key} className="rounded-md bg-[#f6f9fc] p-3">
+                      <div key={item.key} className="rounded-md bg-surface-muted p-3">
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-[3px] bg-[#533afd] text-[11px] font-bold text-white">
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-[3px] bg-brand text-[11px] font-bold text-white">
                             {item.key}
                           </span>
-                          <span className="text-[12px] font-medium text-[#64748d]">{item.label}</span>
+                          <span className="text-[12px] font-medium text-fg-secondary">{item.label}</span>
                         </div>
-                        <p className="text-[13px] text-[#273951] leading-relaxed whitespace-pre-wrap">
+                        <p className="text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">
                           {item.value}
                         </p>
                       </div>
@@ -301,32 +301,32 @@ function VisitCard({
           {/* 3. Treatment Details */}
           {(visit.chiefComplaint || visit.areasAdjusted || visit.techniqueUsed || visit.subluxationFindings) && (
             <div>
-              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-3">
-                <Stethoscope className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-foreground mb-3">
+                <Stethoscope className="h-4 w-4 text-brand" strokeWidth={1.5} />
                 Treatment Details
               </h4>
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <VisitTypeBadge type={visit.visitType} />
                   {visit.techniqueUsed && (
-                    <span className="rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-[#f6f9fc] text-[#273951] border border-[#e5edf5]">
+                    <span className="rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-surface-muted text-foreground border border-border">
                       {visit.techniqueUsed}
                     </span>
                   )}
                 </div>
                 {visit.chiefComplaint && (
-                  <p className="text-[13px] text-[#273951]">
-                    <span className="font-medium text-[#64748d]">Chief Complaint: </span>
+                  <p className="text-[13px] text-foreground">
+                    <span className="font-medium text-fg-secondary">Chief Complaint: </span>
                     {visit.chiefComplaint}
                   </p>
                 )}
                 {areaTags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="text-[13px] font-medium text-[#64748d] mr-1">Areas: </span>
+                    <span className="text-[13px] font-medium text-fg-secondary mr-1">Areas: </span>
                     {areaTags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-[#ededfc] text-[#533afd]"
+                        className="rounded-full px-2.5 py-0.5 text-[12px] font-medium bg-brand-subtle text-brand"
                       >
                         {tag}
                       </span>
@@ -334,8 +334,8 @@ function VisitCard({
                   </div>
                 )}
                 {visit.subluxationFindings && (
-                  <p className="text-[13px] text-[#273951]">
-                    <span className="font-medium text-[#64748d]">Subluxation Findings: </span>
+                  <p className="text-[13px] text-foreground">
+                    <span className="font-medium text-fg-secondary">Subluxation Findings: </span>
                     {visit.subluxationFindings}
                   </p>
                 )}
@@ -346,32 +346,32 @@ function VisitCard({
           {/* 4. Vitals */}
           {(visit.bloodPressureSys || visit.heartRate || visit.weight || visit.temperature) && (
             <div>
-              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-2">
-                <Activity className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-foreground mb-2">
+                <Activity className="h-4 w-4 text-brand" strokeWidth={1.5} />
                 Vitals
               </h4>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-[#273951]">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-foreground">
                 {visit.bloodPressureSys && visit.bloodPressureDia && (
                   <span>
-                    <span className="font-medium text-[#64748d]">BP: </span>
+                    <span className="font-medium text-fg-secondary">BP: </span>
                     {visit.bloodPressureSys}/{visit.bloodPressureDia} mmHg
                   </span>
                 )}
                 {visit.heartRate && (
                   <span>
-                    <span className="font-medium text-[#64748d]">HR: </span>
+                    <span className="font-medium text-fg-secondary">HR: </span>
                     {visit.heartRate} bpm
                   </span>
                 )}
                 {visit.weight && (
                   <span>
-                    <span className="font-medium text-[#64748d]">Weight: </span>
+                    <span className="font-medium text-fg-secondary">Weight: </span>
                     {visit.weight} kg
                   </span>
                 )}
                 {visit.temperature && (
                   <span>
-                    <span className="font-medium text-[#64748d]">Temp: </span>
+                    <span className="font-medium text-fg-secondary">Temp: </span>
                     {visit.temperature}&deg;C
                   </span>
                 )}
@@ -382,22 +382,22 @@ function VisitCard({
           {/* 5. Recommendations */}
           {(visit.recommendations || visit.referrals || visit.nextVisitDays) && (
             <div>
-              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-2">
-                <MessageSquare className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-foreground mb-2">
+                <MessageSquare className="h-4 w-4 text-brand" strokeWidth={1.5} />
                 Recommendations
               </h4>
-              <div className="space-y-1.5 text-[13px] text-[#273951]">
+              <div className="space-y-1.5 text-[13px] text-foreground">
                 {visit.recommendations && (
                   <p className="whitespace-pre-wrap">{visit.recommendations}</p>
                 )}
                 {visit.referrals && (
                   <p>
-                    <span className="font-medium text-[#64748d]">Referrals: </span>
+                    <span className="font-medium text-fg-secondary">Referrals: </span>
                     {visit.referrals}
                   </p>
                 )}
                 {visit.nextVisitDays != null && (
-                  <p className="text-[#533afd] font-medium">
+                  <p className="text-brand font-medium">
                     Next visit: {(() => {
                       const base = new Date(visit.visitDate);
                       base.setDate(base.getDate() + visit.nextVisitDays!);
@@ -413,8 +413,8 @@ function VisitCard({
           {/* 6. Associated X-Rays */}
           {visit.xrays.length > 0 && (
             <div>
-              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-[#061b31] mb-2">
-                <Image className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
+              <h4 className="flex items-center gap-1.5 text-[14px] font-medium text-foreground mb-2">
+                <Image className="h-4 w-4 text-brand" strokeWidth={1.5} />
                 Associated X-Rays
               </h4>
               <div className="grid grid-cols-4 gap-2">
@@ -422,25 +422,25 @@ function VisitCard({
                   <Link
                     key={xray.id}
                     href={`/dashboard/xrays/${patientId}/${xray.id}/annotate`}
-                    className="group relative rounded-md border border-[#e5edf5] overflow-hidden transition-all duration-200 hover:border-[#533afd] hover:shadow-sm"
+                    className="group relative rounded-md border border-border overflow-hidden transition-all duration-200 hover:border-brand hover:shadow-sm"
                   >
                     {xray.thumbnailUrl ? (
                       <img
                         src={xray.thumbnailUrl}
                         alt={xray.title || "X-ray"}
-                        className="w-full h-20 object-cover bg-[#1A1F36]"
+                        className="w-full h-20 object-cover bg-canvas"
                       />
                     ) : (
-                      <div className="w-full h-20 bg-[#1A1F36] flex items-center justify-center">
-                        <Image className="h-6 w-6 text-[#64748d]" strokeWidth={1} />
+                      <div className="w-full h-20 bg-canvas flex items-center justify-center">
+                        <Image className="h-6 w-6 text-fg-secondary" strokeWidth={1} />
                       </div>
                     )}
                     <div className="px-2 py-1.5">
-                      <p className="text-[11px] font-medium text-[#061b31] truncate">
+                      <p className="text-[11px] font-medium text-foreground truncate">
                         {xray.title || "Untitled"}
                       </p>
                       {xray.bodyRegion && (
-                        <p className="text-[10px] text-[#64748d]">{xray.bodyRegion}</p>
+                        <p className="text-[10px] text-fg-secondary">{xray.bodyRegion}</p>
                       )}
                     </div>
                   </Link>
@@ -450,7 +450,7 @@ function VisitCard({
           )}
 
           {/* 7. Actions */}
-          <div className="flex items-center gap-2 pt-2 border-t border-[#e5edf5]">
+          <div className="flex items-center gap-2 pt-2 border-t border-border">
             <Button
               variant="outline"
               size="sm"
@@ -458,7 +458,7 @@ function VisitCard({
                 e.stopPropagation();
                 onEdit(visit);
               }}
-              className="rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] text-[13px]"
+              className="rounded-md border-border text-foreground hover:bg-surface-muted text-[13px]"
             >
               <Pencil className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
               Edit
@@ -470,7 +470,7 @@ function VisitCard({
                 e.stopPropagation();
                 onDelete(visit);
               }}
-              className="rounded-md border-[#e5edf5] text-[#DF1B41] hover:bg-[#FDE8EC] hover:border-[#DF1B41]/20 text-[13px]"
+              className="rounded-md border-border text-danger hover:bg-danger-subtle hover:border-danger/20 text-[13px]"
             >
               <Trash2 className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
               Delete
@@ -546,11 +546,11 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
         <div className="flex items-center gap-3">
           {/* Filter */}
           <div className="relative">
-            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748d] pointer-events-none" strokeWidth={1.5} />
+            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-secondary pointer-events-none" strokeWidth={1.5} />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="h-8 rounded-md border border-[#e5edf5] bg-white pl-8 pr-6 text-[13px] text-[#273951] appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd]"
+              className="h-8 rounded-md border border-border bg-white pl-8 pr-6 text-[13px] text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
             >
               {FILTER_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -563,9 +563,9 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
           {/* Sort Toggle */}
           <button
             onClick={() => setSortNewest(!sortNewest)}
-            className="flex items-center gap-1 h-8 px-2.5 rounded-md border border-[#e5edf5] bg-white text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+            className="flex items-center gap-1 h-8 px-2.5 rounded-md border border-border bg-white text-[13px] text-foreground hover:bg-surface-muted transition-colors"
           >
-            <ArrowUpDown className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+            <ArrowUpDown className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
             {sortNewest ? "Newest" : "Oldest"}
           </button>
         </div>
@@ -573,7 +573,7 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
         {/* Add Visit Button */}
         <Button
           onClick={() => setCreateOpen(true)}
-          className="rounded-md bg-[#533afd] text-white hover:bg-[#4530d4] text-[13px] h-8"
+          className="rounded-md bg-primary text-white hover:bg-primary/90 text-[13px] h-8"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} />
           Add Visit
@@ -585,12 +585,12 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
         <VisitSkeleton />
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-[14px] text-[#DF1B41] mb-2">{error}</p>
+          <p className="text-[14px] text-danger mb-2">{error}</p>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchVisits}
-            className="rounded-md border-[#e5edf5] text-[#273951]"
+            className="rounded-md border-border text-foreground"
           >
             Try again
           </Button>

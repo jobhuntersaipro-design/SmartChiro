@@ -41,7 +41,7 @@ interface Props {
 }
 
 const inputClass =
-  "h-11 w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 text-[16px] text-[#0A2540] outline-none placeholder:text-[#A3ACB9] focus:border-[#635BFF] focus:ring-1 focus:ring-[#635BFF] aria-invalid:border-[#DF1B41]";
+  "h-11 w-full rounded-control border border-border bg-surface-muted px-3 text-[16px] text-foreground outline-none placeholder:text-fg-disabled focus:border-brand focus:ring-1 focus:ring-brand aria-invalid:border-danger";
 
 /** Patient details + consent. Validates with the same schema as the API. */
 export function BookingDetailsForm({ branchName, values, onChange, submitting, error, base, onSubmit }: Props) {
@@ -75,7 +75,7 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
   });
   const fieldError = (key: keyof DetailsValues) =>
     errors[key] ? (
-      <p id={`${id}-${key}-err`} className="mt-1 text-[13px] text-[#DF1B41]">
+      <p id={`${id}-${key}-err`} className="mt-1 text-[13px] text-danger">
         {errors[key]}
       </p>
     ) : null;
@@ -85,7 +85,7 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
       {error && <InlineAlert>{error}</InlineAlert>}
 
       <div>
-        <label htmlFor={`${id}-name`} className="mb-1 block text-[14px] font-medium text-[#425466]">
+        <label htmlFor={`${id}-name`} className="mb-1 block text-[14px] font-medium text-fg-secondary">
           Full name
         </label>
         <input {...field("name")} value={values.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" className={inputClass} />
@@ -93,7 +93,7 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
       </div>
 
       <div>
-        <label htmlFor={`${id}-phone`} className="mb-1 block text-[14px] font-medium text-[#425466]">
+        <label htmlFor={`${id}-phone`} className="mb-1 block text-[14px] font-medium text-fg-secondary">
           Mobile number
         </label>
         <input
@@ -106,13 +106,13 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
           onChange={(e) => set("phone", e.target.value)}
           className={inputClass}
         />
-        <p className="mt-1 text-[13px] text-[#697386]">For your appointment confirmation and reminders.</p>
+        <p className="mt-1 text-[13px] text-fg-muted">For your appointment confirmation and reminders.</p>
         {fieldError("phone")}
       </div>
 
       <div>
-        <label htmlFor={`${id}-email`} className="mb-1 block text-[14px] font-medium text-[#425466]">
-          Email <span className="font-normal text-[#697386]">(optional)</span>
+        <label htmlFor={`${id}-email`} className="mb-1 block text-[14px] font-medium text-fg-secondary">
+          Email <span className="font-normal text-fg-muted">(optional)</span>
         </label>
         <input
           {...field("email")}
@@ -127,8 +127,8 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
       </div>
 
       <div>
-        <label htmlFor={`${id}-icNumber`} className="mb-1 block text-[14px] font-medium text-[#425466]">
-          IC or passport number <span className="font-normal text-[#697386]">(optional)</span>
+        <label htmlFor={`${id}-icNumber`} className="mb-1 block text-[14px] font-medium text-fg-secondary">
+          IC or passport number <span className="font-normal text-fg-muted">(optional)</span>
         </label>
         <input
           {...field("icNumber")}
@@ -142,8 +142,8 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
       </div>
 
       <div>
-        <label htmlFor={`${id}-notes`} className="mb-1 block text-[14px] font-medium text-[#425466]">
-          Anything the clinic should know? <span className="font-normal text-[#697386]">(optional)</span>
+        <label htmlFor={`${id}-notes`} className="mb-1 block text-[14px] font-medium text-fg-secondary">
+          Anything the clinic should know? <span className="font-normal text-fg-muted">(optional)</span>
         </label>
         <textarea
           {...field("notes")}
@@ -152,7 +152,7 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
           value={values.notes}
           onChange={(e) => set("notes", e.target.value)}
           placeholder="e.g. lower back pain for two weeks"
-          className="w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 py-2 text-[16px] text-[#0A2540] outline-none placeholder:text-[#A3ACB9] focus:border-[#635BFF] focus:ring-1 focus:ring-[#635BFF]"
+          className="w-full rounded-control border border-border bg-surface-muted px-3 py-2 text-[16px] text-foreground outline-none placeholder:text-fg-disabled focus:border-brand focus:ring-1 focus:ring-brand"
         />
         {fieldError("notes")}
       </div>
@@ -169,30 +169,30 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
         />
       </div>
 
-      <div className="space-y-3 rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-3">
+      <div className="space-y-3 rounded-panel border border-border bg-surface-muted p-3">
         <div>
-          <label htmlFor={`${id}-consentData`} className="flex items-start gap-2.5 text-[14px] text-[#425466]">
+          <label htmlFor={`${id}-consentData`} className="flex items-start gap-2.5 text-[14px] text-fg-secondary">
             <input
               {...field("consentData")}
               type="checkbox"
               checked={values.consentData}
               onChange={(e) => set("consentData", e.target.checked)}
-              className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-[#635BFF]"
+              className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-brand"
             />
             <span>
               I agree that {branchName} may process my personal data to manage this booking and my care, under the
-              Personal Data Protection Act 2010. <span className="text-[#DF1B41]">*</span>
+              Personal Data Protection Act 2010. <span className="text-danger">*</span>
             </span>
           </label>
           {fieldError("consentData")}
         </div>
-        <label htmlFor={`${id}-consentMarketing`} className="flex items-start gap-2.5 text-[14px] text-[#425466]">
+        <label htmlFor={`${id}-consentMarketing`} className="flex items-start gap-2.5 text-[14px] text-fg-secondary">
           <input
             id={`${id}-consentMarketing`}
             type="checkbox"
             checked={values.consentMarketing}
             onChange={(e) => set("consentMarketing", e.target.checked)}
-            className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-[#635BFF]"
+            className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-brand"
           />
           <span>Send me occasional health tips and offers. You can stop these at any time. (Optional)</span>
         </label>
@@ -201,7 +201,7 @@ export function BookingDetailsForm({ branchName, values, onChange, submitting, e
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[4px] bg-[#635BFF] text-[16px] font-medium text-white hover:bg-[#5851EB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#635BFF] disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary text-[16px] font-medium text-white hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60"
       >
         {submitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
         {submitting ? "Booking…" : "Confirm booking"}

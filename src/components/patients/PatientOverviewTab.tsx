@@ -67,20 +67,20 @@ interface AppointmentItem {
 }
 
 const visitTypeColors: Record<string, { bg: string; text: string }> = {
-  initial: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-[#533afd]" },
-  follow_up: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-[#0570DE]" },
-  emergency: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
-  reassessment: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-[#F5A623]" },
-  discharge: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
+  initial: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-brand" },
+  follow_up: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-info" },
+  emergency: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
+  reassessment: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-warning" },
+  discharge: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-success" },
 };
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  SCHEDULED: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-[#533afd]" },
-  CHECKED_IN: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
-  IN_PROGRESS: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-[#0570DE]" },
-  COMPLETED: { bg: "bg-[rgba(48,177,48,0.15)]", text: "text-[#30B130]" },
-  CANCELLED: { bg: "bg-[#F0F3F7]", text: "text-[#64748d]" },
-  NO_SHOW: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
+  SCHEDULED: { bg: "bg-[rgba(83,58,253,0.12)]", text: "text-brand" },
+  CHECKED_IN: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-success" },
+  IN_PROGRESS: { bg: "bg-[rgba(5,112,222,0.12)]", text: "text-info" },
+  COMPLETED: { bg: "bg-[rgba(48,177,48,0.15)]", text: "text-success" },
+  CANCELLED: { bg: "bg-surface-hover", text: "text-fg-secondary" },
+  NO_SHOW: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
 };
 
 function formatShortDate(iso: string): string {
@@ -105,9 +105,9 @@ function formatVisitType(type: string): string {
 }
 
 const SCORE_PILL: Record<ScoreTone, { bg: string; text: string }> = {
-  good: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-[#30B130]" },
-  fair: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-[#F5A623]" },
-  poor: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
+  good: { bg: "bg-[rgba(48,177,48,0.12)]", text: "text-success" },
+  fair: { bg: "bg-[rgba(245,166,35,0.12)]", text: "text-warning" },
+  poor: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
 };
 
 /** Pill colours for the overall-improvement score (higher is better). */
@@ -119,7 +119,7 @@ function LoadingSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="px-5 py-4 space-y-3">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-4 bg-[#e5edf5] animate-pulse rounded" />
+        <div key={i} className="h-4 bg-border animate-pulse rounded" />
       ))}
     </div>
   );
@@ -137,8 +137,8 @@ function Sparkline({ visits }: { visits: VisitItem[] }) {
   if (points.length === 0) {
     return (
       <div className="px-5 py-8 text-center">
-        <TrendingUp className="h-8 w-8 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-        <p className="text-[14px] text-[#64748d]">No recovery data yet</p>
+        <TrendingUp className="h-8 w-8 mx-auto text-border mb-2" strokeWidth={1} />
+        <p className="text-[14px] text-fg-secondary">No recovery data yet</p>
       </div>
     );
   }
@@ -253,12 +253,12 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
       {/* Left column */}
       <div className="space-y-6">
         {/* Recovery Trend */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white">
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
+        <div className="rounded-panel border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
-              <h2 className="text-[15px] font-medium text-[#061b31]">Recovery Trend</h2>
-              <span className="ml-auto text-[12px] text-[#64748d]">
+              <TrendingUp className="h-4 w-4 text-brand" strokeWidth={1.5} />
+              <h2 className="text-[15px] font-medium text-foreground">Recovery Trend</h2>
+              <span className="ml-auto text-[12px] text-fg-secondary">
                 Overall improvement · {directionHint(RECOVERY_METRICS.overallImprovement.direction).toLowerCase()}
               </span>
             </div>
@@ -273,25 +273,25 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
         </div>
 
         {/* Recent Visits */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white">
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
+        <div className="rounded-panel border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-[#0570DE]" strokeWidth={1.5} />
-              <h2 className="text-[15px] font-medium text-[#061b31]">Recent Visits</h2>
+              <ClipboardList className="h-4 w-4 text-info" strokeWidth={1.5} />
+              <h2 className="text-[15px] font-medium text-foreground">Recent Visits</h2>
             </div>
           </div>
-          <div className="divide-y divide-[#e5edf5]">
+          <div className="divide-y divide-border">
             {loadingVisits ? (
               <LoadingSkeleton />
             ) : recentVisits.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <ClipboardList className="h-8 w-8 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-                <p className="text-[14px] text-[#64748d]">No visits recorded yet</p>
+                <ClipboardList className="h-8 w-8 mx-auto text-border mb-2" strokeWidth={1} />
+                <p className="text-[14px] text-fg-secondary">No visits recorded yet</p>
               </div>
             ) : (
               recentVisits.map((v) => {
                 const typeColors = v.visitType
-                  ? visitTypeColors[v.visitType] ?? { bg: "bg-[#F0F3F7]", text: "text-[#64748d]" }
+                  ? visitTypeColors[v.visitType] ?? { bg: "bg-surface-hover", text: "text-fg-secondary" }
                   : null;
                 const score = v.questionnaire?.overallImprovement;
                 const scoreColor = score != null ? getScoreColor(score) : null;
@@ -299,9 +299,9 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                 return (
                   <div
                     key={v.id}
-                    className="px-5 py-3 flex items-center gap-3 hover:bg-[#F6F9FC] transition-colors"
+                    className="px-5 py-3 flex items-center gap-3 hover:bg-surface-muted transition-colors"
                   >
-                    <span className="text-[13px] text-[#64748d] w-16 shrink-0">
+                    <span className="text-[13px] text-fg-secondary w-16 shrink-0">
                       {formatShortDate(v.visitDate)}
                     </span>
                     {typeColors && v.visitType && (
@@ -311,7 +311,7 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                         {formatVisitType(v.visitType)}
                       </span>
                     )}
-                    <span className="text-[14px] text-[#273951] truncate flex-1 min-w-0">
+                    <span className="text-[14px] text-foreground truncate flex-1 min-w-0">
                       {v.chiefComplaint ?? "\u2014"}
                     </span>
                     {scoreColor && score != null && (
@@ -329,20 +329,20 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
         </div>
 
         {/* Upcoming Appointments */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white">
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
+        <div className="rounded-panel border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[#F5A623]" strokeWidth={1.5} />
-              <h2 className="text-[15px] font-medium text-[#061b31]">Upcoming Appointments</h2>
+              <Calendar className="h-4 w-4 text-warning" strokeWidth={1.5} />
+              <h2 className="text-[15px] font-medium text-foreground">Upcoming Appointments</h2>
             </div>
           </div>
-          <div className="divide-y divide-[#e5edf5]">
+          <div className="divide-y divide-border">
             {loadingAppts ? (
               <LoadingSkeleton />
             ) : appointments.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <Calendar className="h-8 w-8 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-                <p className="text-[14px] text-[#64748d]">No upcoming appointments</p>
+                <Calendar className="h-8 w-8 mx-auto text-border mb-2" strokeWidth={1} />
+                <p className="text-[14px] text-fg-secondary">No upcoming appointments</p>
               </div>
             ) : (
               appointments.map((a) => {
@@ -351,9 +351,9 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                 return (
                   <div
                     key={a.id}
-                    className="px-5 py-3 flex items-center gap-3 hover:bg-[#F6F9FC] transition-colors"
+                    className="px-5 py-3 flex items-center gap-3 hover:bg-surface-muted transition-colors"
                   >
-                    <span className="text-[13px] text-[#273951] w-32 shrink-0">
+                    <span className="text-[13px] text-foreground w-32 shrink-0">
                       {formatDateTime(a.dateTime)}
                     </span>
                     <span className="text-[14px] truncate flex-1 min-w-0">
@@ -362,10 +362,10 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
                           {doctorName}
                         </ExternalLink>
                       ) : (
-                        <span className="text-[#061b31]">{doctorName}</span>
+                        <span className="text-foreground">{doctorName}</span>
                       )}
                     </span>
-                    <span className="text-[13px] text-[#64748d] shrink-0">{a.duration}min</span>
+                    <span className="text-[13px] text-fg-secondary shrink-0">{a.duration}min</span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-[11px] font-medium shrink-0 ${colors.bg} ${colors.text}`}
                     >
@@ -382,8 +382,8 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
       {/* Right column */}
       <div className="space-y-5">
         {/* Quick Info */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
-          <h3 className="text-[15px] font-medium text-[#061b31] mb-3">Quick Info</h3>
+        <div className="rounded-panel border border-border bg-white px-5 py-4">
+          <h3 className="text-[15px] font-medium text-foreground mb-3">Quick Info</h3>
           <div className="space-y-2.5">
             {patient.icNumber && (
               <InfoRow icon={CreditCard} label="IC Number" value={patient.icNumber} />
@@ -426,18 +426,18 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
 
         {/* Emergency Contact */}
         {hasEmergencyContact && (
-          <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
-            <h3 className="text-[15px] font-medium text-[#061b31] mb-3">Emergency Contact</h3>
+          <div className="rounded-panel border border-border bg-white px-5 py-4">
+            <h3 className="text-[15px] font-medium text-foreground mb-3">Emergency Contact</h3>
             <div className="space-y-2.5">
               <InfoRow icon={User} label="Name" value={patient.emergencyName!} />
               {patient.emergencyPhone && (
                 <div className="flex items-start gap-2.5">
-                  <Phone className="h-3.5 w-3.5 text-[#64748d] mt-0.5 shrink-0" strokeWidth={1.5} />
-                  <span className="text-[13px] text-[#64748d] shrink-0 w-20">Phone</span>
+                  <Phone className="h-3.5 w-3.5 text-fg-secondary mt-0.5 shrink-0" strokeWidth={1.5} />
+                  <span className="text-[13px] text-fg-secondary shrink-0 w-20">Phone</span>
                   <PhoneLinks
                     phone={patient.emergencyPhone}
                     name={patient.emergencyName || "emergency contact"}
-                    textClassName="text-[13px] text-[#273951]"
+                    textClassName="text-[13px] text-foreground"
                     className="-my-1"
                   />
                 </div>
@@ -452,35 +452,35 @@ export function PatientOverviewTab({ patientId, patient }: PatientOverviewTabPro
         {/* Medical Alerts */}
         {hasMedicalAlerts && (
           <div
-            className={`rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4 ${
+            className={`rounded-panel border border-border bg-white px-5 py-4 ${
               patient.allergies
-                ? "border-l-4 border-l-[#DF1B41]"
+                ? "border-l-4 border-l-danger"
                 : patient.medicalHistory
-                  ? "border-l-4 border-l-[#F5A623]"
+                  ? "border-l-4 border-l-warning"
                   : ""
             }`}
           >
-            <h3 className="text-[15px] font-medium text-[#061b31] mb-3">Medical Alerts</h3>
+            <h3 className="text-[15px] font-medium text-foreground mb-3">Medical Alerts</h3>
             <div className="space-y-3">
               {patient.allergies && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
-                    <AlertTriangle className="h-3.5 w-3.5 text-[#DF1B41]" strokeWidth={1.5} />
-                    <span className="text-[13px] font-medium text-[#DF1B41]">Allergies</span>
+                    <AlertTriangle className="h-3.5 w-3.5 text-danger" strokeWidth={1.5} />
+                    <span className="text-[13px] font-medium text-danger">Allergies</span>
                   </div>
-                  <p className="text-[13px] text-[#273951] ml-5.5">{patient.allergies}</p>
+                  <p className="text-[13px] text-foreground ml-5.5">{patient.allergies}</p>
                 </div>
               )}
               {patient.medicalHistory && (
                 <div>
-                  <span className="text-[13px] font-medium text-[#273951]">Medical History</span>
-                  <p className="text-[13px] text-[#64748d] mt-0.5">{patient.medicalHistory}</p>
+                  <span className="text-[13px] font-medium text-foreground">Medical History</span>
+                  <p className="text-[13px] text-fg-secondary mt-0.5">{patient.medicalHistory}</p>
                 </div>
               )}
               {patient.notes && (
                 <div>
-                  <span className="text-[13px] font-medium text-[#273951]">Clinical Notes</span>
-                  <p className="text-[13px] text-[#64748d] mt-0.5">{patient.notes}</p>
+                  <span className="text-[13px] font-medium text-foreground">Clinical Notes</span>
+                  <p className="text-[13px] text-fg-secondary mt-0.5">{patient.notes}</p>
                 </div>
               )}
             </div>
@@ -502,9 +502,9 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-2.5">
-      <Icon className="h-3.5 w-3.5 text-[#64748d] mt-0.5 shrink-0" strokeWidth={1.5} />
-      <span className="text-[13px] text-[#64748d] shrink-0 w-20">{label}</span>
-      <span className="text-[13px] text-[#061b31]">{value}</span>
+      <Icon className="h-3.5 w-3.5 text-fg-secondary mt-0.5 shrink-0" strokeWidth={1.5} />
+      <span className="text-[13px] text-fg-secondary shrink-0 w-20">{label}</span>
+      <span className="text-[13px] text-foreground">{value}</span>
     </div>
   );
 }

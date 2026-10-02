@@ -158,7 +158,7 @@ export function BookingFlow({ config }: { config: PublicBookingConfig }) {
     <div className="space-y-5">
       <BookingHeader branch={config.branch} />
       {config.note && index === 0 && (
-        <p className="rounded-[6px] border border-[#E3E8EE] bg-white px-3 py-2.5 text-[14px] whitespace-pre-line text-[#425466]">
+        <p className="rounded-panel border border-border bg-white px-3 py-2.5 text-[14px] whitespace-pre-line text-fg-secondary">
           {config.note}
         </p>
       )}
@@ -194,7 +194,7 @@ export function BookingFlow({ config }: { config: PublicBookingConfig }) {
               title="Any available doctor"
               subtitle="Shows the most times"
               leading={
-                <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F0F3F7] text-[#425466]">
+                <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-hover text-fg-secondary">
                   <Users className="h-4 w-4" strokeWidth={1.5} />
                 </span>
               }

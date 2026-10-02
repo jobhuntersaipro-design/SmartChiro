@@ -21,7 +21,7 @@ interface Props {
 }
 
 const INPUT =
-  "h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] tabular-nums focus:outline-none focus:ring-1 focus:ring-[#533afd]";
+  "h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground tabular-nums focus:outline-none focus:ring-1 focus:ring-brand";
 
 /** Weekly repeat: weekdays, every N weeks, ends after N visits or on a date. */
 export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hideEnd = false }: Props) {
@@ -30,7 +30,7 @@ export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hide
   return (
     <div className="space-y-3">
       <div>
-        <span className="mb-1 block text-[12px] font-medium text-[#425466]">On</span>
+        <span className="mb-1 block text-[12px] font-medium text-fg-secondary">On</span>
         <div className="flex flex-wrap gap-1" role="group" aria-label="Repeat on weekdays">
           {WEEKDAY_PICKER_ORDER.map((d) => {
             const on = value.weekdays.includes(d);
@@ -40,8 +40,8 @@ export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hide
                 type="button"
                 aria-pressed={on}
                 onClick={() => set("weekdays", toggleWeekday(value.weekdays, d))}
-                className={`h-8 w-11 rounded-[4px] border text-[13px] font-medium transition-colors ${
-                  on ? "border-[#533afd] bg-[#533afd] text-white" : "border-[#e5edf5] bg-white text-[#425466] hover:bg-[#f6f9fc]"
+                className={`h-8 w-11 rounded-control border text-[13px] font-medium transition-colors ${
+                  on ? "border-brand bg-primary text-white" : "border-border bg-white text-fg-secondary hover:bg-surface-muted"
                 }`}
               >
                 {WEEKDAY_SHORT[d]}
@@ -51,7 +51,7 @@ export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hide
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#425466]">
+      <div className="flex flex-wrap items-center gap-2 text-[14px] text-fg-secondary">
         <label htmlFor={`${idPrefix}-interval`}>Every</label>
         <select
           id={`${idPrefix}-interval`}
@@ -69,15 +69,15 @@ export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hide
 
       {!hideEnd && (
         <fieldset className="space-y-2">
-          <legend className="mb-1 block text-[12px] font-medium text-[#425466]">Ends</legend>
-          <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#425466]">
+          <legend className="mb-1 block text-[12px] font-medium text-fg-secondary">Ends</legend>
+          <div className="flex flex-wrap items-center gap-2 text-[14px] text-fg-secondary">
             <label className="inline-flex items-center gap-2">
               <input
                 type="radio"
                 name={`${idPrefix}-end`}
                 checked={value.endMode === "count"}
                 onChange={() => set("endMode", "count")}
-                className="accent-[#533afd]"
+                className="accent-brand"
               />
               After
             </label>
@@ -94,14 +94,14 @@ export function RepeatBookingFields({ value, onChange, startDate, idPrefix, hide
             />
             <span>visits</span>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#425466]">
+          <div className="flex flex-wrap items-center gap-2 text-[14px] text-fg-secondary">
             <label className="inline-flex items-center gap-2">
               <input
                 type="radio"
                 name={`${idPrefix}-end`}
                 checked={value.endMode === "until"}
                 onChange={() => set("endMode", "until")}
-                className="accent-[#533afd]"
+                className="accent-brand"
               />
               On
             </label>

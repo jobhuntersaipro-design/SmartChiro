@@ -144,10 +144,10 @@ export function AppointmentsPageShell({
       {/* Top bar */}
       <div className="flex flex-col gap-3 px-4 pt-4 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
         <div className="min-w-0">
-          <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">
+          <h1 className="text-[23px] font-light tracking-[-0.18px] text-foreground">
             Appointments
           </h1>
-          <p className="text-[14px] text-[#64748d]">
+          <p className="text-[14px] text-fg-secondary">
             Schedule, reschedule, and manage all bookings.
           </p>
         </div>
@@ -156,7 +156,7 @@ export function AppointmentsPageShell({
           <div
             role="tablist"
             aria-label="View mode"
-            className="inline-flex rounded-md border border-[#e5edf5] overflow-hidden"
+            className="inline-flex rounded-md border border-border overflow-hidden"
           >
             <button
               role="tab"
@@ -165,8 +165,8 @@ export function AppointmentsPageShell({
               onClick={() => setViewMode("list")}
               className={`inline-flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium transition-colors ${
                 viewMode === "list"
-                  ? "bg-[#635BFF] text-white"
-                  : "bg-white text-[#425466] hover:text-[#0A2540]"
+                  ? "bg-primary text-white"
+                  : "bg-white text-fg-secondary hover:text-foreground"
               }`}
             >
               <List className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -177,10 +177,10 @@ export function AppointmentsPageShell({
               type="button"
               aria-selected={viewMode === "calendar"}
               onClick={() => setViewMode("calendar")}
-              className={`inline-flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium border-l border-[#e5edf5] transition-colors ${
+              className={`inline-flex items-center gap-1.5 h-9 px-3 text-[13px] font-medium border-l border-border transition-colors ${
                 viewMode === "calendar"
-                  ? "bg-[#635BFF] text-white"
-                  : "bg-white text-[#425466] hover:text-[#0A2540]"
+                  ? "bg-primary text-white"
+                  : "bg-white text-fg-secondary hover:text-foreground"
               }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -189,7 +189,7 @@ export function AppointmentsPageShell({
           </div>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
+            className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             New Appointment

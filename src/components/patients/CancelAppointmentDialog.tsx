@@ -89,23 +89,23 @@ export function CancelAppointmentDialog({
         aria-modal="true"
         aria-labelledby="cancel-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-110 rounded-2xl border border-[#e5edf5] bg-white p-6"
+        className="w-110 rounded-2xl border border-border bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
-        <h2 id="cancel-appointment-title" className="text-[18px] font-medium text-[#0A2540] mb-2">Cancel appointment?</h2>
-        <p className="text-[14px] text-[#425466] mb-1">
+        <h2 id="cancel-appointment-title" className="text-[18px] font-medium text-foreground mb-2">Cancel appointment?</h2>
+        <p className="text-[14px] text-fg-secondary mb-1">
           {patientName}&apos;s appointment{appointmentDateTime ? " on" : ""}
           {appointmentDateTime && (
             <>
               {" "}
-              <span className="font-medium text-[#061b31]">
+              <span className="font-medium text-foreground">
                 {formatAppointmentDateTime(appointmentDateTime)}
               </span>
             </>
           )}{" "}
           will be cancelled.
         </p>
-        <p className="text-[13px] text-[#64748d] mb-5">
+        <p className="text-[13px] text-fg-secondary mb-5">
           Pending reminders will be removed. To restore, create a new appointment.
         </p>
 
@@ -116,7 +116,7 @@ export function CancelAppointmentDialog({
         )}
 
         {error && (
-          <div className="mb-4 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+          <div className="mb-4 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger">
             {error}
           </div>
         )}
@@ -133,7 +133,7 @@ export function CancelAppointmentDialog({
           <Button
             onClick={submit}
             disabled={submitting}
-            className="h-8 rounded-md text-[14px] bg-[#DF1B41] hover:bg-[#b3162f] gap-1.5"
+            className="h-8 rounded-md text-[14px] bg-danger hover:bg-danger/90 gap-1.5"
           >
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {submitting ? "Cancelling…" : "Cancel appointment"}

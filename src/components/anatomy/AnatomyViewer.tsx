@@ -428,11 +428,11 @@ function LoadingOverlay({ layer }: { layer: AnatomyLayer }) {
   if (progress?.failed) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/85">
-        <AlertTriangle className="h-6 w-6 text-[#F5A623]" strokeWidth={1.5} />
+        <AlertTriangle className="h-6 w-6 text-warning" strokeWidth={1.5} />
         <span className="text-[14px]">Couldn&apos;t load the 3D model.</span>
         <button
           onClick={() => window.location.reload()}
-          className="rounded-[4px] border border-white/20 bg-white/10 px-3 py-1 text-[13px] font-medium hover:bg-white/20"
+          className="rounded-control border border-white/20 bg-white/10 px-3 py-1 text-[13px] font-medium hover:bg-white/20"
         >
           Reload
         </button>
@@ -448,7 +448,7 @@ function LoadingOverlay({ layer }: { layer: AnatomyLayer }) {
       <Loader2 className="h-6 w-6 animate-spin" strokeWidth={1.5} />
       <span className="text-[14px]">Loading high-resolution {layer === "muscles" ? "muscle" : "skeleton"} model…</span>
       <div className="h-1 w-56 overflow-hidden rounded-full bg-white/15">
-        <div className="h-full rounded-full bg-[#635BFF] transition-[width]" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-brand transition-[width]" style={{ width: `${pct}%` }} />
       </div>
       <span className="font-mono text-[12px] text-white/60">
         {total > 0 ? `${formatMb(loaded)} / ${formatMb(total)} MB` : loaded > 0 ? `${formatMb(loaded)} MB` : "\u00a0"}
@@ -583,7 +583,7 @@ export default function AnatomyViewer({
 
       <div
         ref={tooltipRef}
-        className={`pointer-events-none absolute left-0 top-0 z-10 rounded-[4px] bg-[#0A2540]/90 px-2 py-1 text-[13px] text-white shadow-md ${
+        className={`pointer-events-none absolute left-0 top-0 z-10 rounded-control bg-foreground/90 px-2 py-1 text-[13px] text-white shadow-md ${
           hoveredPart ? "opacity-100" : "opacity-0"
         }`}
       >

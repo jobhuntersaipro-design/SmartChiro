@@ -86,10 +86,10 @@ function TimeCell({ iso }: { iso: string }) {
     <div className="flex items-center gap-2 min-w-0">
       {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
       <time dateTime={iso} className="flex flex-col leading-tight min-w-0">
-        <span className="text-[13px] font-medium text-[#061b31] tabular-nums">
+        <span className="text-[13px] font-medium text-foreground tabular-nums">
           {time}
         </span>
-        <span className="text-[11px] text-[#94a3b8] tabular-nums">{date}</span>
+        <span className="text-[11px] text-fg-muted tabular-nums">{date}</span>
       </time>
     </div>
   );
@@ -153,13 +153,13 @@ function InvoiceCell({
         <button
           type="button"
           onClick={() => onIssueInvoice(row)}
-          className="text-[12px] font-medium text-[#533afd] hover:text-[#3f2bd1] cursor-pointer transition-colors duration-200"
+          className="text-[12px] font-medium text-brand hover:text-brand-strong cursor-pointer transition-colors duration-200"
         >
           + Issue
         </button>
       );
     }
-    return <span className="text-[13px] text-[#cbd5e1]">—</span>;
+    return <span className="text-[13px] text-fg-disabled">—</span>;
   }
   if (row.invoices.length === 1) {
     const inv = row.invoices[0];
@@ -193,7 +193,7 @@ function InvoiceCell({
   const sum = row.invoices.reduce((acc, i) => acc + i.amount, 0);
   return (
     <span
-      className="text-[12px] text-[#425466] tabular-nums whitespace-nowrap"
+      className="text-[12px] text-fg-secondary tabular-nums whitespace-nowrap"
       title={row.invoices.map((i) => i.invoiceNumber).join(", ")}
     >
       {formatMYR(sum)} ({row.invoices.length})
@@ -215,13 +215,13 @@ function VisitCell({
   // Visits are clinical: creating one is OWNER/ADMIN, and front desk never sees them.
   const canManage = can(branchRole, "clinical.write") && can(branchRole, "patient.readAll");
   if (!can(branchRole, "clinical.read")) {
-    return <span className="text-[13px] text-[#cbd5e1]">—</span>;
+    return <span className="text-[13px] text-fg-disabled">—</span>;
   }
   if (row.visit) {
     return (
       <Link
         href={`/dashboard/patients/${patientId}/details?tab=history&sub=visits&visitId=${row.visit.id}`}
-        className="text-[12px] font-medium text-[#533afd] hover:text-[#3f2bd1] cursor-pointer transition-colors duration-200"
+        className="text-[12px] font-medium text-brand hover:text-brand-strong cursor-pointer transition-colors duration-200"
       >
         View
       </Link>
@@ -232,13 +232,13 @@ function VisitCell({
       <button
         type="button"
         onClick={() => onCreateVisit(row)}
-        className="text-[12px] font-medium text-[#533afd] hover:text-[#3f2bd1] cursor-pointer transition-colors duration-200"
+        className="text-[12px] font-medium text-brand hover:text-brand-strong cursor-pointer transition-colors duration-200"
       >
         + Create
       </button>
     );
   }
-  return <span className="text-[13px] text-[#cbd5e1]">—</span>;
+  return <span className="text-[13px] text-fg-disabled">—</span>;
 }
 
 function SortableHeader({
@@ -262,8 +262,8 @@ function SortableHeader({
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
       className={`inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.06em] cursor-pointer transition-colors duration-200 ${
         active
-          ? "text-[#533afd]"
-          : "text-[#94a3b8] hover:text-[#64748d]"
+          ? "text-brand"
+          : "text-fg-muted hover:text-fg-secondary"
       }`}
     >
       {label}
@@ -297,7 +297,7 @@ function RowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[#94a3b8] hover:text-[#061b31] hover:bg-[#f6f9fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#533afd] focus-visible:ring-offset-1 cursor-pointer transition-colors duration-200"
+        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-fg-muted hover:text-foreground hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 cursor-pointer transition-colors duration-200"
         aria-label="Row actions"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={2} />
@@ -356,21 +356,21 @@ export function PastAppointmentTable({
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white overflow-x-auto"
+      className="rounded-panel border border-border bg-white overflow-x-auto"
       style={{ boxShadow: SHADOW_CARD }}
     >
       {loading ? (
-        <div className="flex items-center justify-center py-10 text-[#64748d]">
+        <div className="flex items-center justify-center py-10 text-fg-secondary">
           <Loader2 className="h-4 w-4 animate-spin mr-2" strokeWidth={2} />
           <span className="text-[13px]">Loading…</span>
         </div>
       ) : rows.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <Calendar
-            className="h-7 w-7 text-[#cbd5e1] mx-auto mb-2"
+            className="h-7 w-7 text-fg-disabled mx-auto mb-2"
             strokeWidth={1.5}
           />
-          <p className="text-[14px] text-[#64748d]">
+          <p className="text-[14px] text-fg-secondary">
             No appointments match the current filters.
           </p>
         </div>
@@ -378,7 +378,7 @@ export function PastAppointmentTable({
         <>
           {/* Header */}
           <div
-            className={`grid ${COLS} gap-4 min-w-max px-4 py-2 border-b border-[#e5edf5] bg-[#fafbfd]`}
+            className={`grid ${COLS} gap-4 min-w-max px-4 py-2 border-b border-border bg-surface-subtle`}
           >
             <SortableHeader
               label="When"
@@ -408,10 +408,10 @@ export function PastAppointmentTable({
               dir={sortDir}
               onSort={onSort}
             />
-            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#94a3b8]">
+            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-fg-muted">
               Visit
             </span>
-            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#94a3b8]">
+            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-fg-muted">
               Invoice
             </span>
             <span aria-hidden />
@@ -420,19 +420,19 @@ export function PastAppointmentTable({
           {rows.map((r) => (
             <div
               key={r.id}
-              className={`grid ${COLS} gap-4 min-w-max items-center px-4 h-12 border-b border-[#eef2f7] last:border-b-0 hover:bg-[#fafbfd] transition-colors duration-200`}
+              className={`grid ${COLS} gap-4 min-w-max items-center px-4 h-12 border-b border-border-subtle last:border-b-0 hover:bg-surface-subtle transition-colors duration-200`}
             >
               <TimeCell iso={r.dateTime} />
               <Link
                 href={`/dashboard/doctors/${r.doctor.id}`}
-                className="text-[14px] text-[#425466] hover:text-[#533afd] transition-colors duration-200 truncate"
+                className="text-[14px] text-fg-secondary hover:text-brand transition-colors duration-200 truncate"
                 title={r.doctor.name ?? undefined}
               >
                 {r.doctor.name}
               </Link>
               <Link
                 href={`/dashboard/branches/${r.branch.id}`}
-                className="text-[13px] text-[#425466] hover:text-[#533afd] transition-colors duration-200 truncate"
+                className="text-[13px] text-fg-secondary hover:text-brand transition-colors duration-200 truncate"
                 title={r.branch.name}
               >
                 {r.branch.name}
@@ -459,13 +459,13 @@ export function PastAppointmentTable({
             </div>
           ))}
           {/* Pager */}
-          <div className="flex items-center justify-between gap-3 px-4 h-10 border-t border-[#e5edf5] bg-[#fafbfd]">
-            <span className="text-[12px] text-[#64748d] tabular-nums">
+          <div className="flex items-center justify-between gap-3 px-4 h-10 border-t border-border bg-surface-subtle">
+            <span className="text-[12px] text-fg-secondary tabular-nums">
               Showing{" "}
-              <span className="text-[#273951] font-medium">
+              <span className="text-foreground font-medium">
                 {rangeStart}–{rangeEnd}
               </span>{" "}
-              of <span className="text-[#273951] font-medium">{total}</span>
+              of <span className="text-foreground font-medium">{total}</span>
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -473,21 +473,21 @@ export function PastAppointmentTable({
                 onClick={() => onPageChange(Math.max(1, page - 1))}
                 disabled={page <= 1}
                 aria-label="Previous page"
-                className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
               >
                 <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
               </button>
-              <span className="text-[12px] text-[#64748d] tabular-nums px-2 min-w-16 text-center">
+              <span className="text-[12px] text-fg-secondary tabular-nums px-2 min-w-16 text-center">
                 Page{" "}
-                <span className="text-[#273951] font-medium">{page}</span> of{" "}
-                <span className="text-[#273951] font-medium">{totalPages}</span>
+                <span className="text-foreground font-medium">{page}</span> of{" "}
+                <span className="text-foreground font-medium">{totalPages}</span>
               </span>
               <button
                 type="button"
                 onClick={() => onPageChange(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
                 aria-label="Next page"
-                className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors duration-200"
               >
                 <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
               </button>

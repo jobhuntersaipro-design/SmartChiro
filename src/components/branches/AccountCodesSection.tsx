@@ -55,9 +55,9 @@ export function AccountCodesSection({ branchId, billing, canEdit, onSaved }: Pro
   }
 
   return (
-    <div className="border-t border-[#e5edf5] pt-4">
-      <h4 className="text-[15px] font-medium text-[#0A2540]">Accounting codes</h4>
-      <p className="mb-3 text-[13px] text-[#64748d]">
+    <div className="border-t border-border pt-4">
+      <h4 className="text-[15px] font-medium text-foreground">Accounting codes</h4>
+      <p className="mb-3 text-[13px] text-fg-secondary">
         Used by the journal and Xero exports on the Invoices page. Leave blank for the default shown.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

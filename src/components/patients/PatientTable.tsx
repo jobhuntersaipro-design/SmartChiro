@@ -53,12 +53,12 @@ function WeekdayBadge({ label, isWeekend }: { label: string; isWeekend: boolean 
 }
 
 function NextAppointmentCell({ apt }: { apt: Patient["upcomingAppointment"] }) {
-  if (!apt) return <span className="text-[13px] text-[#94a3b8]">—</span>;
+  if (!apt) return <span className="text-[13px] text-fg-muted">—</span>;
   const dow = getAppointmentWeekday(apt.dateTime);
   return (
     <span className="inline-flex items-center gap-1.5 min-w-0">
       {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
-      <time dateTime={apt.dateTime} className="text-[13px] text-[#273951] tabular-nums truncate">
+      <time dateTime={apt.dateTime} className="text-[13px] text-foreground tabular-nums truncate">
         {formatAppointmentDateTime(apt.dateTime)}
       </time>
     </span>
@@ -88,7 +88,7 @@ function SortHeader({
         type="button"
         onClick={() => onClick(sortKey)}
         className={`flex items-center gap-1 text-[13px] font-medium uppercase tracking-[0.04em] transition-colors ${
-          active ? "text-[#061b31]" : "text-[#64748d] hover:text-[#061b31]"
+          active ? "text-foreground" : "text-fg-secondary hover:text-foreground"
         }`}
       >
         {label}
@@ -119,25 +119,25 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
     <div ref={ref} className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors"
+        className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-colors"
       >
         <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
       </button>
       {open && (
         <div
-          className="absolute right-0 top-8 z-20 w-35 rounded-[6px] border border-[#e5edf5] bg-white py-1"
+          className="absolute right-0 top-8 z-20 w-35 rounded-panel border border-border bg-white py-1"
           style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onView(); }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-foreground hover:bg-surface-muted transition-colors"
           >
             <Eye className="h-3.5 w-3.5" strokeWidth={1.5} /> View
           </button>
           {onEdit && (
             <button
               onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(patient); }}
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-foreground hover:bg-surface-muted transition-colors"
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} /> Edit
             </button>
@@ -145,7 +145,7 @@ function ActionsMenu({ patient, onView, onEdit, onDelete }: {
           {onDelete && (
             <button
               onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(patient); }}
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[#DF1B41] hover:bg-[#FDE8EC] transition-colors"
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-danger hover:bg-danger-subtle transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} /> Delete
             </button>
@@ -198,10 +198,10 @@ export function PatientTable({
   if (sorted.length === 0) {
     return (
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white p-12 text-center"
+        className="rounded-panel border border-border bg-white p-12 text-center"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
-        <p className="text-[15px] text-[#64748d]">No patients found</p>
+        <p className="text-[15px] text-fg-secondary">No patients found</p>
       </div>
     );
   }
@@ -213,15 +213,15 @@ export function PatientTable({
   return (
     <div
       // No overflow-hidden: it clipped the row actions menu.
-      className="rounded-[6px] border border-[#e5edf5] bg-white transition-all duration-200 hover:border-[#c1c9d2]"
+      className="rounded-panel border border-border bg-white transition-all duration-200 hover:border-border-strong"
       style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
     >
       {/* Header */}
-      <div className={`${COL_GRID} px-4 py-2.5 border-b border-[#e5edf5] bg-[#f6f9fc] rounded-t-[6px]`}>
+      <div className={`${COL_GRID} px-4 py-2.5 border-b border-border bg-surface-muted rounded-t-panel`}>
         <SortHeader label="Patient" sortKey="lastName" active={sortKey === "lastName"} dir={sortDir} onClick={handleSort} />
         <SortHeader label="Next Appointment" sortKey="upcomingAppointment" active={sortKey === "upcomingAppointment"} dir={sortDir} onClick={handleSort} />
-        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Contact</span>
-        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Doctor</span>
+        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Contact</span>
+        <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Doctor</span>
         <SortHeader label="Status" sortKey="status" active={sortKey === "status"} dir={sortDir} onClick={handleSort} />
         <SortHeader label="Visits" sortKey="totalVisits" active={sortKey === "totalVisits"} dir={sortDir} onClick={handleSort} />
         <span />
@@ -238,12 +238,12 @@ export function PatientTable({
           <div
             key={patient.id}
             onClick={() => router.push(href)}
-            className={`${COL_GRID} items-center px-4 py-3 border-b border-[#e5edf5] last:border-b-0 last:rounded-b-[6px] transition-all duration-200 cursor-pointer hover:bg-[#f6f9fc] hover:translate-x-0.5`}
+            className={`${COL_GRID} items-center px-4 py-3 border-b border-border last:border-b-0 last:rounded-b-panel transition-all duration-200 cursor-pointer hover:bg-surface-muted hover:translate-x-0.5`}
           >
             {/* Patient name + IC */}
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar className="h-7 w-7 flex-shrink-0">
-                <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[12px] font-medium">
+                <AvatarFallback className="bg-brand-subtle text-brand text-[12px] font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -251,14 +251,14 @@ export function PatientTable({
                 <Link
                   href={href}
                   onClick={(e) => e.stopPropagation()}
-                  className="block truncate rounded-[4px] text-[15px] font-medium text-[#061b31] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
+                  className="block truncate rounded-control text-[15px] font-medium text-foreground hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
                 >
                   {fullName}
                 </Link>
                 {patient.icNumber ? (
-                  <span className="text-[13px] text-[#64748d] block truncate">{patient.icNumber}</span>
+                  <span className="text-[13px] text-fg-secondary block truncate">{patient.icNumber}</span>
                 ) : patient.email ? (
-                  <span className="text-[13px] text-[#64748d] block truncate">{patient.email}</span>
+                  <span className="text-[13px] text-fg-secondary block truncate">{patient.email}</span>
                 ) : null}
               </div>
             </div>
@@ -270,17 +270,17 @@ export function PatientTable({
 
             {/* Contact — number, call and WhatsApp icons */}
             <div className="min-w-0">
-              <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[14px] text-[#273951]" className="max-w-full" />
+              <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[14px] text-foreground" className="max-w-full" />
               {patient.phone && patient.email && (
-                <span className="text-[12px] text-[#64748d] block truncate">{patient.email}</span>
+                <span className="text-[12px] text-fg-secondary block truncate">{patient.email}</span>
               )}
             </div>
 
             {/* Doctor */}
             <div className="min-w-0">
-              <span className="text-[14px] text-[#273951] block truncate">{patient.doctorName}</span>
+              <span className="text-[14px] text-foreground block truncate">{patient.doctorName}</span>
               {showBranch && patient.branchName && (
-                <span className="text-[12px] text-[#64748d] block truncate" title={patient.branchName}>{patient.branchName}</span>
+                <span className="text-[12px] text-fg-secondary block truncate" title={patient.branchName}>{patient.branchName}</span>
               )}
             </div>
 
@@ -288,7 +288,7 @@ export function PatientTable({
             <StatusBadge status={patient.status} />
 
             {/* Visits */}
-            <span className="text-[14px] text-[#273951]">{patient.totalVisits}</span>
+            <span className="text-[14px] text-foreground">{patient.totalVisits}</span>
 
             {/* Actions */}
             <ActionsMenu

@@ -23,8 +23,8 @@ interface DoctorPatientsTabProps {
 }
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  active: { bg: "bg-[rgba(21,190,83,0.15)]", text: "text-[#108c3d]" },
-  inactive: { bg: "bg-[#F0F3F7]", text: "text-[#64748d]" },
+  active: { bg: "bg-[rgba(21,190,83,0.15)]", text: "text-success" },
+  inactive: { bg: "bg-surface-hover", text: "text-fg-secondary" },
 };
 
 function formatDate(iso: string): string {
@@ -82,19 +82,19 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search patients..."
-            className="w-full h-9 pl-9 pr-3 rounded-md border border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd]"
+            className="w-full h-9 pl-9 pr-3 rounded-md border border-border bg-surface-muted text-[14px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[14px] text-[#273951] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+          className="h-9 px-3 rounded-md border border-border bg-white text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -103,12 +103,12 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white overflow-x-auto">
+      <div className="rounded-panel border border-border bg-white overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#e5edf5]">
+            <tr className="border-b border-border">
               {["Name", "IC Number", "Phone", "Gender", "Status", "Last Visit", "Visits", "X-Rays"].map((h) => (
-                <th key={h} className="px-4 py-3 text-left text-[12px] font-medium text-[#64748d] uppercase tracking-wide whitespace-nowrap">
+                <th key={h} className="px-4 py-3 text-left text-[12px] font-medium text-fg-secondary uppercase tracking-wide whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -117,10 +117,10 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-[#e5edf5]">
+                <tr key={i} className="border-b border-border">
                   {Array.from({ length: 8 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-4 bg-[#F6F9FC] rounded animate-pulse" />
+                      <div className="h-4 bg-surface-muted rounded animate-pulse" />
                     </td>
                   ))}
                 </tr>
@@ -128,27 +128,27 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
             ) : patients.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center">
-                  <Users className="h-8 w-8 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-                  <p className="text-[14px] text-[#64748d]">No patients found</p>
+                  <Users className="h-8 w-8 mx-auto text-border mb-2" strokeWidth={1} />
+                  <p className="text-[14px] text-fg-secondary">No patients found</p>
                 </td>
               </tr>
             ) : (
               patients.map((p) => {
                 const colors = statusColors[p.status ?? "active"] ?? statusColors.active;
                 return (
-                  <tr key={p.id} className="border-b border-[#e5edf5] hover:bg-[#F6F9FC] transition-colors">
-                    <td className="px-4 py-3 text-[14px] text-[#061b31] font-medium whitespace-nowrap">
-                      <Link href={`/dashboard/patients/${p.id}/details`} className="hover:text-[#533afd] hover:underline">
+                  <tr key={p.id} className="border-b border-border hover:bg-surface-muted transition-colors">
+                    <td className="px-4 py-3 text-[14px] text-foreground font-medium whitespace-nowrap">
+                      <Link href={`/dashboard/patients/${p.id}/details`} className="hover:text-brand hover:underline">
                         {p.firstName} {p.lastName}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951] whitespace-nowrap">
+                    <td className="px-4 py-3 text-[13px] text-foreground whitespace-nowrap">
                       {p.icNumber ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951] whitespace-nowrap">
+                    <td className="px-4 py-3 text-[13px] text-foreground whitespace-nowrap">
                       {p.phone ?? "-"}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951] whitespace-nowrap">
+                    <td className="px-4 py-3 text-[13px] text-foreground whitespace-nowrap">
                       {p.gender ?? "-"}
                     </td>
                     <td className="px-4 py-3">
@@ -156,13 +156,13 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
                         {p.status ?? "active"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#64748d] whitespace-nowrap">
+                    <td className="px-4 py-3 text-[13px] text-fg-secondary whitespace-nowrap">
                       {p.lastVisit ? formatDate(p.lastVisit) : "-"}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951]" style={{ fontFeatureSettings: '"tnum"' }}>
+                    <td className="px-4 py-3 text-[13px] text-foreground" style={{ fontFeatureSettings: '"tnum"' }}>
                       {p.visitCount}
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-[#273951]" style={{ fontFeatureSettings: '"tnum"' }}>
+                    <td className="px-4 py-3 text-[13px] text-foreground" style={{ fontFeatureSettings: '"tnum"' }}>
                       {p.xrayCount}
                     </td>
                   </tr>
@@ -174,27 +174,27 @@ export function DoctorPatientsTab({ doctorId }: DoctorPatientsTabProps) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-[#e5edf5] flex items-center justify-between">
-            <span className="text-[13px] text-[#64748d]">
+          <div className="px-4 py-3 border-t border-border flex items-center justify-between">
+            <span className="text-[13px] text-fg-secondary">
               {total} patient{total !== 1 ? "s" : ""} total
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="h-8 w-8 flex items-center justify-center rounded-md border border-[#e5edf5] hover:bg-[#F6F9FC] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-md border border-border hover:bg-surface-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+                <ChevronLeft className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
               </button>
-              <span className="text-[13px] text-[#273951]" style={{ fontFeatureSettings: '"tnum"' }}>
+              <span className="text-[13px] text-foreground" style={{ fontFeatureSettings: '"tnum"' }}>
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="h-8 w-8 flex items-center justify-center rounded-md border border-[#e5edf5] hover:bg-[#F6F9FC] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-md border border-border hover:bg-surface-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronRight className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+                <ChevronRight className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
               </button>
             </div>
           </div>

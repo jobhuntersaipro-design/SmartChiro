@@ -7,7 +7,7 @@ export function GoogleSignInButton({ label = 'Sign in with Google' }: { label?: 
     <button
       type="button"
       onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-      className="flex w-full items-center justify-center gap-3 rounded-md border border-[#e5edf5] bg-white px-4 py-2 text-[15px] font-medium text-[#061b31] transition-colors hover:bg-[#f6f9fc] cursor-pointer h-10"
+      className="flex w-full items-center justify-center gap-3 rounded-md border border-border bg-white px-4 py-2 text-[15px] font-medium text-foreground transition-colors hover:bg-surface-muted cursor-pointer h-10"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <path

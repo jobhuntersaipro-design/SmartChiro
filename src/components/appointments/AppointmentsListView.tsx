@@ -234,10 +234,10 @@ export function AppointmentsListView({
   if (branches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
-        <h2 className="text-[18px] font-medium text-[#061b31] mb-2">
+        <h2 className="text-[18px] font-medium text-foreground mb-2">
           You haven&apos;t joined any branches yet
         </h2>
-        <p className="text-[14px] text-[#64748d]">
+        <p className="text-[14px] text-fg-secondary">
           Create a branch from the Branches page to start scheduling appointments.
         </p>
       </div>
@@ -294,13 +294,13 @@ export function AppointmentsListView({
           {loading && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 pointer-events-none">
               <Loader2
-                className="h-5 w-5 text-[#635BFF] animate-spin"
+                className="h-5 w-5 text-brand animate-spin"
                 strokeWidth={2}
               />
             </div>
           )}
           {error && (
-            <div className="px-3 py-2 mb-3 rounded-md bg-[#FDE7EC] text-[13px] text-[#DF1B41]">
+            <div className="px-3 py-2 mb-3 rounded-md bg-danger-subtle text-[13px] text-danger">
               {error}
             </div>
           )}
@@ -316,7 +316,7 @@ export function AppointmentsListView({
                 <Button
                   size="sm"
                   onClick={onOpenCreate}
-                  className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+                  className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" strokeWidth={2} />
                   New appointment

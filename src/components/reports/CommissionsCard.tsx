@@ -11,7 +11,7 @@ const money = (header: string, pick: (r: CommissionReportRow) => number, strong 
   header,
   csvHeader: `${header} (MYR)`,
   align: "right",
-  render: (r) => <span className={strong ? "whitespace-nowrap font-medium text-[#061b31]" : "whitespace-nowrap"}>{formatMYR(pick(r))}</span>,
+  render: (r) => <span className={strong ? "whitespace-nowrap font-medium text-foreground" : "whitespace-nowrap"}>{formatMYR(pick(r))}</span>,
   csv: (r) => csvMoney(pick(r)),
 });
 
@@ -53,7 +53,7 @@ export function CommissionsCard({ query }: { query: ReportQuery }) {
             <StatTile label="Per visit + packages" value={formatMYR(data.totals.visitCommission + data.totals.packageCommission)} hint={`${formatCount(data.totals.visits)} visits`} />
           </div>
           {data.ruleCount === 0 && (
-            <p className="rounded-[4px] bg-[#f6f9fc] px-3 py-2 text-[14px] text-[#425466]">
+            <p className="rounded-control bg-surface-muted px-3 py-2 text-[14px] text-fg-secondary">
               No commission rules yet — add them in Branches → Settings → Commissions.
             </p>
           )}

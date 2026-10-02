@@ -39,14 +39,14 @@ export function AccountingExportButton({ branchId, scopeLabel }: Props) {
       >
         <div className="space-y-4">
           <RangePicker value={range} onChange={setRange} />
-          <ul className="divide-y divide-[#e5edf5] rounded-[6px] border border-[#e5edf5]">
+          <ul className="divide-y divide-border rounded-panel border border-border">
             {ACCOUNTING_EXPORTS.map((e) => (
               <li key={e.kind} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div className="flex min-w-0 items-start gap-2.5">
-                  <FileSpreadsheet className="mt-0.5 h-4 w-4 shrink-0 text-[#533afd]" strokeWidth={1.75} />
+                  <FileSpreadsheet className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={1.75} />
                   <div className="min-w-0">
-                    <p className="text-[15px] text-[#061b31]">{e.label}</p>
-                    <p className="text-[13px] text-[#64748d]">{e.hint}</p>
+                    <p className="text-[15px] text-foreground">{e.label}</p>
+                    <p className="text-[13px] text-fg-secondary">{e.hint}</p>
                   </div>
                 </div>
                 <a href={`/api/exports/${e.kind}.csv?${query}`} download className={BTN_SECONDARY}>
@@ -56,7 +56,7 @@ export function AccountingExportButton({ branchId, scopeLabel }: Props) {
               </li>
             ))}
           </ul>
-          <p className="text-[13px] text-[#64748d]">
+          <p className="text-[13px] text-fg-secondary">
             Journal and Xero files use the account codes in Branches → Settings → Billing &amp; tax.
           </p>
         </div>

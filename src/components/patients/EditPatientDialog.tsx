@@ -26,10 +26,10 @@ interface EditPatientDialogProps {
 function FormField({ label, error, children }: { label: string; error?: string | null; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[13px] font-medium text-[#273951] mb-1">{label}</label>
+      <label className="block text-[13px] font-medium text-foreground mb-1">{label}</label>
       {children}
       {error && (
-        <p className="text-[12px] text-[#DF1B41] mt-1" role="alert">
+        <p className="text-[12px] text-danger mt-1" role="alert">
           {error}
         </p>
       )}
@@ -39,15 +39,15 @@ function FormField({ label, error, children }: { label: string; error?: string |
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d] mb-3 mt-5 first:mt-0 border-b border-[#e5edf5] pb-2">
+    <h3 className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary mb-3 mt-5 first:mt-0 border-b border-border pb-2">
       {children}
     </h3>
   );
 }
 
-const inputClass = "flex h-8 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
-const selectClass = "flex h-8 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none";
-const textareaClass = "flex w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
+const inputClass = "flex h-8 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
+const selectClass = "flex h-8 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none";
+const textareaClass = "flex w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200 resize-none";
 
 const MALAYSIAN_STATES = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang",
@@ -158,15 +158,15 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-patient-title"
-        className="relative z-10 w-full max-w-160 max-h-[90vh] rounded-2xl border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-160 max-h-[90vh] rounded-2xl border border-border bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px" }}
       >
         <div className="flex items-center justify-between p-5 pb-0">
-          <h2 id="edit-patient-title" className="text-[18px] font-light text-[#061b31]">Edit Patient</h2>
+          <h2 id="edit-patient-title" className="text-[18px] font-light text-foreground">Edit Patient</h2>
           <button
             onClick={() => onOpenChange(false)}
             aria-label="Close"
-            className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
+            className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -174,8 +174,8 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
 
         <div className="overflow-y-auto max-h-[calc(90vh-130px)] px-5 pb-5">
           {submitError && (
-            <div className="mt-4 rounded-md border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2">
-              <p className="text-[13px] text-[#DF1B41]">{submitError}</p>
+            <div className="mt-4 rounded-md border border-danger/20 bg-danger-subtle px-3 py-2">
+              <p className="text-[13px] text-danger">{submitError}</p>
             </div>
           )}
 
@@ -349,7 +349,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                     aria-label="Reminder Channel"
                     value={form.reminderChannel || "WHATSAPP"}
                     onChange={(e) => update("reminderChannel", e.target.value)}
-                    className={`${selectClass} ${channelError ? "border-[#DF1B41]/50 focus:ring-[#DF1B41] focus:border-[#DF1B41]" : ""}`}
+                    className={`${selectClass} ${channelError ? "border-danger/50 focus:ring-danger focus:border-danger" : ""}`}
                   >
                     <option value="WHATSAPP">WhatsApp</option>
                     <option value="EMAIL">Email</option>
@@ -394,7 +394,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
             </div>
 
             <div className="flex justify-end gap-2 pt-5">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-8 px-3 text-[15px] font-medium rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-8 px-3 text-[15px] font-medium rounded-md border-border text-foreground hover:bg-surface-muted">
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting || !!dobError || !!channelError} className="h-8 px-3 text-[15px] font-medium rounded-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">

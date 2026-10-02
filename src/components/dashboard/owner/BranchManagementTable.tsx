@@ -24,19 +24,19 @@ export function BranchManagementTable({
 }: BranchManagementTableProps) {
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white transition-all duration-200 ease-out hover:border-[#c1c9d2]"
+      className="rounded-panel border border-border bg-white transition-all duration-200 ease-out hover:border-border-strong"
       style={{
         boxShadow:
           "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5edf5]">
-        <h3 className="text-[16px] font-normal text-[#061b31]">Branch Management</h3>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <h3 className="text-[16px] font-normal text-foreground">Branch Management</h3>
         <Button
           onClick={onCreateBranch}
           size="sm"
-          className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer"
+          className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
         >
           <Building2 className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
           Create Branch
@@ -52,7 +52,7 @@ export function BranchManagementTable({
           action={
             <Button
               onClick={onCreateBranch}
-              className="bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] cursor-pointer"
+              className="bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] cursor-pointer"
             >
               Create Branch
             </Button>
@@ -61,23 +61,23 @@ export function BranchManagementTable({
       ) : (
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#e5edf5]">
-              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">
+            <tr className="border-b border-border">
+              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-fg-secondary">
                 Branch Name
               </th>
-              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">
+              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-fg-secondary">
                 Doctors
               </th>
-              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">
+              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-fg-secondary">
                 Patients
               </th>
-              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">
+              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-fg-secondary">
                 {"Today's Appts"}
               </th>
-              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-[#64748d]">
+              <th className="px-5 py-2.5 text-left text-[14px] font-medium text-fg-secondary">
                 Status
               </th>
-              <th className="px-5 py-2.5 text-right text-[14px] font-medium text-[#64748d]">
+              <th className="px-5 py-2.5 text-right text-[14px] font-medium text-fg-secondary">
                 Actions
               </th>
             </tr>
@@ -114,13 +114,13 @@ function BranchRow({
 
   return (
     <tr
-      className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+      className="border-b border-border last:border-b-0 hover:bg-surface-muted transition-colors cursor-pointer"
       onClick={onSelectBranch}
     >
       <td className="px-5 py-3">
-        <div className="text-[15px] font-medium text-[#061b31]">{branch.name}</div>
+        <div className="text-[15px] font-medium text-foreground">{branch.name}</div>
         {branch.address && (
-          <div className="text-[13px] text-[#64748d]">{branch.address}</div>
+          <div className="text-[13px] text-fg-secondary">{branch.address}</div>
         )}
       </td>
       <td className="px-5 py-3">
@@ -137,14 +137,14 @@ function BranchRow({
                 className="h-7 w-7 border-2 border-white"
                 style={{ marginLeft: i > 0 ? "-6px" : 0 }}
               >
-                <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[11px] font-medium">
+                <AvatarFallback className="bg-brand-subtle text-brand text-[11px] font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
             );
           })}
           {branch.doctorCount > 3 && (
-            <span className="ml-1.5 text-[13px] text-[#64748d]">
+            <span className="ml-1.5 text-[13px] text-fg-secondary">
               +{branch.doctorCount - 3}
             </span>
           )}
@@ -154,17 +154,17 @@ function BranchRow({
                 e.stopPropagation();
                 onManageDoctors();
               }}
-              className="text-[13px] text-[#533afd] hover:text-[#4434d4] font-medium cursor-pointer"
+              className="text-[13px] text-brand hover:text-brand-strong font-medium cursor-pointer"
             >
               Add doctors
             </button>
           )}
         </div>
       </td>
-      <td className="px-5 py-3 text-[15px] text-[#273951]">{branch.patientCount}</td>
-      <td className="px-5 py-3 text-[15px] text-[#273951]">{branch.todayAppointments}</td>
+      <td className="px-5 py-3 text-[15px] text-foreground">{branch.patientCount}</td>
+      <td className="px-5 py-3 text-[15px] text-foreground">{branch.todayAppointments}</td>
       <td className="px-5 py-3">
-        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[13px] font-medium bg-[#ECFDF5] text-[#15be53]">
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[13px] font-medium bg-success-subtle text-success">
           Active
         </span>
       </td>
@@ -175,7 +175,7 @@ function BranchRow({
               e.stopPropagation();
               setMenuOpen(!menuOpen);
             }}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-fg-secondary hover:bg-surface-muted hover:text-foreground transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
           >
             <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -190,7 +190,7 @@ function BranchRow({
                 }}
               />
               <div
-                className="absolute right-0 top-full mt-1 w-48 rounded-[6px] border border-[#e5edf5] bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+                className="absolute right-0 top-full mt-1 w-48 rounded-panel border border-border bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
                 style={{
                   boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
                 }}
@@ -201,9 +201,9 @@ function BranchRow({
                     setMenuOpen(false);
                     onEditBranch();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-foreground hover:bg-surface-muted transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
                 >
-                  <Pencil className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+                  <Pencil className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
                   Edit Branch
                 </button>
                 <button
@@ -212,9 +212,9 @@ function BranchRow({
                     setMenuOpen(false);
                     onManageDoctors();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-foreground hover:bg-surface-muted transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
                 >
-                  <UserPlus className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+                  <UserPlus className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
                   Manage Doctors
                 </button>
                 <button
@@ -223,9 +223,9 @@ function BranchRow({
                     setMenuOpen(false);
                     onSelectBranch();
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-foreground hover:bg-surface-muted transition-all duration-200 cursor-pointer group/item hover:translate-x-0.5"
                 >
-                  <Eye className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+                  <Eye className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
                   View Details
                 </button>
               </div>

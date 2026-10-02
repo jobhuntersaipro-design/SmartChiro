@@ -59,27 +59,27 @@ export function DeleteBranchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-110 rounded-[6px] border border-[#e5edf5]">
+      <DialogContent className="sm:max-w-110 rounded-panel border border-border">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FEF2F4]">
-              <AlertTriangle className="h-5 w-5 text-[#DF1B41]" strokeWidth={1.5} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-subtle">
+              <AlertTriangle className="h-5 w-5 text-danger" strokeWidth={1.5} />
             </div>
-            <DialogTitle className="text-[16px] font-medium text-[#061b31]">
+            <DialogTitle className="text-[16px] font-medium text-foreground">
               Delete Branch
             </DialogTitle>
           </div>
-          <DialogDescription className="text-[14px] text-[#64748d]">
-            This will permanently remove <strong className="text-[#061b31]">{branchName}</strong>{" "}
+          <DialogDescription className="text-[14px] text-fg-secondary">
+            This will permanently remove <strong className="text-foreground">{branchName}</strong>{" "}
             and all associated data — patients, visits, appointments, X-rays, and invoices.
             This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
         <div className="pt-1">
-          <label className="block text-[13px] text-[#273951] mb-1.5">
+          <label className="block text-[13px] text-foreground mb-1.5">
             Type{" "}
-            <span className="font-mono text-[#061b31] bg-[#F6F9FC] border border-[#e5edf5] rounded-[3px] px-1.5 py-0.5">
+            <span className="font-mono text-foreground bg-surface-muted border border-border rounded-[3px] px-1.5 py-0.5">
               {branchName}
             </span>{" "}
             to confirm
@@ -99,15 +99,15 @@ export function DeleteBranchDialog({
             aria-invalid={showMismatch}
             className={`h-9 rounded-md text-[14px] focus:ring-1 transition-all duration-200 ${
               showMismatch
-                ? "border-[#df1b41] bg-[#FDE8EC]/30 focus:ring-[#df1b41] focus:border-[#df1b41]"
-                : "border-[#e5edf5] bg-[#F6F9FC] focus:ring-[#df1b41] focus:border-[#df1b41]"
+                ? "border-danger bg-danger-subtle/30 focus:ring-danger focus:border-danger"
+                : "border-border bg-surface-muted focus:ring-danger focus:border-danger"
             }`}
           />
           {showMismatch && (
-            <p className="text-[12px] text-[#df1b41] mt-1">Branch name doesn&apos;t match.</p>
+            <p className="text-[12px] text-danger mt-1">Branch name doesn&apos;t match.</p>
           )}
           {error && (
-            <p className="text-[12px] text-[#df1b41] mt-1">{error}</p>
+            <p className="text-[12px] text-danger mt-1">{error}</p>
           )}
         </div>
 
@@ -116,14 +116,14 @@ export function DeleteBranchDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="rounded-md border-[#e5edf5] text-[14px] cursor-pointer"
+            className="rounded-md border-border text-[14px] cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             onClick={handleDelete}
             disabled={loading || !matches}
-            className="rounded-md bg-[#DF1B41] hover:bg-[#c01836] text-white text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-danger hover:bg-danger/90 text-white text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Deleting..." : "Delete Branch"}
           </Button>

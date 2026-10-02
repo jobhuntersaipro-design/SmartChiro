@@ -75,7 +75,7 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
   }, [branchId]);
 
   if (loadError) return <p className={ALERT_ERROR}>{loadError}</p>;
-  if (!billing || !form) return <div className="p-6 text-[#697386]">Loading billing settings…</div>;
+  if (!billing || !form) return <div className="p-6 text-fg-muted">Loading billing settings…</div>;
 
   const errors = { sstRate: rateError(form.sstRate), invoicePrefix: prefixError(form.invoicePrefix) };
   const dirty = JSON.stringify(form) !== JSON.stringify(toForm(billing));
@@ -129,10 +129,10 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
   );
 
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6 shadow-(--shadow-card)">
+    <div className="rounded-panel border border-border bg-white p-6 shadow-(--shadow-card)">
       <div className="mb-4">
-        <h3 className="text-[18px] font-medium text-[#0A2540]">Billing &amp; tax</h3>
-        <p className="text-[14px] text-[#697386]">Printed on invoices and receipts from this branch.</p>
+        <h3 className="text-[18px] font-medium text-foreground">Billing &amp; tax</h3>
+        <p className="text-[14px] text-fg-muted">Printed on invoices and receipts from this branch.</p>
       </div>
 
       <div className="space-y-4">
@@ -143,20 +143,20 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
           {text("sstRegNo", "SST registration no.", "e.g. W10-1808-32000123", 50)}
         </div>
 
-        <div className="rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] p-4">
+        <div className="rounded-panel border border-border bg-surface-muted p-4">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <label className="flex cursor-pointer items-center gap-2 text-[15px] text-[#061b31]">
+            <label className="flex cursor-pointer items-center gap-2 text-[15px] text-foreground">
               <input
                 type="checkbox"
                 checked={form.sstEnabled}
                 disabled={!canEdit}
                 onChange={(e) => set("sstEnabled", e.target.checked)}
-                className="h-4 w-4 accent-[#533afd]"
+                className="h-4 w-4 accent-brand"
               />
               Charge SST
             </label>
             <div className="flex items-center gap-2">
-              <label htmlFor="billing-sstRate" className="text-[14px] text-[#425466]">
+              <label htmlFor="billing-sstRate" className="text-[14px] text-fg-secondary">
                 Rate
               </label>
               <input
@@ -168,11 +168,11 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
                 aria-invalid={errors.sstRate ? true : undefined}
                 className={cn(FIELD_INPUT, "w-20 bg-white text-right tabular-nums", errors.sstRate && INVALID)}
               />
-              <span className="text-[14px] text-[#425466]">%</span>
+              <span className="text-[14px] text-fg-secondary">%</span>
             </div>
           </div>
           {errors.sstRate && <p className={FIELD_ERROR}>{errors.sstRate}</p>}
-          <p className="mt-2 text-[13px] text-[#64748d]">
+          <p className="mt-2 text-[13px] text-fg-secondary">
             Applied to taxable items for non-Malaysian patients only (chiropractic services to non-citizens, from 1 Jul 2025).
             Changes affect new invoices; issued invoices keep their tax.
           </p>
@@ -196,7 +196,7 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
             {errors.invoicePrefix ? (
               <p className={FIELD_ERROR}>{errors.invoicePrefix}</p>
             ) : (
-              <p className="mt-1 text-[13px] text-[#64748d]">
+              <p className="mt-1 text-[13px] text-fg-secondary">
                 {dirty && form.invoicePrefix.trim() !== (billing.invoicePrefix ?? "")
                   ? "Save to see the next number."
                   : <>Next: <span className="font-mono">{billing.nextInvoiceNumber}</span> · <span className="font-mono">{billing.nextReceiptNumber}</span></>}
@@ -229,7 +229,7 @@ export function BranchBillingSettingsCard({ branchId }: Props) {
             </button>
           </div>
         ) : (
-          <p className="text-[13px] text-[#64748d]">Only the branch owner can change billing &amp; tax settings.</p>
+          <p className="text-[13px] text-fg-secondary">Only the branch owner can change billing &amp; tax settings.</p>
         )}
 
         <AccountCodesSection branchId={branchId} billing={billing} canEdit={canEdit} onSaved={setBilling} />

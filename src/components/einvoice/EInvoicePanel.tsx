@@ -33,12 +33,12 @@ async function downloadJson(url: string, fallbackName: string): Promise<{ ok: tr
 function SubmissionErrors({ doc }: { doc: EInvoiceSubmissionView }) {
   if (doc.errors.length === 0) return null;
   return (
-    <ul className="mt-2 space-y-1 text-[13px] text-[#b41a36]">
+    <ul className="mt-2 space-y-1 text-[13px] text-danger">
       {doc.errors.slice(0, 8).map((e, i) => (
         <li key={i}>
           {e.code && <span className="font-mono text-[12px]">{e.code} </span>}
           {e.message}
-          {e.path && <span className="block font-mono text-[11px] text-[#697386]">{e.path}</span>}
+          {e.path && <span className="block font-mono text-[11px] text-fg-muted">{e.path}</span>}
         </li>
       ))}
     </ul>
@@ -75,7 +75,7 @@ export function EInvoicePanel({ invoiceId, onChanged }: EInvoicePanelProps) {
   if (loadError) return <p className={ALERT_ERROR}>{loadError}</p>;
   if (!state) {
     return (
-      <div className="flex items-center gap-2 text-[14px] text-[#64748d]">
+      <div className="flex items-center gap-2 text-[14px] text-fg-secondary">
         <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} /> Loading e-invoice…
       </div>
     );
@@ -165,51 +165,51 @@ export function EInvoicePanel({ invoiceId, onChanged }: EInvoicePanelProps) {
   return (
     <section aria-labelledby="inv-einvoice" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 id="inv-einvoice" className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
+        <h3 id="inv-einvoice" className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">
           e-Invoice (LHDN MyInvois)
         </h3>
         <EInvoiceStatusPill status={state.einvoiceStatus} />
       </div>
 
-      <div className="rounded-[6px] border border-[#e5edf5] p-3 text-[14px]">
+      <div className="rounded-panel border border-border p-3 text-[14px]">
         {!state.configured && (
-          <p className="mb-2 text-[13px] text-[#64748d]">
+          <p className="mb-2 text-[13px] text-fg-secondary">
             MyInvois isn&apos;t connected ({state.environment}); you can download the JSON. Submitting needs the clinic&apos;s LHDN client ID and secret on the server.
           </p>
         )}
         {state.consolidatedInto && (
-          <p className="mb-2 text-[13px] text-[#425466]">
+          <p className="mb-2 text-[13px] text-fg-secondary">
             Included in consolidated e-invoice <span className="font-mono">{state.consolidatedInto.codeNumber}</span> ({state.consolidatedInto.status.toLowerCase().replace("_", " ")}).
           </p>
         )}
         {current && (
-          <div className="mb-2 text-[13px] text-[#425466]">
+          <div className="mb-2 text-[13px] text-fg-secondary">
             <p>
               Document <span className="font-mono">{current.codeNumber}</span> · v{current.documentVersion}
               {current.submittedAt && <> · sent {when(current.submittedAt)}</>}
               {current.validatedAt && current.status === "VALID" && <> · validated {when(current.validatedAt)}</>}
             </p>
-            {current.uuid && <p className="font-mono text-[12px] text-[#64748d]">UUID {current.uuid}</p>}
+            {current.uuid && <p className="font-mono text-[12px] text-fg-secondary">UUID {current.uuid}</p>}
             {current.status === "CANCELLED" && current.cancelReason && <p>Cancelled: {current.cancelReason}</p>}
             {current.status === "INVALID" && <SubmissionErrors doc={current} />}
             {current.status === "NOT_SUBMITTED" && current.errors.length > 0 && <SubmissionErrors doc={current} />}
           </div>
         )}
-        {state.refreshError && <p className="mb-2 text-[13px] text-[#9b6829]">{state.refreshError}</p>}
+        {state.refreshError && <p className="mb-2 text-[13px] text-warning">{state.refreshError}</p>}
         {notice && <p className={`${ALERT_ERROR} mb-2`} role="alert">{notice}</p>}
 
         {showCheck && (
           <div className="mb-3" aria-live="polite">
             {check.ok ? (
-              <p className="flex items-center gap-1.5 text-[13px] text-[#1f7a1f]">
+              <p className="flex items-center gap-1.5 text-[13px] text-success">
                 <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} /> All required e-invoice details are present.
               </p>
             ) : (
-              <div className="rounded-[4px] border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2">
-                <p className="mb-1 flex items-center gap-1.5 text-[13px] font-medium text-[#b41a36]">
+              <div className="rounded-control border border-danger/20 bg-danger-subtle px-3 py-2">
+                <p className="mb-1 flex items-center gap-1.5 text-[13px] font-medium text-danger">
                   <AlertTriangle className="h-4 w-4" strokeWidth={1.75} /> {check.errors.length} detail{check.errors.length === 1 ? "" : "s"} to fix
                 </p>
-                <ul className="list-disc space-y-0.5 pl-5 text-[13px] text-[#b41a36]" data-testid="einvoice-errors">
+                <ul className="list-disc space-y-0.5 pl-5 text-[13px] text-danger" data-testid="einvoice-errors">
                   {check.errors.map((e, i) => (
                     <li key={`${e.field}-${i}`}>{e.message}</li>
                   ))}
@@ -217,7 +217,7 @@ export function EInvoicePanel({ invoiceId, onChanged }: EInvoicePanelProps) {
               </div>
             )}
             {check.warnings.length > 0 && (
-              <ul className="mt-2 list-disc space-y-0.5 pl-5 text-[13px] text-[#9b6829]">
+              <ul className="mt-2 list-disc space-y-0.5 pl-5 text-[13px] text-warning">
                 {check.warnings.map((w, i) => (
                   <li key={`${w.field}-${i}`}>{w.message}</li>
                 ))}
@@ -253,33 +253,33 @@ export function EInvoicePanel({ invoiceId, onChanged }: EInvoicePanelProps) {
           )}
         </div>
         {validDoc?.cancellableUntil && cancellable && (
-          <p className="mt-2 text-[12px] text-[#64748d]">Can be cancelled until {when(validDoc.cancellableUntil)}.</p>
+          <p className="mt-2 text-[12px] text-fg-secondary">Can be cancelled until {when(validDoc.cancellableUntil)}.</p>
         )}
       </div>
 
       {state.refunds.length > 0 && (
-        <div className="rounded-[6px] border border-[#e5edf5] p-3">
-          <p className="mb-2 text-[13px] font-medium text-[#273951]">Refund notes</p>
+        <div className="rounded-panel border border-border p-3">
+          <p className="mb-2 text-[13px] font-medium text-foreground">Refund notes</p>
           <ul className="space-y-2">
             {state.refunds.map((r) => (
               <li key={r.paymentId} className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
-                <span className="text-[#425466]">
+                <span className="text-fg-secondary">
                   <span className="font-mono">{r.receiptNumber}</span> · {formatMYR(r.amount)}
                 </span>
                 <span className="flex flex-wrap items-center gap-2">
                   {r.note ? <EInvoiceStatusPill status={r.note.status} /> : null}
                   {r.note?.validationUrl && (
-                    <a href={r.note.validationUrl} target="_blank" rel="noopener noreferrer" className="text-[#533afd] hover:underline">
+                    <a href={r.note.validationUrl} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
                       Link
                     </a>
                   )}
                   {covering && (
-                    <button type="button" className="text-[#533afd] hover:underline disabled:opacity-60" onClick={() => void download(r.paymentId)} disabled={busy !== null}>
+                    <button type="button" className="text-brand hover:underline disabled:opacity-60" onClick={() => void download(r.paymentId)} disabled={busy !== null}>
                       JSON
                     </button>
                   )}
                   {state.canManage && covering && (!r.note || ["INVALID", "CANCELLED", "NOT_SUBMITTED"].includes(r.note.status)) && (
-                    <button type="button" className="text-[#533afd] hover:underline disabled:opacity-60" onClick={() => void submit(r.paymentId)} disabled={busy !== null}>
+                    <button type="button" className="text-brand hover:underline disabled:opacity-60" onClick={() => void submit(r.paymentId)} disabled={busy !== null}>
                       Submit refund note
                     </button>
                   )}
@@ -288,7 +288,7 @@ export function EInvoicePanel({ invoiceId, onChanged }: EInvoicePanelProps) {
               </li>
             ))}
           </ul>
-          {!covering && <p className="mt-2 text-[12px] text-[#64748d]">Refund notes need a validated e-invoice to reference.</p>}
+          {!covering && <p className="mt-2 text-[12px] text-fg-secondary">Refund notes need a validated e-invoice to reference.</p>}
         </div>
       )}
     </section>

@@ -50,19 +50,19 @@ export function DatePickerStep({ slug, treatment, doctorId, firstDay, lastDay, s
             if (key < firstDay || key > lastDay) return true;
             return !available || !available.has(key);
           }}
-          className="rounded-[6px] border border-[#E3E8EE] p-2 [--cell-size:--spacing(10)]"
+          className="rounded-panel border border-border p-2 [--cell-size:--spacing(10)]"
           aria-busy={days.loading}
         />
         {days.loading && (
           <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[13px] text-[#697386] shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[13px] text-fg-muted shadow-sm">
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               Checking availability…
             </span>
           </div>
         )}
       </div>
-      <p className="mt-2 text-center text-[13px] text-[#697386]" aria-live="polite">
+      <p className="mt-2 text-center text-[13px] text-fg-muted" aria-live="polite">
         {noneThisMonth ? "No free times this month — try the next month." : "Dates you can't pick are fully booked or closed."}
       </p>
     </div>

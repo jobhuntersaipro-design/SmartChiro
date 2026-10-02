@@ -56,7 +56,7 @@ export function EInvoiceSettingsSection({ branchId }: Props) {
   }, [branchId]);
 
   if (error) return <p className={ALERT_ERROR}>{error}</p>;
-  if (!settings || !form) return <p className="text-[14px] text-[#697386]">Loading e-invoice settings…</p>;
+  if (!settings || !form) return <p className="text-[14px] text-fg-muted">Loading e-invoice settings…</p>;
 
   const msicError = form.msicCode && !/^\d{5}$/.test(form.msicCode.trim()) ? "5 digits, e.g. 86909" : null;
   const dirty = JSON.stringify(form) !== JSON.stringify(toForm(settings));
@@ -90,28 +90,28 @@ export function EInvoiceSettingsSection({ branchId }: Props) {
   }
 
   return (
-    <div className="space-y-4 border-t border-[#e5edf5] pt-5" data-testid="einvoice-settings">
+    <div className="space-y-4 border-t border-border pt-5" data-testid="einvoice-settings">
       <div>
-        <h4 className="text-[16px] font-medium text-[#0A2540]">e-Invoice (LHDN MyInvois)</h4>
-        <p className="text-[14px] text-[#697386]">
+        <h4 className="text-[16px] font-medium text-foreground">e-Invoice (LHDN MyInvois)</h4>
+        <p className="text-[14px] text-fg-muted">
           Issues invoices to LHDN for validation. Uses the legal name, SSM no., TIN and SST no. above plus the branch address and phone.
         </p>
       </div>
 
-      <div className="flex items-start gap-2 rounded-[6px] border border-[#e5edf5] bg-[#f6f9fc] p-3 text-[14px]">
-        <PlugZap className="mt-0.5 h-4 w-4 shrink-0 text-[#425466]" strokeWidth={1.5} />
+      <div className="flex items-start gap-2 rounded-panel border border-border bg-surface-muted p-3 text-[14px]">
+        <PlugZap className="mt-0.5 h-4 w-4 shrink-0 text-fg-secondary" strokeWidth={1.5} />
         <div>
           {settings.configured ? (
-            <p className="text-[#061b31]">
+            <p className="text-foreground">
               Connected to MyInvois <span className="font-medium">{settings.environment}</span>
               {settings.intermediary && " (as intermediary)"} · document version {settings.documentVersion}
             </p>
           ) : (
-            <p className="text-[#061b31]">
+            <p className="text-foreground">
               Not connected — the server has no MyInvois client ID / secret. Invoices can still be checked and downloaded as JSON.
             </p>
           )}
-          <p className="text-[13px] text-[#64748d]">Credentials are set by the administrator as environment variables and are never shown here.</p>
+          <p className="text-[13px] text-fg-secondary">Credentials are set by the administrator as environment variables and are never shown here.</p>
         </div>
       </div>
 
@@ -156,35 +156,35 @@ export function EInvoiceSettingsSection({ branchId }: Props) {
           />
         </div>
       </div>
-      <p className="-mt-2 text-[13px] text-[#64748d]">
+      <p className="-mt-2 text-[13px] text-fg-secondary">
         Use the MSIC code registered with LHDN for this business (your tax agent can confirm). State code from the branch address:{" "}
         {settings.stateCode ? (
           <span className="font-mono">
             {settings.stateCode} {settings.stateName}
           </span>
         ) : (
-          <span className="text-[#b41a36]">not recognised — set the state in the branch details</span>
+          <span className="text-danger">not recognised — set the state in the branch details</span>
         )}
         .
       </p>
 
-      <label className="flex cursor-pointer items-center gap-2 text-[15px] text-[#061b31]">
+      <label className="flex cursor-pointer items-center gap-2 text-[15px] text-foreground">
         <input
           type="checkbox"
           checked={form.einvoiceEnabled}
           disabled={!canEdit}
           onChange={(e) => set("einvoiceEnabled", e.target.checked)}
-          className="h-4 w-4 accent-[#533afd]"
+          className="h-4 w-4 accent-brand"
         />
         Issue e-invoices for this branch
       </label>
 
       {settings.readiness.ok ? (
-        <p className="flex items-center gap-1.5 text-[13px] text-[#1f7a1f]">
+        <p className="flex items-center gap-1.5 text-[13px] text-success">
           <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} /> Clinic details are complete for e-invoicing.
         </p>
       ) : (
-        <div className="rounded-[4px] border border-[#F5A623]/30 bg-[#FFF8EB] px-3 py-2 text-[13px] text-[#8a5a14]">
+        <div className="rounded-control border border-warning/30 bg-warning-subtle px-3 py-2 text-[13px] text-warning">
           <p className="mb-1 font-medium">Still needed before submitting:</p>
           <ul className="list-disc space-y-0.5 pl-5">
             {settings.readiness.errors.map((e, i) => (
@@ -202,7 +202,7 @@ export function EInvoiceSettingsSection({ branchId }: Props) {
           </button>
         </div>
       ) : (
-        <p className="text-[13px] text-[#64748d]">Only the branch owner can change e-invoice settings.</p>
+        <p className="text-[13px] text-fg-secondary">Only the branch owner can change e-invoice settings.</p>
       )}
 
       <ConsolidatedEInvoicePanel branchId={branchId} />

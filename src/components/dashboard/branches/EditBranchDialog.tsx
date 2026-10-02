@@ -56,25 +56,25 @@ const DAYS = [
 ] as const;
 
 const inputClass =
-  "h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[15px] focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "h-9 rounded-md border-border bg-surface-muted text-[15px] focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 const inputErrorClass =
-  "h-9 rounded-md border-[#df1b41] bg-[#FDE8EC]/30 text-[15px] focus:ring-1 focus:ring-[#df1b41] focus:border-[#df1b41] focus:bg-white transition-all duration-200";
+  "h-9 rounded-md border-danger bg-danger-subtle/30 text-[15px] focus:ring-1 focus:ring-danger focus:border-danger focus:bg-white transition-all duration-200";
 const timeInputClass =
-  "h-8 w-22.5 rounded-md border border-[#e5edf5] bg-[#F6F9FC] px-2 text-[14px] text-[#061b31] text-center focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "h-8 w-22.5 rounded-md border border-border bg-surface-muted px-2 text-[14px] text-foreground text-center focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const defaultHours: DayHours = { open: "09:00", close: "18:00" };
 
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="block text-[14px] font-medium text-[#273951] mb-1.5">
-      {children} {required && <span className="text-[#df1b41]">*</span>}
+    <label className="block text-[14px] font-medium text-foreground mb-1.5">
+      {children} {required && <span className="text-danger">*</span>}
     </label>
   );
 }
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-[12px] text-[#df1b41] mt-1">{message}</p>;
+  return <p className="text-[12px] text-danger mt-1">{message}</p>;
 }
 
 export function EditBranchDialog({
@@ -220,9 +220,9 @@ export function EditBranchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-145 rounded-2xl border border-[#e5edf5] p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-145 rounded-2xl border border-border p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-[18px] font-light tracking-[-0.18px] text-[#061b31]">
+          <DialogTitle className="text-[18px] font-light tracking-[-0.18px] text-foreground">
             Edit Clinic
           </DialogTitle>
         </DialogHeader>
@@ -240,10 +240,10 @@ export function EditBranchDialog({
                   onClick={() => setStep(s.id)}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-[#ededfc] text-[#533afd]"
+                      ? "bg-brand-subtle text-brand"
                       : isDone
-                        ? "text-[#15be53] hover:bg-[#ECFDF5]"
-                        : "text-[#64748d] hover:bg-[#f6f9fc]"
+                        ? "text-success hover:bg-success-subtle"
+                        : "text-fg-secondary hover:bg-surface-muted"
                   }`}
                 >
                   {isDone ? (
@@ -256,7 +256,7 @@ export function EditBranchDialog({
                 {i < steps.length - 1 && (
                   <div
                     className={`flex-1 h-px mx-1 transition-colors duration-300 ${
-                      isDone ? "bg-[#15be53]" : "bg-[#e5edf5]"
+                      isDone ? "bg-success" : "bg-border"
                     }`}
                   />
                 )}
@@ -305,9 +305,9 @@ export function EditBranchDialog({
                   value={ownerName ?? ""}
                   readOnly
                   disabled
-                  className="h-9 rounded-md border-[#e5edf5] bg-[#e5edf5]/50 text-[15px] text-[#64748d] cursor-not-allowed"
+                  className="h-9 rounded-md border-border bg-border/50 text-[15px] text-fg-secondary cursor-not-allowed"
                 />
-                <p className="text-[12px] text-[#64748d] mt-1">
+                <p className="text-[12px] text-fg-secondary mt-1">
                   Owner is set when the clinic is created and cannot be changed here.
                 </p>
               </div>
@@ -390,7 +390,7 @@ export function EditBranchDialog({
 
               <div>
                 <Label>Operating Hours</Label>
-                <div className="rounded-[6px] border border-[#e5edf5] divide-y divide-[#e5edf5] mt-1">
+                <div className="rounded-panel border border-border divide-y divide-border mt-1">
                   {DAYS.map(({ key, label }) => {
                     const dayHours = hours[key as keyof OperatingHoursMap];
                     const isOpen = !!dayHours;
@@ -401,8 +401,8 @@ export function EditBranchDialog({
                           onClick={() => toggleDay(key)}
                           className={`flex items-center justify-center w-10 h-7 rounded-md text-[13px] font-medium transition-all duration-200 cursor-pointer ${
                             isOpen
-                              ? "bg-[#ededfc] text-[#533afd]"
-                              : "bg-[#f6f9fc] text-[#64748d] hover:bg-[#e5edf5]"
+                              ? "bg-brand-subtle text-brand"
+                              : "bg-surface-muted text-fg-secondary hover:bg-border"
                           }`}
                         >
                           {label}
@@ -415,7 +415,7 @@ export function EditBranchDialog({
                               onChange={(e) => updateDayHours(key, "open", e.target.value)}
                               className={timeInputClass}
                             />
-                            <span className="text-[13px] text-[#64748d]">to</span>
+                            <span className="text-[13px] text-fg-secondary">to</span>
                             <input
                               type="time"
                               value={dayHours.close}
@@ -424,7 +424,7 @@ export function EditBranchDialog({
                             />
                           </div>
                         ) : (
-                          <span className="text-[13px] text-[#64748d]">Closed</span>
+                          <span className="text-[13px] text-fg-secondary">Closed</span>
                         )}
                       </div>
                     );
@@ -470,19 +470,19 @@ export function EditBranchDialog({
           )}
 
           {errors._form && (
-            <div className="mt-4 rounded-md border border-[#df1b41]/20 bg-[#FDE8EC] px-3 py-2 animate-in fade-in duration-200">
-              <p className="text-[13px] text-[#df1b41]">{errors._form}</p>
+            <div className="mt-4 rounded-md border border-danger/20 bg-danger-subtle px-3 py-2 animate-in fade-in duration-200">
+              <p className="text-[13px] text-danger">{errors._form}</p>
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#e5edf5]">
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
             <div>
               {step > 1 && (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="h-9 px-4 rounded-md border-[#e5edf5] text-[14px] text-[#061b31] cursor-pointer transition-all duration-200 hover:translate-x-[-2px]"
+                  className="h-9 px-4 rounded-md border-border text-[14px] text-foreground cursor-pointer transition-all duration-200 hover:translate-x-[-2px]"
                 >
                   <ChevronLeft className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                   Back
@@ -490,14 +490,14 @@ export function EditBranchDialog({
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-[#64748d] mr-2">
+              <span className="text-[13px] text-fg-secondary mr-2">
                 Step {step} of {steps.length}
               </span>
               {step < 4 ? (
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="h-9 px-4 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-4 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Next
                   <ChevronRight className="h-3.5 w-3.5 ml-1" strokeWidth={1.5} />
@@ -507,7 +507,7 @@ export function EditBranchDialog({
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="h-9 px-5 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-9 px-5 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? "Saving..." : "Save Changes"}
                 </Button>

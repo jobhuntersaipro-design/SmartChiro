@@ -25,9 +25,9 @@ interface Props {
 }
 
 const STATUS_STYLE: Record<CarePlanStatusValue, { label: string; className: string }> = {
-  ACTIVE: { label: "Active", className: "bg-[#E8F7EE] text-[#108c3d]" },
-  COMPLETED: { label: "Completed", className: "bg-[#F0EEFF] text-[#533afd]" },
-  CANCELLED: { label: "Cancelled", className: "bg-[#F1F5F9] text-[#64748b]" },
+  ACTIVE: { label: "Active", className: "bg-success-subtle text-success" },
+  COMPLETED: { label: "Completed", className: "bg-brand-subtle text-brand" },
+  CANCELLED: { label: "Cancelled", className: "bg-surface-hover text-fg-secondary" },
 };
 
 /** Clinical: the patient's care plans with visit progress (never shown to front desk). */
@@ -57,32 +57,32 @@ export function CarePlanSection({ patientId, patientName, branchId, defaultDocto
   }, [load]);
 
   return (
-    <section className="rounded-[6px] border border-[#e5edf5] bg-white" aria-labelledby="care-plans-title">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5edf5] px-5 py-3">
+    <section className="rounded-panel border border-border bg-white" aria-labelledby="care-plans-title">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
         <div>
-          <h2 id="care-plans-title" className="text-[16px] font-medium text-[#061b31]">Care plan</h2>
-          <p className="text-[13px] text-[#64748d]">Planned visits, progress and goals.</p>
+          <h2 id="care-plans-title" className="text-[16px] font-medium text-foreground">Care plan</h2>
+          <p className="text-[13px] text-fg-secondary">Planned visits, progress and goals.</p>
         </div>
         <Button
           onClick={() => setCreateOpen(true)}
-          className="h-8 gap-1.5 rounded-md bg-[#533afd] text-[14px] text-white hover:bg-[#4434d4]"
+          className="h-8 gap-1.5 rounded-md bg-primary text-[14px] text-white hover:bg-primary/90"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New care plan
         </Button>
       </div>
 
       <div className="px-5 py-4">
-        {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
+        {error && <p className="text-[14px] text-danger">{error}</p>}
         {!plans && !error && (
-          <div className="flex items-center gap-2 text-[14px] text-[#64748d]">
+          <div className="flex items-center gap-2 text-[14px] text-fg-secondary">
             <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> Loading care plans…
           </div>
         )}
         {plans && plans.length === 0 && (
           <div className="flex flex-col items-center py-6 text-center">
-            <ClipboardList className="mb-2 h-8 w-8 text-[#c1c9d2]" strokeWidth={1.25} />
-            <p className="text-[14px] text-[#64748d]">No care plan yet.</p>
-            <p className="text-[13px] text-[#94a3b8]">Plan the visits, book them and sell a package in one step.</p>
+            <ClipboardList className="mb-2 h-8 w-8 text-border-strong" strokeWidth={1.25} />
+            <p className="text-[14px] text-fg-secondary">No care plan yet.</p>
+            <p className="text-[13px] text-fg-muted">Plan the visits, book them and sell a package in one step.</p>
           </div>
         )}
         {plans && plans.length > 0 && (
@@ -128,14 +128,14 @@ function CarePlanCard({ plan, onCancel }: { plan: CarePlanJson; onCancel: () => 
   const v = carePlanProgressView(plan.progress);
   const style = STATUS_STYLE[plan.status];
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] px-4 py-3">
+    <div className="rounded-panel border border-border px-4 py-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[15px] font-medium text-[#061b31]">{plan.title}</span>
+            <span className="text-[15px] font-medium text-foreground">{plan.title}</span>
             <span className={`inline-flex rounded-full px-2 py-0.5 text-[12px] font-medium ${style.className}`}>{style.label}</span>
           </div>
-          <p className="mt-0.5 text-[13px] text-[#64748d]">
+          <p className="mt-0.5 text-[13px] text-fg-secondary">
             {displayDoctorName(plan.doctor.name)} · {plan.visitsPerWeek}× a week · {plan.totalVisits} visits · from{" "}
             {clinicDateLabel(clinicInstantFromInputs(plan.startDate, "12:00"))}
           </p>
@@ -145,7 +145,7 @@ function CarePlanCard({ plan, onCancel }: { plan: CarePlanJson; onCancel: () => 
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-7 gap-1 rounded-md border-[#e5edf5] px-2 text-[12px] text-[#9b6829]"
+            className="h-7 gap-1 rounded-md border-border px-2 text-[12px] text-warning"
           >
             <XCircle className="h-3 w-3" strokeWidth={1.75} /> Cancel plan
           </Button>
@@ -154,37 +154,37 @@ function CarePlanCard({ plan, onCancel }: { plan: CarePlanJson; onCancel: () => 
 
       <div className="mt-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-[13px]">
-          <span className="font-medium tabular-nums text-[#061b31]">
+          <span className="font-medium tabular-nums text-foreground">
             {v.completed} of {v.planned} visits completed
           </span>
-          <span className="tabular-nums text-[#64748d]">
+          <span className="tabular-nums text-fg-secondary">
             {v.upcoming} upcoming
             {v.missed > 0 ? ` · ${v.missed} missed` : ""}
             {v.unbooked > 0 ? ` · ${v.unbooked} not booked` : ""}
           </span>
         </div>
         <div
-          className="mt-1 flex h-2 overflow-hidden rounded-full bg-[#eef2f7]"
+          className="mt-1 flex h-2 overflow-hidden rounded-full bg-surface-hover"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={v.planned}
           aria-valuenow={v.completed}
           aria-label={`${plan.title} progress`}
         >
-          <div className="h-full bg-[#30B130]" style={{ width: `${v.completedPct}%` }} />
-          <div className="h-full bg-[#C9C2FF]" style={{ width: `${v.upcomingPct}%` }} />
+          <div className="h-full bg-success" style={{ width: `${v.completedPct}%` }} />
+          <div className="h-full bg-brand-subtle" style={{ width: `${v.upcomingPct}%` }} />
         </div>
       </div>
 
       {plan.package && (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[#425466]">
-          <Package className="h-3.5 w-3.5 text-[#533afd]" strokeWidth={1.75} />
+        <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-fg-secondary">
+          <Package className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} />
           {plan.package.name} — <span className="tabular-nums">{sessionsUsedLabel(plan.package.sessionsUsed, plan.package.sessionsTotal)}</span>
         </p>
       )}
       {plan.goals && (
-        <p className="mt-2 whitespace-pre-wrap text-[13px] text-[#425466]">
-          <span className="font-medium text-[#273951]">Goals: </span>
+        <p className="mt-2 whitespace-pre-wrap text-[13px] text-fg-secondary">
+          <span className="font-medium text-foreground">Goals: </span>
           {plan.goals}
         </p>
       )}
@@ -252,7 +252,7 @@ function CancelCarePlanDialog({
             type="button"
             onClick={() => void submit()}
             disabled={saving}
-            className="h-8 gap-1.5 rounded-md bg-[#DF1B41] text-[14px] hover:bg-[#b3162f]"
+            className="h-8 gap-1.5 rounded-md bg-danger text-[14px] hover:bg-danger/90"
           >
             {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             Cancel plan
@@ -260,20 +260,20 @@ function CancelCarePlanDialog({
         </>
       }
     >
-      {error && <p className="mb-3 text-[13px] text-[#DF1B41]">{error}</p>}
-      <label className="flex items-start gap-2 text-[14px] text-[#273951]">
+      {error && <p className="mb-3 text-[13px] text-danger">{error}</p>}
+      <label className="flex items-start gap-2 text-[14px] text-foreground">
         <input
           type="checkbox"
           checked={cancelRemaining}
           onChange={(e) => setCancelRemaining(e.target.checked)}
-          className="mt-0.5 h-4 w-4 accent-[#533afd]"
+          className="mt-0.5 h-4 w-4 accent-brand"
         />
         <span>
           Also cancel the remaining booked visits
           {plan ? ` (${plan.progress.upcoming} upcoming)` : ""}
         </span>
       </label>
-      <p className="mt-2 text-[12px] text-[#64748d]">Completed visits and used package sessions stay as they are.</p>
+      <p className="mt-2 text-[12px] text-fg-secondary">Completed visits and used package sessions stay as they are.</p>
     </ModalShell>
   );
 }

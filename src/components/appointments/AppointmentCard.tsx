@@ -53,10 +53,10 @@ export function AppointmentCard({
           onSelect();
         }
       }}
-      className={`relative bg-white rounded-2xl p-4 mb-2 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] ${
+      className={`relative bg-white rounded-2xl p-4 mb-2 transition-all duration-150 cursor-pointer group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand ${
         selected
-          ? "border border-[#635BFF] bg-[#F0EEFF]"
-          : "border border-[#e5edf5] hover:border-[#C1C9D2] hover:shadow-sm"
+          ? "border border-brand bg-brand-subtle"
+          : "border border-border hover:border-border-strong hover:shadow-sm"
       }`}
       style={{ boxShadow: selected ? "none" : "var(--shadow-xs)" }}
     >
@@ -67,7 +67,7 @@ export function AppointmentCard({
       />
       <div className="flex items-start gap-3 pl-2">
         {/* Avatar */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F0EEFF] text-[13px] font-semibold text-[#635BFF]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-[13px] font-semibold text-brand">
           {initials(appointment.patient.firstName, appointment.patient.lastName)}
         </div>
 
@@ -75,20 +75,20 @@ export function AppointmentCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h3 className="text-[15px] font-medium text-[#061b31] truncate">
+                <h3 className="text-[15px] font-medium text-foreground truncate">
                   {appointment.patient.firstName} {appointment.patient.lastName}
                 </h3>
                 {appointment.notes && (
                   <span title="Has notes" aria-label="Has notes">
                     <StickyNote
-                      className="h-3 w-3 text-[#697386] shrink-0"
+                      className="h-3 w-3 text-fg-muted shrink-0"
                       strokeWidth={1.5}
                     />
                   </span>
                 )}
               </div>
               {appointment.notes && (
-                <p className="text-[12px] text-[#425466] mt-0.5 line-clamp-1">
+                <p className="text-[12px] text-fg-secondary mt-0.5 line-clamp-1">
                   {appointment.notes}
                 </p>
               )}
@@ -124,9 +124,9 @@ export function AppointmentCard({
             </div>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#425466]">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-fg-secondary">
             <span className="inline-flex items-center gap-1 tabular-nums">
-              <Clock className="h-3 w-3 text-[#697386]" strokeWidth={1.75} />
+              <Clock className="h-3 w-3 text-fg-muted" strokeWidth={1.75} />
               {time} · {appointment.duration} min
             </span>
             <span className="inline-flex items-center gap-1">
@@ -138,7 +138,7 @@ export function AppointmentCard({
               {appointment.doctor.name ?? "Unassigned"}
             </span>
             <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3 w-3 text-[#697386]" strokeWidth={1.75} />
+              <MapPin className="h-3 w-3 text-fg-muted" strokeWidth={1.75} />
               {appointment.branch.name}
             </span>
           </div>

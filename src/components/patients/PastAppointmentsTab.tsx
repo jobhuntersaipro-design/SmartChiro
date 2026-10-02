@@ -293,9 +293,9 @@ export function PastAppointmentsTab({
       <PastAppointmentStatCards stats={stats} onShowStale={showOnlyStale} />
 
       {/* Filter bar */}
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-3">
+      <div className="rounded-panel border border-border bg-white px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[12px] font-medium uppercase tracking-[0.06em] text-[#94a3b8] mr-1">
+          <span className="text-[12px] font-medium uppercase tracking-[0.06em] text-fg-muted mr-1">
             Filter
           </span>
           {/* Status chips */}
@@ -309,8 +309,8 @@ export function PastAppointmentsTab({
                   onClick={() => toggleStatus(s)}
                   className={`px-2.5 h-7 rounded-md text-[12px] font-medium border cursor-pointer transition-colors duration-200 ${
                     active
-                      ? "bg-[#f5f3ff] border-[#533afd] text-[#533afd]"
-                      : "bg-white border-[#e5edf5] text-[#64748d] hover:border-[#cbd5e1] hover:text-[#061b31]"
+                      ? "bg-brand-subtle border-brand text-brand"
+                      : "bg-white border-border text-fg-secondary hover:border-border-strong hover:text-foreground"
                   }`}
                   aria-pressed={active}
                 >
@@ -326,7 +326,7 @@ export function PastAppointmentsTab({
               <select
                 value={doctorId ?? ""}
                 onChange={(e) => setDoctorId(e.target.value || null)}
-                className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-md h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd] focus:border-[#533afd] transition-colors duration-200"
+                className="appearance-none cursor-pointer text-[13px] text-foreground bg-white border border-border rounded-md h-7 pl-2.5 pr-7 hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-200"
                 aria-label="Doctor"
               >
                 <option value="">All doctors</option>
@@ -337,7 +337,7 @@ export function PastAppointmentsTab({
                 ))}
               </select>
               <ChevronDown
-                className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none"
+                className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
                 strokeWidth={2}
               />
             </div>
@@ -348,7 +348,7 @@ export function PastAppointmentsTab({
             <select
               value={range}
               onChange={(e) => setRange(e.target.value as RangePreset)}
-              className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-md h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd] focus:border-[#533afd] transition-colors duration-200"
+              className="appearance-none cursor-pointer text-[13px] text-foreground bg-white border border-border rounded-md h-7 pl-2.5 pr-7 hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-200"
               aria-label="Date range"
             >
               {VALID_RANGES.map((r) => (
@@ -358,7 +358,7 @@ export function PastAppointmentsTab({
               ))}
             </select>
             <ChevronDown
-              className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none"
+              className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
               strokeWidth={2}
             />
           </div>
@@ -367,7 +367,7 @@ export function PastAppointmentsTab({
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex items-center gap-1 text-[12px] text-[#64748d] hover:text-[#061b31] cursor-pointer transition-colors duration-200 ml-1"
+              className="inline-flex items-center gap-1 text-[12px] text-fg-secondary hover:text-foreground cursor-pointer transition-colors duration-200 ml-1"
             >
               <X className="h-3 w-3" strokeWidth={2} />
               Clear
@@ -378,28 +378,28 @@ export function PastAppointmentsTab({
 
       {/* Body */}
       {loading && !data ? (
-        <div className="flex items-center justify-center py-16 text-[#64748d]">
+        <div className="flex items-center justify-center py-16 text-fg-secondary">
           <Loader2 className="h-4 w-4 animate-spin mr-2" strokeWidth={2} />
           <span className="text-[13px]">Loading past appointments…</span>
         </div>
       ) : error ? (
-        <div className="rounded-[6px] border border-[#fcd0db] bg-[#fef2f5] px-4 py-3 text-[13px] text-[#ea2261] flex items-center justify-between">
+        <div className="rounded-panel border border-danger/25 bg-danger-subtle px-4 py-3 text-[13px] text-danger flex items-center justify-between">
           <span>{error}</span>
           <button
             type="button"
             onClick={fetchPage}
-            className="text-[#ea2261] underline hover:no-underline cursor-pointer"
+            className="text-danger underline hover:no-underline cursor-pointer"
           >
             Retry
           </button>
         </div>
       ) : totalAcrossPatient === 0 ? (
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white px-6 py-12 text-center">
+        <div className="rounded-panel border border-border bg-white px-6 py-12 text-center">
           <Calendar
-            className="h-7 w-7 text-[#cbd5e1] mx-auto mb-2"
+            className="h-7 w-7 text-fg-disabled mx-auto mb-2"
             strokeWidth={1.5}
           />
-          <p className="text-[14px] text-[#64748d]">
+          <p className="text-[14px] text-fg-secondary">
             No past appointments yet. Once visits are completed, they&apos;ll
             appear here.
           </p>

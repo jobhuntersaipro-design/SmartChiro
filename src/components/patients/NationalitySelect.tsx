@@ -31,8 +31,8 @@ export function NationalitySelect({ value, onChange, hint, className, id }: Nati
   const item = (c: { code: string; name: string }, group: string) => (
     <CommandItem key={`${group}-${c.code}`} value={`${c.name} ${c.code} ${group}`} onSelect={() => pick(c.code)}>
       <span className="flex-1 truncate">{c.name}</span>
-      <span className="font-mono text-[12px] text-[#64748d]">{c.code}</span>
-      {value === c.code && <Check className="h-3.5 w-3.5 text-[#533afd]" strokeWidth={2} />}
+      <span className="font-mono text-[12px] text-fg-secondary">{c.code}</span>
+      {value === c.code && <Check className="h-3.5 w-3.5 text-brand" strokeWidth={2} />}
     </CommandItem>
   );
 
@@ -42,12 +42,12 @@ export function NationalitySelect({ value, onChange, hint, className, id }: Nati
         <PopoverTrigger
           id={id}
           className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-left text-[15px] text-[#061b31] transition-colors focus:border-[#533afd] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#533afd]",
+            "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-border bg-surface-muted px-3 text-left text-[15px] text-foreground transition-colors focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand",
             className,
           )}
         >
-          <span className={cn("truncate", !value && "text-[#a3acb9]")}>{nationalityLabel(value) ?? "Select country…"}</span>
-          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[#64748d]" strokeWidth={1.75} />
+          <span className={cn("truncate", !value && "text-fg-disabled")}>{nationalityLabel(value) ?? "Select country…"}</span>
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-secondary" strokeWidth={1.75} />
         </PopoverTrigger>
         <PopoverContent className="w-72 p-0" align="start">
           <Command>
@@ -63,7 +63,7 @@ export function NationalitySelect({ value, onChange, hint, className, id }: Nati
               {value && (
                 <CommandGroup>
                   <CommandItem value="not recorded clear" onSelect={() => pick(null)}>
-                    <span className="text-[#64748d]">Not recorded</span>
+                    <span className="text-fg-secondary">Not recorded</span>
                   </CommandItem>
                 </CommandGroup>
               )}
@@ -71,7 +71,7 @@ export function NationalitySelect({ value, onChange, hint, className, id }: Nati
           </Command>
         </PopoverContent>
       </Popover>
-      {hint && <p className="mt-1 text-[12px] text-[#64748d]">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] text-fg-secondary">{hint}</p>}
     </div>
   );
 }

@@ -94,7 +94,7 @@ function ExportMenu({
         disabled={exporting !== null}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors hover:bg-[#f6f9fc] disabled:opacity-60"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm transition-colors hover:bg-surface-muted disabled:opacity-60"
         style={{ borderRadius: 4, border: "1px solid #e5edf5", backgroundColor: "#FFFFFF", color: "#273951" }}
       >
         {exporting ? (
@@ -118,10 +118,10 @@ function ExportMenu({
                 setOpen(false);
                 onExport(item.format);
               }}
-              className="block w-full px-3 py-2 text-left transition-colors hover:bg-[#f6f9fc]"
+              className="block w-full px-3 py-2 text-left transition-colors hover:bg-surface-muted"
             >
-              <span className="block text-sm text-[#061b31]">{item.label}</span>
-              <span className="block text-xs text-[#64748d]">{item.hint}</span>
+              <span className="block text-sm text-foreground">{item.label}</span>
+              <span className="block text-xs text-fg-secondary">{item.hint}</span>
             </button>
           ))}
         </div>
@@ -157,7 +157,7 @@ function AdjustmentSlider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1 flex-1 cursor-pointer accent-[#533afd]"
+        className="h-1 flex-1 cursor-pointer accent-brand"
       />
       <span
         className="text-xs tabular-nums"
@@ -452,7 +452,7 @@ function AdjustPopover({
         {inverted && <Check size={13} strokeWidth={2} />}
       </button>
       {onShowShortcuts && (
-        <div className="flex items-center justify-between pt-2 border-t border-[#e5edf5]">
+        <div className="flex items-center justify-between pt-2 border-t border-border">
           <button
             onClick={() => { onShowShortcuts(); onClose(); }}
             className="text-[12px] hover:underline"

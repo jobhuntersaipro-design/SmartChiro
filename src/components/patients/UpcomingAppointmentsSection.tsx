@@ -110,10 +110,10 @@ function TimeCell({ iso }: { iso: string }) {
     <div className="flex items-center gap-2 min-w-0">
       {dow && <WeekdayBadge label={dow.label} isWeekend={dow.isWeekend} />}
       <time dateTime={iso} className="flex flex-col leading-tight min-w-0">
-        <span className="text-[13px] font-medium text-[#061b31] tabular-nums">
+        <span className="text-[13px] font-medium text-foreground tabular-nums">
           {time}
         </span>
-        <span className="text-[11px] text-[#94a3b8] tabular-nums">
+        <span className="text-[11px] text-fg-muted tabular-nums">
           {date}
         </span>
       </time>
@@ -124,8 +124,8 @@ function TimeCell({ iso }: { iso: string }) {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="px-6 py-12 text-center">
-      <Calendar className="h-7 w-7 text-[#cbd5e1] mx-auto mb-2" strokeWidth={1.5} />
-      <p className="text-[14px] text-[#64748d]">{message}</p>
+      <Calendar className="h-7 w-7 text-fg-disabled mx-auto mb-2" strokeWidth={1.5} />
+      <p className="text-[14px] text-fg-secondary">{message}</p>
     </div>
   );
 }
@@ -150,7 +150,7 @@ function SortableHeader({
       onClick={() => onSort(k)}
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
       className={`inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.06em] cursor-pointer transition-colors ${
-        active ? "text-[#533afd]" : "text-[#94a3b8] hover:text-[#64748d]"
+        active ? "text-brand" : "text-fg-muted hover:text-fg-secondary"
       }`}
     >
       {label}
@@ -177,7 +177,7 @@ function FilterSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="appearance-none cursor-pointer text-[13px] text-[#273951] bg-white border border-[#e5edf5] rounded-md h-7 pl-2.5 pr-7 hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#533afd]/30 focus:border-[#533afd] transition-colors"
+        className="appearance-none cursor-pointer text-[13px] text-foreground bg-white border border-border rounded-md h-7 pl-2.5 pr-7 hover:border-border-strong focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
       >
         <option value={ALL}>All {label.toLowerCase()}s</option>
         {options.map((o) => (
@@ -187,7 +187,7 @@ function FilterSelect({
         ))}
       </select>
       <ChevronDown
-        className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none"
+        className="h-3.5 w-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
         strokeWidth={2}
       />
     </div>
@@ -352,28 +352,28 @@ export function UpcomingAppointmentsSection({
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden mb-5"
+      className="rounded-panel border border-border bg-white overflow-hidden mb-5"
       style={{ boxShadow: SHADOW_CARD }}
     >
       {/* Row 1 — title + range tabs */}
-      <div className="flex items-center justify-between gap-3 px-4 h-12 border-b border-[#e5edf5]">
+      <div className="flex items-center justify-between gap-3 px-4 h-12 border-b border-border">
         <button
           type="button"
           onClick={toggleCollapsed}
           aria-expanded={!collapsed}
           aria-controls="upcoming-appointments-body"
-          className="group flex items-center gap-2 min-w-0 -mx-1 px-1 py-1 rounded-md hover:bg-[#f6f9fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#533afd] focus-visible:ring-offset-1 cursor-pointer transition-colors"
+          className="group flex items-center gap-2 min-w-0 -mx-1 px-1 py-1 rounded-md hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 cursor-pointer transition-colors"
         >
           <ChevronDown
-            className={`h-4 w-4 text-[#94a3b8] transition-transform duration-200 ${collapsed ? "-rotate-90" : ""}`}
+            className={`h-4 w-4 text-fg-muted transition-transform duration-200 ${collapsed ? "-rotate-90" : ""}`}
             strokeWidth={2}
           />
-          <Calendar className="h-4 w-4 text-[#533afd]" strokeWidth={1.75} />
-          <h2 className="text-[15px] font-semibold text-[#061b31] truncate">
+          <Calendar className="h-4 w-4 text-brand" strokeWidth={1.75} />
+          <h2 className="text-[15px] font-semibold text-foreground truncate">
             Upcoming Appointments
           </h2>
           {!loading && total > 0 && (
-            <span className="text-[13px] text-[#94a3b8] tabular-nums">
+            <span className="text-[13px] text-fg-muted tabular-nums">
               {hasActiveFilter ? `${filteredSorted.length} / ${total}` : total}
             </span>
           )}
@@ -386,14 +386,14 @@ export function UpcomingAppointmentsSection({
           >
             {(["today", "week", "month"] as const).map((r, i) => (
               <span key={r} className="flex items-center gap-3">
-                {i > 0 && <span className="text-[#cbd5e1]" aria-hidden>·</span>}
+                {i > 0 && <span className="text-fg-disabled" aria-hidden>·</span>}
                 <button
                   onClick={() => setRange(r)}
                   aria-current={range === r ? "page" : undefined}
                   className={`cursor-pointer transition-colors ${
                     range === r
-                      ? "text-[#533afd] font-medium"
-                      : "text-[#64748d] hover:text-[#061b31]"
+                      ? "text-brand font-medium"
+                      : "text-fg-secondary hover:text-foreground"
                   }`}
                 >
                   {RANGE_LABELS[r]}
@@ -406,8 +406,8 @@ export function UpcomingAppointmentsSection({
 
       {/* Row 2 — filters (only when expanded and there's something to filter) */}
       {!collapsed && (branchOptions.length > 1 || doctorOptions.length > 1) && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-[#e5edf5] bg-[#fafbfd]">
-          <span className="text-[12px] text-[#94a3b8] uppercase tracking-[0.06em] font-medium mr-1">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-surface-subtle">
+          <span className="text-[12px] text-fg-muted uppercase tracking-[0.06em] font-medium mr-1">
             Filter
           </span>
           <FilterSelect
@@ -426,7 +426,7 @@ export function UpcomingAppointmentsSection({
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex items-center gap-1 text-[12px] text-[#64748d] hover:text-[#061b31] cursor-pointer transition-colors ml-1"
+              className="inline-flex items-center gap-1 text-[12px] text-fg-secondary hover:text-foreground cursor-pointer transition-colors ml-1"
             >
               <X className="h-3 w-3" strokeWidth={2} />
               Clear
@@ -439,7 +439,7 @@ export function UpcomingAppointmentsSection({
       {!collapsed && (
         <div id="upcoming-appointments-body">
           {loading ? (
-            <div className="flex items-center justify-center py-10 text-[#64748d]">
+            <div className="flex items-center justify-center py-10 text-fg-secondary">
               <Loader2 className="h-4 w-4 animate-spin mr-2" strokeWidth={2} />
               <span className="text-[13px]">Loading…</span>
             </div>
@@ -456,7 +456,7 @@ export function UpcomingAppointmentsSection({
               {/* Scrolls sideways inside the card on narrow screens, never the page. */}
               <div className="overflow-x-auto">
               {/* Table header */}
-              <div className={`grid ${COLS} gap-4 min-w-max px-4 py-2 border-b border-[#e5edf5]`}>
+              <div className={`grid ${COLS} gap-4 min-w-max px-4 py-2 border-b border-border`}>
                 <SortableHeader label="When"    k="when"    active={sortKey === "when"}    dir={sortDir} onSort={onSort} />
                 <SortableHeader label="Patient" k="patient" active={sortKey === "patient"} dir={sortDir} onSort={onSort} />
                 <SortableHeader label="Doctor"  k="doctor"  active={sortKey === "doctor"}  dir={sortDir} onSort={onSort} />
@@ -470,26 +470,26 @@ export function UpcomingAppointmentsSection({
                 return (
                   <div
                     key={a.id}
-                    className={`grid ${COLS} gap-4 min-w-max items-center px-4 h-11 border-b border-[#eef2f7] last:border-b-0 hover:bg-[#fafbfd] transition-colors`}
+                    className={`grid ${COLS} gap-4 min-w-max items-center px-4 h-11 border-b border-border-subtle last:border-b-0 hover:bg-surface-subtle transition-colors`}
                   >
                     <TimeCell iso={a.dateTime} />
                     <Link
                       href={`/dashboard/patients/${a.patient.id}/details`}
-                      className="text-[14px] font-medium text-[#061b31] hover:text-[#533afd] transition-colors truncate"
+                      className="text-[14px] font-medium text-foreground hover:text-brand transition-colors truncate"
                       title={`${a.patient.firstName} ${a.patient.lastName}`}
                     >
                       {a.patient.firstName} {a.patient.lastName}
                     </Link>
                     <Link
                       href={`/dashboard/doctors/${a.doctor.id}`}
-                      className="text-[14px] text-[#425466] hover:text-[#533afd] transition-colors truncate"
+                      className="text-[14px] text-fg-secondary hover:text-brand transition-colors truncate"
                       title={a.doctor.name ?? undefined}
                     >
                       {a.doctor.name}
                     </Link>
                     <Link
                       href={`/dashboard/branches/${a.branch.id}`}
-                      className="text-[13px] text-[#425466] hover:text-[#533afd] transition-colors truncate"
+                      className="text-[13px] text-fg-secondary hover:text-brand transition-colors truncate"
                       title={a.branch.name}
                     >
                       {a.branch.name}
@@ -501,14 +501,14 @@ export function UpcomingAppointmentsSection({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[#94a3b8] hover:text-[#25D366] hover:bg-[#f6f9fc] transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center h-7 w-7 rounded-md text-fg-muted hover:text-[#25D366] hover:bg-surface-muted transition-colors cursor-pointer"
                         title={`WhatsApp ${a.patient.phone}`}
                         aria-label={`Open WhatsApp chat with ${a.patient.firstName} ${a.patient.lastName}`}
                       >
                         <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
                       </a>
                     ) : (
-                      <span className="text-[13px] text-[#cbd5e1] text-center" aria-hidden>—</span>
+                      <span className="text-[13px] text-fg-disabled text-center" aria-hidden>—</span>
                     )}
                     <AppointmentActionsMenu
                       canEdit={isAdmin || a.doctor.id === currentUserId}
@@ -522,10 +522,10 @@ export function UpcomingAppointmentsSection({
               })}
               </div>
               {/* Pager — always visible so the user knows there's a paged surface */}
-              <div className="flex items-center justify-between gap-3 px-4 h-10 border-t border-[#e5edf5] bg-[#fafbfd]">
-                <span className="text-[12px] text-[#64748d] tabular-nums">
-                  Showing <span className="text-[#273951] font-medium">{rangeStart}–{rangeEnd}</span> of{" "}
-                  <span className="text-[#273951] font-medium">{filteredSorted.length}</span>
+              <div className="flex items-center justify-between gap-3 px-4 h-10 border-t border-border bg-surface-subtle">
+                <span className="text-[12px] text-fg-secondary tabular-nums">
+                  Showing <span className="text-foreground font-medium">{rangeStart}–{rangeEnd}</span> of{" "}
+                  <span className="text-foreground font-medium">{filteredSorted.length}</span>
                 </span>
                 <div className="flex items-center gap-1">
                   <button
@@ -533,20 +533,20 @@ export function UpcomingAppointmentsSection({
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     aria-label="Previous page"
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
                   </button>
-                  <span className="text-[12px] text-[#64748d] tabular-nums px-2 min-w-16 text-center">
-                    Page <span className="text-[#273951] font-medium">{page}</span> of{" "}
-                    <span className="text-[#273951] font-medium">{totalPages}</span>
+                  <span className="text-[12px] text-fg-secondary tabular-nums px-2 min-w-16 text-center">
+                    Page <span className="text-foreground font-medium">{page}</span> of{" "}
+                    <span className="text-foreground font-medium">{totalPages}</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     aria-label="Next page"
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-[#e5edf5] bg-white text-[#64748d] hover:text-[#061b31] hover:border-[#cbd5e1] disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-md border border-border bg-white text-fg-secondary hover:text-foreground hover:border-border-strong disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer transition-colors"
                   >
                     <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
                   </button>

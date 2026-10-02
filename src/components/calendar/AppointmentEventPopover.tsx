@@ -76,10 +76,10 @@ export function AppointmentEventPopover({
   return (
     <div
       ref={ref}
-      className="fixed z-40 w-80 rounded-[6px] border border-[#e5edf5] bg-white"
+      className="fixed z-40 w-80 rounded-panel border border-border bg-white"
       style={{ top, left, boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
     >
-      <div className="px-4 pt-3 pb-2 border-b border-[#e5edf5]">
+      <div className="px-4 pt-3 pb-2 border-b border-border">
         <div className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1.5">
             <span
@@ -93,20 +93,20 @@ export function AppointmentEventPopover({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-[#94a3b8] hover:text-[#061b31] transition-colors"
+            className="text-fg-muted hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         </div>
         <Link
           href={`/dashboard/patients/${appointment.patient.id}/details`}
-          className="block mt-2 text-[15px] font-medium text-[#061b31] hover:text-[#635BFF] transition-colors"
+          className="block mt-2 text-[15px] font-medium text-foreground hover:text-brand transition-colors"
           onClick={onClose}
         >
           {appointment.patient.firstName} {appointment.patient.lastName}
           <ExternalLink className="inline-block h-3 w-3 ml-1 opacity-50" strokeWidth={1.75} />
         </Link>
-        <p className="text-[13px] text-[#64748d] mt-0.5 tabular-nums">
+        <p className="text-[13px] text-fg-secondary mt-0.5 tabular-nums">
           {clinicDateLabel(new Date(appointment.dateTime), "day")} · {clinicTimeLabel(new Date(appointment.dateTime))} · {appointment.duration} min
         </p>
       </div>
@@ -119,38 +119,38 @@ export function AppointmentEventPopover({
           />
           <Link
             href={`/dashboard/doctors/${appointment.doctor.id}`}
-            className="text-[#425466] hover:text-[#635BFF] transition-colors"
+            className="text-fg-secondary hover:text-brand transition-colors"
             onClick={onClose}
           >
             {appointment.doctor.name ?? "Unknown doctor"}
           </Link>
-          <span className="text-[#cbd5e1]">·</span>
+          <span className="text-fg-disabled">·</span>
           <Link
             href={`/dashboard/branches/${appointment.branch.id}`}
-            className="text-[#425466] hover:text-[#635BFF] transition-colors"
+            className="text-fg-secondary hover:text-brand transition-colors"
             onClick={onClose}
           >
             {appointment.branch.name}
           </Link>
           {appointment.room && (
             <>
-              <span className="text-[#cbd5e1]">·</span>
-              <span className="text-[#425466]">{appointment.room}</span>
+              <span className="text-fg-disabled">·</span>
+              <span className="text-fg-secondary">{appointment.room}</span>
             </>
           )}
         </div>
         {appointment.notes && (
-          <p className="text-[13px] text-[#425466] whitespace-pre-wrap break-words">
+          <p className="text-[13px] text-fg-secondary whitespace-pre-wrap break-words">
             {appointment.notes}
           </p>
         )}
         {appointment.patient.phone && (
-          <p className="text-[13px] text-[#64748d] tabular-nums">
+          <p className="text-[13px] text-fg-secondary tabular-nums">
             ☎ {appointment.patient.phone}
           </p>
         )}
         {appointment.seriesIndex != null && (
-          <p className="text-[12px] text-[#64748d] tabular-nums">Recurring · visit {appointment.seriesIndex}</p>
+          <p className="text-[12px] text-fg-secondary tabular-nums">Recurring · visit {appointment.seriesIndex}</p>
         )}
         <div className="empty:hidden">
           <AppointmentPackageInfo
@@ -165,7 +165,7 @@ export function AppointmentEventPopover({
       </div>
 
       {canEdit && nextStatusActions(appointment.status, new Date(appointment.dateTime)).length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3 border-t border-[#e5edf5]">
+        <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3 border-t border-border">
           <AppointmentStatusActions
             appointmentId={appointment.id}
             status={appointment.status}
@@ -175,13 +175,13 @@ export function AppointmentEventPopover({
           />
         </div>
       )}
-      <div className="flex items-center justify-end gap-2 px-3 pb-3 border-t border-[#e5edf5] pt-3">
+      <div className="flex items-center justify-end gap-2 px-3 pb-3 border-t border-border pt-3">
         {canEdit && (
           <Button
             variant="outline"
             size="sm"
             onClick={onEdit}
-            className="h-7 rounded-md border-[#e5edf5] text-[12px] gap-1"
+            className="h-7 rounded-md border-border text-[12px] gap-1"
           >
             <Pencil className="h-3 w-3" strokeWidth={1.75} /> Edit
           </Button>
@@ -191,7 +191,7 @@ export function AppointmentEventPopover({
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-7 rounded-md border-[#e5edf5] text-[12px] text-[#9b6829] gap-1"
+            className="h-7 rounded-md border-border text-[12px] text-warning gap-1"
           >
             <X className="h-3 w-3" strokeWidth={1.75} /> Cancel
           </Button>
@@ -201,7 +201,7 @@ export function AppointmentEventPopover({
             variant="outline"
             size="sm"
             onClick={onDelete}
-            className="h-7 rounded-md border-[#e5edf5] text-[12px] text-[#DF1B41] gap-1"
+            className="h-7 rounded-md border-border text-[12px] text-danger gap-1"
           >
             <Trash2 className="h-3 w-3" strokeWidth={1.75} /> Delete
           </Button>

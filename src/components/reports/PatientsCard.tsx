@@ -17,7 +17,7 @@ function columns(multiBranch: boolean, asOf: string): ReportColumn<LapsedPatient
     {
       header: "Patient",
       render: (r) => (
-        <Link href={`/dashboard/patients/${r.id}/details`} className="whitespace-nowrap text-[#273951] hover:text-[#533afd] hover:underline">
+        <Link href={`/dashboard/patients/${r.id}/details`} className="whitespace-nowrap text-foreground hover:text-brand hover:underline">
           {r.name}
         </Link>
       ),
@@ -53,7 +53,7 @@ export function PatientsCard({ query, multiBranch }: { query: ReportQuery; multi
             <StatTile label="Lapsed" value={formatCount(data.lapsed)} hint={`No visit in ${data.lapsedAfterDays}+ days, nothing booked`} />
           </div>
           <div className="space-y-2">
-            <h3 className="text-[14px] font-medium text-[#425466]">
+            <h3 className="text-[14px] font-medium text-fg-secondary">
               Lapsed patients, most recent first{data.lapsed > data.lapsedList.length ? ` (${data.lapsedList.length} of ${formatCount(data.lapsed)})` : ""}
             </h3>
             <ReportTable caption="Lapsed patients" columns={cols} rows={data.lapsedList} rowKey={(r) => r.id} empty="No lapsed patients." />

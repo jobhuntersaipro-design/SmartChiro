@@ -35,21 +35,21 @@ interface AddPatientDialogProps {
 // ─── Shared Styles ───
 
 const inputClass =
-  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const inputNoIconClass =
-  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const selectNoIconClass =
-  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const textareaClass =
-  "flex w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
+  "flex w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 py-2 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200 resize-none";
 
-const errorInputClass = "border-[#DF1B41]/50 focus:ring-[#DF1B41] focus:border-[#DF1B41]";
+const errorInputClass = "border-danger/50 focus:ring-danger focus:border-danger";
 
 // ─── Sub-components ───
 
@@ -58,12 +58,12 @@ function FormField({ label, required, error, children }: {
 }) {
   return (
     <div>
-      <label className="block text-[13px] font-medium text-[#273951] mb-1.5">
-        {label} {required && <span className="text-[#DF1B41]">*</span>}
+      <label className="block text-[13px] font-medium text-foreground mb-1.5">
+        {label} {required && <span className="text-danger">*</span>}
       </label>
       {children}
       {error && (
-        <p className="flex items-center gap-1 text-[12px] text-[#DF1B41] mt-1" role="alert">
+        <p className="flex items-center gap-1 text-[12px] text-danger mt-1" role="alert">
           <ShieldAlert className="h-3 w-3 shrink-0" strokeWidth={2} />
           {error}
         </p>
@@ -78,7 +78,7 @@ function IconInput({ icon: Icon, children }: {
 }) {
   return (
     <div className="relative">
-      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748d] pointer-events-none" strokeWidth={1.5} />
+      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-secondary pointer-events-none" strokeWidth={1.5} />
       {children}
     </div>
   );
@@ -90,7 +90,7 @@ function IconTextarea({ icon: Icon, children }: {
 }) {
   return (
     <div className="relative">
-      <Icon className="absolute left-3 top-3 h-4 w-4 text-[#64748d] pointer-events-none" strokeWidth={1.5} />
+      <Icon className="absolute left-3 top-3 h-4 w-4 text-fg-secondary pointer-events-none" strokeWidth={1.5} />
       {children}
     </div>
   );
@@ -265,24 +265,24 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-patient-title"
-        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-2xl border border-[#e5edf5] bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-165 max-h-[92vh] rounded-2xl border border-border bg-white overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)" }}
       >
         {/* ─── Header ─── */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-9 w-9 rounded-[6px] bg-[#ededfc]">
-              <UserPlus className="h-4.5 w-4.5 text-[#533afd]" strokeWidth={1.5} />
+            <div className="flex items-center justify-center h-9 w-9 rounded-panel bg-brand-subtle">
+              <UserPlus className="h-4.5 w-4.5 text-brand" strokeWidth={1.5} />
             </div>
             <div>
-              <h2 id="add-patient-title" className="text-[18px] font-medium text-[#061b31] tracking-[-0.01em]">Add New Patient</h2>
-              <p className="text-[13px] text-[#64748d]">Step {step} of 3 — {STEPS[step - 1].description}</p>
+              <h2 id="add-patient-title" className="text-[18px] font-medium text-foreground tracking-[-0.01em]">Add New Patient</h2>
+              <p className="text-[13px] text-fg-secondary">Step {step} of 3 — {STEPS[step - 1].description}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={requestClose}
-            className="flex items-center justify-center h-8 w-8 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31]"
+            className="flex items-center justify-center h-8 w-8 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -307,10 +307,10 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                     }}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md w-full transition-all duration-200 ${
                       isActive
-                        ? "bg-[#533afd] text-white"
+                        ? "bg-primary text-white"
                         : isCompleted
-                          ? "bg-[#E8F5E8] text-[#30B130] cursor-pointer hover:bg-[#d4edd4]"
-                          : "bg-[#f6f9fc] text-[#a3acb9]"
+                          ? "bg-success-subtle text-success cursor-pointer hover:bg-success-subtle"
+                          : "bg-surface-muted text-fg-disabled"
                     }`}
                   >
                     {isCompleted ? (
@@ -321,7 +321,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                     <span className="text-[13px] font-medium truncate">{s.label}</span>
                   </button>
                   {i < STEPS.length - 1 && (
-                    <ChevronRight className={`h-4 w-4 mx-1 shrink-0 ${isCompleted ? "text-[#30B130]" : "text-[#d1d5db]"}`} strokeWidth={1.5} />
+                    <ChevronRight className={`h-4 w-4 mx-1 shrink-0 ${isCompleted ? "text-success" : "text-border-strong"}`} strokeWidth={1.5} />
                   )}
                 </div>
               );
@@ -333,9 +333,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
         <form onSubmit={handleSubmit}>
           <div className="overflow-y-auto max-h-[calc(92vh-240px)] px-6 pb-2">
             {submitError && (
-              <div className="mb-4 rounded-[6px] border border-[#DF1B41]/20 bg-[#FDE8EC] px-4 py-3 flex items-start gap-2">
-                <ShieldAlert className="h-4 w-4 text-[#DF1B41] shrink-0 mt-0.5" strokeWidth={1.5} />
-                <p className="text-[13px] text-[#DF1B41]">{submitError}</p>
+              <div className="mb-4 rounded-panel border border-danger/20 bg-danger-subtle px-4 py-3 flex items-start gap-2">
+                <ShieldAlert className="h-4 w-4 text-danger shrink-0 mt-0.5" strokeWidth={1.5} />
+                <p className="text-[13px] text-danger">{submitError}</p>
               </div>
             )}
 
@@ -512,9 +512,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
                 {/* Address section label */}
                 <div className="flex items-center gap-2 pt-1">
-                  <MapPin className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Address</span>
-                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                  <MapPin className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Address</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
 
                 {/* Address Lines */}
@@ -565,9 +565,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
               <div className="space-y-4">
                 {/* Emergency contact section label */}
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-4 w-4 text-[#F5A623]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Emergency Contact</span>
-                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                  <ShieldAlert className="h-4 w-4 text-warning" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Emergency Contact</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -595,9 +595,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
                 {/* Reminders section */}
                 <div className="flex items-center gap-2 pt-1">
-                  <Phone className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Reminder Preferences</span>
-                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                  <Phone className="h-4 w-4 text-brand" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Reminder Preferences</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField label="Reminder channel" error={channelError ?? undefined}>
@@ -632,9 +632,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
                 {/* Medical section label */}
                 <div className="flex items-center gap-2 pt-1">
-                  <Stethoscope className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Medical Information</span>
-                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                  <Stethoscope className="h-4 w-4 text-brand" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Medical Information</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
 
                 <FormField label="Allergies">
@@ -661,9 +661,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
 
                 {/* Pricing section */}
                 <div className="flex items-center gap-2 pt-1">
-                  <Banknote className="h-4 w-4 text-[#30B130]" strokeWidth={1.5} />
-                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Pricing (RM)</span>
-                  <div className="flex-1 h-px bg-[#e5edf5]" />
+                  <Banknote className="h-4 w-4 text-success" strokeWidth={1.5} />
+                  <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Pricing (RM)</span>
+                  <div className="flex-1 h-px bg-border" />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -712,9 +712,9 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 {isAdmin && branchDoctors && branchDoctors.length > 0 && (
                   <>
                     <div className="flex items-center gap-2 pt-1">
-                      <Stethoscope className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-                      <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Assignment</span>
-                      <div className="flex-1 h-px bg-[#e5edf5]" />
+                      <Stethoscope className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
+                      <span className="text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Assignment</span>
+                      <div className="flex-1 h-px bg-border" />
                     </div>
                     <FormField label="Assigned Doctor">
                       <IconInput icon={Stethoscope}>
@@ -734,14 +734,14 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
           </div>
 
           {/* ─── Footer Navigation ─── */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-[#e5edf5] bg-[#fafbfc]">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-surface-subtle">
             <div>
               {step > 1 && (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleBack}
-                  className="h-9 px-4 text-[14px] font-medium rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc] gap-1.5"
+                  className="h-9 px-4 text-[14px] font-medium rounded-md border-border text-foreground hover:bg-surface-muted gap-1.5"
                 >
                   <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
                   Back
@@ -754,7 +754,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 type="button"
                 variant="ghost"
                 onClick={requestClose}
-                className="h-9 px-4 text-[14px] font-medium rounded-md text-[#64748d] hover:text-[#273951] hover:bg-[#f6f9fc]"
+                className="h-9 px-4 text-[14px] font-medium rounded-md text-fg-secondary hover:text-foreground hover:bg-surface-muted"
               >
                 Cancel
               </Button>

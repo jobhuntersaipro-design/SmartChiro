@@ -29,7 +29,7 @@ export function LineItemsEditor({ lines, onChange, errors, showErrors }: LineIte
 
   return (
     <div className="space-y-2">
-      <div className="hidden grid-cols-[minmax(0,1fr)_4.5rem_7rem_6rem_4.5rem_2rem] gap-2 px-0.5 text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d] sm:grid">
+      <div className="hidden grid-cols-[minmax(0,1fr)_4.5rem_7rem_6rem_4.5rem_2rem] gap-2 px-0.5 text-[12px] font-medium uppercase tracking-[0.04em] text-fg-secondary sm:grid">
         <span>Description</span>
         <span>Qty</span>
         <span>Unit (RM)</span>
@@ -47,7 +47,7 @@ export function LineItemsEditor({ lines, onChange, errors, showErrors }: LineIte
         return (
           <div
             key={line.key}
-            className="grid grid-cols-[4.5rem_minmax(0,1fr)_4.5rem_2rem] gap-2 rounded-[6px] border border-[#e5edf5] p-2 sm:grid-cols-[minmax(0,1fr)_4.5rem_7rem_6rem_4.5rem_2rem] sm:border-0 sm:p-0"
+            className="grid grid-cols-[4.5rem_minmax(0,1fr)_4.5rem_2rem] gap-2 rounded-panel border border-border p-2 sm:grid-cols-[minmax(0,1fr)_4.5rem_7rem_6rem_4.5rem_2rem] sm:border-0 sm:p-0"
           >
             <div className="col-span-4 sm:col-span-1">
               <input
@@ -84,18 +84,18 @@ export function LineItemsEditor({ lines, onChange, errors, showErrors }: LineIte
               />
               {e.unitPrice && <p className={FIELD_ERROR}>{e.unitPrice}</p>}
             </div>
-            <div className="hidden h-9 items-center justify-end whitespace-nowrap text-[14px] tabular-nums text-[#425466] sm:flex">
+            <div className="hidden h-9 items-center justify-end whitespace-nowrap text-[14px] tabular-nums text-fg-secondary sm:flex">
               {amount === null ? "—" : formatMYR(amount)}
             </div>
             <label
-              className="flex h-9 cursor-pointer items-center justify-center gap-1.5 text-[13px] text-[#425466]"
+              className="flex h-9 cursor-pointer items-center justify-center gap-1.5 text-[13px] text-fg-secondary"
               title="Subject to SST (charged to non-Malaysian patients when the branch has SST on)"
             >
               <input
                 type="checkbox"
                 checked={line.taxable}
                 onChange={(ev) => update(line.key, { taxable: ev.target.checked })}
-                className="h-4 w-4 cursor-pointer accent-[#533afd]"
+                className="h-4 w-4 cursor-pointer accent-brand"
                 aria-label={`Item ${n} subject to SST`}
               />
               <span className="sm:hidden">SST</span>
@@ -104,7 +104,7 @@ export function LineItemsEditor({ lines, onChange, errors, showErrors }: LineIte
               type="button"
               onClick={() => remove(line.key)}
               aria-label={`Remove item ${n}`}
-              className="flex h-9 w-8 items-center justify-center rounded-[4px] text-[#64748d] transition-colors hover:bg-[#fff0f3] hover:text-[#DF1B41]"
+              className="flex h-9 w-8 items-center justify-center rounded-control text-fg-secondary transition-colors hover:bg-danger-subtle hover:text-danger"
             >
               <Trash2 className="h-4 w-4" strokeWidth={1.5} />
             </button>
@@ -116,7 +116,7 @@ export function LineItemsEditor({ lines, onChange, errors, showErrors }: LineIte
         <button
           type="button"
           onClick={() => onChange([...lines, blankLine()])}
-          className="inline-flex h-8 items-center gap-1.5 rounded-[4px] px-2 text-[14px] font-medium text-[#533afd] transition-colors hover:bg-[#f0eeff]"
+          className="inline-flex h-8 items-center gap-1.5 rounded-control px-2 text-[14px] font-medium text-brand transition-colors hover:bg-brand-subtle"
         >
           <Plus className="h-4 w-4" strokeWidth={1.75} />
           Add item

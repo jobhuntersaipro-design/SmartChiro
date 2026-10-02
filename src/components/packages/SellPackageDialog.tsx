@@ -122,8 +122,8 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
       footer={
         <>
           {total !== null && valid && (
-            <span className="mr-auto text-[13px] text-[#64748d]">
-              Invoice total <span className="font-medium text-[#061b31] tabular-nums">{formatMYR(total)}</span>
+            <span className="mr-auto text-[13px] text-fg-secondary">
+              Invoice total <span className="font-medium text-foreground tabular-nums">{formatMYR(total)}</span>
             </span>
           )}
           <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="h-8 rounded-md text-[14px]">
@@ -138,7 +138,7 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
     >
       <form id="sell-package-form" onSubmit={sell} className="space-y-4">
         <FormError message={error} />
-        <div className="inline-flex rounded-md border border-[#e5edf5] p-0.5" role="radiogroup" aria-label="Package source">
+        <div className="inline-flex rounded-md border border-border p-0.5" role="radiogroup" aria-label="Package source">
           {(["template", "custom"] as const).map((m) => (
             <button
               key={m}
@@ -147,8 +147,8 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
               aria-checked={mode === m}
               disabled={m === "template" && templates?.length === 0}
               onClick={() => setMode(m)}
-              className={`rounded-[4px] px-3 py-1 text-[13px] font-medium transition-colors disabled:opacity-50 ${
-                mode === m ? "bg-[#F0EEFF] text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"
+              className={`rounded-control px-3 py-1 text-[13px] font-medium transition-colors disabled:opacity-50 ${
+                mode === m ? "bg-brand-subtle text-brand" : "text-fg-secondary hover:text-foreground"
               }`}
             >
               {m === "template" ? "From catalogue" : "Custom"}
@@ -159,7 +159,7 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
         {mode === "template" && (
           <div>
             {templates === null ? (
-              <div className="flex items-center gap-2 text-[13px] text-[#64748d]">
+              <div className="flex items-center gap-2 text-[13px] text-fg-secondary">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> Loading packages…
               </div>
             ) : (
@@ -168,7 +168,7 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
                   <label
                     key={t.id}
                     className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 transition-colors ${
-                      t.id === templateId ? "border-[#533afd] bg-[#F7F5FF]" : "border-[#e5edf5] hover:bg-[#f6f9fc]"
+                      t.id === templateId ? "border-brand bg-brand-subtle" : "border-border hover:bg-surface-muted"
                     }`}
                   >
                     <input
@@ -177,14 +177,14 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
                       value={t.id}
                       checked={t.id === templateId}
                       onChange={() => setTemplateId(t.id)}
-                      className="mt-1 accent-[#533afd]"
+                      className="mt-1 accent-brand"
                     />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
-                        <span className="font-medium text-[#061b31]">{t.name}</span>
-                        <span className="whitespace-nowrap tabular-nums text-[#061b31]">{formatMYR(t.price)}</span>
+                        <span className="font-medium text-foreground">{t.name}</span>
+                        <span className="whitespace-nowrap tabular-nums text-foreground">{formatMYR(t.price)}</span>
                       </span>
-                      <span className="block text-[12px] text-[#64748d]">
+                      <span className="block text-[12px] text-fg-secondary">
                         {t.sessions} sessions · {t.validityDays ? `valid ${t.validityDays} days` : "no expiry"} ·{" "}
                         {treatmentTypesSummary(t.treatmentTypes, labelFor)}
                       </span>
@@ -199,7 +199,7 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
         {mode === "custom" && (
           <>
             {templates?.length === 0 && (
-              <p className="text-[13px] text-[#64748d]">This branch has no catalogue packages yet — enter the details.</p>
+              <p className="text-[13px] text-fg-secondary">This branch has no catalogue packages yet — enter the details.</p>
             )}
             <div>
               <label htmlFor="sell-name" className={LABEL_CLASS}>Name</label>
@@ -222,7 +222,7 @@ export function SellPackageDialog({ open, patientId, patientName, branchId, onCl
             <div>
               <span className={LABEL_CLASS}>Redeems for</span>
               <TreatmentTypePicker value={types} onChange={setTypes} />
-              <p className="mt-1 text-[12px] text-[#64748d]">None selected = any treatment.</p>
+              <p className="mt-1 text-[12px] text-fg-secondary">None selected = any treatment.</p>
             </div>
           </>
         )}

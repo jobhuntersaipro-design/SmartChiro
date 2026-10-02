@@ -55,7 +55,7 @@ export function AnatomyPartList(props: AnatomyPartListProps) {
   const selected = new Set(selectedIds);
 
   if (rows.length === 0) {
-    return <p className="px-4 py-6 text-center text-[14px] text-[#64748d]">No structures match “{query}”.</p>;
+    return <p className="px-4 py-6 text-center text-[14px] text-fg-secondary">No structures match “{query}”.</p>;
   }
 
   return (
@@ -91,23 +91,23 @@ function RegionSection({
 
   return (
     <div>
-      <div className="group flex items-center gap-1 px-2 hover:bg-[#f6f9fc]">
+      <div className="group flex items-center gap-1 px-2 hover:bg-surface-muted">
         <button
           onClick={() => onToggleExpanded(regionRowKey(layer, region.key))}
           aria-expanded={open}
           className={cn(
             "flex flex-1 items-center gap-1.5 py-1.5 text-left text-[14px] font-medium",
-            isHidden ? "text-[#A3ACB9]" : "text-[#061b31]"
+            isHidden ? "text-fg-disabled" : "text-foreground"
           )}
         >
           <ChevronRight
-            className={cn("h-3.5 w-3.5 shrink-0 text-[#64748d] transition-transform", open && "rotate-90")}
+            className={cn("h-3.5 w-3.5 shrink-0 text-fg-secondary transition-transform", open && "rotate-90")}
             strokeWidth={1.75}
           />
           <span className="truncate">{region.label}</span>
-          <span className="text-[12px] font-normal text-[#64748d]">{parts.length}</span>
+          <span className="text-[12px] font-normal text-fg-secondary">{parts.length}</span>
           {selectedCount > 0 && (
-            <span className="rounded-full bg-[#ededfc] px-1.5 text-[11px] font-medium text-[#533afd]">
+            <span className="rounded-full bg-brand-subtle px-1.5 text-[11px] font-medium text-brand">
               {selectedCount} selected
             </span>
           )}
@@ -119,8 +119,8 @@ function RegionSection({
             aria-label={`${isExpanding ? "Collapse" : "Expand"} ${region.label} in 3D view`}
             title={isExpanding ? "Collapse this region" : "Expand this region to separate its muscle groups"}
             className={cn(
-              "rounded-[4px] p-1",
-              isExpanding ? "bg-[#ededfc] text-[#533afd]" : "text-[#64748d] hover:bg-white hover:text-[#061b31]"
+              "rounded-control p-1",
+              isExpanding ? "bg-brand-subtle text-brand" : "text-fg-secondary hover:bg-white hover:text-foreground"
             )}
           >
             <Expand className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -130,7 +130,7 @@ function RegionSection({
           onClick={() => onToggleVisibility(region.key)}
           aria-label={isHidden ? `Show ${region.label}` : `Hide ${region.label}`}
           title={isHidden ? "Show in 3D view" : "Hide in 3D view"}
-          className="rounded-[4px] p-1 text-[#64748d] hover:bg-white hover:text-[#061b31]"
+          className="rounded-control p-1 text-fg-secondary hover:bg-white hover:text-foreground"
         >
           {isHidden ? <EyeOff className="h-3.5 w-3.5" strokeWidth={1.5} /> : <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />}
         </button>
@@ -185,12 +185,12 @@ function MuscleGroupSection({ entry, open, onToggle, selected, peelDepth, onSele
 
   return (
     <div>
-      <div className={cn("flex items-center gap-1 pl-5 pr-2", allSelected ? "bg-[#ededfc]" : "hover:bg-[#f6f9fc]")}>
+      <div className={cn("flex items-center gap-1 pl-5 pr-2", allSelected ? "bg-brand-subtle" : "hover:bg-surface-muted")}>
         <button
           onClick={onToggle}
           aria-expanded={open}
           aria-label={`${open ? "Collapse" : "Show"} ${group.label} muscles`}
-          className="rounded-[4px] p-0.5 text-[#64748d] hover:text-[#061b31]"
+          className="rounded-control p-0.5 text-fg-secondary hover:text-foreground"
         >
           <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-90")} strokeWidth={1.75} />
         </button>
@@ -199,11 +199,11 @@ function MuscleGroupSection({ entry, open, onToggle, selected, peelDepth, onSele
           title="Select this group on both sides"
           className={cn(
             "flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left text-[14px]",
-            allSelected ? "text-[#533afd]" : "text-[#273951] hover:text-[#061b31]"
+            allSelected ? "text-brand" : "text-foreground hover:text-foreground"
           )}
         >
           <span className="truncate">{group.label}</span>
-          <span className="shrink-0 text-[12px] text-[#64748d]">{parts.length}</span>
+          <span className="shrink-0 text-[12px] text-fg-secondary">{parts.length}</span>
         </button>
         {sides.map(({ side, short, ids, active }) => (
           <button
@@ -213,8 +213,8 @@ function MuscleGroupSection({ entry, open, onToggle, selected, peelDepth, onSele
             aria-label={`Select ${side} ${group.label}`}
             title={`Select ${side} side`}
             className={cn(
-              "h-5 w-5 shrink-0 rounded-[4px] text-[11px] font-medium",
-              active ? "bg-[#635BFF] text-white" : "bg-[#f6f9fc] text-[#425466] hover:bg-[#ededfc] hover:text-[#533afd]"
+              "h-5 w-5 shrink-0 rounded-control text-[11px] font-medium",
+              active ? "bg-brand text-white" : "bg-surface-muted text-fg-secondary hover:bg-brand-subtle hover:text-brand"
             )}
           >
             {short}
@@ -253,19 +253,19 @@ function PartRow({ part, layer, indent, selected, peelDepth, onSelect }: PartRow
           "flex w-full items-center gap-2 py-1 pr-3 text-left text-[14px] transition-colors",
           indent,
           isSelected
-            ? "bg-[#ededfc] text-[#533afd]"
+            ? "bg-brand-subtle text-brand"
             : peeled
-              ? "text-[#A3ACB9] hover:bg-[#f6f9fc] hover:text-[#425466]"
-              : "text-[#425466] hover:bg-[#f6f9fc] hover:text-[#061b31]"
+              ? "text-fg-disabled hover:bg-surface-muted hover:text-fg-secondary"
+              : "text-fg-secondary hover:bg-surface-muted hover:text-foreground"
         )}
         title={peeled ? "Peeled away — click to reveal this layer" : undefined}
       >
         <span className="flex-1 truncate">{part.label}</span>
         {part.layer && part.layer > 1 && (
-          <span className="shrink-0 text-[11px] text-[#697386]">{layerLabel(part.layer)}</span>
+          <span className="shrink-0 text-[11px] text-fg-muted">{layerLabel(part.layer)}</span>
         )}
         {part.short && (
-          <span className="shrink-0 rounded-full bg-[#f6f9fc] px-1.5 font-mono text-[11px] text-[#425466]">
+          <span className="shrink-0 rounded-full bg-surface-muted px-1.5 font-mono text-[11px] text-fg-secondary">
             {part.short}
           </span>
         )}

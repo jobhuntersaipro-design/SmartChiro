@@ -26,23 +26,23 @@ export function actionStyle(action: BranchAuditAction): ActionStyle {
     case "CREATE":
       return {
         label: "Created",
-        bg: "bg-[#ECFDF5] text-[#15be53] green-pill",
-        text: "text-[#15be53]",
-        dot: "bg-[#15be53]",
+        bg: "bg-success-subtle text-success green-pill",
+        text: "text-success",
+        dot: "bg-success",
       };
     case "UPDATE":
       return {
         label: "Updated",
-        bg: "bg-[rgba(5,112,222,0.1)] text-[#0570DE] blue-pill",
-        text: "text-[#0570DE]",
-        dot: "bg-[#0570DE]",
+        bg: "bg-[rgba(5,112,222,0.1)] text-info blue-pill",
+        text: "text-info",
+        dot: "bg-info",
       };
     case "DELETE":
       return {
         label: "Deleted",
-        bg: "bg-[#FDE8EC] text-[#df1b41] red-pill",
-        text: "text-[#df1b41]",
-        dot: "bg-[#df1b41]",
+        bg: "bg-danger-subtle text-danger red-pill",
+        text: "text-danger",
+        dot: "bg-danger",
       };
   }
 }

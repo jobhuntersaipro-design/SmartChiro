@@ -101,7 +101,7 @@ export function CalendarFilterBar({
           variant="outline"
           size="sm"
           onClick={onToday}
-          className="h-8 rounded-md border-[#e5edf5] text-[13px]"
+          className="h-8 rounded-md border-border text-[13px]"
         >
           Today
         </Button>
@@ -110,7 +110,7 @@ export function CalendarFilterBar({
           size="icon"
           onClick={onPrev}
           aria-label="Previous"
-          className="h-8 w-8 rounded-md border-[#e5edf5]"
+          className="h-8 w-8 rounded-md border-border"
         >
           <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
         </Button>
@@ -119,13 +119,13 @@ export function CalendarFilterBar({
           size="icon"
           onClick={onNext}
           aria-label="Next"
-          className="h-8 w-8 rounded-md border-[#e5edf5]"
+          className="h-8 w-8 rounded-md border-border"
         >
           <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
         </Button>
         <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
           <PopoverTrigger
-            className="inline-flex items-center h-8 px-3 rounded-md border border-[#e5edf5] bg-white text-[13px] font-medium text-[#061b31] gap-1.5 min-w-42.5 hover:bg-[#fafbfd] transition-colors"
+            className="inline-flex items-center h-8 px-3 rounded-md border border-border bg-white text-[13px] font-medium text-foreground gap-1.5 min-w-42.5 hover:bg-surface-subtle transition-colors"
           >
             {dateLabel}
             <ChevronDown className="h-3.5 w-3.5 ml-auto opacity-50" strokeWidth={2} />
@@ -148,16 +148,16 @@ export function CalendarFilterBar({
 
       <div className="ml-auto flex flex-wrap items-center gap-2">
         {/* View switcher */}
-        <div className="inline-flex rounded-md border border-[#e5edf5] overflow-hidden">
+        <div className="inline-flex rounded-md border border-border overflow-hidden">
           {([Views.DAY, Views.WEEK, Views.MONTH] as View[]).map((v) => (
             <button
               key={v}
               type="button"
               onClick={() => onViewChange(v)}
-              className={`h-8 px-3 text-[13px] font-medium border-r border-[#e5edf5] last:border-r-0 transition-colors ${
+              className={`h-8 px-3 text-[13px] font-medium border-r border-border last:border-r-0 transition-colors ${
                 v === view
-                  ? "bg-[#ededfc] text-[#635BFF]"
-                  : "bg-white text-[#64748d] hover:text-[#061b31]"
+                  ? "bg-brand-subtle text-brand"
+                  : "bg-white text-fg-secondary hover:text-foreground"
               }`}
             >
               {VIEW_LABELS[v]}
@@ -189,7 +189,7 @@ export function CalendarFilterBar({
         {/* Doctor multi-select */}
         <Popover open={doctorPickerOpen} onOpenChange={setDoctorPickerOpen}>
           <PopoverTrigger
-            className="inline-flex items-center h-8 px-3 rounded-md border border-[#e5edf5] bg-white text-[13px] gap-1.5 min-w-40 hover:bg-[#fafbfd] transition-colors"
+            className="inline-flex items-center h-8 px-3 rounded-md border border-border bg-white text-[13px] gap-1.5 min-w-40 hover:bg-surface-subtle transition-colors"
           >
             {doctorIds.length === 0
               ? "All doctors"

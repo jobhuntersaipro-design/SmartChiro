@@ -203,11 +203,11 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-5 w-28 rounded bg-[#e5edf5] animate-pulse" />
-        <div className="h-32 rounded-[6px] bg-[#e5edf5] animate-pulse" />
+        <div className="h-5 w-28 rounded bg-border animate-pulse" />
+        <div className="h-32 rounded-panel bg-border animate-pulse" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 rounded-[6px] bg-[#e5edf5] animate-pulse" />
+            <div key={i} className="h-20 rounded-panel bg-border animate-pulse" />
           ))}
         </div>
       </div>
@@ -218,9 +218,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   if (error) {
     return (
       <div className="py-12 text-center">
-        <User className="h-12 w-12 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
-        <p className="text-[15px] text-[#64748d]">{error}</p>
-        <Link href="/dashboard/patients" className="text-[14px] text-[#533afd] hover:underline mt-2 inline-block">
+        <User className="h-12 w-12 mx-auto text-border mb-3" strokeWidth={1} />
+        <p className="text-[15px] text-fg-secondary">{error}</p>
+        <Link href="/dashboard/patients" className="text-[14px] text-brand hover:underline mt-2 inline-block">
           Back to Patients
         </Link>
       </div>
@@ -231,9 +231,9 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
   if (!patient) {
     return (
       <div className="py-12 text-center">
-        <User className="h-12 w-12 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
-        <p className="text-[15px] text-[#64748d]">Patient not found or you don&apos;t have access.</p>
-        <Link href="/dashboard/patients" className="text-[14px] text-[#533afd] hover:underline mt-2 inline-block">
+        <User className="h-12 w-12 mx-auto text-border mb-3" strokeWidth={1} />
+        <p className="text-[15px] text-fg-secondary">Patient not found or you don&apos;t have access.</p>
+        <Link href="/dashboard/patients" className="text-[14px] text-brand hover:underline mt-2 inline-block">
           Back to Patients
         </Link>
       </div>
@@ -278,7 +278,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       {/* Back link */}
       <Link
         href="/dashboard/patients"
-        className="inline-flex items-center gap-1.5 text-[14px] text-[#64748d] hover:text-[#061b31] transition-colors"
+        className="inline-flex items-center gap-1.5 text-[14px] text-fg-secondary hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
         Back to Patients
@@ -286,24 +286,24 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
 
       {/* Header card */}
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white px-6 py-5"
+        className="rounded-panel border border-border bg-white px-6 py-5"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
             <Avatar className="h-14 w-14 shrink-0">
-              <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[16px] font-medium">
+              <AvatarFallback className="bg-brand-subtle text-brand text-[16px] font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-[23px] font-light text-[#061b31]">
+                <h1 className="text-[23px] font-light text-foreground">
                   {fullName}
                 </h1>
                 <StatusBadge status={patient.status} />
               </div>
-              <div className="flex flex-wrap items-center gap-4 mt-1 text-[14px] text-[#64748d]">
+              <div className="flex flex-wrap items-center gap-4 mt-1 text-[14px] text-fg-secondary">
                 {patient.icNumber && (
                   <span className="flex items-center gap-1.5">
                     IC: {patient.icNumber}
@@ -316,7 +316,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
                   <span>{dobDisplay}</span>
                 )}
                 {patient.phone && (
-                  <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[#273951]" />
+                  <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-foreground" />
                 )}
                 {patient.email && (
                   <span className="flex items-center gap-1.5">
@@ -329,7 +329,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-4 mt-1 text-[13px] text-[#64748d]">
+              <div className="flex flex-wrap items-center gap-4 mt-1 text-[13px] text-fg-secondary">
                 {patient.doctorName && patient.doctorId && (
                   <span>
                     Doctor:{" "}
@@ -361,7 +361,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
           <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-9 rounded-md text-[14px] border-border gap-1.5"
               onClick={handleToggleStatus}
             >
               {isActive ? (
@@ -373,7 +373,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             </Button>
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-9 rounded-md text-[14px] border-border gap-1.5"
               onClick={() => setCreateAppointmentOpen(true)}
             >
               <CalendarCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -382,7 +382,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             {canBill && (
               <Button
                 variant="outline"
-                className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+                className="h-9 rounded-md text-[14px] border-border gap-1.5"
                 onClick={() => {
                   handleTabChange("billing");
                   setNewInvoiceRequested(true);
@@ -394,7 +394,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             )}
             <Button
               variant="outline"
-              className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+              className="h-9 rounded-md text-[14px] border-border gap-1.5"
               onClick={() => setEditOpen(true)}
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -403,7 +403,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
             {can(branchRole, "patient.delete") && (
               <Button
                 variant="outline"
-                className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5 text-[#DF1B41] hover:text-[#DF1B41] hover:bg-red-50"
+                className="h-9 rounded-md text-[14px] border-border gap-1.5 text-danger hover:text-danger hover:bg-red-50"
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -419,14 +419,14 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
         {statCards.map((s) => (
           <div
             key={s.label}
-            className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-3"
+            className="rounded-panel border border-border bg-white px-4 py-3"
           >
             <div className="flex items-center gap-2 mb-1">
               <s.icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.5} />
-              <span className="text-[13px] text-[#64748d]">{s.label}</span>
+              <span className="text-[13px] text-fg-secondary">{s.label}</span>
             </div>
             <div
-              className="text-[22px] font-light text-[#061b31]"
+              className="text-[22px] font-light text-foreground"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
               {s.value}
@@ -436,7 +436,7 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
       </div>
 
       {/* Tab navigation */}
-      <div className="border-b border-[#e5edf5]">
+      <div className="border-b border-border">
         <div className="flex gap-0">
           {visibleTabs.map((tab) => (
             <button
@@ -444,8 +444,8 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
               onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-[#533afd] text-[#533afd]"
-                  : "border-transparent text-[#64748d] hover:text-[#061b31]"
+                  ? "border-brand text-brand"
+                  : "border-transparent text-fg-secondary hover:text-foreground"
               }`}
             >
               {tab.label}

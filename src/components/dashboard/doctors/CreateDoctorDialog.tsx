@@ -137,79 +137,79 @@ export function CreateDoctorDialog({
     >
       <DialogContent className="max-w-140 rounded-2xl p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-[18px] font-light text-[#061b31]">
+          <DialogTitle className="text-[18px] font-light text-foreground">
             Add Staff Member
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6">
           {error && (
-            <div className="mt-4 rounded-md bg-[#FEF2F4] px-3 py-2 text-[13px] text-[#df1b41]">
+            <div className="mt-4 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger">
               {error}
             </div>
           )}
 
           {/* Account section */}
           <div className="mt-5">
-            <h3 className="text-[14px] font-medium text-[#273951] mb-3">
+            <h3 className="text-[14px] font-medium text-foreground mb-3">
               Account
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="text-[13px] text-[#273951] mb-1 block">
-                  Full Name <span className="text-[#df1b41]">*</span>
+                <label className="text-[13px] text-foreground mb-1 block">
+                  Full Name <span className="text-danger">*</span>
                 </label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Dr. Sarah Chen"
-                  className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
-                    Email <span className="text-[#df1b41]">*</span>
+                  <label className="text-[13px] text-foreground mb-1 block">
+                    Email <span className="text-danger">*</span>
                   </label>
                   <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="sarah@clinic.com"
-                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
+                  <label className="text-[13px] text-foreground mb-1 block">
                     Phone
                   </label>
                   <Input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+60 12-345 6789"
-                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
-                    Password <span className="text-[#df1b41]">*</span>
+                  <label className="text-[13px] text-foreground mb-1 block">
+                    Password <span className="text-danger">*</span>
                   </label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                      className="h-9 rounded-md border-border bg-white text-[14px] pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31]"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-fg-secondary hover:text-foreground"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -219,26 +219,26 @@ export function CreateDoctorDialog({
                     </button>
                   </div>
                   {password && password.length < 8 && (
-                    <p className="text-[12px] text-[#df1b41] mt-1">
+                    <p className="text-[12px] text-danger mt-1">
                       Min 8 characters
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
-                    Confirm Password <span className="text-[#df1b41]">*</span>
+                  <label className="text-[13px] text-foreground mb-1 block">
+                    Confirm Password <span className="text-danger">*</span>
                   </label>
                   <div className="relative">
                     <Input
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                      className="h-9 rounded-md border-border bg-white text-[14px] pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31]"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-fg-secondary hover:text-foreground"
                     >
                       {showConfirm ? (
                         <EyeOff className="h-4 w-4" />
@@ -248,7 +248,7 @@ export function CreateDoctorDialog({
                     </button>
                   </div>
                   {confirmPassword && password !== confirmPassword && (
-                    <p className="text-[12px] text-[#df1b41] mt-1">
+                    <p className="text-[12px] text-danger mt-1">
                       Passwords don&apos;t match
                     </p>
                   )}
@@ -257,13 +257,13 @@ export function CreateDoctorDialog({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
-                    Branch <span className="text-[#df1b41]">*</span>
+                  <label className="text-[13px] text-foreground mb-1 block">
+                    Branch <span className="text-danger">*</span>
                   </label>
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
-                    className="flex h-9 w-full rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+                    className="flex h-9 w-full rounded-md border border-border bg-white px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -273,7 +273,7 @@ export function CreateDoctorDialog({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
+                  <label className="text-[13px] text-foreground mb-1 block">
                     Role
                   </label>
                   <select
@@ -281,7 +281,7 @@ export function CreateDoctorDialog({
                     onChange={(e) =>
                       setRole(e.target.value as StaffRole)
                     }
-                    className="flex h-9 w-full rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+                    className="flex h-9 w-full rounded-md border border-border bg-white px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
                   >
                     {ASSIGNABLE_STAFF_ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -297,25 +297,25 @@ export function CreateDoctorDialog({
           {/* Professional section (not for front desk — no doctor profile) */}
           {role !== "FRONT_DESK" && (
           <div className="mt-5">
-            <h3 className="text-[14px] font-medium text-[#273951] mb-3">
+            <h3 className="text-[14px] font-medium text-foreground mb-3">
               Professional (Optional)
             </h3>
 
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
+                  <label className="text-[13px] text-foreground mb-1 block">
                     License Number
                   </label>
                   <Input
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
                     placeholder="DC-12345"
-                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div>
-                  <label className="text-[13px] text-[#273951] mb-1 block">
+                  <label className="text-[13px] text-foreground mb-1 block">
                     Years Experience
                   </label>
                   <Input
@@ -325,32 +325,32 @@ export function CreateDoctorDialog({
                     value={yearsExperience}
                     onChange={(e) => setYearsExperience(e.target.value)}
                     placeholder="8"
-                    className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[13px] text-[#273951] mb-1 block">
+                <label className="text-[13px] text-foreground mb-1 block">
                   Specialties (comma separated)
                 </label>
                 <Input
                   value={specialties}
                   onChange={(e) => setSpecialties(e.target.value)}
                   placeholder="Sports Chiro, Pediatric"
-                  className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
 
               <div>
-                <label className="text-[13px] text-[#273951] mb-1 block">
+                <label className="text-[13px] text-foreground mb-1 block">
                   Education
                 </label>
                 <Input
                   value={education}
                   onChange={(e) => setEducation(e.target.value)}
                   placeholder="Doctor of Chiropractic, Palmer College"
-                  className="h-9 rounded-md border-[#e5edf5] bg-white text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-border bg-white text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -358,7 +358,7 @@ export function CreateDoctorDialog({
           )}
 
           <DialogFooter className="mt-6 flex items-center justify-between gap-3 sm:justify-between">
-            <p className="text-[13px] text-[#64748d]">
+            <p className="text-[13px] text-fg-secondary">
               The doctor will use these credentials to log in.
             </p>
             <div className="flex gap-2">
@@ -376,7 +376,7 @@ export function CreateDoctorDialog({
               <Button
                 type="submit"
                 disabled={!isValid || loading}
-                className="h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
+                className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
               >
                 {loading ? "Creating..." : "Create Doctor"}
               </Button>

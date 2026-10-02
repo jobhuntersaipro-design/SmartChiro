@@ -79,36 +79,36 @@ export function PatientCombobox({ value, onChange, disabled, branchId }: Props) 
         type="button"
         disabled={disabled}
         onClick={() => setOpen(!open)}
-        className="flex w-full h-9 items-center justify-between rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] hover:border-[#c1c9d2] focus:outline-none focus:ring-1 focus:ring-[#533afd] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="flex w-full h-9 items-center justify-between rounded-md border border-border bg-white px-3 text-[14px] text-foreground hover:border-border-strong focus:outline-none focus:ring-1 focus:ring-brand disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <span className={value ? "" : "text-[#94a3b8]"}>{label}</span>
-        <ChevronsUpDown className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.75} />
+        <span className={value ? "" : "text-fg-muted"}>{label}</span>
+        <ChevronsUpDown className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.75} />
       </button>
 
       {open && (
         <div
-          className="absolute left-0 right-0 top-10 z-30 rounded-[6px] border border-[#e5edf5] bg-white py-1"
+          className="absolute left-0 right-0 top-10 z-30 rounded-panel border border-border bg-white py-1"
           style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
         >
-          <div className="px-2 pb-1 border-b border-[#e5edf5]">
+          <div className="px-2 pb-1 border-b border-border">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748d] pointer-events-none" strokeWidth={1.75} />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-secondary pointer-events-none" strokeWidth={1.75} />
               <input
                 autoFocus
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by name, IC, phone, email…"
-                className="w-full h-8 pl-7 pr-2 text-[13px] border-0 focus:outline-none bg-transparent text-[#061b31] placeholder:text-[#94a3b8]"
+                className="w-full h-8 pl-7 pr-2 text-[13px] border-0 focus:outline-none bg-transparent text-foreground placeholder:text-fg-muted"
               />
             </div>
           </div>
           <div className="max-h-65 overflow-y-auto">
             {loading && (
-              <div className="px-3 py-2 text-[13px] text-[#64748d]">Loading…</div>
+              <div className="px-3 py-2 text-[13px] text-fg-secondary">Loading…</div>
             )}
             {!loading && results.length === 0 && (
-              <div className="px-3 py-2 text-[13px] text-[#64748d]">
+              <div className="px-3 py-2 text-[13px] text-fg-secondary">
                 {query.trim() ? "No matches" : "Type to search"}
               </div>
             )}
@@ -123,19 +123,19 @@ export function PatientCombobox({ value, onChange, disabled, branchId }: Props) 
                       onChange(p);
                       setOpen(false);
                     }}
-                    className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+                    className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-foreground hover:bg-surface-muted transition-colors"
                   >
                     <span className="min-w-0">
-                      <span className="block font-medium text-[#061b31] truncate">
+                      <span className="block font-medium text-foreground truncate">
                         {p.firstName} {p.lastName}
                       </span>
                       {(p.phone || p.email) && (
-                        <span className="block text-[12px] text-[#64748d] truncate">
+                        <span className="block text-[12px] text-fg-secondary truncate">
                           {p.phone ?? p.email}
                         </span>
                       )}
                     </span>
-                    {selected && <Check className="h-3.5 w-3.5 text-[#533afd]" strokeWidth={2} />}
+                    {selected && <Check className="h-3.5 w-3.5 text-brand" strokeWidth={2} />}
                   </button>
                 );
               })}

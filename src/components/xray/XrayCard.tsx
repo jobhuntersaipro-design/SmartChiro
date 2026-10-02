@@ -74,7 +74,7 @@ export function XrayCard({
 
   return (
     <div
-      className="group relative rounded-[6px] border bg-white overflow-hidden transition-colors"
+      className="group relative rounded-panel border bg-white overflow-hidden transition-colors"
       style={{ borderColor: selected ? '#533afd' : '#e5edf5' }}
     >
       {batchMode && (
@@ -82,7 +82,7 @@ export function XrayCard({
           type="checkbox"
           checked={selected}
           onChange={() => onToggleSelect(xray.id)}
-          className="absolute top-2 left-2 z-10 h-4 w-4 rounded-[3px] accent-[#533afd]"
+          className="absolute top-2 left-2 z-10 h-4 w-4 rounded-[3px] accent-brand"
           aria-label={`Select ${xray.title ?? 'X-ray'}`}
         />
       )}
@@ -93,7 +93,7 @@ export function XrayCard({
         onClick={handleClick}
         className="block"
       >
-        <div className="h-40 bg-[#1A1F36] flex items-center justify-center overflow-hidden relative">
+        <div className="h-40 bg-canvas flex items-center justify-center overflow-hidden relative">
           {xray.thumbnailUrl ? (
             <Image
               src={xray.thumbnailUrl}
@@ -104,20 +104,20 @@ export function XrayCard({
               className="w-full h-full object-contain"
             />
           ) : (
-            <ScanLine className="w-10 h-10 text-[#4a5568] opacity-40" />
+            <ScanLine className="w-10 h-10 text-fg-secondary opacity-40" />
           )}
           {archived && (
-            <span className="absolute top-2 left-2 rounded-md bg-[#697386] px-2 py-0.5 text-[10px] text-white">
+            <span className="absolute top-2 left-2 rounded-md bg-fg-muted px-2 py-0.5 text-[10px] text-white">
               Archived
             </span>
           )}
           {xray.status === 'UPLOADING' && (
-            <span className="absolute top-2 left-2 rounded-md bg-[#0570DE] px-2 py-0.5 text-[10px] text-white">
+            <span className="absolute top-2 left-2 rounded-md bg-info px-2 py-0.5 text-[10px] text-white">
               Uploading…
             </span>
           )}
           {(xray.annotationCount ?? 0) > 0 && (
-            <span className="absolute top-2 right-2 rounded-full bg-[#533afd] px-2 py-0.5 text-[10px] text-white">
+            <span className="absolute top-2 right-2 rounded-full bg-brand px-2 py-0.5 text-[10px] text-white">
               {xray.annotationCount} annot.
             </span>
           )}
@@ -132,13 +132,13 @@ export function XrayCard({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commitRename}
             onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') { setDraft(xray.title ?? ''); setEditing(false) } }}
-            className="w-full rounded-md border border-[#533afd] px-2 py-1 text-[14px] outline-none"
+            className="w-full rounded-md border border-brand px-2 py-1 text-[14px] outline-none"
           />
         ) : (
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-left text-[14px] font-medium text-[#061b31] truncate w-full hover:underline"
+            className="text-left text-[14px] font-medium text-foreground truncate w-full hover:underline"
           >
             {displayTitle || 'Untitled'}
           </button>
@@ -146,11 +146,11 @@ export function XrayCard({
 
         <div className="flex items-center gap-2 mt-1.5">
           {xray.bodyRegion && (
-            <span className="rounded-full px-2 py-0.5 text-[11px] bg-[#f6f9fc] text-[#64748d]">
+            <span className="rounded-full px-2 py-0.5 text-[11px] bg-surface-muted text-fg-secondary">
               {xray.bodyRegion.replace(/_/g, ' ').toLowerCase()}
             </span>
           )}
-          <span className="flex items-center gap-1 text-[11px] text-[#97a3b6]">
+          <span className="flex items-center gap-1 text-[11px] text-fg-muted">
             <Calendar className="w-3 h-3" />
             {formatDate(xray.createdAt)}
           </span>
@@ -159,15 +159,15 @@ export function XrayCard({
         <button
           type="button"
           onClick={() => onOpenNotes(xray.id)}
-          className="mt-1.5 block w-full text-left text-[12px] text-[#64748d] truncate hover:text-[#533afd]"
+          className="mt-1.5 block w-full text-left text-[12px] text-fg-secondary truncate hover:text-brand"
         >
-          {xray.notePreview ? xray.notePreview : <span className="text-[#A3ACB9]">Add notes…</span>}
+          {xray.notePreview ? xray.notePreview : <span className="text-fg-disabled">Add notes…</span>}
         </button>
       </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="absolute top-2 right-2 z-10 hidden group-hover:flex h-7 w-7 items-center justify-center rounded-md bg-white/90 hover:bg-white text-[#425466]"
+          className="absolute top-2 right-2 z-10 hidden group-hover:flex h-7 w-7 items-center justify-center rounded-md bg-white/90 hover:bg-white text-fg-secondary"
           aria-label="More actions"
         >
           <MoreVertical className="w-4 h-4" />
@@ -184,7 +184,7 @@ export function XrayCard({
               <RotateCcw className="mr-2 h-3.5 w-3.5" /> Restore
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem onSelect={() => onDelete(xray.id)} className="text-[#DF1B41]">
+            <DropdownMenuItem onSelect={() => onDelete(xray.id)} className="text-danger">
               <Archive className="mr-2 h-3.5 w-3.5" /> Archive
               <Trash2 className="ml-1 h-3 w-3 opacity-0" />
             </DropdownMenuItem>

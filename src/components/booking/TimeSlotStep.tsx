@@ -26,7 +26,7 @@ function groupOf(label: string): "Morning" | "Afternoon" | "Evening" {
 export function TimeSlotStep({ slots, loading, error, selected, timeZoneLabel, onSelect }: Props) {
   if (loading) {
     return (
-      <p className="flex items-center gap-2 py-6 text-[15px] text-[#697386]" aria-live="polite">
+      <p className="flex items-center gap-2 py-6 text-[15px] text-fg-muted" aria-live="polite">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Finding free times…
       </p>
@@ -36,7 +36,7 @@ export function TimeSlotStep({ slots, loading, error, selected, timeZoneLabel, o
     return <InlineAlert>{error === "rate_limited" ? "Too many requests — wait a moment and try again." : "Couldn't load times. Try again."}</InlineAlert>;
   }
   if (!slots || slots.length === 0) {
-    return <p className="py-4 text-[15px] text-[#425466]">No free times left on this day. Go back and pick another date.</p>;
+    return <p className="py-4 text-[15px] text-fg-secondary">No free times left on this day. Go back and pick another date.</p>;
   }
 
   const groups = (["Morning", "Afternoon", "Evening"] as const)
@@ -45,11 +45,11 @@ export function TimeSlotStep({ slots, loading, error, selected, timeZoneLabel, o
 
   return (
     <div>
-      <p className="mb-3 text-[13px] text-[#697386]">Times are in {timeZoneLabel}.</p>
+      <p className="mb-3 text-[13px] text-fg-muted">Times are in {timeZoneLabel}.</p>
       <div className="space-y-4">
         {groups.map((g) => (
           <fieldset key={g.name}>
-            <legend className="mb-1.5 text-[14px] font-medium text-[#425466]">{g.name}</legend>
+            <legend className="mb-1.5 text-[14px] font-medium text-fg-secondary">{g.name}</legend>
             <div className="grid grid-cols-3 gap-2">
               {g.items.map((s) => {
                 const on = selected === s.start;
@@ -59,10 +59,10 @@ export function TimeSlotStep({ slots, loading, error, selected, timeZoneLabel, o
                     type="button"
                     aria-pressed={on}
                     onClick={() => onSelect(s)}
-                    className={`h-11 rounded-[4px] border text-[15px] font-medium tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#635BFF] ${
+                    className={`h-11 rounded-control border text-[15px] font-medium tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand ${
                       on
-                        ? "border-[#635BFF] bg-[#635BFF] text-white"
-                        : "border-[#E3E8EE] bg-white text-[#0A2540] hover:border-[#635BFF] hover:text-[#635BFF]"
+                        ? "border-brand bg-primary text-white"
+                        : "border-border bg-white text-foreground hover:border-brand hover:text-brand"
                     }`}
                   >
                     {s.label}

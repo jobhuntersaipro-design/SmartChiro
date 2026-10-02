@@ -173,7 +173,7 @@ export function CommissionRuleDialog({ open, branchId, rule, staff, onClose, onS
               aria-invalid={rateError ? true : undefined}
               className={`${FIELD_CLASS} tabular-nums`}
             />
-            {rateError && <p className="mt-1 text-[12px] text-[#DF1B41]">{rateError}</p>}
+            {rateError && <p className="mt-1 text-[12px] text-danger">{rateError}</p>}
           </div>
           <div>
             <label htmlFor="rule-effective" className={LABEL_CLASS}>Effective from</label>
@@ -187,8 +187,8 @@ export function CommissionRuleDialog({ open, branchId, rule, staff, onClose, onS
           </div>
         </div>
         {rule && (
-          <label className="flex items-center gap-2 text-[14px] text-[#273951]">
-            <input type="checkbox" checked={form.active} onChange={(e) => set("active", e.target.checked)} className="h-4 w-4 accent-[#533afd]" />
+          <label className="flex items-center gap-2 text-[14px] text-foreground">
+            <input type="checkbox" checked={form.active} onChange={(e) => set("active", e.target.checked)} className="h-4 w-4 accent-brand" />
             Active
           </label>
         )}

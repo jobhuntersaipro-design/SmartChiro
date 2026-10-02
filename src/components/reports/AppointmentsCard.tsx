@@ -48,7 +48,7 @@ export function AppointmentsCard({ query }: { query: ReportQuery }) {
             <StatTile label="No-show" value={formatCount(data.totals.noShow)} hint={`${formatRate(data.totals.noShowRate)} no-show rate`} />
           </div>
           <div className="space-y-2">
-            <h3 className="text-[14px] font-medium text-[#425466]">No-show rate per doctor</h3>
+            <h3 className="text-[14px] font-medium text-fg-secondary">No-show rate per doctor</h3>
             <BarList
               label="No-show rate per doctor"
               empty="No appointments in this range."

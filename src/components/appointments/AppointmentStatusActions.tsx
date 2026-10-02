@@ -11,9 +11,9 @@ import {
 } from "@/lib/appointment-status-actions";
 
 const TONE: Record<StatusAction["tone"], string> = {
-  primary: "border-[#e5edf5] text-[#533afd] hover:bg-[#f0eeff]",
-  success: "border-[#e5edf5] text-[#108c3d] hover:bg-[#ecfbf0]",
-  danger: "border-[#e5edf5] text-[#DF1B41] hover:bg-[#fff0f3]",
+  primary: "border-border text-brand hover:bg-brand-subtle",
+  success: "border-border text-success hover:bg-success-subtle",
+  danger: "border-border text-danger hover:bg-danger-subtle",
 };
 
 interface Props {

@@ -109,7 +109,7 @@ export function AppointmentAuditLog({ appointmentId }: Props) {
 
   if (loading) {
     return (
-      <div className="py-3 flex items-center gap-2 text-[12px] text-[#697386]">
+      <div className="py-3 flex items-center gap-2 text-[12px] text-fg-muted">
         <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
         Loading history…
       </div>
@@ -118,7 +118,7 @@ export function AppointmentAuditLog({ appointmentId }: Props) {
 
   if (!entries || entries.length === 0) {
     return (
-      <p className="text-[12px] text-[#697386] py-2">
+      <p className="text-[12px] text-fg-muted py-2">
         No history yet.
       </p>
     );
@@ -131,7 +131,7 @@ export function AppointmentAuditLog({ appointmentId }: Props) {
         const changeKeys = Object.keys(e.changes ?? {});
         return (
           <li key={e.id} className="flex gap-2.5">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F0EEFF] text-[10px] font-semibold text-[#635BFF]">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-[10px] font-semibold text-brand">
               {actorInitials(e.actorName, e.actorEmail)}
             </div>
             <div className="min-w-0 flex-1">
@@ -143,11 +143,11 @@ export function AppointmentAuditLog({ appointmentId }: Props) {
                   <History className="h-2.5 w-2.5 mr-0.5" strokeWidth={2} />
                   {style.label}
                 </span>
-                <span className="text-[12px] text-[#425466]">
+                <span className="text-[12px] text-fg-secondary">
                   by {e.actorName ?? e.actorEmail}
                 </span>
                 <span
-                  className="text-[11px] text-[#697386] tabular-nums"
+                  className="text-[11px] text-fg-muted tabular-nums"
                   title={`${clinicDateLabel(new Date(e.createdAt), "numeric")} ${clinicTimeLabel(new Date(e.createdAt))}`}
                 >
                   · {relativeTime(e.createdAt)}
@@ -160,16 +160,16 @@ export function AppointmentAuditLog({ appointmentId }: Props) {
                     return (
                       <li
                         key={k}
-                        className="text-[11px] text-[#425466] flex flex-wrap gap-1"
+                        className="text-[11px] text-fg-secondary flex flex-wrap gap-1"
                       >
-                        <span className="font-medium text-[#697386]">
+                        <span className="font-medium text-fg-muted">
                           {FIELD_LABELS[k] ?? k}:
                         </span>
                         <span className="line-through opacity-60 tabular-nums">
                           {formatValue(k, c.from)}
                         </span>
-                        <span className="text-[#697386]">→</span>
-                        <span className="text-[#061b31] tabular-nums">
+                        <span className="text-fg-muted">→</span>
+                        <span className="text-foreground tabular-nums">
                           {formatValue(k, c.to)}
                         </span>
                       </li>

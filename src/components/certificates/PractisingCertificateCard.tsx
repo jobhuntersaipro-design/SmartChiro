@@ -32,8 +32,8 @@ const toForm = (d: DoctorDetail): FormState => ({
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="min-w-0">
-      <p className="text-[12px] text-[#64748d]">{label}</p>
-      <p className="truncate text-[14px] text-[#061b31]">{value || <span className="text-[#a3acb9]">Not recorded</span>}</p>
+      <p className="text-[12px] text-fg-secondary">{label}</p>
+      <p className="truncate text-[14px] text-foreground">{value || <span className="text-fg-disabled">Not recorded</span>}</p>
     </div>
   );
 }
@@ -95,9 +95,9 @@ export function PractisingCertificateCard({ doctor, canEdit, onSaved }: Practisi
   );
 
   return (
-    <section aria-labelledby="cert-heading" className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
-      <div className="mb-3 flex items-center justify-between gap-2 border-b border-[#e5edf5] pb-2">
-        <h3 id="cert-heading" className="flex items-center gap-1.5 text-[13px] font-medium uppercase tracking-wide text-[#273951]">
+    <section aria-labelledby="cert-heading" className="rounded-panel border border-border bg-white px-5 py-4">
+      <div className="mb-3 flex items-center justify-between gap-2 border-b border-border pb-2">
+        <h3 id="cert-heading" className="flex items-center gap-1.5 text-[13px] font-medium uppercase tracking-wide text-foreground">
           <BadgeCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
           Practising certificate
         </h3>
@@ -108,7 +108,7 @@ export function PractisingCertificateCard({ doctor, canEdit, onSaved }: Practisi
               setForm(toForm(doctor));
               setEditing(true);
             }}
-            className="inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[13px] text-[#533afd] hover:bg-[#f0eeff] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF]"
+            className="inline-flex items-center gap-1 rounded-control px-1.5 py-0.5 text-[13px] text-brand hover:bg-brand-subtle focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
           >
             <Pencil className="h-3 w-3" strokeWidth={1.75} />
             Edit
@@ -154,16 +154,16 @@ export function PractisingCertificateCard({ doctor, canEdit, onSaved }: Practisi
           <Field label="T&CM registration no." value={doctor.profile?.tcmRegistrationNo ?? null} />
           <Field label="APC no." value={doctor.profile?.apcNumber ?? null} />
           <div className="min-w-0">
-            <p className="text-[12px] text-[#64748d]">APC expiry</p>
+            <p className="text-[12px] text-fg-secondary">APC expiry</p>
             {expiresOn && stage ? (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[14px] tabular-nums text-[#061b31]">{formatDateInput(expiresOn)}</span>
+                <span className="text-[14px] tabular-nums text-foreground">{formatDateInput(expiresOn)}</span>
                 <span className={cn("rounded-full border px-2 py-px text-[12px] whitespace-nowrap", STAGE_TONE[stage])}>
                   {stage === "ok" ? STAGE_LABEL.ok : describeExpiry(daysUntilExpiry(expiresOn))}
                 </span>
               </div>
             ) : (
-              <p className="text-[14px] text-[#a3acb9]">Not recorded</p>
+              <p className="text-[14px] text-fg-disabled">Not recorded</p>
             )}
           </div>
         </div>

@@ -63,7 +63,7 @@ export function StatusBar({
             {onRetrySave && (
               <button
                 onClick={onRetrySave}
-                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-surface-muted"
                 style={{ color: "#533afd" }}
               >
                 Retry
@@ -77,7 +77,7 @@ export function StatusBar({
             <span style={{ color: "#DF1B41" }}>{saveError ?? "Changed elsewhere"}</span>
             <button
               onClick={() => window.location.reload()}
-              className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+              className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-surface-muted"
               style={{ color: "#533afd" }}
             >
               Reload
@@ -85,7 +85,7 @@ export function StatusBar({
             {onRetrySave && (
               <button
                 onClick={onRetrySave}
-                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-[#f6f9fc]"
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:bg-surface-muted"
                 style={{ color: "#DF1B41" }}
               >
                 Overwrite
@@ -139,7 +139,7 @@ export function StatusBar({
             onClick={onUndo}
             disabled={!canUndo}
             aria-label="Undo"
-            className="flex items-center justify-center rounded-md hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            className="flex items-center justify-center rounded-md hover:bg-surface-muted disabled:cursor-not-allowed"
             style={{ width: 24, height: 24, color: canUndo ? "#425466" : "#A3ACB9" }}
           >
             <Undo2 size={14} strokeWidth={1.5} />
@@ -148,7 +148,7 @@ export function StatusBar({
             onClick={onRedo}
             disabled={!canRedo}
             aria-label="Redo"
-            className="flex items-center justify-center rounded-md hover:bg-[#f6f9fc] disabled:cursor-not-allowed"
+            className="flex items-center justify-center rounded-md hover:bg-surface-muted disabled:cursor-not-allowed"
             style={{ width: 24, height: 24, color: canRedo ? "#425466" : "#A3ACB9" }}
           >
             <Redo2 size={14} strokeWidth={1.5} />

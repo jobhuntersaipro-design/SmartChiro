@@ -51,12 +51,12 @@ export function RepeatBookingSection({
   }
 
   return (
-    <div className="mb-3 rounded-md border border-[#e5edf5] px-3 py-2.5">
+    <div className="mb-3 rounded-md border border-border px-3 py-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#273951]">
-          <Repeat className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.75} /> Repeat
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+          <Repeat className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.75} /> Repeat
         </span>
-        <div className="inline-flex rounded-md border border-[#e5edf5] p-0.5" role="radiogroup" aria-label="Repeat">
+        <div className="inline-flex rounded-md border border-border p-0.5" role="radiogroup" aria-label="Repeat">
           {[
             { on: false, label: "Off" },
             { on: true, label: "Weekly" },
@@ -67,8 +67,8 @@ export function RepeatBookingSection({
               role="radio"
               aria-checked={value.enabled === o.on}
               onClick={() => value.enabled !== o.on && setEnabled(o.on)}
-              className={`rounded-[4px] px-2.5 py-0.5 text-[12px] font-medium transition-colors ${
-                value.enabled === o.on ? "bg-[#F0EEFF] text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"
+              className={`rounded-control px-2.5 py-0.5 text-[12px] font-medium transition-colors ${
+                value.enabled === o.on ? "bg-brand-subtle text-brand" : "text-fg-secondary hover:text-foreground"
               }`}
             >
               {o.label}
@@ -82,14 +82,14 @@ export function RepeatBookingSection({
           <RepeatBookingFields value={value} onChange={onChange} startDate={date} idPrefix="create-appointment-repeat" />
           {eligible.length > 0 && (
             <div>
-              <label htmlFor="create-appointment-package" className="mb-1 block text-[12px] font-medium text-[#425466]">
+              <label htmlFor="create-appointment-package" className="mb-1 block text-[12px] font-medium text-fg-secondary">
                 Pay with package (optional)
               </label>
               <select
                 id="create-appointment-package"
                 value={packageId}
                 onChange={(e) => onPackageChange(e.target.value)}
-                className="h-9 w-full rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-9 w-full rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
               >
                 <option value="">Any matching package (automatic)</option>
                 {eligible.map((p) => (
@@ -98,11 +98,11 @@ export function RepeatBookingSection({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-[#697386]">Completing each visit uses a session from this package first.</p>
+              <p className="mt-1 text-[11px] text-fg-muted">Completing each visit uses a session from this package first.</p>
             </div>
           )}
           {ruleError ? (
-            <p className="text-[13px] text-[#9b6829]">{ruleError}</p>
+            <p className="text-[13px] text-warning">{ruleError}</p>
           ) : (
             <SeriesPreviewList
               preview={preview}

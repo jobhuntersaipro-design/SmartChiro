@@ -46,10 +46,10 @@ export function AppointmentCardList({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <CalendarIcon
-          className="h-10 w-10 text-[#cbd5e1] mb-3"
+          className="h-10 w-10 text-fg-disabled mb-3"
           strokeWidth={1.5}
         />
-        <p className="text-[14px] text-[#697386]">
+        <p className="text-[14px] text-fg-muted">
           {emptyMessage(activeTab)}
         </p>
         {emptyAction && <div className="mt-3">{emptyAction}</div>}
@@ -100,11 +100,11 @@ export function AppointmentCardList({
       {groups.map((g) => (
         <section key={clinicDateKey(g.date)} className="mb-4">
           <header className="flex items-center gap-3 mb-2">
-            <span className="text-[13px] font-medium text-[#697386]">
+            <span className="text-[13px] font-medium text-fg-muted">
               {groupHeader(g.date, todayKey, tomorrowKey)}
             </span>
-            <span className="flex-1 h-px bg-[#e5edf5]" aria-hidden="true" />
-            <span className="text-[12px] text-[#697386] tabular-nums">
+            <span className="flex-1 h-px bg-border" aria-hidden="true" />
+            <span className="text-[12px] text-fg-muted tabular-nums">
               {g.items.length}
             </span>
           </header>

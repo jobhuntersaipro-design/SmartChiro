@@ -42,24 +42,24 @@ export function ForgotPasswordForm() {
     return (
       <div className="w-full max-w-105">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#30B130]">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-panel bg-success">
             <CheckCircle2 size={24} className="text-white" />
           </div>
-          <h1 className="text-[23px] font-light text-[#061b31]">
+          <h1 className="text-[23px] font-light text-foreground">
             Check your email
           </h1>
-          <p className="mt-2 text-[15px] text-[#273951] leading-relaxed">
+          <p className="mt-2 text-[15px] text-foreground leading-relaxed">
             If an account exists with{' '}
-            <span className="font-medium text-[#061b31]">{email}</span>, we&apos;ve sent a reset link.
+            <span className="font-medium text-foreground">{email}</span>, we&apos;ve sent a reset link.
             <br />
             The link expires in 1 hour.
           </p>
         </div>
 
-        <p className="mt-6 text-center text-[14px] text-[#64748d]">
+        <p className="mt-6 text-center text-[14px] text-fg-secondary">
           <Link
             href="/login"
-            className="inline-flex items-center gap-1 text-[#533afd] hover:text-[#4434d4] transition-colors"
+            className="inline-flex items-center gap-1 text-brand hover:text-brand-strong transition-colors"
           >
             <ArrowLeft size={14} />
             Back to sign in
@@ -72,19 +72,19 @@ export function ForgotPasswordForm() {
   return (
     <div className="w-full max-w-105">
       <div className="mb-8 text-center flex flex-col items-center">
-        <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
+        <div className="mb-4 rounded-panel bg-brand px-3 py-2">
           <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
-        <h1 className="text-[23px] font-light text-[#061b31]">
+        <h1 className="text-[23px] font-light text-foreground">
           Reset your password
         </h1>
-        <p className="mt-1 text-[15px] text-[#64748d]">
+        <p className="mt-1 text-[15px] text-fg-secondary">
           Enter the email associated with your account
         </p>
       </div>
 
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white p-6"
+        className="rounded-panel border border-border bg-white p-6"
         style={{
           boxShadow:
             'rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px',
@@ -94,7 +94,7 @@ export function ForgotPasswordForm() {
           <div>
             <label
               htmlFor="email"
-              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
+              className="mb-1.5 block text-[14px] font-medium text-foreground"
             >
               Email
             </label>
@@ -106,26 +106,26 @@ export function ForgotPasswordForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
-          {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
+          {error && <p className="text-[14px] text-danger">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : 'Send reset link'}
           </button>
         </form>
       </div>
 
-      <p className="mt-6 text-center text-[14px] text-[#64748d]">
+      <p className="mt-6 text-center text-[14px] text-fg-secondary">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1 text-[#533afd] hover:text-[#4434d4] transition-colors"
+          className="inline-flex items-center gap-1 text-brand hover:text-brand-strong transition-colors"
         >
           <ArrowLeft size={14} />
           Back to sign in

@@ -50,15 +50,15 @@ export default async function SettingsPage({
       <div className="mb-6">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1 text-[14px] text-[#64748d] hover:text-[#533afd] transition-colors"
+          className="inline-flex items-center gap-1 text-[14px] text-fg-secondary hover:text-brand transition-colors"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           Back to Dashboard
         </Link>
-        <h1 className="text-[23px] font-light text-[#061b31] mt-1">
+        <h1 className="text-[23px] font-light text-foreground mt-1">
           Settings
         </h1>
-        <p className="text-[14px] text-[#64748d] mt-0.5">
+        <p className="text-[14px] text-fg-secondary mt-0.5">
           Manage your account preferences and security
         </p>
       </div>

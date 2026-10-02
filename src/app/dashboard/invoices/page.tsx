@@ -19,8 +19,8 @@ export default async function InvoicesPage() {
   if (!activeBranchId || !can(branchRole, "invoice.manage")) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
-        <h1 className="text-[23px] font-light text-[#061b31]">Invoices</h1>
-        <p className="mt-2 text-[15px] text-[#64748d]">
+        <h1 className="text-[23px] font-light text-foreground">Invoices</h1>
+        <p className="mt-2 text-[15px] text-fg-secondary">
           Billing is handled by the branch owner, admins and front desk. Ask them if you need an invoice for a patient.
         </p>
       </div>

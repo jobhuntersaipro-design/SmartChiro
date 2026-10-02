@@ -45,7 +45,7 @@ export function PackagesCard({ query }: { query: ReportQuery }) {
             <StatTile label="Sold in range" value={formatCount(data.sold.count)} hint={formatMYR(data.sold.value)} />
           </div>
           <div className="space-y-2">
-            <h3 className="text-[14px] font-medium text-[#425466]">Liability by package</h3>
+            <h3 className="text-[14px] font-medium text-fg-secondary">Liability by package</h3>
             <BarList
               label="Liability by package"
               empty="No active packages."

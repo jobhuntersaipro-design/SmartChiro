@@ -36,16 +36,16 @@ export function BranchPicker({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         title={label}
-        className="flex max-w-full items-center gap-2 h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] whitespace-nowrap hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:border-[#c1c9d2] active:scale-[0.98]"
+        className="flex max-w-full items-center gap-2 h-9 px-3 rounded-md border border-border bg-white text-[15px] font-medium text-foreground whitespace-nowrap hover:bg-surface-muted transition-all duration-200 cursor-pointer hover:border-border-strong active:scale-[0.98]"
       >
-        <Building2 className="h-4 w-4 shrink-0 text-[#64748d]" strokeWidth={1.5} />
+        <Building2 className="h-4 w-4 shrink-0 text-fg-secondary" strokeWidth={1.5} />
         <span className="truncate">{label}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[#64748d] transition-transform duration-200 ${open ? "rotate-180" : ""}`} strokeWidth={1.5} />
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-fg-secondary transition-transform duration-200 ${open ? "rotate-180" : ""}`} strokeWidth={1.5} />
       </button>
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-1 w-56 rounded-[6px] border border-[#e5edf5] bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute right-0 top-full mt-1 w-56 rounded-panel border border-border bg-white py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
           style={{
             boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px",
           }}
@@ -55,18 +55,18 @@ export function BranchPicker({
               onBranchChange(null);
               setOpen(false);
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:translate-x-0.5"
+            className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-foreground hover:bg-surface-muted transition-all duration-200 cursor-pointer hover:translate-x-0.5"
           >
             <div className="w-4 flex justify-center">
               {selectedBranchId === null && (
-                <Check className="h-3.5 w-3.5 text-[#533afd]" strokeWidth={1.5} />
+                <Check className="h-3.5 w-3.5 text-brand" strokeWidth={1.5} />
               )}
             </div>
             All Branches
           </button>
 
           {branches.length > 0 && (
-            <div className="mx-3 my-1 border-t border-[#e5edf5]" />
+            <div className="mx-3 my-1 border-t border-border" />
           )}
 
           {branches.map((branch) => (
@@ -76,11 +76,11 @@ export function BranchPicker({
                 onBranchChange(branch.id);
                 setOpen(false);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-[#061b31] hover:bg-[#f6f9fc] transition-all duration-200 cursor-pointer hover:translate-x-0.5"
+              className="flex w-full items-center gap-2 px-3 py-2 text-[14px] text-foreground hover:bg-surface-muted transition-all duration-200 cursor-pointer hover:translate-x-0.5"
             >
               <div className="w-4 flex justify-center">
                 {selectedBranchId === branch.id && (
-                  <Check className="h-3.5 w-3.5 text-[#533afd]" strokeWidth={1.5} />
+                  <Check className="h-3.5 w-3.5 text-brand" strokeWidth={1.5} />
                 )}
               </div>
               {branch.name}

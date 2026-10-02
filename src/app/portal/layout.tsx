@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
-  return <main className="flex min-h-screen flex-1 flex-col bg-[#F6F9FC] text-[#0A2540]">{children}</main>;
+  return <main className="flex min-h-screen flex-1 flex-col bg-surface-muted text-foreground">{children}</main>;
 }

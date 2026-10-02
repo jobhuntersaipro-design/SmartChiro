@@ -47,12 +47,12 @@ export function GreetingBar({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <h1 className="text-[23px] font-light tracking-[-0.23px] text-[#061b31]" suppressHydrationWarning>
+        <h1 className="text-[23px] font-light tracking-[-0.23px] text-foreground" suppressHydrationWarning>
           {greeting},{" "}
           <span className="font-medium">{displayName}</span>
         </h1>
         {branchDisplayName && (
-          <p className="text-[14px] text-[#64748d] mt-0.5 truncate">{branchDisplayName}</p>
+          <p className="text-[14px] text-fg-secondary mt-0.5 truncate">{branchDisplayName}</p>
         )}
       </div>
 
@@ -60,7 +60,7 @@ export function GreetingBar({
         {isDoctor ? (
           branches.length > 0 && (
             <span
-              className="inline-flex max-w-full items-center truncate rounded-full bg-[#ededfc] px-3 py-1 text-[14px] font-medium text-[#533afd]"
+              className="inline-flex max-w-full items-center truncate rounded-full bg-brand-subtle px-3 py-1 text-[14px] font-medium text-brand"
               title={branches[0]?.name}
             >
               {branches[0]?.name}
@@ -77,7 +77,7 @@ export function GreetingBar({
           <button
             type="button"
             onClick={onNewAppointment}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[4px] bg-[#635BFF] px-3 text-[14px] font-medium text-white whitespace-nowrap transition-colors hover:bg-[#5851EB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#635BFF] focus-visible:ring-offset-2 cursor-pointer"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-control bg-primary px-3 text-[14px] font-medium text-white whitespace-nowrap transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             New appointment

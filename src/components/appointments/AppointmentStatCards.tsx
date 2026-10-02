@@ -44,7 +44,7 @@ export function AppointmentStatCards({
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <StatCard
-        icon={<Calendar className="h-4 w-4 text-[#635BFF]" strokeWidth={1.75} />}
+        icon={<Calendar className="h-4 w-4 text-brand" strokeWidth={1.75} />}
         label={dayLabel}
         primary={stats.todayCount === 0 ? "No appointments" : plural(stats.todayCount, "appointment")}
         secondary={
@@ -52,13 +52,13 @@ export function AppointmentStatCards({
         }
       />
       <StatCard
-        icon={<Users className="h-4 w-4 text-[#0570DE]" strokeWidth={1.75} />}
+        icon={<Users className="h-4 w-4 text-info" strokeWidth={1.75} />}
         label="This week"
         primary={plural(stats.weekCount, "appointment")}
         secondary={doctorsLabel}
       />
       <StatCard
-        icon={<CheckCircle2 className="h-4 w-4 text-[#15be53]" strokeWidth={1.75} />}
+        icon={<CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.75} />}
         label="Completion rate"
         primary={completionRate === null ? "—" : `${completionRate}%`}
         secondary={
@@ -68,7 +68,7 @@ export function AppointmentStatCards({
         }
       />
       <StatCard
-        icon={<BarChart3 className="h-4 w-4 text-[#F5A623]" strokeWidth={1.75} />}
+        icon={<BarChart3 className="h-4 w-4 text-warning" strokeWidth={1.75} />}
         label="Stale"
         primary={`${countStale(appointments)}`}
         secondary="Past + still SCHEDULED"
@@ -100,17 +100,17 @@ function StatCard({
 }) {
   return (
     <div
-      className="bg-white border border-[#e5edf5] rounded-[6px] p-4 transition-shadow hover:shadow-sm"
+      className="bg-white border border-border rounded-panel p-4 transition-shadow hover:shadow-sm"
       style={{ boxShadow: "var(--shadow-card)" }}
     >
-      <div className="flex items-center gap-2 text-[12px] uppercase tracking-wider text-[#697386] font-medium">
+      <div className="flex items-center gap-2 text-[12px] uppercase tracking-wider text-fg-muted font-medium">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="mt-2 text-[20px] font-semibold text-[#061b31] tabular-nums">
+      <div className="mt-2 text-[20px] font-semibold text-foreground tabular-nums">
         {primary}
       </div>
-      <div className="text-[12px] text-[#697386] mt-0.5">{secondary}</div>
+      <div className="text-[12px] text-fg-muted mt-0.5">{secondary}</div>
     </div>
   );
 }

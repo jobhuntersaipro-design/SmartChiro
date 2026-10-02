@@ -46,20 +46,20 @@ function EmptyPatientState({
 }) {
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white p-12 text-center"
+      className="rounded-panel border border-border bg-white p-12 text-center"
       style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
     >
-      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#ededfc]">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-subtle">
         {hasFilters ? (
-          <FilterX className="h-5 w-5 text-[#533afd]" strokeWidth={1.5} />
+          <FilterX className="h-5 w-5 text-brand" strokeWidth={1.5} />
         ) : (
-          <Users className="h-5 w-5 text-[#533afd]" strokeWidth={1.5} />
+          <Users className="h-5 w-5 text-brand" strokeWidth={1.5} />
         )}
       </div>
-      <h3 className="text-[16px] font-medium text-[#061b31] mb-1">
+      <h3 className="text-[16px] font-medium text-foreground mb-1">
         {hasFilters ? "No patients match these filters" : "No patients yet"}
       </h3>
-      <p className="text-[14px] text-[#64748d] mb-4 max-w-sm mx-auto">
+      <p className="text-[14px] text-fg-secondary mb-4 max-w-sm mx-auto">
         {hasFilters
           ? "Try adjusting your search or filters to find who you're looking for."
           : "Add your first patient to start tracking visits, X-rays, and appointments."}
@@ -87,7 +87,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-3 fade-in duration-300">
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-2.5 text-[14px] text-[#061b31]"
+      <div className="rounded-panel border border-border bg-white px-4 py-2.5 text-[14px] text-foreground"
         style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}>
         {message}
       </div>
@@ -262,15 +262,15 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
     setToast("Patient deleted");
   }
 
-  const selectClass = "h-8 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] appearance-none";
+  const selectClass = "h-8 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand appearance-none";
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[22px] font-light tracking-[-0.22px] text-[#061b31]">Patients</h1>
-          <p className="text-[14px] text-[#64748d] mt-0.5">Manage your clinic&apos;s patient records</p>
+          <h1 className="text-[22px] font-light tracking-[-0.22px] text-foreground">Patients</h1>
+          <p className="text-[14px] text-fg-secondary mt-0.5">Manage your clinic&apos;s patient records</p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
@@ -285,19 +285,19 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
       <BranchStatsCards scopeKey={scopeKey} />
 
       {/* Filter bar — sticky to top of viewport while scrolling */}
-      <div className="sticky top-13 z-20 -mx-2 px-2 py-2 bg-[#f6f9fc]/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-[#f6f9fc]/80">
+      <div className="sticky top-13 z-20 -mx-2 px-2 py-2 bg-surface-muted/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-surface-muted/80">
         <div className="flex items-center gap-3">
           <div className="flex-1 relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748d] pointer-events-none" strokeWidth={1.75} />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-secondary pointer-events-none" strokeWidth={1.75} />
             <input
               ref={searchRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search patients by name, IC, phone, email…"
-              className="w-full h-8 rounded-md border border-[#e5edf5] bg-white pl-8 pr-12 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] transition-colors"
+              className="w-full h-8 rounded-md border border-border bg-white pl-8 pr-12 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-colors"
             />
-            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-4.5 px-1 rounded border border-[#e5edf5] bg-[#f6f9fc] text-[10px] font-medium text-[#94a3b8] pointer-events-none">/</kbd>
+            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex items-center justify-center h-5 min-w-4.5 px-1 rounded border border-border bg-surface-muted text-[10px] font-medium text-fg-muted pointer-events-none">/</kbd>
           </div>
 
           {isAdmin && (
@@ -319,7 +319,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[13px] text-[#64748d] hover:text-[#061b31] hover:bg-white transition-colors"
+              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[13px] text-fg-secondary hover:text-foreground hover:bg-white transition-colors"
               title="Clear all filters"
             >
               <X className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -327,17 +327,17 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
             </button>
           )}
 
-          <div className="flex items-center rounded-md border border-[#e5edf5] bg-[#f6f9fc] overflow-hidden">
+          <div className="flex items-center rounded-md border border-border bg-surface-muted overflow-hidden">
             <button
               onClick={() => setViewMode("list")}
-              className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "list" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
+              className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "list" ? "bg-white text-brand" : "text-fg-secondary hover:text-foreground"}`}
               title="List view"
             >
               <List className="h-4 w-4" strokeWidth={1.5} />
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "grid" ? "bg-white text-[#533afd]" : "text-[#64748d] hover:text-[#061b31]"}`}
+              className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "grid" ? "bg-white text-brand" : "text-fg-secondary hover:text-foreground"}`}
               title="Grid view"
             >
               <LayoutGrid className="h-4 w-4" strokeWidth={1.5} />
@@ -348,10 +348,10 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
 
       {/* Results count */}
       {!loading && !error && (
-        <p className="text-[13px] text-[#64748d] mb-3">
+        <p className="text-[13px] text-fg-secondary mb-3">
           {filtered.length} patient{filtered.length !== 1 ? "s" : ""}{hasActiveFilters ? " matching filters" : ""}
           {sortKey === "upcomingAppointment" && (
-            <span className="text-[#94a3b8]"> · sorted by next appointment {sortDir === "asc" ? "↑" : "↓"}</span>
+            <span className="text-fg-muted"> · sorted by next appointment {sortDir === "asc" ? "↑" : "↓"}</span>
           )}
         </p>
       )}
@@ -361,10 +361,10 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
 
       {/* Error state */}
       {error && !loading && (
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white p-8 text-center"
+        <div className="rounded-panel border border-border bg-white p-8 text-center"
           style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
         >
-          <p className="text-[15px] text-[#DF1B41] mb-2">{error}</p>
+          <p className="text-[15px] text-danger mb-2">{error}</p>
           <Button variant="outline" onClick={fetchPatients} className="h-7 px-3 text-[13px] rounded-md">
             Retry
           </Button>

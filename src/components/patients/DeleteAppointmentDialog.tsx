@@ -70,21 +70,21 @@ export function DeleteAppointmentDialog({
         aria-modal="true"
         aria-labelledby="delete-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-115 rounded-2xl border border-[#e5edf5] bg-white p-6"
+        className="w-115 rounded-2xl border border-border bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
         <div className="flex items-start gap-3 mb-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FDE7EC] flex-shrink-0">
-            <AlertTriangle className="h-4 w-4 text-[#DF1B41]" strokeWidth={2} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-danger-subtle flex-shrink-0">
+            <AlertTriangle className="h-4 w-4 text-danger" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <h2 id="delete-appointment-title" className="text-[18px] font-medium text-[#0A2540]">
+            <h2 id="delete-appointment-title" className="text-[18px] font-medium text-foreground">
               Permanently delete appointment?
             </h2>
-            <p className="text-[14px] text-[#425466] mt-1">
+            <p className="text-[14px] text-fg-secondary mt-1">
               {patientName}&apos;s appointment{appointmentDateTime ? " on " : ""}
               {appointmentDateTime && (
-                <span className="font-medium text-[#061b31]">
+                <span className="font-medium text-foreground">
                   {formatAppointmentDateTime(appointmentDateTime)}
                 </span>
               )}
@@ -93,8 +93,8 @@ export function DeleteAppointmentDialog({
           </div>
         </div>
 
-        <div className="rounded-[6px] bg-[#FFF8E1] border border-[#F5A623]/30 p-3 mb-5">
-          <p className="text-[13px] text-[#9b6829] leading-relaxed">
+        <div className="rounded-panel bg-warning-subtle border border-warning/30 p-3 mb-5">
+          <p className="text-[13px] text-warning leading-relaxed">
             This removes the row and all associated reminders.{" "}
             <strong className="font-semibold">It cannot be undone</strong> and will not appear in
             any audit log. Use <strong className="font-semibold">Cancel</strong> instead if you
@@ -103,7 +103,7 @@ export function DeleteAppointmentDialog({
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+          <div className="mb-4 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger">
             {error}
           </div>
         )}
@@ -120,7 +120,7 @@ export function DeleteAppointmentDialog({
           <Button
             onClick={submit}
             disabled={submitting}
-            className="h-8 rounded-md text-[14px] bg-[#DF1B41] hover:bg-[#b3162f] gap-1.5"
+            className="h-8 rounded-md text-[14px] bg-danger hover:bg-danger/90 gap-1.5"
           >
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
             {submitting ? "Deleting…" : "Delete permanently"}

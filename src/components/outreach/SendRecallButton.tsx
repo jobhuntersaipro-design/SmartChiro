@@ -80,7 +80,7 @@ export function SendRecallButton({
         disabled={busy || disabled}
         title={title}
         aria-label={`Send recall to ${patientName}`}
-        className="inline-flex shrink-0 items-center gap-1 rounded-[4px] px-1 text-[12px] font-medium text-[#533afd] hover:bg-[#F0EEFF] disabled:cursor-not-allowed disabled:text-[#A3ACB9] disabled:hover:bg-transparent"
+        className="inline-flex shrink-0 items-center gap-1 rounded-control px-1 text-[12px] font-medium text-brand hover:bg-brand-subtle disabled:cursor-not-allowed disabled:text-fg-disabled disabled:hover:bg-transparent"
       >
         {busy ? <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} /> : <Send className="h-3 w-3" strokeWidth={2} />}
         Recall
@@ -93,7 +93,7 @@ export function SendRecallButton({
       onClick={onClick}
       disabled={busy || disabled}
       title={title}
-      className="inline-flex items-center gap-1.5 rounded-[4px] border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7] disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center gap-1.5 rounded-control border border-border bg-white px-3 py-1.5 text-[14px] text-foreground hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50"
     >
       {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} /> : <Send className="h-4 w-4" strokeWidth={1.5} />}
       Send recall

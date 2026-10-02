@@ -61,7 +61,7 @@ export function PatientHistoryTab({
         {subTabs.map((t, i) => (
           <span key={t.id} className="flex items-center gap-3">
             {i > 0 && (
-              <span className="text-[#cbd5e1]" aria-hidden>
+              <span className="text-fg-disabled" aria-hidden>
                 ·
               </span>
             )}
@@ -71,8 +71,8 @@ export function PatientHistoryTab({
               aria-current={activeSub === t.id ? "page" : undefined}
               className={`cursor-pointer transition-colors duration-200 ${
                 activeSub === t.id
-                  ? "text-[#533afd] font-medium"
-                  : "text-[#64748d] hover:text-[#061b31]"
+                  ? "text-brand font-medium"
+                  : "text-fg-secondary hover:text-foreground"
               }`}
             >
               {t.label}

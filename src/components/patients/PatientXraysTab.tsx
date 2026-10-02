@@ -116,14 +116,14 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
         <XrayFilterBar state={filters} onChange={handleFiltersChange} count={filtered.length} />
         <Button
           onClick={() => setShowUpload((v) => !v)}
-          className="ml-3 h-8 rounded-md bg-[#533afd] text-white text-[13px] font-medium hover:bg-[#4434d4] px-3"
+          className="ml-3 h-8 rounded-md bg-primary text-white text-[13px] font-medium hover:bg-primary/90 px-3"
         >
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload X-Ray
         </Button>
       </div>
 
       {showUpload && (
-        <div className="mb-4 rounded-[6px] border border-[#e5edf5] bg-white p-4">
+        <div className="mb-4 rounded-panel border border-border bg-white p-4">
           {/* Stays open after upload so "Annotate now" is one click away. */}
           <XrayUpload patientId={patientId} onUploadComplete={() => onRefresh()} />
         </div>
@@ -131,7 +131,7 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
 
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-[14px] text-[#64748d]">No X-rays match these filters.</p>
+          <p className="text-[14px] text-fg-secondary">No X-rays match these filters.</p>
         </div>
       )}
 

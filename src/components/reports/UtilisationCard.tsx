@@ -19,7 +19,7 @@ const COLUMNS: ReportColumn<UtilisationRow>[] = [
   { header: "Booked", csvHeader: "Booked (h)", align: "right", render: (r) => <span className="whitespace-nowrap">{formatHours(r.bookedMinutes)}</span>, csv: (r) => hoursNumber(r.bookedMinutes) },
   { header: "Available", csvHeader: "Available (h)", align: "right", render: (r) => <span className="whitespace-nowrap">{formatHours(r.availableMinutes)}</span>, csv: (r) => hoursNumber(r.availableMinutes) },
   { header: "Utilisation", csvHeader: "Utilisation (%)", align: "right", render: (r) => formatRate(r.rate), csv: (r) => csvPercent(r.rate) },
-  { header: "Hours from", render: (r) => <span className="whitespace-nowrap text-[#64748d]">{r.doctorId === "total" ? "" : SOURCE_LABEL[r.hoursSource]}</span>, csv: (r) => (r.doctorId === "total" ? "" : SOURCE_LABEL[r.hoursSource]) },
+  { header: "Hours from", render: (r) => <span className="whitespace-nowrap text-fg-secondary">{r.doctorId === "total" ? "" : SOURCE_LABEL[r.hoursSource]}</span>, csv: (r) => (r.doctorId === "total" ? "" : SOURCE_LABEL[r.hoursSource]) },
 ];
 
 export function UtilisationCard({ query }: { query: ReportQuery }) {

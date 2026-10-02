@@ -112,11 +112,11 @@ function DetailRow({
   const display = value || "-";
   const shouldLink = !!href && !!value;
   const valueClasses = `text-[14px] mt-0.5 ${
-    danger ? "text-[#DF1B41] font-medium" : "text-[#061b31]"
+    danger ? "text-danger font-medium" : "text-foreground"
   } ${mono ? "font-mono text-[13px]" : ""}`;
 
   const inner = shouldLink ? (
-    <ExternalLink href={href!} className="text-[#533afd] hover:underline break-words">
+    <ExternalLink href={href!} className="text-brand hover:underline break-words">
       {display}
     </ExternalLink>
   ) : (
@@ -125,7 +125,7 @@ function DetailRow({
 
   return (
     <div>
-      <p className="text-[13px] text-[#64748d]">{label}</p>
+      <p className="text-[13px] text-fg-secondary">{label}</p>
       <p className={valueClasses}>
         {icon ? (
           <span className="inline-flex items-center gap-1">
@@ -144,8 +144,8 @@ function DetailRow({
 function PhoneRow({ label, phone, name }: { label: string; phone: string | null; name: string }) {
   return (
     <div>
-      <p className="text-[13px] text-[#64748d]">{label}</p>
-      <div className="mt-0.5 text-[14px] text-[#061b31]">
+      <p className="text-[13px] text-fg-secondary">{label}</p>
+      <div className="mt-0.5 text-[14px] text-foreground">
         {phone ? <PhoneLinks phone={phone} name={name} /> : "-"}
       </div>
     </div>
@@ -160,8 +160,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4 mb-4">
-      <h4 className="text-[15px] font-medium text-[#061b31] mb-3">{title}</h4>
+    <div className="rounded-panel border border-border bg-white px-5 py-4 mb-4">
+      <h4 className="text-[15px] font-medium text-foreground mb-3">{title}</h4>
       {children}
     </div>
   );
@@ -230,7 +230,7 @@ export function PatientProfileTab({ patient, showClinical = true, onPatientChang
             danger={hasAllergies}
             icon={
               hasAllergies ? (
-                <AlertTriangle className="w-3.5 h-3.5 text-[#DF1B41] inline-flex shrink-0" />
+                <AlertTriangle className="w-3.5 h-3.5 text-danger inline-flex shrink-0" />
               ) : undefined
             }
           />

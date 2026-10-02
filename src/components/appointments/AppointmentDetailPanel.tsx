@@ -164,35 +164,35 @@ export function AppointmentDetailPanel({
         aria-modal="true"
         aria-labelledby="appointment-detail-title"
         tabIndex={-1}
-        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-105 bg-white border-l border-[#e5edf5] shadow-lg overflow-y-auto animate-appointment-panel-in focus:outline-none"
+        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-105 bg-white border-l border-border shadow-lg overflow-y-auto animate-appointment-panel-in focus:outline-none"
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-white border-b border-[#e5edf5]">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-white border-b border-border">
           <h2
             id="appointment-detail-title"
-            className="text-[15px] font-semibold text-[#061b31]"
+            className="text-[15px] font-semibold text-foreground"
           >
             Appointment details
           </h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-[#697386] hover:bg-[#f6f9fc] hover:text-[#061b31] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF]"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-fg-muted hover:bg-surface-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         </div>
 
         {/* Patient header */}
-        <div className="px-5 py-4 border-b border-[#e5edf5]">
+        <div className="px-5 py-4 border-b border-border">
           <div className="flex items-start gap-3">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#F0EEFF] text-[20px] font-semibold text-[#635BFF]">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-[20px] font-semibold text-brand">
               {appointment.patient.firstName.charAt(0)}
               {appointment.patient.lastName.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-[17px] font-semibold text-[#061b31] truncate">
+                <h3 className="text-[17px] font-semibold text-foreground truncate">
                   {appointment.patient.firstName} {appointment.patient.lastName}
                 </h3>
                 <span
@@ -211,12 +211,12 @@ export function AppointmentDetailPanel({
                 {appointment.source === "ONLINE" && <OnlineBookingBadge />}
               </div>
               {patientDetail?.dateOfBirth && (
-                <p className="text-[12px] text-[#697386] mt-0.5">
+                <p className="text-[12px] text-fg-muted mt-0.5">
                   {formatDobWithAge(patientDetail.dateOfBirth)}
                 </p>
               )}
               {patientDetail?.icNumber && (
-                <p className="text-[12px] text-[#697386] tabular-nums">
+                <p className="text-[12px] text-fg-muted tabular-nums">
                   IC: {patientDetail.icNumber}
                 </p>
               )}
@@ -224,7 +224,7 @@ export function AppointmentDetailPanel({
                 href={`/dashboard/patients/${appointment.patient.id}/details`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 mt-2 text-[12px] font-medium text-[#635BFF] hover:underline"
+                className="inline-flex items-center gap-1 mt-2 text-[12px] font-medium text-brand hover:underline"
               >
                 View patient profile
                 <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
@@ -239,9 +239,9 @@ export function AppointmentDetailPanel({
                 href={buildWhatsAppUrl(patientDetail.phone) ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[13px] text-[#425466] hover:text-[#635BFF] transition-colors"
+                className="inline-flex items-center gap-2 text-[13px] text-fg-secondary hover:text-brand transition-colors"
               >
-                <Phone className="h-3.5 w-3.5 text-[#697386]" strokeWidth={1.75} />
+                <Phone className="h-3.5 w-3.5 text-fg-muted" strokeWidth={1.75} />
                 <span className="tabular-nums">{patientDetail.phone}</span>
               </a>
             )}
@@ -250,9 +250,9 @@ export function AppointmentDetailPanel({
                 href={buildMailtoUrl(patientDetail.email) ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[13px] text-[#425466] hover:text-[#635BFF] transition-colors break-all"
+                className="inline-flex items-center gap-2 text-[13px] text-fg-secondary hover:text-brand transition-colors break-all"
               >
-                <Mail className="h-3.5 w-3.5 text-[#697386]" strokeWidth={1.75} />
+                <Mail className="h-3.5 w-3.5 text-fg-muted" strokeWidth={1.75} />
                 {patientDetail.email}
               </a>
             )}
@@ -260,44 +260,44 @@ export function AppointmentDetailPanel({
         </div>
 
         {/* Appointment info */}
-        <div className="px-5 py-4 border-b border-[#e5edf5]">
-          <h4 className="text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-3">
+        <div className="px-5 py-4 border-b border-border">
+          <h4 className="text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-3">
             Appointment info
           </h4>
           <dl className="grid grid-cols-[100px_1fr] gap-y-2 text-[13px]">
-            <dt className="text-[#697386]">Date & time</dt>
-            <dd className="text-[#061b31] tabular-nums">
+            <dt className="text-fg-muted">Date & time</dt>
+            <dd className="text-foreground tabular-nums">
               {clinicDateLabel(dt, "day")} · {clinicTimeLabel(dt)}
             </dd>
-            <dt className="text-[#697386]">Duration</dt>
-            <dd className="text-[#061b31] tabular-nums">
+            <dt className="text-fg-muted">Duration</dt>
+            <dd className="text-foreground tabular-nums">
               {appointment.duration} minutes
             </dd>
             {appointment.room && (
               <>
-                <dt className="text-[#697386]">Room</dt>
-                <dd className="text-[#061b31]">{appointment.room}</dd>
+                <dt className="text-fg-muted">Room</dt>
+                <dd className="text-foreground">{appointment.room}</dd>
               </>
             )}
-            <dt className="text-[#697386]">Doctor</dt>
+            <dt className="text-fg-muted">Doctor</dt>
             <dd>
               <Link
                 href={`/dashboard/doctors/${appointment.doctor.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#061b31] hover:text-[#635BFF] transition-colors"
+                className="text-foreground hover:text-brand transition-colors"
               >
                 {appointment.doctor.name ?? "Unassigned"}
                 <ExternalLink className="inline-block h-3 w-3 ml-1 opacity-50" strokeWidth={1.75} />
               </Link>
             </dd>
-            <dt className="text-[#697386]">Branch</dt>
+            <dt className="text-fg-muted">Branch</dt>
             <dd>
               <Link
                 href={`/dashboard/branches/${appointment.branch.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#061b31] hover:text-[#635BFF] transition-colors"
+                className="text-foreground hover:text-brand transition-colors"
               >
                 {appointment.branch.name}
                 <ExternalLink className="inline-block h-3 w-3 ml-1 opacity-50" strokeWidth={1.75} />
@@ -305,8 +305,8 @@ export function AppointmentDetailPanel({
             </dd>
             {appointment.seriesIndex != null && (
               <>
-                <dt className="text-[#697386]">Series</dt>
-                <dd className="text-[#061b31] tabular-nums">Visit {appointment.seriesIndex} of a recurring series</dd>
+                <dt className="text-fg-muted">Series</dt>
+                <dd className="text-foreground tabular-nums">Visit {appointment.seriesIndex} of a recurring series</dd>
               </>
             )}
           </dl>
@@ -324,27 +324,27 @@ export function AppointmentDetailPanel({
 
         {/* Notes */}
         {appointment.notes && (
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h4 className="text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-2">
+          <div className="px-5 py-4 border-b border-border">
+            <h4 className="text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-2">
               Notes
             </h4>
-            <p className="text-[13px] text-[#425466] whitespace-pre-wrap wrap-break-word">
+            <p className="text-[13px] text-fg-secondary whitespace-pre-wrap wrap-break-word">
               {appointment.notes}
             </p>
           </div>
         )}
 
         {/* Reminders */}
-        <div className="px-5 py-4 border-b border-[#e5edf5]">
-          <h4 className="text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-2">
+        <div className="px-5 py-4 border-b border-border">
+          <h4 className="text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-2">
             Reminders
           </h4>
           <ReminderStatusBadge appointmentId={appointment.id} />
         </div>
 
         {/* History */}
-        <div className="px-5 py-4 border-b border-[#e5edf5]">
-          <h4 className="text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-2">
+        <div className="px-5 py-4 border-b border-border">
+          <h4 className="text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-2">
             History
           </h4>
           <AppointmentAuditLog appointmentId={appointment.id} />
@@ -357,7 +357,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onEdit}
-              className="h-8 rounded-md border-[#e5edf5] text-[13px] gap-1.5"
+              className="h-8 rounded-md border-border text-[13px] gap-1.5"
             >
               <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} /> Edit
             </Button>
@@ -375,7 +375,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onCancel}
-              className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#9b6829] gap-1.5"
+              className="h-8 rounded-md border-border text-[13px] text-warning gap-1.5"
             >
               <XCircle className="h-3.5 w-3.5" strokeWidth={1.75} /> Cancel
             </Button>
@@ -385,7 +385,7 @@ export function AppointmentDetailPanel({
               variant="outline"
               size="sm"
               onClick={onDelete}
-              className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#DF1B41] gap-1.5"
+              className="h-8 rounded-md border-border text-[13px] text-danger gap-1.5"
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Delete
             </Button>
@@ -396,7 +396,7 @@ export function AppointmentDetailPanel({
               href={`/dashboard/patients/${appointment.patient.id}/details?tab=history&visit=${linkedVisit.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 h-8 rounded-md border border-[#e5edf5] px-3 text-[13px] text-[#635BFF] hover:bg-[#f6f9fc] transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 rounded-md border border-border px-3 text-[13px] text-brand hover:bg-surface-muted transition-colors"
             >
               <ClipboardList className="h-3.5 w-3.5" strokeWidth={1.75} /> View visit
             </Link>
@@ -409,7 +409,7 @@ export function AppointmentDetailPanel({
                 size="sm"
                 onClick={handleCreateVisit}
                 disabled={creatingVisit}
-                className="h-8 rounded-md border-[#e5edf5] text-[13px] text-[#635BFF] gap-1.5"
+                className="h-8 rounded-md border-border text-[13px] text-brand gap-1.5"
               >
                 {creatingVisit ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} />

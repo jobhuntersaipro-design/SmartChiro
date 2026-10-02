@@ -70,14 +70,14 @@ function BranchSwitcher({ user }: { user: SidebarUser }) {
   const active = user.branches.find((b) => b.id === user.activeBranchId) ?? user.branches[0];
   if (!active) {
     return (
-      <span className="text-[12px] font-medium tracking-[0.04em] text-[#64748d] uppercase">Health Center</span>
+      <span className="text-[12px] font-medium tracking-[0.04em] text-fg-secondary uppercase">Health Center</span>
     );
   }
   const allOn = !!user.allBranches;
   const current = allOn ? "All branches" : active.name;
   const label = (
     <span
-      className="block truncate text-[13px] text-[#64748d]"
+      className="block truncate text-[13px] text-fg-secondary"
       title={allOn ? `All branches (${user.branches.length})` : `${active.name} · ${ROLE_LABEL[active.role]}`}
     >
       {current}
@@ -111,20 +111,20 @@ function BranchSwitcher({ user }: { user: SidebarUser }) {
       <DropdownMenuTrigger
         disabled={switching}
         aria-label={`Branch: ${current}. Switch branch`}
-        className="flex w-full min-w-0 items-center gap-1 rounded-[4px] text-left hover:text-[#061b31] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
+        className="flex w-full min-w-0 items-center gap-1 rounded-control text-left hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
       >
         <span className="min-w-0 flex-1">{label}</span>
-        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[#64748d]" strokeWidth={1.5} />
+        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-secondary" strokeWidth={1.5} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
         {user.canUseAllBranches && (
           <>
             <DropdownMenuItem onClick={() => void switchTo("all")} className="flex items-center gap-2">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] text-[#061b31]">All branches</span>
-                <span className="block text-[12px] text-[#64748d]">{user.branches.length} branches</span>
+                <span className="block truncate text-[14px] text-foreground">All branches</span>
+                <span className="block text-[12px] text-fg-secondary">{user.branches.length} branches</span>
               </span>
-              {allOn && <Check className="h-4 w-4 text-[#533afd]" strokeWidth={2} />}
+              {allOn && <Check className="h-4 w-4 text-brand" strokeWidth={2} />}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>
@@ -132,10 +132,10 @@ function BranchSwitcher({ user }: { user: SidebarUser }) {
         {user.branches.map((b) => (
           <DropdownMenuItem key={b.id} onClick={() => void switchTo(b.id)} className="flex items-center gap-2">
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] text-[#061b31]">{b.name}</span>
-              <span className="block text-[12px] text-[#64748d]">{ROLE_LABEL[b.role]}</span>
+              <span className="block truncate text-[14px] text-foreground">{b.name}</span>
+              <span className="block text-[12px] text-fg-secondary">{ROLE_LABEL[b.role]}</span>
             </span>
-            {!allOn && b.id === active.id && <Check className="h-4 w-4 text-[#533afd]" strokeWidth={2} />}
+            {!allOn && b.id === active.id && <Check className="h-4 w-4 text-brand" strokeWidth={2} />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -183,7 +183,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         </div>
         {!collapsed && (
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[15px] font-semibold leading-tight text-[#061b31]">
+            <span className="text-[15px] font-semibold leading-tight text-foreground">
               SmartChiro
             </span>
             <BranchSwitcher user={user} />
@@ -213,8 +213,8 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
                 className={cn(
                   "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[15px] transition-all duration-200",
                   isActive
-                    ? "bg-[#ededfc] text-[#533afd] font-normal"
-                    : "text-[#273951] hover:bg-[#f6f9fc] hover:text-[#061b31] font-normal hover:translate-x-0.5"
+                    ? "bg-brand-subtle text-brand font-normal"
+                    : "text-foreground hover:bg-surface-muted hover:text-foreground font-normal hover:translate-x-0.5"
                 )}
               >
                 <item.icon
@@ -251,13 +251,13 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-all duration-200 hover:bg-[#f6f9fc] outline-none",
+              "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-all duration-200 hover:bg-surface-muted outline-none",
               collapsed && "justify-center px-0"
             )}
           >
             <Avatar size="sm">
               {user.image && <AvatarImage src={user.image} alt={user.name ?? "User"} />}
-              <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[11px] font-medium">
+              <AvatarFallback className="bg-brand-subtle text-brand text-[11px] font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -265,43 +265,43 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
               <>
                 <div className="flex-1 text-left min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[14px] font-medium text-[#061b31] truncate" title={user.name ?? user.email}>
+                    <span className="text-[14px] font-medium text-foreground truncate" title={user.name ?? user.email}>
                       {user.name ?? user.email}
                     </span>
                     {isOwner && (
-                      <span className="shrink-0 rounded-full bg-[#ededfc] px-1.5 py-0.25 text-[10px] font-medium text-[#533afd]">
+                      <span className="shrink-0 rounded-full bg-brand-subtle px-1.5 py-0.25 text-[10px] font-medium text-brand">
                         Owner
                       </span>
                     )}
                   </div>
                 </div>
-                <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-[#64748d]" strokeWidth={1.5} />
+                <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-fg-secondary" strokeWidth={1.5} />
               </>
             )}
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="top"
             align="start"
-            className="w-50 rounded-[6px] border border-[#e5edf5] shadow-md"
+            className="w-50 rounded-panel border border-border shadow-md"
           >
             <div className="px-3 py-2">
-              <p className="text-[14px] font-medium text-[#061b31] truncate">
+              <p className="text-[14px] font-medium text-foreground truncate">
                 {user.name ?? "User"}
               </p>
-              <p className="text-[12px] text-[#64748d] truncate">
+              <p className="text-[12px] text-fg-secondary truncate">
                 {user.email}
               </p>
             </div>
             <DropdownMenuSeparator />
             <Link href={`/dashboard/settings/${user.id}`}>
-              <DropdownMenuItem className="gap-2 text-[14px] text-[#273951] cursor-pointer">
+              <DropdownMenuItem className="gap-2 text-[14px] text-foreground cursor-pointer">
                 <Settings className="h-4 w-4" strokeWidth={1.5} />
                 Settings
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="gap-2 text-[14px] text-[#273951] cursor-pointer"
+              className="gap-2 text-[14px] text-foreground cursor-pointer"
               onClick={() => signOut({ callbackUrl: "/login" })}
             >
               <LogOut className="h-4 w-4" strokeWidth={1.5} />
@@ -316,7 +316,7 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
         <button
           onClick={onToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex w-full items-center justify-center rounded-md p-1.5 text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 active:scale-95"
+          className="flex w-full items-center justify-center rounded-md p-1.5 text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 active:scale-95"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />

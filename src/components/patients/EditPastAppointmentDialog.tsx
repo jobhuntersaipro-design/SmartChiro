@@ -91,23 +91,23 @@ export function EditPastAppointmentDialog({
       }}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-[#e5edf5] overflow-hidden"
+        className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-border overflow-hidden"
         style={{
           boxShadow:
             "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.08)",
         }}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5edf5]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h2
             id="edit-past-appt-title"
-            className="text-[16px] font-semibold text-[#061b31]"
+            className="text-[16px] font-semibold text-foreground"
           >
             Edit appointment
           </h2>
           <button
             type="button"
             onClick={() => !submitting && onOpenChange(false)}
-            className="text-[#94a3b8] hover:text-[#061b31] cursor-pointer transition-colors duration-200"
+            className="text-fg-muted hover:text-foreground cursor-pointer transition-colors duration-200"
             aria-label="Close"
           >
             <X className="h-4 w-4" strokeWidth={2} />
@@ -116,13 +116,13 @@ export function EditPastAppointmentDialog({
 
         <form onSubmit={handleSave} className="px-5 py-4 space-y-4">
           {error && (
-            <div className="rounded-md border border-[#fcd0db] bg-[#fef2f5] px-3 py-2 text-[13px] text-[#ea2261]">
+            <div className="rounded-md border border-danger/25 bg-danger-subtle px-3 py-2 text-[13px] text-danger">
               {error}
             </div>
           )}
 
           <fieldset>
-            <legend className="block text-[13px] font-medium text-[#273951] mb-2">
+            <legend className="block text-[13px] font-medium text-foreground mb-2">
               Status
             </legend>
             <div className="grid grid-cols-1 gap-1.5">
@@ -131,8 +131,8 @@ export function EditPastAppointmentDialog({
                   key={opt.value}
                   className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors duration-200 ${
                     status === opt.value
-                      ? "border-[#533afd] bg-[#f5f3ff]"
-                      : "border-[#e5edf5] hover:bg-[#fafbfd]"
+                      ? "border-brand bg-brand-subtle"
+                      : "border-border hover:bg-surface-subtle"
                   }`}
                 >
                   <input
@@ -141,9 +141,9 @@ export function EditPastAppointmentDialog({
                     value={opt.value}
                     checked={status === opt.value}
                     onChange={() => setStatus(opt.value)}
-                    className="cursor-pointer accent-[#533afd]"
+                    className="cursor-pointer accent-brand"
                   />
-                  <span className="text-[14px] text-[#273951]">
+                  <span className="text-[14px] text-foreground">
                     {opt.label}
                   </span>
                 </label>
@@ -154,10 +154,10 @@ export function EditPastAppointmentDialog({
           <div>
             <label
               htmlFor="appt-notes"
-              className="flex items-center justify-between text-[13px] font-medium text-[#273951] mb-1"
+              className="flex items-center justify-between text-[13px] font-medium text-foreground mb-1"
             >
               <span>Notes</span>
-              <span className="text-[12px] text-[#94a3b8] tabular-nums">
+              <span className="text-[12px] text-fg-muted tabular-nums">
                 {notes.length}/{NOTES_MAX}
               </span>
             </label>
@@ -167,25 +167,25 @@ export function EditPastAppointmentDialog({
               onChange={(e) => setNotes(e.target.value.slice(0, NOTES_MAX))}
               rows={4}
               placeholder="Add notes about this appointment…"
-              className="w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors duration-200 resize-none"
+              className="w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors duration-200 resize-none"
             />
           </div>
         </form>
 
-        <div className="flex justify-end gap-2 px-5 py-3 border-t border-[#e5edf5] bg-[#fafbfd]">
+        <div className="flex justify-end gap-2 px-5 py-3 border-t border-border bg-surface-subtle">
           <Button
             variant="outline"
             type="button"
             disabled={submitting}
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-md text-[14px] border-[#e5edf5] cursor-pointer"
+            className="h-9 rounded-md text-[14px] border-border cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={submitting || !dirty}
-            className="h-9 rounded-md text-[14px] bg-[#533afd] hover:bg-[#3f2bd1] text-white cursor-pointer disabled:opacity-60"
+            className="h-9 rounded-md text-[14px] bg-primary hover:bg-primary/90 text-white cursor-pointer disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />

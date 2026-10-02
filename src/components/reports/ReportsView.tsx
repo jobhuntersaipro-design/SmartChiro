@@ -45,8 +45,8 @@ export function ReportsView({ branchId, scopeLabel, branchCount }: ReportsViewPr
       <header className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h1 className="text-[23px] font-light text-[#061b31]">Reports</h1>
-            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-[#64748d]">
+            <h1 className="text-[23px] font-light text-foreground">Reports</h1>
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-fg-secondary">
               <span className="inline-flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                 {scopeLabel}

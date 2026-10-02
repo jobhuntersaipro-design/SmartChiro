@@ -36,26 +36,26 @@ export function DeleteXrayDialog({ open, onOpenChange, xrayIds, xrayTitles, onCo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[16px] font-medium text-[#061b31]">
+          <DialogTitle className="text-[16px] font-medium text-foreground">
             Archive {xrayIds.length === 1 ? 'this X-ray' : `${xrayIds.length} X-rays`}?
           </DialogTitle>
         </DialogHeader>
-        <p className="text-[14px] text-[#425466]">
+        <p className="text-[14px] text-fg-secondary">
           Annotations will be preserved but the X-ray will be hidden from the patient&apos;s gallery.
           You can restore archived X-rays later from the &quot;Show archived&quot; toggle.
         </p>
         {xrayTitles.length > 0 && (
-          <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-[#e5edf5] bg-[#f6f9fc] p-3 text-[13px] text-[#425466]">
+          <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border bg-surface-muted p-3 text-[13px] text-fg-secondary">
             {xrayTitles.map((t, i) => <li key={i}>• {t || 'Untitled'}</li>)}
           </ul>
         )}
-        {error && <p className="mt-2 text-[12px] text-[#DF1B41]">{error}</p>}
+        {error && <p className="mt-2 text-[12px] text-danger">{error}</p>}
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
           <Button
             onClick={handleConfirm}
             disabled={busy}
-            className="bg-[#DF1B41] hover:bg-[#c4153a] text-white rounded-md"
+            className="bg-danger hover:bg-danger/90 text-white rounded-md"
           >
             {busy ? 'Archiving…' : 'Archive'}
           </Button>

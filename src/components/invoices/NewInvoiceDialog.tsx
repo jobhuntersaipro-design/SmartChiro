@@ -149,10 +149,10 @@ function NewInvoiceForm({
   })();
 
   return (
-    <DialogContent className="gap-0 rounded-[8px] p-0 sm:max-w-2xl">
-      <DialogHeader className="border-b border-[#e5edf5] px-5 py-4">
-        <DialogTitle className="text-[18px] font-medium text-[#061b31]">New invoice</DialogTitle>
-        <DialogDescription className="text-[14px] text-[#64748d]">
+    <DialogContent className="gap-0 rounded-surface p-0 sm:max-w-2xl">
+      <DialogHeader className="border-b border-border px-5 py-4">
+        <DialogTitle className="text-[18px] font-medium text-foreground">New invoice</DialogTitle>
+        <DialogDescription className="text-[14px] text-fg-secondary">
           For items not tied to an appointment — products, reports, packages, adjustments.
         </DialogDescription>
       </DialogHeader>
@@ -198,7 +198,7 @@ function NewInvoiceForm({
           <div>
             <span className={FIELD_LABEL}>Patient</span>
             {fixedPatient ? (
-              <p className="flex h-9 items-center text-[15px] text-[#061b31]">
+              <p className="flex h-9 items-center text-[15px] text-foreground">
                 {fixedPatient.firstName} {fixedPatient.lastName}
               </p>
             ) : (
@@ -213,7 +213,7 @@ function NewInvoiceForm({
             )}
             {patientError && <p className={FIELD_ERROR}>{patientError}</p>}
             {patient && patient.isMalaysian !== undefined && (
-              <p className="mt-1 text-[13px] text-[#64748d]">
+              <p className="mt-1 text-[13px] text-fg-secondary">
                 {patient.isMalaysian
                   ? `Malaysian${patient.nationality ? "" : " (MyKad)"} — no SST`
                   : `${nationalityLabel(patient.nationality) ?? "Nationality not recorded"} — SST applies when the branch charges it`}
@@ -238,18 +238,18 @@ function NewInvoiceForm({
           )}
         </div>
 
-        <div className="ml-auto max-w-sm space-y-1.5 rounded-[6px] bg-[#f6f9fc] px-4 py-3" aria-live="polite">
-          <div className="flex justify-between gap-4 text-[15px] text-[#425466]">
+        <div className="ml-auto max-w-sm space-y-1.5 rounded-panel bg-surface-muted px-4 py-3" aria-live="polite">
+          <div className="flex justify-between gap-4 text-[15px] text-fg-secondary">
             <span>Subtotal</span>
             <span className="whitespace-nowrap tabular-nums">{formatMYR(totals.subtotal)}</span>
           </div>
           {sstRow && (
-            <div className="flex justify-between gap-4 text-[14px] text-[#425466]">
+            <div className="flex justify-between gap-4 text-[14px] text-fg-secondary">
               <span>{sstRow.label}</span>
               <span className="whitespace-nowrap tabular-nums">{sstRow.value}</span>
             </div>
           )}
-          <div className="flex justify-between gap-4 border-t border-[#e5edf5] pt-1.5 text-[16px] font-medium text-[#061b31]">
+          <div className="flex justify-between gap-4 border-t border-border pt-1.5 text-[16px] font-medium text-foreground">
             <span>Total{!taxKnown && sstRow?.value === "" ? " (before SST)" : ""}</span>
             <span className="whitespace-nowrap tabular-nums">{formatMYR(totals.total)}</span>
           </div>
@@ -258,7 +258,7 @@ function NewInvoiceForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="inv-due" className={FIELD_LABEL}>
-              Due date <span className="font-normal text-[#64748d]">(optional)</span>
+              Due date <span className="font-normal text-fg-secondary">(optional)</span>
             </label>
             <DateInput
               id="inv-due"
@@ -276,12 +276,12 @@ function NewInvoiceForm({
 
         <div>
           <label htmlFor="inv-notes" className={FIELD_LABEL}>
-            Notes <span className="font-normal text-[#64748d]">(printed on the invoice)</span>
+            Notes <span className="font-normal text-fg-secondary">(printed on the invoice)</span>
           </label>
           <textarea id="inv-notes" rows={2} maxLength={2000} value={notes} onChange={(e) => setNotes(e.target.value)} className={FIELD_TEXTAREA} />
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-[#e5edf5] pt-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
           <button type="button" onClick={requestClose} className={BTN_SECONDARY} disabled={!!saving}>
             Cancel
           </button>

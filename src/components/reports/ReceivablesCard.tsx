@@ -17,7 +17,7 @@ function columns(multiBranch: boolean): ReportColumn<OverdueInvoiceRow>[] {
     {
       header: "Patient",
       render: (r) => (
-        <Link href={`/dashboard/patients/${r.patientId}/details?tab=history&sub=appointments`} className="whitespace-nowrap text-[#273951] hover:text-[#533afd] hover:underline">
+        <Link href={`/dashboard/patients/${r.patientId}/details?tab=history&sub=appointments`} className="whitespace-nowrap text-foreground hover:text-brand hover:underline">
           {r.patientName}
         </Link>
       ),
@@ -51,7 +51,7 @@ export function ReceivablesCard({ query, multiBranch }: { query: ReportQuery; mu
             <StatTile label="Overdue" value={formatMYR(data.overdue.balance)} hint={`${plural(data.overdue.count, "invoice")} past due`} />
           </div>
           <div className="space-y-2">
-            <h3 className="text-[14px] font-medium text-[#425466]">
+            <h3 className="text-[14px] font-medium text-fg-secondary">
               Oldest overdue{data.overdue.count > data.oldestOverdue.length ? ` (${data.oldestOverdue.length} of ${data.overdue.count})` : ""}
             </h3>
             <ReportTable

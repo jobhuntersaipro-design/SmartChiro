@@ -32,7 +32,7 @@ export function PatientBalanceChip({ patientId, branchId, refreshKey = 0, onClic
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-[#fef3e2] px-2 py-0.5 text-[13px] font-medium text-[#9b6829] transition-colors hover:bg-[#fde7c4]"
+      className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-warning-subtle px-2 py-0.5 text-[13px] font-medium text-warning transition-colors hover:bg-warning-subtle"
     >
       Balance due {formatMYR(outstanding)}
     </button>

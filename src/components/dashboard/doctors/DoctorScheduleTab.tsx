@@ -40,8 +40,8 @@ export function DoctorScheduleTab({ doctor }: DoctorScheduleTabProps) {
   if (!schedule) {
     return (
       <div className="py-12 text-center">
-        <Clock className="h-10 w-10 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
-        <p className="text-[15px] text-[#64748d]">No schedule has been set for this doctor.</p>
+        <Clock className="h-10 w-10 mx-auto text-border mb-3" strokeWidth={1} />
+        <p className="text-[15px] text-fg-secondary">No schedule has been set for this doctor.</p>
       </div>
     );
   }
@@ -59,18 +59,18 @@ export function DoctorScheduleTab({ doctor }: DoctorScheduleTabProps) {
   return (
     <div className="space-y-6">
       {/* Schedule grid */}
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#e5edf5]">
+      <div className="rounded-panel border border-border bg-white overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
-            <h2 className="text-[16px] font-medium text-[#061b31]">Weekly Schedule</h2>
-            <span className="text-[13px] text-[#64748d] ml-auto">
+            <Clock className="h-4 w-4 text-brand" strokeWidth={1.5} />
+            <h2 className="text-[16px] font-medium text-foreground">Weekly Schedule</h2>
+            <span className="text-[13px] text-fg-secondary ml-auto">
               {workingDays} days &middot; {Math.round(totalHours)}h/week
             </span>
           </div>
         </div>
 
-        <div className="divide-y divide-[#e5edf5]">
+        <div className="divide-y divide-border">
           {dayKeys.map((key) => {
             const day = schedule[key];
             const isToday = key === todayKey;
@@ -80,21 +80,21 @@ export function DoctorScheduleTab({ doctor }: DoctorScheduleTabProps) {
               <div
                 key={key}
                 className={`flex items-center px-5 py-3.5 transition-colors ${
-                  isToday ? "bg-[#ededfc]" : "hover:bg-[#F6F9FC]"
+                  isToday ? "bg-brand-subtle" : "hover:bg-surface-muted"
                 }`}
               >
                 <div className="w-32">
                   <span
                     className={`text-[14px] ${
                       isToday
-                        ? "text-[#533afd] font-medium"
-                        : "text-[#061b31] font-medium"
+                        ? "text-brand font-medium"
+                        : "text-foreground font-medium"
                     }`}
                   >
                     {dayLabels[key]}
                   </span>
                   {isToday && (
-                    <span className="ml-2 text-[11px] text-[#533afd] bg-white rounded-full px-2 py-0.5 border border-[#533afd]/20">
+                    <span className="ml-2 text-[11px] text-brand bg-white rounded-full px-2 py-0.5 border border-brand/20">
                       Today
                     </span>
                   )}
@@ -104,18 +104,18 @@ export function DoctorScheduleTab({ doctor }: DoctorScheduleTabProps) {
                   {isWorking ? (
                     <div className="flex items-center gap-4">
                       <div
-                        className={`h-2 rounded-full ${isToday ? "bg-[#533afd]" : "bg-[#0570DE]"}`}
+                        className={`h-2 rounded-full ${isToday ? "bg-brand" : "bg-info"}`}
                         style={{ width: `${Math.min(100, ((parseInt(day.end) - parseInt(day.start)) / 12) * 100)}%`, minWidth: "40px" }}
                       />
-                      <span className={`text-[14px] ${isToday ? "text-[#533afd]" : "text-[#273951]"}`}>
+                      <span className={`text-[14px] ${isToday ? "text-brand" : "text-foreground"}`}>
                         {day.start} - {day.end}
                       </span>
-                      <span className="text-[12px] text-[#64748d]">
+                      <span className="text-[12px] text-fg-secondary">
                         {getHoursCount(day)}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-[14px] text-[#c1c9d2] italic">Off</span>
+                    <span className="text-[14px] text-border-strong italic">Off</span>
                   )}
                 </div>
               </div>
@@ -127,21 +127,21 @@ export function DoctorScheduleTab({ doctor }: DoctorScheduleTabProps) {
       {/* Clinic details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {doctor.profile?.treatmentRoom && (
-          <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
+          <div className="rounded-panel border border-border bg-white px-5 py-4">
             <div className="flex items-center gap-2 mb-1">
-              <MapPin className="h-4 w-4 text-[#0570DE]" strokeWidth={1.5} />
-              <span className="text-[13px] text-[#64748d]">Treatment Room</span>
+              <MapPin className="h-4 w-4 text-info" strokeWidth={1.5} />
+              <span className="text-[13px] text-fg-secondary">Treatment Room</span>
             </div>
-            <p className="text-[16px] font-medium text-[#061b31]">{doctor.profile.treatmentRoom}</p>
+            <p className="text-[16px] font-medium text-foreground">{doctor.profile.treatmentRoom}</p>
           </div>
         )}
         {doctor.profile?.consultationFee != null && (
-          <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
+          <div className="rounded-panel border border-border bg-white px-5 py-4">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-[#30B130]" strokeWidth={1.5} />
-              <span className="text-[13px] text-[#64748d]">Consultation Fee</span>
+              <DollarSign className="h-4 w-4 text-success" strokeWidth={1.5} />
+              <span className="text-[13px] text-fg-secondary">Consultation Fee</span>
             </div>
-            <p className="text-[16px] font-medium text-[#061b31]">RM {doctor.profile.consultationFee}</p>
+            <p className="text-[16px] font-medium text-foreground">RM {doctor.profile.consultationFee}</p>
           </div>
         )}
       </div>

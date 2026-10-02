@@ -66,7 +66,7 @@ interface TrendChartProps {
 
 export function Legend() {
   return (
-    <div className="flex flex-wrap items-center gap-4 text-[13px] text-[#425466]">
+    <div className="flex flex-wrap items-center gap-4 text-[13px] text-fg-secondary">
       {(["collected", "invoiced"] as const).map((k) => (
         <span key={k} className="inline-flex items-center gap-1.5">
           <svg width="10" height="10" aria-hidden>
@@ -151,7 +151,7 @@ export function TrendChart({ points, granularity }: TrendChartProps) {
               onMouseLeave={() => setActive(null)}
               onFocus={() => setActive(i)}
               onBlur={() => setActive(null)}
-              className="outline-none focus-visible:stroke-[#635BFF]"
+              className="outline-none focus-visible:stroke-brand"
             />
           ))}
           {active !== null && points[active] && (
@@ -215,7 +215,7 @@ interface BarListProps {
 /** Horizontal bars, one series: label, bar, value at the end of the row. */
 export function BarList({ rows, max, track = false, label, empty }: BarListProps) {
   const top = max ?? Math.max(0, ...rows.map((r) => r.value ?? 0));
-  if (rows.length === 0) return <p className="py-4 text-center text-[14px] text-[#64748d]">{empty}</p>;
+  if (rows.length === 0) return <p className="py-4 text-center text-[14px] text-fg-secondary">{empty}</p>;
   return (
     <ul aria-label={label} className="space-y-1">
       {rows.map((r) => {
@@ -224,9 +224,9 @@ export function BarList({ rows, max, track = false, label, empty }: BarListProps
           <li
             key={r.key}
             title={`${r.label}: ${r.display}${r.detail ? ` (${r.detail})` : ""}`}
-            className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-center gap-3 rounded-[4px] px-1 py-1 hover:bg-[#f6f9fc] sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_auto]"
+            className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-center gap-3 rounded-control px-1 py-1 hover:bg-surface-muted sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_auto]"
           >
-            <span className="truncate text-[14px] text-[#273951]">{r.label}</span>
+            <span className="truncate text-[14px] text-foreground">{r.label}</span>
             <svg className="h-3.5 w-full" aria-hidden>
               {track && <rect x="0" y="1" width="100%" height="12" rx="4" fill={TRACK} />}
               {pct > 0 && (
@@ -236,9 +236,9 @@ export function BarList({ rows, max, track = false, label, empty }: BarListProps
                 </>
               )}
             </svg>
-            <span className="text-right text-[14px] whitespace-nowrap text-[#061b31] tabular-nums">
+            <span className="text-right text-[14px] whitespace-nowrap text-foreground tabular-nums">
               {r.display}
-              {r.detail && <span className="block text-[12px] text-[#64748d]">{r.detail}</span>}
+              {r.detail && <span className="block text-[12px] text-fg-secondary">{r.detail}</span>}
             </span>
           </li>
         );

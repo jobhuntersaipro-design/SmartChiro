@@ -97,13 +97,13 @@ export function PortalHome({ email }: { email: string }) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-[#E3E8EE] bg-white">
+      <header className="border-b border-border bg-white">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="shrink-0 rounded-[4px] bg-[#635BFF] px-2 py-1 text-[14px] font-bold text-white">
+            <span className="shrink-0 rounded-control bg-primary px-2 py-1 text-[14px] font-bold text-white">
               Smart Chiro
             </span>
-            <span className="truncate text-[15px] text-[#425466]">{email}</span>
+            <span className="truncate text-[15px] text-fg-secondary">{email}</span>
           </div>
           <button type="button" onClick={() => void signOut()} disabled={signingOut} className={BTN_SECONDARY}>
             {signingOut ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <LogOut className="size-4" strokeWidth={1.5} aria-hidden />}
@@ -113,12 +113,12 @@ export function PortalHome({ email }: { email: string }) {
       </header>
 
       <div className="mx-auto w-full max-w-3xl px-4 py-6">
-        <h1 className="text-[23px] font-medium text-[#0A2540]">
+        <h1 className="text-[23px] font-medium text-foreground">
           {data ? `Hi ${firstNames.join(" & ")}` : "Your portal"}
         </h1>
-        <p className="mt-1 text-[15px] text-[#425466]">All times are Malaysia time.</p>
+        <p className="mt-1 text-[15px] text-fg-secondary">All times are Malaysia time.</p>
 
-        <div role="tablist" aria-label="Portal sections" className="mt-5 grid grid-cols-4 gap-1 rounded-[6px] border border-[#E3E8EE] bg-white p-1">
+        <div role="tablist" aria-label="Portal sections" className="mt-5 grid grid-cols-4 gap-1 rounded-panel border border-border bg-white p-1">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -129,8 +129,8 @@ export function PortalHome({ email }: { email: string }) {
               aria-controls={`portal-panel-${id}`}
               onClick={() => setTab(id)}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-[4px] px-1 py-2 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#635BFF] sm:flex-row sm:justify-center sm:gap-2 sm:text-[15px]",
-                tab === id ? "bg-[#F0EEFF] text-[#635BFF]" : "text-[#425466] hover:bg-[#F0F3F7] hover:text-[#0A2540]",
+                "flex flex-col items-center gap-1 rounded-control px-1 py-2 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:flex-row sm:justify-center sm:gap-2 sm:text-[15px]",
+                tab === id ? "bg-brand-subtle text-brand" : "text-fg-secondary hover:bg-surface-hover hover:text-foreground",
               )}
             >
               <Icon className="size-4" strokeWidth={tab === id ? 2 : 1.5} aria-hidden />
@@ -147,7 +147,7 @@ export function PortalHome({ email }: { email: string }) {
         >
           {error && <p role="alert" className={ALERT_ERROR}>{error}</p>}
           {!data && !error && (
-            <div className="flex items-center gap-2 py-10 text-[15px] text-[#697386]" role="status">
+            <div className="flex items-center gap-2 py-10 text-[15px] text-fg-muted" role="status">
               <Loader2 className="size-4 animate-spin" aria-hidden /> Loading…
             </div>
           )}

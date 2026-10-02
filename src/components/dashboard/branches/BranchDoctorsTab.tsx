@@ -69,14 +69,14 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-[16px] font-normal text-[#061b31]">
+        <h3 className="text-[16px] font-normal text-foreground">
           Doctors ({members.length})
         </h3>
         {canManage && (
           <Button
             onClick={() => setSheetOpen(true)}
             size="sm"
-            className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer"
+            className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
           >
             <UserPlus className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
             Add Doctor
@@ -87,8 +87,8 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
       {/* Doctor cards */}
       {members.length === 0 ? (
         <div className="py-12 text-center">
-          <Users className="h-10 w-10 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-          <p className="text-[15px] text-[#64748d]">No doctors in this branch yet.</p>
+          <Users className="h-10 w-10 mx-auto text-border mb-2" strokeWidth={1} />
+          <p className="text-[15px] text-fg-secondary">No doctors in this branch yet.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -99,20 +99,20 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
             return (
               <div
                 key={member.id}
-                className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4 transition-all duration-200 hover:border-[#c1c9d2]"
+                className="rounded-panel border border-border bg-white px-5 py-4 transition-all duration-200 hover:border-border-strong"
                 style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="h-10 w-10 shrink-0">
-                      <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[13px] font-medium">
+                      <AvatarFallback className="bg-brand-subtle text-brand text-[13px] font-medium">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <span
-                          className="text-[15px] font-medium text-[#061b31] truncate"
+                          className="text-[15px] font-medium text-foreground truncate"
                           title={member.name ?? member.email}
                         >
                           {member.name ?? member.email}
@@ -120,22 +120,22 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                         <span
                           className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
                             isOwnerMember
-                              ? "bg-[#ededfc] text-[#533afd]"
+                              ? "bg-brand-subtle text-brand"
                               : member.role === "ADMIN"
-                              ? "bg-[#E8F4FD] text-[#0570DE]"
-                              : "bg-[#F0F3F7] text-[#64748d]"
+                              ? "bg-info-subtle text-info"
+                              : "bg-surface-hover text-fg-secondary"
                           }`}
                         >
                           {roleLabel(member.role)}
                         </span>
                       </div>
-                      <p className="text-[13px] text-[#64748d] truncate" title={member.email}>{member.email}</p>
+                      <p className="text-[13px] text-fg-secondary truncate" title={member.email}>{member.email}</p>
                     </div>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-4">
                     {/* Stats */}
-                    <div className="hidden sm:flex items-center gap-4 text-[13px] text-[#64748d] whitespace-nowrap">
+                    <div className="hidden sm:flex items-center gap-4 text-[13px] text-fg-secondary whitespace-nowrap">
                       <span className="flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" strokeWidth={1.5} />
                         {plural(member.patientCount ?? 0, "patient")}
@@ -150,7 +150,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                     <div className="flex items-center gap-2 whitespace-nowrap">
                       <Link
                         href={`/dashboard/doctors/${member.userId}`}
-                        className="text-[13px] text-[#533afd] hover:text-[#4434d4] font-medium"
+                        className="text-[13px] text-brand hover:text-brand-strong font-medium"
                         onClick={(e) => e.stopPropagation()}
                       >
                         View Profile
@@ -160,7 +160,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                           onClick={async () => {
                             await handleRemoveDoctor(branchId, member.id);
                           }}
-                          className="flex h-7 w-7 items-center justify-center rounded-md text-[#64748d] hover:bg-[#FEF2F4] hover:text-[#DF1B41] transition-colors cursor-pointer"
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-fg-secondary hover:bg-danger-subtle hover:text-danger transition-colors cursor-pointer"
                           title="Remove doctor"
                         >
                           <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -171,7 +171,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
                 </div>
 
                 {/* Joined date */}
-                <p className="text-[12px] text-[#c1c9d2] mt-2">
+                <p className="text-[12px] text-border-strong mt-2">
                   Joined {new Date(member.joinedAt).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", year: "numeric" })}
                 </p>
               </div>

@@ -30,7 +30,7 @@ const dateTime = (iso: string) => `${clinicDateLabel(new Date(iso))}, ${clinicTi
 
 function TotalRow({ label, value, strong, tone }: { label: string; value: string; strong?: boolean; tone?: string }) {
   return (
-    <div className={`flex items-baseline justify-between gap-4 ${strong ? "text-[16px] font-medium text-[#061b31]" : "text-[15px] text-[#425466]"}`}>
+    <div className={`flex items-baseline justify-between gap-4 ${strong ? "text-[16px] font-medium text-foreground" : "text-[15px] text-fg-secondary"}`}>
       <span>{label}</span>
       <span className={`whitespace-nowrap tabular-nums ${tone ?? ""}`}>{value}</span>
     </div>
@@ -102,35 +102,35 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
         {!invoice ? (
           <div className="flex h-full items-center justify-center p-8 text-center">
             {error ? (
-              <p className="text-[15px] text-[#425466]">{error}</p>
+              <p className="text-[15px] text-fg-secondary">{error}</p>
             ) : (
-              <Loader2 className="h-5 w-5 animate-spin text-[#64748d]" strokeWidth={1.5} />
+              <Loader2 className="h-5 w-5 animate-spin text-fg-secondary" strokeWidth={1.5} />
             )}
             <SheetTitle className="sr-only">Invoice</SheetTitle>
           </div>
         ) : (
           <>
-            <SheetHeader className="gap-1 border-b border-[#e5edf5] px-5 py-4 pr-12">
+            <SheetHeader className="gap-1 border-b border-border px-5 py-4 pr-12">
               <div className="flex flex-wrap items-center gap-2">
-                <SheetTitle className="font-mono text-[17px] font-medium text-[#061b31]">{invoice.invoiceNumber}</SheetTitle>
+                <SheetTitle className="font-mono text-[17px] font-medium text-foreground">{invoice.invoiceNumber}</SheetTitle>
                 <InvoiceStatusBadge status={invoice.status} />
               </div>
-              <SheetDescription className="text-[14px] text-[#64748d]">
-                <Link href={`/dashboard/patients/${invoice.patient.id}/details`} className="text-[#273951] hover:text-[#533afd] hover:underline">
+              <SheetDescription className="text-[14px] text-fg-secondary">
+                <Link href={`/dashboard/patients/${invoice.patient.id}/details`} className="text-foreground hover:text-brand hover:underline">
                   {invoice.patient.firstName} {invoice.patient.lastName}
                 </Link>
                 {invoice.patient.nationality && <> · {nationalityLabel(invoice.patient.nationality)}</>}
                 {" · "}
                 {invoice.branch.name}
               </SheetDescription>
-              <p className="text-[13px] text-[#64748d]">
+              <p className="text-[13px] text-fg-secondary">
                 Issued {date(invoice.issuedAt)}
                 {invoice.dueDate && invoice.status !== "PAID" && <> · Due {date(invoice.dueDate)}</>}
                 {invoice.paidAt && invoice.status === "PAID" && <> · Paid {date(invoice.paidAt)}</>}
               </p>
             </SheetHeader>
 
-            <div className="flex flex-wrap gap-2 border-b border-[#e5edf5] px-5 py-3">
+            <div className="flex flex-wrap gap-2 border-b border-border px-5 py-3">
               {canPay && (
                 <button type="button" className={BTN_PRIMARY} onClick={() => setDialog("payment")} disabled={busy}>
                   <Banknote className="h-4 w-4" strokeWidth={1.75} />
@@ -169,17 +169,17 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
 
             <div className="space-y-6 px-5 py-5">
               {access.manage && cancellable && hasPayments && (
-                <p className="text-[13px] text-[#64748d]">Money has been taken on this invoice — refund it before cancelling.</p>
+                <p className="text-[13px] text-fg-secondary">Money has been taken on this invoice — refund it before cancelling.</p>
               )}
 
               <section aria-labelledby="inv-lines">
-                <h3 id="inv-lines" className="mb-2 text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
+                <h3 id="inv-lines" className="mb-2 text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">
                   Items
                 </h3>
-                <div className="overflow-x-auto rounded-[6px] border border-[#e5edf5]">
+                <div className="overflow-x-auto rounded-panel border border-border">
                   <table className="w-full text-[14px]">
                     <thead>
-                      <tr className="border-b border-[#e5edf5] bg-[#f6f9fc] text-left text-[13px] text-[#64748d]">
+                      <tr className="border-b border-border bg-surface-muted text-left text-[13px] text-fg-secondary">
                         <th className="px-3 py-2 font-medium">Description</th>
                         <th className="px-3 py-2 text-right font-medium">Qty</th>
                         <th className="px-3 py-2 text-right font-medium">Unit</th>
@@ -188,16 +188,16 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
                     </thead>
                     <tbody>
                       {invoice.lineItems.map((line, i) => (
-                        <tr key={i} className="border-b border-[#e5edf5] last:border-b-0">
-                          <td className="px-3 py-2 text-[#061b31]">
+                        <tr key={i} className="border-b border-border last:border-b-0">
+                          <td className="px-3 py-2 text-foreground">
                             {line.description}
                             {invoice.taxLabel && line.taxable === false && (
-                              <span className="ml-1.5 whitespace-nowrap text-[12px] text-[#64748d]">(no SST)</span>
+                              <span className="ml-1.5 whitespace-nowrap text-[12px] text-fg-secondary">(no SST)</span>
                             )}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums text-[#425466]">{line.quantity}</td>
-                          <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-[#425466]">{formatMYR(line.unitPrice)}</td>
-                          <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-[#061b31]">{formatMYR(line.total)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-fg-secondary">{line.quantity}</td>
+                          <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-fg-secondary">{formatMYR(line.unitPrice)}</td>
+                          <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-foreground">{formatMYR(line.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -211,53 +211,53 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
                   ) : sstNotCharged ? (
                     <TotalRow label="SST (Malaysian patient)" value={formatMYR(0)} />
                   ) : null}
-                  <div className="border-t border-[#e5edf5] pt-1.5">
+                  <div className="border-t border-border pt-1.5">
                     <TotalRow label="Total" value={formatMYR(invoice.total)} strong />
                   </div>
-                  <TotalRow label="Paid" value={formatMYR(invoice.amountPaid)} tone="text-[#108c3d]" />
+                  <TotalRow label="Paid" value={formatMYR(invoice.amountPaid)} tone="text-success" />
                   <TotalRow
                     label="Balance"
                     value={formatMYR(invoice.balance)}
                     strong
-                    tone={invoice.balance > 0 && invoice.status !== "CANCELLED" ? "text-[#9b6829]" : undefined}
+                    tone={invoice.balance > 0 && invoice.status !== "CANCELLED" ? "text-warning" : undefined}
                   />
                 </div>
               </section>
 
               <section aria-labelledby="inv-payments">
-                <h3 id="inv-payments" className="mb-2 text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
+                <h3 id="inv-payments" className="mb-2 text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">
                   Payments
                 </h3>
                 {invoice.payments.length === 0 ? (
-                  <p className="rounded-[6px] border border-dashed border-[#e5edf5] px-3 py-4 text-center text-[14px] text-[#64748d]">
+                  <p className="rounded-panel border border-dashed border-border px-3 py-4 text-center text-[14px] text-fg-secondary">
                     No payments yet.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-[#e5edf5] rounded-[6px] border border-[#e5edf5]">
+                  <ul className="divide-y divide-border rounded-panel border border-border">
                     {invoice.payments.map((p) => (
                       <li key={p.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 px-3 py-2.5">
                         <div className="min-w-0">
-                          <p className="text-[14px] text-[#061b31]">
+                          <p className="text-[14px] text-foreground">
                             {p.isRefund ? "Refund" : p.methodLabel}
-                            {p.isRefund && <span className="text-[#64748d]"> · {p.methodLabel}</span>}
-                            {p.reference && <span className="text-[#64748d]"> · {p.reference}</span>}
+                            {p.isRefund && <span className="text-fg-secondary"> · {p.methodLabel}</span>}
+                            {p.reference && <span className="text-fg-secondary"> · {p.reference}</span>}
                           </p>
-                          <p className="text-[13px] text-[#64748d]">
+                          <p className="text-[13px] text-fg-secondary">
                             {dateTime(p.receivedAt)}
                             {p.receivedBy?.name && <> · {p.receivedBy.name}</>}
                           </p>
-                          {p.refundReason && <p className="text-[13px] text-[#425466]">Reason: {p.refundReason}</p>}
-                          {p.notes && <p className="text-[13px] text-[#425466]">{p.notes}</p>}
+                          {p.refundReason && <p className="text-[13px] text-fg-secondary">Reason: {p.refundReason}</p>}
+                          {p.notes && <p className="text-[13px] text-fg-secondary">{p.notes}</p>}
                         </div>
                         <div className="text-right">
-                          <p className={`whitespace-nowrap text-[15px] tabular-nums ${p.isRefund ? "text-[#DF1B41]" : "text-[#061b31]"}`}>
+                          <p className={`whitespace-nowrap text-[15px] tabular-nums ${p.isRefund ? "text-danger" : "text-foreground"}`}>
                             {formatMYR(p.amount)}
                           </p>
                           <a
                             href={`/api/invoices/${invoice.id}/payments/${p.id}/receipt`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 font-mono text-[12px] text-[#533afd] hover:underline"
+                            className="inline-flex items-center gap-1 font-mono text-[12px] text-brand hover:underline"
                             aria-label={`Download receipt ${p.receiptNumber}`}
                           >
                             <Download className="h-3 w-3" strokeWidth={2} />
@@ -276,21 +276,21 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
                 <section className="space-y-3 text-[14px]">
                   {invoice.notes && (
                     <div>
-                      <h3 className="mb-1 text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Notes</h3>
-                      <p className="whitespace-pre-line text-[#425466]">{invoice.notes}</p>
+                      <h3 className="mb-1 text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Notes</h3>
+                      <p className="whitespace-pre-line text-fg-secondary">{invoice.notes}</p>
                     </div>
                   )}
                   {invoice.branch.paymentInstructions && (
                     <div>
-                      <h3 className="mb-1 text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d]">How to pay</h3>
-                      <p className="whitespace-pre-line text-[#425466]">{invoice.branch.paymentInstructions}</p>
+                      <h3 className="mb-1 text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary">How to pay</h3>
+                      <p className="whitespace-pre-line text-fg-secondary">{invoice.branch.paymentInstructions}</p>
                     </div>
                   )}
                 </section>
               )}
 
               {!access.manage && access.read && (
-                <p className="rounded-[4px] bg-[#f6f9fc] px-3 py-2 text-[13px] text-[#425466]">
+                <p className="rounded-control bg-surface-muted px-3 py-2 text-[13px] text-fg-secondary">
                   Read only — payments are recorded by the front desk, admins and the owner.
                 </p>
               )}

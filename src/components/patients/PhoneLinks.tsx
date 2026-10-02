@@ -18,14 +18,14 @@ interface PhoneLinksProps {
 const stop = (e: MouseEvent | KeyboardEvent) => e.stopPropagation();
 
 const ICON_LINK =
-  "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] text-[#64748d] transition-colors hover:bg-[#f0f3f7] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]";
+  "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-control text-fg-secondary transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand";
 
 /**
  * A phone number as plain text plus two icon links: call (`tel:`) and
  * WhatsApp (new tab). The number itself is not a link.
  */
 export function PhoneLinks({ phone, name, className, textClassName }: PhoneLinksProps) {
-  if (!phone) return <span className={cn("text-[14px] text-[#94a3b8]", className)}>—</span>;
+  if (!phone) return <span className={cn("text-[14px] text-fg-muted", className)}>—</span>;
   const tel = buildTelUrl(phone);
   const whatsapp = buildWhatsAppUrl(phone);
   return (
@@ -38,7 +38,7 @@ export function PhoneLinks({ phone, name, className, textClassName }: PhoneLinks
           onKeyDown={stop}
           aria-label={`Call ${name}`}
           title={`Call ${phone}`}
-          className={cn(ICON_LINK, "hover:text-[#533afd]")}
+          className={cn(ICON_LINK, "hover:text-brand")}
         >
           <Phone className="h-4 w-4" strokeWidth={1.5} />
         </a>
@@ -52,7 +52,7 @@ export function PhoneLinks({ phone, name, className, textClassName }: PhoneLinks
           onKeyDown={stop}
           aria-label={`WhatsApp ${name}`}
           title={`WhatsApp ${phone}`}
-          className={cn(ICON_LINK, "hover:text-[#1a8d4a]")}
+          className={cn(ICON_LINK, "hover:text-success")}
         >
           <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
         </a>

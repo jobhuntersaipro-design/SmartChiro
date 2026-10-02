@@ -19,22 +19,22 @@ const TYPE_LABEL: Record<PublicWhatsAppAccount["connectionType"], string> = {
 };
 
 const primaryBtn =
-  "inline-flex items-center gap-1.5 rounded-[4px] bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB] disabled:opacity-50";
+  "inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-1.5 text-[14px] text-white hover:bg-primary/90 disabled:opacity-50";
 const secondaryBtn =
-  "inline-flex items-center gap-1.5 rounded-[4px] border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7] disabled:opacity-50";
+  "inline-flex items-center gap-1.5 rounded-control border border-border bg-white px-3 py-1.5 text-[14px] text-foreground hover:bg-surface-hover disabled:opacity-50";
 
 function templatePill(status: string | undefined): { label: string; className: string } {
   switch (status) {
     case "APPROVED":
-      return { label: "Approved", className: "bg-[#E5F8E5] text-[#1F7A1F]" };
+      return { label: "Approved", className: "bg-success-subtle text-success" };
     case "PENDING":
     case "IN_APPEAL":
     case "PAUSED":
-      return { label: status === "PAUSED" ? "Paused" : "Pending review", className: "bg-[#FEF4E4] text-[#9A5B00]" };
+      return { label: status === "PAUSED" ? "Paused" : "Pending review", className: "bg-warning-subtle text-warning" };
     case undefined:
-      return { label: "Not created", className: "bg-[#F0F3F7] text-[#697386]" };
+      return { label: "Not created", className: "bg-surface-hover text-fg-muted" };
     default:
-      return { label: status === "CREATE_FAILED" ? "Create failed" : status.toLowerCase(), className: "bg-[#FDE7EC] text-[#DF1B41]" };
+      return { label: status === "CREATE_FAILED" ? "Create failed" : status.toLowerCase(), className: "bg-danger-subtle text-danger" };
   }
 }
 
@@ -126,15 +126,15 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
   }
 
   if (!state) {
-    return <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] px-4 py-3 text-[14px] text-[#697386]">Loading WhatsApp connection…</div>;
+    return <div className="rounded-panel border border-border bg-surface-muted px-4 py-3 text-[14px] text-fg-muted">Loading WhatsApp connection…</div>;
   }
 
   const { account, signup: signupCfg, canManage } = state;
 
   if (!account) {
     return (
-      <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] px-4 py-3">
-        <p className="text-[14px] text-[#425466]">
+      <div className="rounded-panel border border-border bg-surface-muted px-4 py-3">
+        <p className="text-[14px] text-fg-secondary">
           Not connected. Reminders go by email until a WhatsApp number is connected.
         </p>
         {canManage && (
@@ -151,19 +151,19 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
                 </button>
               </div>
             ) : (
-              <p className="mt-2 text-[14px] text-[#697386]">
+              <p className="mt-2 text-[14px] text-fg-muted">
                 One-click signup isn&apos;t configured on this server yet (META_APP_ID / META_WA_CONFIG_ID). You can connect manually below.
               </p>
             )}
             {signupCfg && (
-              <p className="mt-2 text-[14px] text-[#697386]">
+              <p className="mt-2 text-[14px] text-fg-muted">
                 Keep using WhatsApp Business on your phone — you&apos;ll confirm the link inside the app. Personal WhatsApp numbers must switch to the free WhatsApp Business app first.
               </p>
             )}
             <button
               type="button"
               onClick={() => setShowManual((v) => !v)}
-              className="mt-3 text-[14px] text-[#635BFF] hover:underline"
+              className="mt-3 text-[14px] text-brand hover:underline"
             >
               {showManual ? "Hide manual connection" : "Connect manually (IDs + access token)"}
             </button>
@@ -187,21 +187,21 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
   const approved = TEMPLATE_LANGS.some((l) => account.templateStatus[l] === "APPROVED");
 
   return (
-    <div className="space-y-3 rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] px-4 py-3">
+    <div className="space-y-3 rounded-panel border border-border bg-surface-muted px-4 py-3">
       {account.status === "ERROR" && (
-        <div className="flex items-start gap-2 rounded-[4px] bg-[#FDE7EC] p-2.5 text-[14px] text-[#DF1B41]">
+        <div className="flex items-start gap-2 rounded-control bg-danger-subtle p-2.5 text-[14px] text-danger">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} />
           <span>{account.lastError ?? "WhatsApp connection needs attention."} Disconnect and connect again to resume WhatsApp reminders.</span>
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-[14px] text-[#425466]">
-          <div className="flex items-center gap-1.5 font-medium text-[#0A2540]">
-            {account.status === "CONNECTED" && <CheckCircle2 className="h-4 w-4 text-[#30B130]" strokeWidth={1.5} />}
+        <div className="text-[14px] text-fg-secondary">
+          <div className="flex items-center gap-1.5 font-medium text-foreground">
+            {account.status === "CONNECTED" && <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.5} />}
             {account.verifiedName ?? "WhatsApp"} {account.displayPhoneNumber && `· ${account.displayPhoneNumber}`}
           </div>
-          <div className="text-[#697386]">{TYPE_LABEL[account.connectionType]}</div>
+          <div className="text-fg-muted">{TYPE_LABEL[account.connectionType]}</div>
         </div>
         {canManage && (
           <button type="button" onClick={disconnect} disabled={busy !== null} className={secondaryBtn}>
@@ -211,11 +211,11 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
         )}
       </div>
 
-      <div className="space-y-1.5 text-[14px] text-[#425466]">
+      <div className="space-y-1.5 text-[14px] text-fg-secondary">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-medium text-[#0A2540]">Message templates</span>
+          <span className="font-medium text-foreground">Message templates</span>
           {canManage && (
-            <button type="button" onClick={refreshTemplates} disabled={busy !== null} className="inline-flex items-center gap-1 text-[#635BFF] hover:underline disabled:opacity-50">
+            <button type="button" onClick={refreshTemplates} disabled={busy !== null} className="inline-flex items-center gap-1 text-brand hover:underline disabled:opacity-50">
               <RefreshCw className={`h-3.5 w-3.5 ${busy === "templates" ? "animate-spin" : ""}`} strokeWidth={1.5} />
               Refresh templates
             </button>
@@ -240,10 +240,10 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
         })}
       </div>
       {account.status === "CONNECTED" && account.lastError && (
-        <p className="text-[14px] text-[#9A5B00]">{account.lastError}</p>
+        <p className="text-[14px] text-warning">{account.lastError}</p>
       )}
       {!approved && (
-        <p className="text-[14px] text-[#697386]">
+        <p className="text-[14px] text-fg-muted">
           Meta reviews the template before WhatsApp reminders can send (usually minutes, up to 24 hours). Until then reminders go by email.
         </p>
       )}
@@ -254,7 +254,7 @@ export function WhatsAppConnectionPanel({ branchId }: Props) {
             value={testTo}
             onChange={(e) => setTestTo(e.target.value)}
             placeholder="Phone for a test message, e.g. 012-345 6789"
-            className="h-8 w-72 max-w-full rounded-[4px] border border-[#E3E8EE] bg-white px-2.5 text-[14px] text-[#0A2540] placeholder:text-[#A3ACB9] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+            className="h-8 w-72 max-w-full rounded-control border border-border bg-white px-2.5 text-[14px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand"
           />
           <button type="submit" disabled={busy !== null || !testTo.trim() || !approved} className={secondaryBtn}>
             {busy === "test" ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} /> : <Send className="h-4 w-4" strokeWidth={1.5} />}

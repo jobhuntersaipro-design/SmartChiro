@@ -21,13 +21,13 @@ interface CreateVisitDialogProps {
 // ─── Shared Styles ───
 
 const inputClass =
-  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200";
+  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200";
 
 const selectClass =
-  "flex h-9 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-colors appearance-none cursor-pointer";
+  "flex h-9 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-colors appearance-none cursor-pointer";
 
 const textareaClass =
-  "flex w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[15px] text-[#061b31] placeholder:text-[#a3acb9] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200 resize-none";
+  "flex w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[15px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200 resize-none";
 
 const VISIT_TYPES = [
   { value: "initial", label: "Initial" },
@@ -65,16 +65,16 @@ function SectionHeader({
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full items-center justify-between py-2.5 px-1 text-left transition-colors hover:bg-[#f6f9fc] rounded-md -mx-1"
+      className="flex w-full items-center justify-between py-2.5 px-1 text-left transition-colors hover:bg-surface-muted rounded-md -mx-1"
     >
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
-        <span className="text-[15px] font-medium text-[#061b31]">{title}</span>
+        <Icon className="h-4 w-4 text-brand" strokeWidth={1.5} />
+        <span className="text-[15px] font-medium text-foreground">{title}</span>
       </div>
       {expanded ? (
-        <ChevronUp className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+        <ChevronUp className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
       ) : (
-        <ChevronDown className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
+        <ChevronDown className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
       )}
     </button>
   );
@@ -99,15 +99,15 @@ function SliderField({
 }) {
   function colorFor(n: number): string {
     const effective = inverted ? 10 - n : n;
-    if (effective >= 7) return "bg-[#30B130] text-white border-[#30B130]";
-    if (effective >= 4) return "bg-[#F5A623] text-white border-[#F5A623]";
-    return "bg-[#DF1B41] text-white border-[#DF1B41]";
+    if (effective >= 7) return "bg-success text-white border-success";
+    if (effective >= 4) return "bg-warning text-white border-warning";
+    return "bg-danger text-white border-danger";
   }
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="text-[13px] font-medium text-[#273951]">{label}</label>
-        <span className="text-[18px] font-semibold text-[#533afd] tabular-nums">{value}<span className="text-[12px] text-[#64748d] font-normal">/10</span></span>
+        <label className="text-[13px] font-medium text-foreground">{label}</label>
+        <span className="text-[18px] font-semibold text-brand tabular-nums">{value}<span className="text-[12px] text-fg-secondary font-normal">/10</span></span>
       </div>
       <div className="grid grid-cols-11 gap-1">
         {Array.from({ length: 11 }, (_, i) => i).map((n) => {
@@ -120,7 +120,7 @@ function SliderField({
               className={`h-9 rounded-md border text-[13px] font-medium transition-all duration-150 ${
                 selected
                   ? `${colorFor(n)} scale-105 shadow-sm`
-                  : "bg-white text-[#273951] border-[#e5edf5] hover:border-[#c1c9d2] hover:bg-[#f6f9fc]"
+                  : "bg-white text-foreground border-border hover:border-border-strong hover:bg-surface-muted"
               }`}
             >
               {n}
@@ -129,8 +129,8 @@ function SliderField({
         })}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[11px] text-[#64748d]">{minLabel}</span>
-        <span className="text-[11px] text-[#64748d]">{maxLabel}</span>
+        <span className="text-[11px] text-fg-secondary">{minLabel}</span>
+        <span className="text-[11px] text-fg-secondary">{maxLabel}</span>
       </div>
     </div>
   );
@@ -274,19 +274,19 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-visit-title"
-        className="relative z-10 w-full max-w-150 max-h-[90vh] flex flex-col rounded-[6px] border border-[#e5edf5] bg-white animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-10 w-full max-w-150 max-h-[90vh] flex flex-col rounded-panel border border-border bg-white animate-in fade-in zoom-in-95 duration-200"
         style={{
           boxShadow:
             "rgba(3,3,39,0.25) 0px 14px 21px -14px, rgba(0,0,0,0.1) 0px 8px 17px -8px",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5edf5]">
-          <h2 id="create-visit-title" className="text-[18px] font-light text-[#061b31]">Add Visit</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 id="create-visit-title" className="text-[18px] font-light text-foreground">Add Visit</h2>
           <button
             onClick={handleClose}
             aria-label="Close"
-            className="flex items-center justify-center h-7 w-7 rounded-md text-[#64748d] transition-all duration-200 hover:bg-[#f6f9fc] hover:text-[#061b31] hover:scale-110 hover:rotate-90 active:scale-95"
+            className="flex items-center justify-center h-7 w-7 rounded-md text-fg-secondary transition-all duration-200 hover:bg-surface-muted hover:text-foreground hover:scale-110 hover:rotate-90 active:scale-95"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
@@ -305,7 +305,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             <div className="space-y-3 pb-3 pl-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="create-visit-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-visit-date" className="block text-[13px] font-medium text-foreground mb-1.5">
                     Visit Date
                   </label>
                   <DateInput
@@ -316,7 +316,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label htmlFor="create-visit-visit-type" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-visit-type" className="block text-[13px] font-medium text-foreground mb-1.5">
                     Visit Type
                   </label>
                   <select
@@ -334,7 +334,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 </div>
               </div>
               <div>
-                <label htmlFor="create-visit-chief-complaint" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-chief-complaint" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Chief Complaint
                 </label>
                 <input
@@ -363,15 +363,15 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   type="checkbox"
                   checked={questionnaireEnabled}
                   onChange={(e) => setQuestionnaireEnabled(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#e5edf5] text-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-4 w-4 rounded border-border text-brand focus:ring-1 focus:ring-brand"
                   style={{ accentColor: "#533afd" }}
                 />
-                <span className="text-[13px] text-[#273951]">
+                <span className="text-[13px] text-foreground">
                   Record recovery questionnaire for this visit
                 </span>
               </label>
               {!questionnaireEnabled && (
-                <p className="text-[13px] text-[#64748d] italic pl-6">
+                <p className="text-[13px] text-fg-secondary italic pl-6">
                   Not recorded unless you tick this — only real answers count towards the recovery trend.
                 </p>
               )}
@@ -414,7 +414,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 maxLabel="10 — Fully Recovered"
               />
               <div>
-                <label htmlFor="create-visit-patient-comments" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-patient-comments" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Patient Comments
                 </label>
                 <textarea
@@ -441,7 +441,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           {sections.soap && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label htmlFor="create-visit-subjective" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-subjective" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Subjective
                 </label>
                 <textarea
@@ -454,7 +454,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-objective" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-objective" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Objective
                 </label>
                 <textarea
@@ -467,7 +467,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-assessment" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-assessment" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Assessment
                 </label>
                 <textarea
@@ -480,7 +480,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-plan" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-plan" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Plan
                 </label>
                 <textarea
@@ -505,7 +505,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           {sections.treatment && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label htmlFor="create-visit-areas-adjusted" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-areas-adjusted" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Areas Adjusted
                 </label>
                 <input
@@ -518,7 +518,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-technique-used" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-technique-used" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Technique Used
                 </label>
                 <select
@@ -536,7 +536,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 </select>
               </div>
               <div>
-                <label htmlFor="create-visit-subluxation-findings" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-subluxation-findings" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Subluxation Findings
                 </label>
                 <textarea
@@ -549,7 +549,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-treatment-notes" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-treatment-notes" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Treatment Notes
                 </label>
                 <textarea
@@ -575,7 +575,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             <div className="space-y-3 pb-3 pl-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="create-visit-bp-systolic" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-bp-systolic" className="block text-[13px] font-medium text-foreground mb-1.5">
                     BP Systolic
                   </label>
                   <input
@@ -590,7 +590,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label htmlFor="create-visit-bp-diastolic" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-bp-diastolic" className="block text-[13px] font-medium text-foreground mb-1.5">
                     BP Diastolic
                   </label>
                   <input
@@ -607,7 +607,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="create-visit-heart-rate" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-heart-rate" className="block text-[13px] font-medium text-foreground mb-1.5">
                     Heart Rate
                   </label>
                   <input
@@ -622,7 +622,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label htmlFor="create-visit-weight-kg" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-weight-kg" className="block text-[13px] font-medium text-foreground mb-1.5">
                     Weight (kg)
                   </label>
                   <input
@@ -638,7 +638,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   />
                 </div>
                 <div>
-                  <label htmlFor="create-visit-temp-c" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                  <label htmlFor="create-visit-temp-c" className="block text-[13px] font-medium text-foreground mb-1.5">
                     Temp (C)
                   </label>
                   <input
@@ -667,7 +667,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
           {sections.recommendations && (
             <div className="space-y-3 pb-3 pl-1">
               <div>
-                <label htmlFor="create-visit-recommendations" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-recommendations" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Recommendations
                 </label>
                 <textarea
@@ -680,7 +680,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-referrals" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-referrals" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Referrals
                 </label>
                 <textarea
@@ -693,7 +693,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 />
               </div>
               <div>
-                <label htmlFor="create-visit-next-visit-date" className="block text-[13px] font-medium text-[#273951] mb-1.5">
+                <label htmlFor="create-visit-next-visit-date" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Next Visit Date
                 </label>
                 <DateInput
@@ -704,7 +704,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                   inputClassName={inputClass}
                 />
                 {nextVisitDate && (
-                  <p className="mt-1 text-[12px] text-[#64748d]">
+                  <p className="mt-1 text-[12px] text-fg-secondary">
                     {(() => {
                       const d = daysFromToday(nextVisitDate);
                       if (d === undefined) return null;
@@ -721,7 +721,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
 
           {/* Submit Error */}
           {submitError && (
-            <div className="flex items-center gap-2 rounded-md border border-[#DF1B41]/20 bg-[#FDE8EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+            <div className="flex items-center gap-2 rounded-md border border-danger/20 bg-danger-subtle px-3 py-2 text-[13px] text-danger">
               <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               {submitError}
             </div>
@@ -729,13 +729,13 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#e5edf5]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
           <Button
             type="button"
             variant="outline"
             onClick={handleClose}
             disabled={submitting}
-            className="rounded-md border-[#e5edf5] text-[#273951] hover:bg-[#f6f9fc]"
+            className="rounded-md border-border text-foreground hover:bg-surface-muted"
           >
             Cancel
           </Button>
@@ -743,7 +743,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
             type="submit"
             disabled={submitting}
             onClick={handleSubmit}
-            className="rounded-md bg-[#533afd] text-white hover:bg-[#4530d4]"
+            className="rounded-md bg-primary text-white hover:bg-primary/90"
           >
             {submitting ? (
               <>

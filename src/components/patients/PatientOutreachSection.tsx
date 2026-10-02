@@ -65,9 +65,9 @@ export function PatientOutreachSection({
   }
 
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4 mb-4">
+    <div className="rounded-panel border border-border bg-white px-5 py-4 mb-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h4 className="text-[15px] font-medium text-[#061b31]">Recall &amp; review messages</h4>
+        <h4 className="text-[15px] font-medium text-foreground">Recall &amp; review messages</h4>
         {data?.canSend && (
           <SendRecallButton
             patientId={patientId}
@@ -79,14 +79,14 @@ export function PatientOutreachSection({
         )}
       </div>
       {failed ? (
-        <p className="text-[14px] text-[#64748d]">Couldn&apos;t load outreach history.</p>
+        <p className="text-[14px] text-fg-secondary">Couldn&apos;t load outreach history.</p>
       ) : !data ? (
-        <div className="h-16 animate-pulse rounded bg-[#f6f9fc]" />
+        <div className="h-16 animate-pulse rounded bg-surface-muted" />
       ) : (
         <div className="space-y-3">
           <MarketingConsentCheckbox checked={data.marketingConsent} disabled={saving} onChange={setConsent} />
           {data.marketingConsent && data.marketingConsentAt && (
-            <p className="text-[13px] text-[#64748d]">Consent given {formatAppointmentDateOnly(data.marketingConsentAt)}</p>
+            <p className="text-[13px] text-fg-secondary">Consent given {formatAppointmentDateOnly(data.marketingConsentAt)}</p>
           )}
           <OutreachLogList items={data.items} emptyText="No recall or review messages yet." />
         </div>

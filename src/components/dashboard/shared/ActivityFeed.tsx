@@ -41,8 +41,8 @@ export function ActivityFeed({ activities, showBranch = false }: ActivityFeedPro
   if (activities.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <Activity className="h-5 w-5 text-[#64748d] mb-2" strokeWidth={1.5} />
-        <p className="text-[14px] text-[#64748d]">
+        <Activity className="h-5 w-5 text-fg-secondary mb-2" strokeWidth={1.5} />
+        <p className="text-[14px] text-fg-secondary">
           No activity yet. Add your first patient to get started.
         </p>
       </div>
@@ -56,21 +56,21 @@ export function ActivityFeed({ activities, showBranch = false }: ActivityFeedPro
         return (
           <div
             key={item.id}
-            className="flex items-start gap-3 px-4 py-3 border-b border-[#e5edf5] last:border-b-0 transition-all duration-200 hover:bg-[#f6f9fc] hover:translate-x-1 cursor-default"
+            className="flex items-start gap-3 px-4 py-3 border-b border-border last:border-b-0 transition-all duration-200 hover:bg-surface-muted hover:translate-x-1 cursor-default"
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F6F9FC] mt-0.5">
-              <Icon className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-muted mt-0.5">
+              <Icon className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] text-[#273951] leading-snug">
+              <p className="text-[14px] text-foreground leading-snug">
                 {item.description}
               </p>
               <div className="flex min-w-0 items-center gap-2 mt-0.5">
-                <span className="text-[13px] text-[#64748d] whitespace-nowrap">
+                <span className="text-[13px] text-fg-secondary whitespace-nowrap">
                   {formatRelativeTime(item.timestamp)}
                 </span>
                 {showBranch && item.branchName && (
-                  <span className="text-[13px] text-[#64748d] truncate" title={item.branchName}>
+                  <span className="text-[13px] text-fg-secondary truncate" title={item.branchName}>
                     &middot; {item.branchName}
                   </span>
                 )}

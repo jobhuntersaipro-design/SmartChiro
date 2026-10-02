@@ -74,20 +74,20 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
     return (
       <div className="w-full max-w-105">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#533afd]">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-panel bg-brand">
             <Mail size={24} className="text-white" />
           </div>
-          <h1 className="text-[23px] font-light text-[#061b31]">
+          <h1 className="text-[23px] font-light text-foreground">
             Check your email
           </h1>
-          <p className="mt-2 text-[15px] text-[#273951] leading-relaxed">
+          <p className="mt-2 text-[15px] text-foreground leading-relaxed">
             We sent a verification link to<br />
-            <span className="font-medium text-[#061b31]">{email}</span>
+            <span className="font-medium text-foreground">{email}</span>
           </p>
         </div>
 
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
-          <p className="text-[14px] text-[#273951] leading-relaxed text-center">
+        <div className="rounded-panel border border-border bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
+          <p className="text-[14px] text-foreground leading-relaxed text-center">
             Click the link in your email to verify your account. If you don&apos;t see it, check your spam folder.
           </p>
 
@@ -95,7 +95,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             <button
               onClick={handleResend}
               disabled={resending}
-              className="flex h-10 w-full items-center justify-center rounded-md border border-[#e5edf5] bg-white text-[15px] font-medium text-[#061b31] transition-colors hover:bg-[#f6f9fc] disabled:opacity-60 cursor-pointer"
+              className="flex h-10 w-full items-center justify-center rounded-md border border-border bg-white text-[15px] font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
             >
               {resending ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -106,8 +106,8 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[14px] text-[#64748d]">
-          <Link href="/login" className="inline-flex items-center gap-1 text-[#533afd] hover:text-[#4434d4] transition-colors">
+        <p className="mt-6 text-center text-[14px] text-fg-secondary">
+          <Link href="/login" className="inline-flex items-center gap-1 text-brand hover:text-brand-strong transition-colors">
             <ArrowLeft size={14} />
             Back to sign in
           </Link>
@@ -120,25 +120,25 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
     <div className="w-full max-w-105">
       {/* Logo / Branding */}
       <div className="mb-8 text-center flex flex-col items-center">
-        <div className="mb-4 rounded-[6px] bg-[#533afd] px-3 py-2">
+        <div className="mb-4 rounded-panel bg-brand px-3 py-2">
           <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
-        <h1 className="text-[23px] font-light text-[#061b31]">
+        <h1 className="text-[23px] font-light text-foreground">
           Create your account
         </h1>
-        <p className="mt-1 text-[15px] text-[#64748d]">
+        <p className="mt-1 text-[15px] text-fg-secondary">
           Get started with SmartChiro
         </p>
       </div>
 
       {/* Auth Card */}
-      <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
+      <div className="rounded-panel border border-border bg-white p-6" style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}>
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="name"
-              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
+              className="mb-1.5 block text-[14px] font-medium text-foreground"
             >
               Full name
             </label>
@@ -149,14 +149,14 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Dr. Jane Smith"
-              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
           <div>
             <label
               htmlFor="email"
-              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
+              className="mb-1.5 block text-[14px] font-medium text-foreground"
             >
               Email
             </label>
@@ -167,14 +167,14 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
+              className="mb-1.5 block text-[14px] font-medium text-foreground"
             >
               Password
             </label>
@@ -186,12 +186,12 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-secondary hover:text-foreground cursor-pointer"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 aria-pressed={showPassword}
               >
@@ -207,7 +207,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           <div>
             <label
               htmlFor="confirmPassword"
-              className="mb-1.5 block text-[14px] font-medium text-[#061b31]"
+              className="mb-1.5 block text-[14px] font-medium text-foreground"
             >
               Confirm password
             </label>
@@ -219,12 +219,12 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter your password"
-                className="h-10 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 pr-10 text-[15px] text-[#061b31] placeholder-[#64748d] transition-colors focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-10 w-full rounded-md border border-border bg-surface-muted px-3 pr-10 text-[15px] text-foreground placeholder-fg-secondary transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-secondary hover:text-foreground cursor-pointer"
                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 aria-pressed={showConfirmPassword}
               >
@@ -238,13 +238,13 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
           </div>
 
           {error && (
-            <p className="text-[14px] text-[#DF1B41]">{error}</p>
+            <p className="text-[14px] text-danger">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center rounded-md bg-[#533afd] text-[15px] font-medium text-white transition-colors hover:bg-[#4434d4] disabled:opacity-60 cursor-pointer"
+            className="flex h-10 w-full items-center justify-center rounded-md bg-primary text-[15px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={18} className="animate-spin" />
@@ -258,9 +258,9 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         {googleEnabled && (
           <>
             <div className="my-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-[#e5edf5]" />
-              <span className="text-[13px] text-[#64748d]">or continue with</span>
-              <div className="h-px flex-1 bg-[#e5edf5]" />
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[13px] text-fg-secondary">or continue with</span>
+              <div className="h-px flex-1 bg-border" />
             </div>
             <GoogleSignInButton label="Register using Google" />
           </>
@@ -268,9 +268,9 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
       </div>
 
       {/* Footer */}
-      <p className="mt-6 text-center text-[14px] text-[#64748d]">
+      <p className="mt-6 text-center text-[14px] text-fg-secondary">
         Already have an account?{' '}
-        <Link href="/login" className="text-[#533afd] hover:text-[#4434d4] transition-colors">Sign in</Link>
+        <Link href="/login" className="text-brand hover:text-brand-strong transition-colors">Sign in</Link>
       </p>
     </div>
   )

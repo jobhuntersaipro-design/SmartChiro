@@ -45,7 +45,7 @@ export function DoctorCard({
 
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white p-5 transition-all duration-200 hover:border-[#c1c9d2] hover:translate-y-[-1px] cursor-pointer"
+      className="rounded-panel border border-border bg-white p-5 transition-all duration-200 hover:border-border-strong hover:translate-y-[-1px] cursor-pointer"
       style={{ boxShadow: "rgba(23,23,23,0.08) 0px 15px 35px" }}
       onClick={() => router.push(`/dashboard/doctors/${doctor.id}`)}
     >
@@ -56,31 +56,31 @@ export function DoctorCard({
             {doctor.image && (
               <AvatarImage src={doctor.image} alt={doctor.name ?? "Doctor"} />
             )}
-            <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[13px] font-medium">
+            <AvatarFallback className="bg-brand-subtle text-brand text-[13px] font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[16px] font-medium text-[#061b31] truncate">
+              <span className="text-[16px] font-medium text-foreground truncate">
                 {doctor.name ?? "Unnamed"}
               </span>
               <span
                 className={`shrink-0 rounded-md px-1.5 py-0.25 text-[10px] font-light ${
                   doctor.isActive
-                    ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
-                    : "bg-[#F0F3F7] text-[#64748d]"
+                    ? "bg-[rgba(21,190,83,0.2)] text-success border border-[rgba(21,190,83,0.4)]"
+                    : "bg-surface-hover text-fg-secondary"
                 }`}
               >
                 {doctor.isActive ? "Active" : "Inactive"}
               </span>
               <CertificateBadge expiresOn={doctor.apcExpiresOn} />
             </div>
-            <div className="text-[13px] text-[#64748d] truncate">
+            <div className="text-[13px] text-fg-secondary truncate">
               {doctor.email}
             </div>
             {doctor.specialties.length > 0 && (
-              <div className="text-[13px] text-[#64748d] truncate mt-0.5">
+              <div className="text-[13px] text-fg-secondary truncate mt-0.5">
                 {doctor.specialties.join(", ")}
               </div>
             )}
@@ -90,17 +90,17 @@ export function DoctorCard({
         {isAdmin && (
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#f6f9fc] transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-surface-muted transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreHorizontal className="h-4 w-4 text-[#64748d]" />
+              <MoreHorizontal className="h-4 w-4 text-fg-secondary" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="rounded-[6px] border border-[#e5edf5] shadow-md"
+              className="rounded-panel border border-border shadow-md"
             >
               <DropdownMenuItem
-                className="text-[14px] text-[#273951] cursor-pointer"
+                className="text-[14px] text-foreground cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   router.push(`/dashboard/doctors/${doctor.id}`);
@@ -109,7 +109,7 @@ export function DoctorCard({
                 View Profile
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-[14px] text-[#273951] cursor-pointer"
+                className="text-[14px] text-foreground cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleStatus(doctor);
@@ -118,7 +118,7 @@ export function DoctorCard({
                 {doctor.isActive ? "Deactivate" : "Activate"}
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-[14px] text-[#df1b41] cursor-pointer"
+                className="text-[14px] text-danger cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemove(doctor);
@@ -140,15 +140,15 @@ export function DoctorCard({
         ].map((s) => (
           <div
             key={s.label}
-            className="flex-1 rounded-md bg-[#F6F9FC] px-3 py-2 text-center"
+            className="flex-1 rounded-md bg-surface-muted px-3 py-2 text-center"
           >
             <div
-              className="text-[16px] font-medium text-[#061b31]"
+              className="text-[16px] font-medium text-foreground"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
               {s.value}
             </div>
-            <div className="text-[11px] text-[#64748d]">{s.label}</div>
+            <div className="text-[11px] text-fg-secondary">{s.label}</div>
           </div>
         ))}
       </div>
@@ -156,19 +156,19 @@ export function DoctorCard({
       {/* Footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 min-w-0">
-          <MapPin className="h-3 w-3 shrink-0 text-[#64748d]" strokeWidth={1.5} />
+          <MapPin className="h-3 w-3 shrink-0 text-fg-secondary" strokeWidth={1.5} />
           <div className="flex flex-wrap gap-1">
             {doctor.branches.map((b) => (
               <span
                 key={b.id}
-                className="text-[12px] text-[#533afd] bg-[#ededfc] rounded-full px-2 py-0.5"
+                className="text-[12px] text-brand bg-brand-subtle rounded-full px-2 py-0.5"
               >
                 {b.name}
               </span>
             ))}
           </div>
         </div>
-        <span className="text-[12px] text-[#c1c9d2] shrink-0">
+        <span className="text-[12px] text-border-strong shrink-0">
           Joined {formatDate(doctor.createdAt)}
         </span>
       </div>

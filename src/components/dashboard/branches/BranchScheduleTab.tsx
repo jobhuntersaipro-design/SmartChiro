@@ -77,13 +77,13 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
     <div className="space-y-4">
       {/* Navigation */}
       <div className="flex items-center justify-between">
-        <h3 className="text-[16px] font-normal text-[#061b31]">{week.label}</h3>
+        <h3 className="text-[16px] font-normal text-foreground">{week.label}</h3>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={goPrev}
-            className="h-8 w-8 p-0 rounded-md border-[#e5edf5] cursor-pointer"
+            className="h-8 w-8 p-0 rounded-md border-border cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           </Button>
@@ -91,7 +91,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
             variant="outline"
             size="sm"
             onClick={goToday}
-            className="h-8 px-3 rounded-md border-[#e5edf5] text-[13px] cursor-pointer"
+            className="h-8 px-3 rounded-md border-border text-[13px] cursor-pointer"
           >
             Today
           </Button>
@@ -99,7 +99,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
             variant="outline"
             size="sm"
             onClick={goNext}
-            className="h-8 w-8 p-0 rounded-md border-[#e5edf5] cursor-pointer"
+            className="h-8 w-8 p-0 rounded-md border-border cursor-pointer"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
           </Button>
@@ -110,7 +110,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
       {doctors.length > 0 && (
         <div className="flex items-center gap-4 flex-wrap">
           {doctors.map((doc) => (
-            <div key={doc.id} className="flex items-center gap-1.5 text-[13px] text-[#273951]">
+            <div key={doc.id} className="flex items-center gap-1.5 text-[13px] text-foreground">
               <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: doc.color }} />
               {doc.name ?? "Unknown"}
             </div>
@@ -120,7 +120,7 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
 
       {/* Calendar */}
       {loading ? (
-        <div className="h-96 rounded-[6px] bg-[#e5edf5] animate-pulse" />
+        <div className="h-96 rounded-panel bg-border animate-pulse" />
       ) : (
         <WeekCalendar
           weekStart={week.start}
@@ -131,18 +131,18 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
       )}
 
       {/* Status legend */}
-      <div className="flex items-center gap-4 text-[12px] text-[#64748d]">
+      <div className="flex items-center gap-4 text-[12px] text-fg-secondary">
         <span className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm bg-[#0570DE]" /> Scheduled
+          <div className="h-2.5 w-2.5 rounded-sm bg-info" /> Scheduled
         </span>
         <span className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm bg-[#30B130]" /> Completed
+          <div className="h-2.5 w-2.5 rounded-sm bg-success" /> Completed
         </span>
         <span className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm bg-[#F5A623]" /> In Progress
+          <div className="h-2.5 w-2.5 rounded-sm bg-warning" /> In Progress
         </span>
         <span className="flex items-center gap-1.5">
-          <div className="h-2.5 w-2.5 rounded-sm bg-[#DF1B41]" /> Cancelled
+          <div className="h-2.5 w-2.5 rounded-sm bg-danger" /> Cancelled
         </span>
       </div>
     </div>

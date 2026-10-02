@@ -33,7 +33,7 @@ function StatCard({
 }) {
   return (
     <div
-      className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4 transition-shadow duration-200"
+      className="rounded-panel border border-border bg-white px-5 py-4 transition-shadow duration-200"
       style={{ boxShadow: SHADOW_CARD }}
     >
       <div className="flex items-center gap-2 mb-2">
@@ -42,7 +42,7 @@ function StatCard({
           style={{ color: iconColor }}
           strokeWidth={1.75}
         />
-        <span className="text-[13px] font-medium text-[#64748d]">{label}</span>
+        <span className="text-[13px] font-medium text-fg-secondary">{label}</span>
       </div>
       <div
         className="text-[24px] font-semibold tabular-nums leading-none"
@@ -113,7 +113,7 @@ export function PastAppointmentStatCards({
             <button
               type="button"
               onClick={onShowStale}
-              className="text-[12px] font-medium text-[#9b6829] hover:text-[#7a4f1f] cursor-pointer transition-colors duration-200 underline-offset-2 hover:underline"
+              className="text-[12px] font-medium text-warning hover:text-warning cursor-pointer transition-colors duration-200 underline-offset-2 hover:underline"
             >
               Show only stale
             </button>

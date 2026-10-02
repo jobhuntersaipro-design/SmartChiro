@@ -70,10 +70,10 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-6 w-32 rounded bg-[#e5edf5] animate-pulse" />
-        <div className="h-32 rounded-[6px] bg-[#e5edf5] animate-pulse" />
+        <div className="h-6 w-32 rounded bg-border animate-pulse" />
+        <div className="h-32 rounded-panel bg-border animate-pulse" />
         <div className="grid grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 rounded-[6px] bg-[#e5edf5] animate-pulse" />)}
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 rounded-panel bg-border animate-pulse" />)}
         </div>
       </div>
     );
@@ -82,9 +82,9 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
   if (!branch) {
     return (
       <div className="py-12 text-center">
-        <Building2 className="h-12 w-12 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
-        <p className="text-[15px] text-[#64748d]">Branch not found or you don&apos;t have access.</p>
-        <Link href="/dashboard/branches" className="text-[14px] text-[#533afd] hover:underline mt-2 inline-block">
+        <Building2 className="h-12 w-12 mx-auto text-border mb-3" strokeWidth={1} />
+        <p className="text-[15px] text-fg-secondary">Branch not found or you don&apos;t have access.</p>
+        <Link href="/dashboard/branches" className="text-[14px] text-brand hover:underline mt-2 inline-block">
           Back to Branches
         </Link>
       </div>
@@ -98,7 +98,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       {/* Back link */}
       <Link
         href="/dashboard/branches"
-        className="inline-flex items-center gap-1.5 text-[14px] text-[#64748d] hover:text-[#061b31] transition-colors"
+        className="inline-flex items-center gap-1.5 text-[14px] text-fg-secondary hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
         Back to Branches
@@ -106,14 +106,14 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
 
       {/* Header card */}
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white px-6 py-5"
+        className="rounded-panel border border-border bg-white px-6 py-5"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h1 className="text-[23px] font-normal text-[#061b31]">{branch.name}</h1>
+            <h1 className="text-[23px] font-normal text-foreground">{branch.name}</h1>
             {(branch.address || branch.city) && (
-              <p className="text-[14px] text-[#64748d] mt-0.5">
+              <p className="text-[14px] text-fg-secondary mt-0.5">
                 {[branch.address, branch.city, branch.state, branch.zip].filter(Boolean).join(", ")}
               </p>
             )}
@@ -123,7 +123,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
               variant="outline"
               size="sm"
               onClick={() => handleTabChange("settings")}
-              className="rounded-md border-[#e5edf5] text-[14px] text-[#273951] cursor-pointer"
+              className="rounded-md border-border text-[14px] text-foreground cursor-pointer"
             >
               <Pencil className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
               Edit
@@ -132,7 +132,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
         </div>
 
         {/* Contact info */}
-        <div className="flex items-center gap-5 text-[13px] text-[#64748d]">
+        <div className="flex items-center gap-5 text-[13px] text-fg-secondary">
           {branch.phone && (
             <span className="flex items-center gap-1.5">
               <Phone className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -165,14 +165,14 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
           ].map((s) => (
             <div
               key={s.label}
-              className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-3"
+              className="rounded-panel border border-border bg-white px-4 py-3"
               style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
             >
               <div className="flex items-center gap-2.5">
                 <s.icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.5} />
                 <div>
-                  <p className="text-[12px] text-[#64748d]">{s.label}</p>
-                  <p className="text-[20px] font-normal text-[#061b31] leading-tight">{s.value}</p>
+                  <p className="text-[12px] text-fg-secondary">{s.label}</p>
+                  <p className="text-[20px] font-normal text-foreground leading-tight">{s.value}</p>
                 </div>
               </div>
             </div>
@@ -181,7 +181,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       )}
 
       {/* Tabs */}
-      <div className="border-b border-[#e5edf5]">
+      <div className="border-b border-border">
         <nav className="flex gap-0 -mb-px">
           {visibleTabs.map((tab) => (
             <button
@@ -189,8 +189,8 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
               onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors cursor-pointer ${
                 activeTab === tab.id
-                  ? "border-[#533afd] text-[#533afd]"
-                  : "border-transparent text-[#64748d] hover:text-[#061b31] hover:border-[#c1c9d2]"
+                  ? "border-brand text-brand"
+                  : "border-transparent text-fg-secondary hover:text-foreground hover:border-border-strong"
               }`}
             >
               {tab.label}

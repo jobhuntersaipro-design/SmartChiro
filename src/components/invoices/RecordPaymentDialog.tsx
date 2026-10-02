@@ -128,10 +128,10 @@ function PaymentForm({ mode, invoice, onOpenChange, onRecorded }: PaymentDialogP
   const showAmountError = (touched || amount !== "") && check.error;
 
   return (
-    <DialogContent className="gap-0 rounded-[8px] p-0 sm:max-w-md">
-      <DialogHeader className="border-b border-[#e5edf5] px-5 py-4">
-        <DialogTitle className="text-[18px] font-medium text-[#061b31]">{isRefund ? "Refund" : "Record payment"}</DialogTitle>
-        <DialogDescription className="text-[14px] text-[#64748d]">
+    <DialogContent className="gap-0 rounded-surface p-0 sm:max-w-md">
+      <DialogHeader className="border-b border-border px-5 py-4">
+        <DialogTitle className="text-[18px] font-medium text-foreground">{isRefund ? "Refund" : "Record payment"}</DialogTitle>
+        <DialogDescription className="text-[14px] text-fg-secondary">
           {invoice.invoiceNumber} ·{" "}
           {isRefund ? `${formatMYR(invoice.amountPaid)} paid so far` : `${formatMYR(invoice.balance)} outstanding`}
         </DialogDescription>
@@ -182,14 +182,14 @@ function PaymentForm({ mode, invoice, onOpenChange, onRecorded }: PaymentDialogP
         </div>
 
         {!isRefund && invoice.balance > 0 && (
-          <p className="-mt-2 text-[13px] text-[#64748d]">
+          <p className="-mt-2 text-[13px] text-fg-secondary">
             Paying part now? Enter that amount — record the rest (another method or a later instalment) as a second payment.
           </p>
         )}
 
         <div>
           <label htmlFor="pay-reference" className={FIELD_LABEL}>
-            Reference <span className="font-normal text-[#64748d]">(optional)</span>
+            Reference <span className="font-normal text-fg-secondary">(optional)</span>
           </label>
           <input
             id="pay-reference"
@@ -245,7 +245,7 @@ function PaymentForm({ mode, invoice, onOpenChange, onRecorded }: PaymentDialogP
 
         <div>
           <label htmlFor="pay-notes" className={FIELD_LABEL}>
-            Notes <span className="font-normal text-[#64748d]">(optional)</span>
+            Notes <span className="font-normal text-fg-secondary">(optional)</span>
           </label>
           <textarea
             id="pay-notes"
@@ -257,14 +257,14 @@ function PaymentForm({ mode, invoice, onOpenChange, onRecorded }: PaymentDialogP
           />
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-[#e5edf5] pt-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
           <button type="button" onClick={() => onOpenChange(false)} className={BTN_SECONDARY} disabled={saving}>
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className={cn(BTN_PRIMARY, isRefund && "bg-[#DF1B41] hover:bg-[#c0173a]")}
+            className={cn(BTN_PRIMARY, isRefund && "bg-danger hover:bg-danger")}
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
             {isRefund ? "Record refund" : "Record payment"}

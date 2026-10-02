@@ -12,8 +12,8 @@ interface RangePickerProps {
 
 const chip = (active: boolean) =>
   cn(
-    "h-8 rounded-[4px] border px-3 text-[14px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF]",
-    active ? "border-[#533afd] bg-[#f0eeff] text-[#533afd]" : "border-[#e5edf5] bg-white text-[#425466] hover:bg-[#f6f9fc]",
+    "h-8 rounded-control border px-3 text-[14px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand",
+    active ? "border-brand bg-brand-subtle text-brand" : "border-border bg-white text-fg-secondary hover:bg-surface-muted",
   );
 
 /** Preset ranges plus a custom from–to (dd/mm/yyyy), all in clinic days. */
@@ -73,22 +73,22 @@ export function RangePicker({ value, onChange }: RangePickerProps) {
             if (!problem) onChange({ from, to });
           }}
         >
-          <label className="flex flex-col gap-1 text-[13px] text-[#64748d]">
+          <label className="flex flex-col gap-1 text-[13px] text-fg-secondary">
             From
             <DateInput value={from} onChange={setFrom} className="w-40" aria-label="From date" />
           </label>
-          <label className="flex flex-col gap-1 text-[13px] text-[#64748d]">
+          <label className="flex flex-col gap-1 text-[13px] text-fg-secondary">
             To
             <DateInput value={to} onChange={setTo} min={from || undefined} className="w-40" aria-label="To date" />
           </label>
           <button
             type="submit"
             disabled={!!problem}
-            className="h-9 rounded-[4px] bg-[#635BFF] px-3 text-[14px] font-medium text-white transition-colors hover:bg-[#5851EB] disabled:opacity-50"
+            className="h-9 rounded-control bg-primary px-3 text-[14px] font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             Apply
           </button>
-          {problem && from && to && <p className="basis-full text-[13px] text-[#b41a36]">{problem}</p>}
+          {problem && from && to && <p className="basis-full text-[13px] text-danger">{problem}</p>}
         </form>
       )}
     </div>

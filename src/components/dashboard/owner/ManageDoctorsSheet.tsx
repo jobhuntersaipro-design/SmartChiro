@@ -67,9 +67,9 @@ export function ManageDoctorsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-105 sm:max-w-105 border-l border-[#e5edf5] p-0">
-        <SheetHeader className="px-5 py-4 border-b border-[#e5edf5]">
-          <SheetTitle className="text-[16px] font-light text-[#061b31]">
+      <SheetContent className="w-105 sm:max-w-105 border-l border-border p-0">
+        <SheetHeader className="px-5 py-4 border-b border-border">
+          <SheetTitle className="text-[16px] font-light text-foreground">
             Manage Doctors — {branchName}
           </SheetTitle>
         </SheetHeader>
@@ -80,27 +80,27 @@ export function ManageDoctorsSheet({
             <Button
               onClick={() => setShowAddForm(true)}
               variant="outline"
-              className="w-full h-9 rounded-md border-[#e5edf5] text-[14px] text-[#533afd] hover:bg-[#ededfc] cursor-pointer mb-4"
+              className="w-full h-9 rounded-md border-border text-[14px] text-brand hover:bg-brand-subtle cursor-pointer mb-4"
             >
               <UserPlus className="h-3.5 w-3.5 mr-2" strokeWidth={1.5} />
               Add Doctor
             </Button>
           ) : (
-            <div className="mb-4 p-3 rounded-[6px] border border-[#e5edf5] bg-[#F6F9FC]">
+            <div className="mb-4 p-3 rounded-panel border border-border bg-surface-muted">
               <div className="relative mb-2">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#64748d]" strokeWidth={2} />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-secondary" strokeWidth={2} />
                 <Input
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
                   placeholder="Search by email..."
-                  className="h-8 pl-8 rounded-md border-[#e5edf5] bg-white text-[14px]"
+                  className="h-8 pl-8 rounded-md border-border bg-white text-[14px]"
                 />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <select
                   value={addRole}
                   onChange={(e) => setAddRole(e.target.value as BranchRole)}
-                  className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] cursor-pointer"
+                  className="h-8 rounded-md border border-border bg-white px-2 text-[14px] text-foreground cursor-pointer"
                 >
                   {ASSIGNABLE_STAFF_ROLES.map((r) => (
                     <option key={r} value={r}>{ROLE_LABELS[r]}</option>
@@ -110,7 +110,7 @@ export function ManageDoctorsSheet({
                   onClick={handleAdd}
                   disabled={addLoading || !searchEmail.trim()}
                   size="sm"
-                  className="h-8 px-3 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[13px] cursor-pointer disabled:opacity-50"
+                  className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-md text-[13px] cursor-pointer disabled:opacity-50"
                 >
                   {addLoading ? "Adding..." : "Add"}
                 </Button>
@@ -121,13 +121,13 @@ export function ManageDoctorsSheet({
                     setShowAddForm(false);
                     setAddError("");
                   }}
-                  className="h-8 px-2 text-[#64748d] cursor-pointer"
+                  className="h-8 px-2 text-fg-secondary cursor-pointer"
                 >
                   Cancel
                 </Button>
               </div>
               {addError && (
-                <p className="text-[13px] text-[#df1b41]">{addError}</p>
+                <p className="text-[13px] text-danger">{addError}</p>
               )}
             </div>
           )}
@@ -135,7 +135,7 @@ export function ManageDoctorsSheet({
           {/* Members list */}
           <div className="space-y-0">
             {members.length === 0 ? (
-              <p className="text-center text-[14px] text-[#64748d] py-8">
+              <p className="text-center text-[14px] text-fg-secondary py-8">
                 No doctors in this branch yet.
               </p>
             ) : (
@@ -150,21 +150,21 @@ export function ManageDoctorsSheet({
                 return (
                   <div
                     key={member.id}
-                    className="flex items-center gap-3 py-3 border-b border-[#e5edf5] last:border-b-0"
+                    className="flex items-center gap-3 py-3 border-b border-border last:border-b-0"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[12px] font-medium">
+                      <AvatarFallback className="bg-brand-subtle text-brand text-[12px] font-medium">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <Link
                         href={`/dashboard/settings/${member.userId}`}
-                        className="text-[14px] font-medium text-[#061b31] truncate hover:text-[#533afd] transition-colors"
+                        className="text-[14px] font-medium text-foreground truncate hover:text-brand transition-colors"
                       >
                         {member.name ?? member.email}
                       </Link>
-                      <div className="text-[13px] text-[#64748d] truncate">
+                      <div className="text-[13px] text-fg-secondary truncate">
                         {member.email}
                       </div>
                     </div>
@@ -174,21 +174,21 @@ export function ManageDoctorsSheet({
                         onChange={(e) =>
                           onChangeRole(branchId, member.id, e.target.value as BranchRole)
                         }
-                        className="h-7 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px] text-[#273951] cursor-pointer"
+                        className="h-7 rounded-md border border-border bg-white px-2 text-[13px] text-foreground cursor-pointer"
                       >
                         {ASSIGNABLE_STAFF_ROLES.map((r) => (
                           <option key={r} value={r}>{ROLE_LABELS[r]}</option>
                         ))}
                       </select>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-[#ededfc] px-2 py-0.5 text-[12px] font-medium text-[#533afd]">
+                      <span className="inline-flex items-center rounded-full bg-brand-subtle px-2 py-0.5 text-[12px] font-medium text-brand">
                         Owner
                       </span>
                     )}
                     {member.role !== "OWNER" && (
                       <button
                         onClick={() => onRemoveDoctor(branchId, member.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-[#64748d] hover:bg-[#FEF2F2] hover:text-[#df1b41] transition-colors cursor-pointer"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-fg-secondary hover:bg-danger-subtle hover:text-danger transition-colors cursor-pointer"
                         title="Remove from branch"
                       >
                         <X className="h-3.5 w-3.5" strokeWidth={2} />

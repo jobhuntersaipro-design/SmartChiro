@@ -172,12 +172,12 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
       {/* Optional details, saved with the X-ray (the title defaults to the file name) */}
       {stage === 'idle' && (
         <div className="mb-3 grid grid-cols-2 gap-3">
-          <label className="text-[14px] text-[#425466]">
+          <label className="text-[14px] text-fg-secondary">
             Body region
             <select
               value={bodyRegion}
               onChange={(e) => setBodyRegion(e.target.value as BodyRegion | '')}
-              className="mt-1 block h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-2 text-[15px] text-[#061b31] focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="mt-1 block h-9 w-full rounded-control border border-border bg-surface-muted px-2 text-[15px] text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             >
               <option value="">Not set</option>
               {BODY_REGION_OPTIONS.map((o) => (
@@ -185,12 +185,12 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
               ))}
             </select>
           </label>
-          <label className="text-[14px] text-[#425466]">
+          <label className="text-[14px] text-fg-secondary">
             View
             <select
               value={viewType}
               onChange={(e) => setViewType(e.target.value as ViewType | '')}
-              className="mt-1 block h-9 w-full rounded-[4px] border border-[#e5edf5] bg-[#f6f9fc] px-2 text-[15px] text-[#061b31] focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+              className="mt-1 block h-9 w-full rounded-control border border-border bg-surface-muted px-2 text-[15px] text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
             >
               <option value="">Not set</option>
               {VIEW_TYPE_OPTIONS.map((o) => (
@@ -206,15 +206,15 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
         <label
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-[6px] border-2 border-dashed border-[#e5edf5] bg-[#f6f9fc] px-6 py-10 transition-colors hover:border-[#C1C9D2] hover:bg-[#f6f9fc]"
+          className="flex cursor-pointer flex-col items-center justify-center rounded-panel border-2 border-dashed border-border bg-surface-muted px-6 py-10 transition-colors hover:border-border-strong hover:bg-surface-muted"
         >
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#ededfc]">
-            <Upload className="h-5 w-5 text-[#533afd]" strokeWidth={1.5} />
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-brand-subtle">
+            <Upload className="h-5 w-5 text-brand" strokeWidth={1.5} />
           </div>
-          <p className="text-[16px] font-medium text-[#061b31]">
+          <p className="text-[16px] font-medium text-foreground">
             Drop an X-ray image here
           </p>
-          <p className="mt-1 text-[15px] text-[#64748d]">
+          <p className="mt-1 text-[15px] text-fg-secondary">
             or click to browse — JPEG, PNG up to 300 MB
           </p>
           <input
@@ -229,10 +229,10 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
 
       {/* Upload progress */}
       {stage !== 'idle' && (
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white p-4" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)' }}>
+        <div className="rounded-panel border border-border bg-white p-4" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)' }}>
           <div className="flex items-start gap-3">
             {/* Preview */}
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#f6f9fc]">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-muted">
               {preview ? (
                 <img
                   src={preview}
@@ -240,35 +240,35 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <ImageIcon className="h-6 w-6 text-[#64748d]" strokeWidth={1.5} />
+                <ImageIcon className="h-6 w-6 text-fg-secondary" strokeWidth={1.5} />
               )}
             </div>
 
             {/* Info */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <p className="truncate text-[15px] font-medium text-[#061b31]">
+                <p className="truncate text-[15px] font-medium text-foreground">
                   {fileName}
                 </p>
                 {(stage === 'done' || stage === 'error') && (
                   <button
                     onClick={reset}
-                    className="ml-2 flex-shrink-0 rounded-md p-1 text-[#64748d] transition-colors hover:bg-[#f6f9fc] hover:text-[#061b31]"
+                    className="ml-2 flex-shrink-0 rounded-md p-1 text-fg-secondary transition-colors hover:bg-surface-muted hover:text-foreground"
                   >
                     <X className="h-4 w-4" strokeWidth={1.5} />
                   </button>
                 )}
               </div>
-              <p className="mt-0.5 text-[14px] text-[#64748d]">
+              <p className="mt-0.5 text-[14px] text-fg-secondary">
                 {formatFileSize(fileSize)}
               </p>
 
               {/* Progress bar */}
               {isUploading && (
                 <div className="mt-2">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e5edf5]">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                     <div
-                      className="h-full rounded-full bg-[#533afd] transition-all duration-300"
+                      className="h-full rounded-full bg-brand transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -278,21 +278,21 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
               {/* Stage label */}
               <div className="mt-2 flex items-center gap-1.5">
                 {(isUploading || stage === 'validating' || stage === 'generating-thumbnail') && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#533afd]" strokeWidth={2} />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" strokeWidth={2} />
                 )}
                 {stage === 'done' && (
-                  <CheckCircle className="h-3.5 w-3.5 text-[#30B130]" strokeWidth={2} />
+                  <CheckCircle className="h-3.5 w-3.5 text-success" strokeWidth={2} />
                 )}
                 {stage === 'error' && (
-                  <AlertCircle className="h-3.5 w-3.5 text-[#DF1B41]" strokeWidth={2} />
+                  <AlertCircle className="h-3.5 w-3.5 text-danger" strokeWidth={2} />
                 )}
                 <span
                   className={`text-[14px] ${
                     stage === 'done'
-                      ? 'text-[#30B130]'
+                      ? 'text-success'
                       : stage === 'error'
-                        ? 'text-[#DF1B41]'
-                        : 'text-[#64748d]'
+                        ? 'text-danger'
+                        : 'text-fg-secondary'
                   }`}
                 >
                   {stageLabel[stage]}
@@ -303,7 +303,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
                 <Link
                   href={`/dashboard/xrays/${patientId}/${uploadedId}/annotate`}
                   target="_blank"
-                  className="mt-2 inline-block text-[14px] font-medium text-[#533afd] hover:underline"
+                  className="mt-2 inline-block text-[14px] font-medium text-brand hover:underline"
                 >
                   Annotate now →
                 </Link>
@@ -312,7 +312,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
               {/* Error message + retry */}
               {stage === 'error' && error && (
                 <div className="mt-2">
-                  <p className="text-[14px] text-[#DF1B41]">{error}</p>
+                  <p className="text-[14px] text-danger">{error}</p>
                   <Button
                     variant="outline"
                     size="sm"

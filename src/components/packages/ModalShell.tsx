@@ -73,27 +73,27 @@ export function ModalShell({
         role={role}
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`flex max-h-[90vh] w-full ${widthClass} flex-col overflow-hidden rounded-2xl border border-[#e5edf5] bg-white shadow-[0_12px_40px_rgba(18,42,66,0.15)]`}
+        className={`flex max-h-[90vh] w-full ${widthClass} flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-(--shadow-lg)`}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-[#e5edf5] px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-[16px] font-semibold text-[#061b31]">
+            <h2 id={titleId} className="text-[16px] font-semibold text-foreground">
               {title}
             </h2>
-            {description && <p className="mt-0.5 text-[13px] text-[#64748d]">{description}</p>}
+            {description && <p className="mt-0.5 text-[13px] text-fg-secondary">{description}</p>}
           </div>
           <button
             type="button"
             onClick={() => !busy && onClose()}
             aria-label="Close"
-            className="shrink-0 text-[#94a3b8] transition-colors hover:text-[#061b31]"
+            className="shrink-0 text-fg-muted transition-colors hover:text-foreground"
           >
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
         {footer && (
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[#e5edf5] bg-[#fafbfd] px-5 py-3">
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border bg-surface-subtle px-5 py-3">
             {footer}
           </div>
         )}
@@ -103,14 +103,14 @@ export function ModalShell({
 }
 
 export const FIELD_CLASS =
-  "w-full h-9 rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white disabled:opacity-60";
+  "w-full h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white disabled:opacity-60";
 
-export const LABEL_CLASS = "mb-1 block text-[13px] font-medium text-[#273951]";
+export const LABEL_CLASS = "mb-1 block text-[13px] font-medium text-foreground";
 
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div role="alert" className="rounded-md border border-[#fcd0db] bg-[#fef2f5] px-3 py-2 text-[13px] text-[#DF1B41]">
+    <div role="alert" className="rounded-md border border-danger/25 bg-danger-subtle px-3 py-2 text-[13px] text-danger">
       {message}
     </div>
   );

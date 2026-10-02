@@ -516,10 +516,10 @@ export function AppointmentsCalendarView({
   if (branches.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
-        <h2 className="text-[18px] font-medium text-[#061b31] mb-2">
+        <h2 className="text-[18px] font-medium text-foreground mb-2">
           You haven&apos;t joined any branches yet
         </h2>
-        <p className="text-[14px] text-[#64748d]">
+        <p className="text-[14px] text-fg-secondary">
           Create a branch from the Branches page to start scheduling appointments.
         </p>
       </div>
@@ -531,15 +531,15 @@ export function AppointmentsCalendarView({
       {!hideHeader && (
         <div className="flex items-baseline justify-between gap-3">
           <div>
-            <h1 className="text-[23px] font-light tracking-[-0.18px] text-[#061b31]">Appointments</h1>
-            <p className="text-[14px] text-[#64748d]">Schedule, reschedule, and manage all bookings.</p>
+            <h1 className="text-[23px] font-light tracking-[-0.18px] text-foreground">Appointments</h1>
+            <p className="text-[14px] text-fg-secondary">Schedule, reschedule, and manage all bookings.</p>
           </div>
           <Button
             onClick={() => {
               setCreatePrefill(null);
               setCreateOpen(true);
             }}
-            className="h-9 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[14px] gap-1.5"
+            className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] gap-1.5"
           >
             New Appointment
           </Button>
@@ -581,7 +581,7 @@ export function AppointmentsCalendarView({
       />
 
       {error && (
-        <div className="px-3 py-2 rounded-md bg-[#FDE7EC] text-[13px] text-[#DF1B41]">
+        <div className="px-3 py-2 rounded-md bg-danger-subtle text-[13px] text-danger">
           {error}
         </div>
       )}
@@ -616,10 +616,10 @@ export function AppointmentsCalendarView({
           />
         </div>
       ) : (
-      <div className="relative flex-1 min-h-0 rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden">
+      <div className="relative flex-1 min-h-0 rounded-panel border border-border bg-white overflow-hidden">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-            <Loader2 className="h-5 w-5 text-[#635BFF] animate-spin" strokeWidth={2} />
+            <Loader2 className="h-5 w-5 text-brand animate-spin" strokeWidth={2} />
           </div>
         )}
         {mounted && (

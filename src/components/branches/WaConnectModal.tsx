@@ -68,15 +68,15 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
         role="dialog"
         aria-modal="true"
         aria-label="Connect WhatsApp"
-        className="w-105 rounded-2xl border border-[#E3E8EE] bg-white p-6 shadow-lg"
+        className="w-105 rounded-2xl border border-border bg-white p-6 shadow-lg"
       >
-        <div className="mb-3 text-[18px] font-medium text-[#0A2540]">Connect WhatsApp</div>
-        <p className="mb-4 text-[15px] text-[#425466]">
+        <div className="mb-3 text-[18px] font-medium text-foreground">Connect WhatsApp</div>
+        <p className="mb-4 text-[15px] text-fg-secondary">
           Scan this QR with the WhatsApp app on the owner&apos;s phone (Settings → Linked
           Devices → Link a Device).
         </p>
         {err && (
-          <div className="mb-3 rounded-md bg-[#FDE7EC] p-2 text-[14px] text-[#DF1B41]">
+          <div className="mb-3 rounded-md bg-danger-subtle p-2 text-[14px] text-danger">
             {err}
           </div>
         )}
@@ -86,24 +86,24 @@ export function WaConnectModal({ branchId, open, onClose, onConnected }: Props) 
           <img
             alt="WhatsApp pairing QR"
             src={`data:image/png;base64,${qr}`}
-            className="mx-auto h-65 w-65 rounded-[6px] border border-[#E3E8EE]"
+            className="mx-auto h-65 w-65 rounded-panel border border-border"
           />
         ) : status === "CONNECTED" ? (
-          <div className="rounded-[6px] bg-[#E5F8E5] p-4 text-center text-[#30B130]">
+          <div className="rounded-panel bg-success-subtle p-4 text-center text-success">
             Connected as {phone}
           </div>
         ) : (
-          <div className="rounded-[6px] bg-[#F0F3F7] p-4 text-center text-[#697386]">
+          <div className="rounded-panel bg-surface-hover p-4 text-center text-fg-muted">
             Waiting for QR…
           </div>
         )}
-        <p className="mt-4 text-[13px] text-[#697386]">
+        <p className="mt-4 text-[13px] text-fg-muted">
           WhatsApp may disconnect this session at their discretion. Use at your own risk.
         </p>
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-md border border-[#E3E8EE] bg-white px-3 py-1.5 text-[14px] text-[#0A2540] hover:bg-[#F0F3F7]"
+            className="rounded-md border border-border bg-white px-3 py-1.5 text-[14px] text-foreground hover:bg-surface-hover"
           >
             Close
           </button>

@@ -2155,7 +2155,7 @@ export function AnnotationCanvas({
                         type="button"
                         key={i}
                         onClick={() => setPickerSlotIndex(i)}
-                        className="group flex cursor-pointer items-center justify-center transition-all duration-150 hover:bg-[#252b48] hover:border-[#533afd]"
+                        className="group flex cursor-pointer items-center justify-center transition-all duration-150 hover:bg-canvas-raised hover:border-brand"
                         style={{
                           backgroundColor: "#1A1F36",
                           border: i === activeSlotIndex
@@ -2167,10 +2167,10 @@ export function AnnotationCanvas({
                       >
                         <div className="flex flex-col items-center gap-2 transition-transform duration-150 group-hover:-translate-y-0.5">
                           <div
-                            className="flex h-12 w-12 items-center justify-center transition-colors group-hover:bg-[#533afd]/30"
+                            className="flex h-12 w-12 items-center justify-center transition-colors group-hover:bg-brand/30"
                             style={{ borderRadius: 9999, backgroundColor: "rgba(255,255,255,0.08)" }}
                           >
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.75" className="transition-colors group-hover:stroke-[#a89ffd]">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.75" className="transition-colors group-hover:stroke-brand-subtle">
                               <path d="M12 5v14M5 12h14" />
                             </svg>
                           </div>

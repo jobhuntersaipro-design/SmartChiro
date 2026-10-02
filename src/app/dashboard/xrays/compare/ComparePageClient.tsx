@@ -197,45 +197,45 @@ export function ComparePageClient({
   };
 
   return (
-    <div className="flex h-screen flex-col bg-[#1A1F36]">
+    <div className="flex h-screen flex-col bg-canvas">
       {/* Header */}
-      <div className="flex h-13 shrink-0 items-center justify-between border-b border-[#2D3348] bg-[#1A1F36] px-4">
+      <div className="flex h-13 shrink-0 items-center justify-between border-b border-canvas-raised bg-canvas px-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="rounded-md p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
+            className="rounded-md p-1.5 text-fg-muted transition-colors hover:bg-canvas-raised hover:text-white"
           >
             <ArrowLeft size={18} strokeWidth={1.5} />
           </button>
           <span className="text-[15px] font-medium text-white">Compare X-Rays</span>
-          <span className="text-[14px] text-[#8B93A7]">{patientName}</span>
+          <span className="text-[14px] text-fg-muted">{patientName}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => zoomBoth(1 / 1.25)}
-            className="rounded-md p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
+            className="rounded-md p-1.5 text-fg-muted transition-colors hover:bg-canvas-raised hover:text-white"
           >
             <ZoomOut size={16} strokeWidth={1.5} />
           </button>
-          <span className="min-w-11 text-center text-[13px] text-[#8B93A7]">
+          <span className="min-w-11 text-center text-[13px] text-fg-muted">
             {Math.round(leftView.zoom * 100)}%
           </span>
           <button
             onClick={() => zoomBoth(1.25)}
-            className="rounded-md p-1.5 text-[#8B93A7] transition-colors hover:bg-[#2D3348] hover:text-white"
+            className="rounded-md p-1.5 text-fg-muted transition-colors hover:bg-canvas-raised hover:text-white"
           >
             <ZoomIn size={16} strokeWidth={1.5} />
           </button>
 
-          <div className="mx-2 h-5 w-px bg-[#2D3348]" />
+          <div className="mx-2 h-5 w-px bg-canvas-raised" />
 
           <button
             onClick={() => setLinked(!linked)}
             className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors ${
               linked
-                ? "bg-[#533afd]/20 text-[#533afd]"
-                : "text-[#8B93A7] hover:bg-[#2D3348] hover:text-white"
+                ? "bg-primary/20 text-brand"
+                : "text-fg-muted hover:bg-canvas-raised hover:text-white"
             }`}
           >
             {linked ? <Link2 size={14} strokeWidth={1.5} /> : <Link2Off size={14} strokeWidth={1.5} />}
@@ -259,7 +259,7 @@ export function ComparePageClient({
           {/* Left label */}
           <div className="absolute left-3 top-3 z-10 rounded-md bg-black/60 px-2.5 py-1">
             <span className="text-[13px] font-medium text-white">{leftXray.title}</span>
-            <span className="ml-2 text-[12px] text-[#8B93A7]">{formatDate(leftXray.createdAt)}</span>
+            <span className="ml-2 text-[12px] text-fg-muted">{formatDate(leftXray.createdAt)}</span>
           </div>
           <div
             ref={leftCanvasRef}
@@ -289,10 +289,10 @@ export function ComparePageClient({
 
         {/* Divider */}
         <div
-          className="z-20 flex w-1.5 shrink-0 cursor-col-resize items-center justify-center bg-[#2D3348] transition-colors hover:bg-[#533afd]"
+          className="z-20 flex w-1.5 shrink-0 cursor-col-resize items-center justify-center bg-canvas-raised transition-colors hover:bg-brand"
           onPointerDown={handleDividerPointerDown}
         >
-          <div className="h-8 w-0.5 rounded-full bg-[#8B93A7]" />
+          <div className="h-8 w-0.5 rounded-full bg-fg-muted" />
         </div>
 
         {/* Right panel */}
@@ -303,7 +303,7 @@ export function ComparePageClient({
           {/* Right label */}
           <div className="absolute left-3 top-3 z-10 rounded-md bg-black/60 px-2.5 py-1">
             <span className="text-[13px] font-medium text-white">{rightXray.title}</span>
-            <span className="ml-2 text-[12px] text-[#8B93A7]">{formatDate(rightXray.createdAt)}</span>
+            <span className="ml-2 text-[12px] text-fg-muted">{formatDate(rightXray.createdAt)}</span>
           </div>
           <div
             ref={rightCanvasRef}

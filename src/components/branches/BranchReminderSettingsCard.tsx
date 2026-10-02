@@ -37,7 +37,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
       .then(setState);
   }, [branchId]);
 
-  if (!state) return <div className="p-6 text-[#697386]">Loading reminder settings…</div>;
+  if (!state) return <div className="p-6 text-fg-muted">Loading reminder settings…</div>;
   const s = state.settings;
 
   function set<K extends keyof typeof s>(key: K, val: (typeof s)[K]) {
@@ -70,13 +70,13 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
 
   return (
     <>
-    <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
+    <div className="rounded-panel border border-border bg-white p-6 shadow-(--shadow-card)">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <div className="text-[18px] font-medium text-[#0A2540]">
+          <div className="text-[18px] font-medium text-foreground">
             Appointment Reminders
           </div>
-          <div className="text-[14px] text-[#697386]">
+          <div className="text-[14px] text-fg-muted">
             Send WhatsApp + email reminders before each appointment.
           </div>
         </div>
@@ -92,12 +92,12 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
       </div>
 
       <div className="mb-5">
-        <div className="mb-2 text-[15px] font-medium text-[#0A2540]">When to send</div>
+        <div className="mb-2 text-[15px] font-medium text-foreground">When to send</div>
         <div className="flex flex-wrap gap-3">
           {ALLOWED_OFFSETS_MIN.map((off) => (
             <label
               key={off}
-              className="flex items-center gap-1.5 text-[14px] text-[#425466]"
+              className="flex items-center gap-1.5 text-[14px] text-fg-secondary"
             >
               <input
                 type="checkbox"
@@ -120,13 +120,13 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
 
       <div className="mb-5 grid gap-5 md:grid-cols-2">
         <div>
-          <div className="mb-1.5 text-[15px] font-medium text-[#0A2540]">
+          <div className="mb-1.5 text-[15px] font-medium text-foreground">
             WhatsApp message (Meta-approved template)
           </div>
-          <div className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-3 text-[14px] leading-relaxed text-[#425466]">
+          <div className="rounded-panel border border-border bg-surface-muted p-3 text-[14px] leading-relaxed text-fg-secondary">
             {renderTemplatePreview("en", sampleTemplateParams(branch?.name))}
           </div>
-          <p className="mt-1.5 text-[13px] text-[#697386]">
+          <p className="mt-1.5 text-[13px] text-fg-muted">
             WhatsApp only allows approved templates for reminders, so this text is fixed. Patients get it in their language (English, Bahasa Melayu or 中文).
           </p>
         </div>
@@ -139,7 +139,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
       </div>
 
       <div className="mb-5">
-        <div className="mb-2 text-[15px] font-medium text-[#0A2540]">
+        <div className="mb-2 text-[15px] font-medium text-foreground">
           WhatsApp connection
         </div>
         <WhatsAppConnectionPanel branchId={branchId} />
@@ -150,7 +150,7 @@ export function BranchReminderSettingsCard({ branchId, canEdit, branch }: Props)
           <button
             onClick={save}
             disabled={saving}
-            className="rounded-md bg-[#635BFF] px-4 py-2 text-[14px] text-white hover:bg-[#5851EB] disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-[14px] text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>

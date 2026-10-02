@@ -15,9 +15,9 @@ interface PatientCardProps {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-    active: { bg: "bg-[#E8F5E8]", text: "text-[#30B130]", dot: "bg-[#30B130]", label: "Active" },
-    inactive: { bg: "bg-[#FFF8E1]", text: "text-[#9b6829]", dot: "bg-[#F5A623]", label: "Inactive" },
-    discharged: { bg: "bg-[#F0F0F0]", text: "text-[#64748d]", dot: "bg-[#64748d]", label: "Discharged" },
+    active: { bg: "bg-success-subtle", text: "text-success", dot: "bg-success", label: "Active" },
+    inactive: { bg: "bg-warning-subtle", text: "text-warning", dot: "bg-warning", label: "Inactive" },
+    discharged: { bg: "bg-surface-hover", text: "text-fg-secondary", dot: "bg-fg-secondary", label: "Discharged" },
   };
   const c = config[status] || config.active;
   return (
@@ -38,14 +38,14 @@ export function PatientCard({ patient, showBranch = false }: PatientCardProps) {
     // Whole card opens the patient; keyboard users use the name link (Enter).
     <div
       onClick={() => router.push(href)}
-      className="rounded-[6px] border border-[#e5edf5] bg-white p-4 cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:border-[#c1c9d2]"
+      className="rounded-panel border border-border bg-white p-4 cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:border-border-strong"
       style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03), 0 3px 6px rgba(18,42,66,0.02)" }}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[13px] font-medium">
+            <AvatarFallback className="bg-brand-subtle text-brand text-[13px] font-medium">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -53,12 +53,12 @@ export function PatientCard({ patient, showBranch = false }: PatientCardProps) {
             <Link
               href={href}
               onClick={(e) => e.stopPropagation()}
-              className="block truncate rounded-[4px] text-[15px] font-medium text-[#061b31] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#533afd]"
+              className="block truncate rounded-control text-[15px] font-medium text-foreground hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
             >
               {fullName}
             </Link>
             {patient.icNumber && (
-              <p className="text-[13px] text-[#64748d] truncate">{patient.icNumber}</p>
+              <p className="text-[13px] text-fg-secondary truncate">{patient.icNumber}</p>
             )}
           </div>
         </div>
@@ -67,30 +67,30 @@ export function PatientCard({ patient, showBranch = false }: PatientCardProps) {
 
       {/* Contact */}
       {patient.phone && (
-        <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[13px] text-[#64748d]" className="flex mb-3 max-w-full" />
+        <PhoneLinks phone={patient.phone} name={fullName} textClassName="text-[13px] text-fg-secondary" className="flex mb-3 max-w-full" />
       )}
       {showBranch && patient.branchName && (
-        <p className="text-[13px] text-[#64748d] mb-3 truncate" title={patient.branchName}>{patient.branchName}</p>
+        <p className="text-[13px] text-fg-secondary mb-3 truncate" title={patient.branchName}>{patient.branchName}</p>
       )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="rounded-md bg-[#f6f9fc] px-2 py-1.5 text-center">
-          <p className="text-[15px] font-semibold text-[#061b31]">{patient.totalVisits}</p>
-          <p className="text-[11px] text-[#64748d]">Visits</p>
+        <div className="rounded-md bg-surface-muted px-2 py-1.5 text-center">
+          <p className="text-[15px] font-semibold text-foreground">{patient.totalVisits}</p>
+          <p className="text-[11px] text-fg-secondary">Visits</p>
         </div>
-        <div className="rounded-md bg-[#f6f9fc] px-2 py-1.5 text-center">
-          <p className="text-[15px] font-semibold text-[#061b31]">{patient.totalXrays}</p>
-          <p className="text-[11px] text-[#64748d]">X-Rays</p>
+        <div className="rounded-md bg-surface-muted px-2 py-1.5 text-center">
+          <p className="text-[15px] font-semibold text-foreground">{patient.totalXrays}</p>
+          <p className="text-[11px] text-fg-secondary">X-Rays</p>
         </div>
-        <div className="rounded-md bg-[#f6f9fc] px-2 py-1.5 text-center">
-          <p className="text-[15px] font-semibold text-[#061b31] capitalize">{patient.status}</p>
-          <p className="text-[11px] text-[#64748d]">Status</p>
+        <div className="rounded-md bg-surface-muted px-2 py-1.5 text-center">
+          <p className="text-[15px] font-semibold text-foreground capitalize">{patient.status}</p>
+          <p className="text-[11px] text-fg-secondary">Status</p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-[13px] text-[#64748d]">
+      <div className="flex items-center justify-between text-[13px] text-fg-secondary">
         <span>Dr. {patient.doctorName?.replace(/^Dr\.?\s*/i, '')}</span>
         <span>
           {patient.lastVisit

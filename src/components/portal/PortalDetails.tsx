@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 function Row({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="py-2.5 sm:grid sm:grid-cols-3 sm:gap-4">
-      <dt className="text-[14px] text-[#697386]">{label}</dt>
-      <dd className="text-[15px] text-[#0A2540] sm:col-span-2">{value || "—"}</dd>
+      <dt className="text-[14px] text-fg-muted">{label}</dt>
+      <dd className="text-[15px] text-foreground sm:col-span-2">{value || "—"}</dd>
     </div>
   );
 }
@@ -20,14 +20,14 @@ export function PortalDetails({ me }: { me: PortalMe }) {
         const tel = buildTelUrl(p.branch.phone);
         return (
           <div key={p.id} className={cn(CARD, "p-4")}>
-            <h2 className="text-[18px] font-medium text-[#0A2540]">{p.name}</h2>
-            <p className="text-[14px] text-[#697386]">Patient at {p.branch.name}</p>
-            <dl className="mt-2 divide-y divide-[#E3E8EE]">
+            <h2 className="text-[18px] font-medium text-foreground">{p.name}</h2>
+            <p className="text-[14px] text-fg-muted">Patient at {p.branch.name}</p>
+            <dl className="mt-2 divide-y divide-border">
               <Row label="Email" value={p.email} />
               <Row label="Phone" value={p.phone} />
               <Row label="Address" value={p.address} />
             </dl>
-            <p className="mt-3 rounded-[4px] bg-[#F6F9FC] px-3 py-2 text-[14px] text-[#425466]">
+            <p className="mt-3 rounded-control bg-surface-muted px-3 py-2 text-[14px] text-fg-secondary">
               Something wrong? Ask the clinic to change these
               {p.branch.phone && tel ? (
                 <>

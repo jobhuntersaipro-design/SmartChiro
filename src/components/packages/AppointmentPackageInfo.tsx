@@ -112,21 +112,21 @@ export function AppointmentPackageInfo({
   }
 
   const text = compact ? "text-[12px]" : "text-[13px]";
-  const button = `inline-flex items-center gap-1 rounded-md border border-[#e5edf5] bg-white px-2 font-medium transition-colors hover:bg-[#f6f9fc] disabled:opacity-60 ${compact ? "h-6 text-[11px]" : "h-7 text-[12px]"}`;
+  const button = `inline-flex items-center gap-1 rounded-md border border-border bg-white px-2 font-medium transition-colors hover:bg-surface-muted disabled:opacity-60 ${compact ? "h-6 text-[11px]" : "h-7 text-[12px]"}`;
 
   if (redemption) {
     return (
-      <div className={`flex flex-wrap items-center justify-between gap-2 rounded-md bg-[#F7F5FF] px-2.5 py-1.5 ${text}`}>
-        <span className="inline-flex min-w-0 items-center gap-1.5 text-[#273951]">
-          <Package className="h-3.5 w-3.5 shrink-0 text-[#533afd]" strokeWidth={1.75} />
+      <div className={`flex flex-wrap items-center justify-between gap-2 rounded-md bg-brand-subtle px-2.5 py-1.5 ${text}`}>
+        <span className="inline-flex min-w-0 items-center gap-1.5 text-foreground">
+          <Package className="h-3.5 w-3.5 shrink-0 text-brand" strokeWidth={1.75} />
           <span className="truncate">
-            Package: <span className="font-medium text-[#061b31]">{redemption.packageName}</span>
+            Package: <span className="font-medium text-foreground">{redemption.packageName}</span>
             {" — "}
             <span className="tabular-nums">{sessionsUsedLabel(redemption.sessionsUsed, redemption.sessionsTotal)}</span>
           </span>
         </span>
         {canRedeem && (
-          <button type="button" onClick={() => void undo()} disabled={busy} className={`${button} text-[#9b6829]`}>
+          <button type="button" onClick={() => void undo()} disabled={busy} className={`${button} text-warning`}>
             {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Undo2 className="h-3 w-3" strokeWidth={1.75} />}
             Undo
           </button>
@@ -136,14 +136,14 @@ export function AppointmentPackageInfo({
   }
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 rounded-md border border-dashed border-[#d6dce5] px-2.5 py-1.5 ${text}`}>
-      <Package className="h-3.5 w-3.5 shrink-0 text-[#64748d]" strokeWidth={1.75} />
+    <div className={`flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border-strong px-2.5 py-1.5 ${text}`}>
+      <Package className="h-3.5 w-3.5 shrink-0 text-fg-secondary" strokeWidth={1.75} />
       {eligible.length > 1 ? (
         <select
           aria-label="Package to use"
           value={choice}
           onChange={(e) => setChoice(e.target.value)}
-          className="h-7 min-w-0 flex-1 rounded-md border border-[#e5edf5] bg-white px-1.5 text-[12px] text-[#061b31]"
+          className="h-7 min-w-0 flex-1 rounded-md border border-border bg-white px-1.5 text-[12px] text-foreground"
         >
           <option value="">Best match (automatic)</option>
           {eligible.map((p) => (
@@ -153,11 +153,11 @@ export function AppointmentPackageInfo({
           ))}
         </select>
       ) : (
-        <span className="min-w-0 flex-1 truncate text-[#425466]">
+        <span className="min-w-0 flex-1 truncate text-fg-secondary">
           {eligible[0].name} · {eligible[0].sessionsLeft} left
         </span>
       )}
-      <button type="button" onClick={() => void redeem()} disabled={busy} className={`${button} text-[#533afd]`}>
+      <button type="button" onClick={() => void redeem()} disabled={busy} className={`${button} text-brand`}>
         {busy && <Loader2 className="h-3 w-3 animate-spin" />}
         Use package session
       </button>

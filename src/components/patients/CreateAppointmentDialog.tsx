@@ -77,7 +77,7 @@ function pickBranch(list: BranchOption[], preferred: (string | null | undefined)
 }
 
 const FIELD_CLASS =
-  "w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]";
+  "w-full h-9 rounded-md border border-border bg-white px-2 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand";
 
 /** Confirmation gates the user has accepted — sent as bypass flags on retry. */
 interface SubmitOpts {
@@ -334,14 +334,14 @@ export function CreateAppointmentDialog({
         aria-modal="true"
         aria-labelledby="create-appointment-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-[#e5edf5] bg-white p-6"
+        className="w-120 max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-white p-6"
         style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.15)" }}
       >
-        <h2 id="create-appointment-title" className="text-[18px] font-medium text-[#0A2540] mb-4">Schedule appointment</h2>
+        <h2 id="create-appointment-title" className="text-[18px] font-medium text-foreground mb-4">Schedule appointment</h2>
 
         {branches.length > 1 && (
           <div className="mb-3">
-            <label htmlFor="create-appointment-branch" className="block text-[12px] font-medium text-[#425466] mb-1">
+            <label htmlFor="create-appointment-branch" className="block text-[12px] font-medium text-fg-secondary mb-1">
               Branch
             </label>
             <select
@@ -358,13 +358,13 @@ export function CreateAppointmentDialog({
               ))}
             </select>
             {prefilledPatient?.branchId && (
-              <p className="text-[11px] text-[#697386] mt-1">Booked at the patient&apos;s branch.</p>
+              <p className="text-[11px] text-fg-muted mt-1">Booked at the patient&apos;s branch.</p>
             )}
           </div>
         )}
 
         <div className="mb-3">
-          <label className="block text-[12px] font-medium text-[#425466] mb-1">Patient</label>
+          <label className="block text-[12px] font-medium text-fg-secondary mb-1">Patient</label>
           <PatientCombobox
             value={patient}
             onChange={setPatient}
@@ -375,14 +375,14 @@ export function CreateAppointmentDialog({
 
         {canPickDoctor && (
           <div className="mb-3">
-            <label className="block text-[12px] font-medium text-[#425466] mb-1">Doctor</label>
+            <label className="block text-[12px] font-medium text-fg-secondary mb-1">Doctor</label>
             <DoctorCombobox value={doctor} onChange={setDoctor} branchId={branchId || undefined} />
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label htmlFor="create-appointment-date" className="block text-[12px] font-medium text-[#425466] mb-1">Date</label>
+            <label htmlFor="create-appointment-date" className="block text-[12px] font-medium text-fg-secondary mb-1">Date</label>
             <DateInput
               id="create-appointment-date"
               value={date}
@@ -392,7 +392,7 @@ export function CreateAppointmentDialog({
             />
           </div>
           <div>
-            <label htmlFor="create-appointment-time" className="block text-[12px] font-medium text-[#425466] mb-1">Time</label>
+            <label htmlFor="create-appointment-time" className="block text-[12px] font-medium text-fg-secondary mb-1">Time</label>
             <input
               id="create-appointment-time"
               type="time"
@@ -404,7 +404,7 @@ export function CreateAppointmentDialog({
         </div>
 
         <div className="mb-3">
-          <label htmlFor="create-appointment-treatment" className="block text-[12px] font-medium text-[#425466] mb-1">
+          <label htmlFor="create-appointment-treatment" className="block text-[12px] font-medium text-fg-secondary mb-1">
             Treatment type (optional)
           </label>
           <select
@@ -424,7 +424,7 @@ export function CreateAppointmentDialog({
 
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <label htmlFor="create-appointment-duration" className="block text-[12px] font-medium text-[#425466] mb-1">
+            <label htmlFor="create-appointment-duration" className="block text-[12px] font-medium text-fg-secondary mb-1">
               Duration (minutes)
             </label>
             <input
@@ -442,7 +442,7 @@ export function CreateAppointmentDialog({
             />
           </div>
           <div>
-            <label htmlFor="create-appointment-room" className="block text-[12px] font-medium text-[#425466] mb-1">
+            <label htmlFor="create-appointment-room" className="block text-[12px] font-medium text-fg-secondary mb-1">
               Room (optional)
             </label>
             <input
@@ -482,26 +482,26 @@ export function CreateAppointmentDialog({
         />
 
         <div className="mb-4">
-          <label className="block text-[12px] font-medium text-[#425466] mb-1">
+          <label className="block text-[12px] font-medium text-fg-secondary mb-1">
             Notes (optional)
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-1.5 text-[14px] text-[#061b31] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            className="w-full rounded-md border border-border bg-white px-2 py-1.5 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand"
           />
         </div>
 
         {isPast && !repeat.enabled && (
-          <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41] inline-flex items-start gap-2">
+          <div className="mb-3 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger inline-flex items-start gap-2">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" strokeWidth={2} />
             <span>Selected time is in the past.</span>
           </div>
         )}
 
         {conflicts.length > 0 && !repeat.enabled && (
-          <div className="mb-3 rounded-md bg-[#FDE7EC] border border-[#DF1B41]/20 px-3 py-2 text-[13px] text-[#DF1B41]">
+          <div className="mb-3 rounded-md bg-danger-subtle border border-danger/20 px-3 py-2 text-[13px] text-danger">
             <div className="flex items-center gap-1.5 font-medium mb-1">
               <AlertCircle className="h-3.5 w-3.5" strokeWidth={2} />
               Conflicts with existing appointment
@@ -519,12 +519,12 @@ export function CreateAppointmentDialog({
         )}
 
         {error && (repeat.enabled || !conflicts.length) && (
-          <div className="mb-3 rounded-md bg-[#FDE7EC] px-3 py-2 text-[13px] text-[#DF1B41]">
+          <div className="mb-3 rounded-md bg-danger-subtle px-3 py-2 text-[13px] text-danger">
             {error}
           </div>
         )}
 
-        <p className="text-[11px] text-[#94a3b8] mb-3">Clinic time (GMT{clinicUtcOffsetLabel()})</p>
+        <p className="text-[11px] text-fg-muted mb-3">Clinic time (GMT{clinicUtcOffsetLabel()})</p>
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-md text-[14px]">
@@ -549,16 +549,16 @@ export function CreateAppointmentDialog({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-105 rounded-2xl border border-[#e5edf5] bg-white p-6"
+            className="w-105 rounded-2xl border border-border bg-white p-6"
             style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <Coffee className="h-5 w-5 text-[#F59E0B]" strokeWidth={1.75} />
-              <h3 className="text-[16px] font-semibold text-[#061b31]">
+              <Coffee className="h-5 w-5 text-warning" strokeWidth={1.75} />
+              <h3 className="text-[16px] font-semibold text-foreground">
                 Book during break time?
               </h3>
             </div>
-            <p className="text-[13px] text-[#425466] mb-4">
+            <p className="text-[13px] text-fg-secondary mb-4">
               {doctor?.name ?? "The doctor"}&apos;s schedule has{" "}
               <strong>&ldquo;{breakConfirm.label}&rdquo;</strong> blocked at this time.
               The doctor will be notified by email if you book anyway.
@@ -579,7 +579,7 @@ export function CreateAppointmentDialog({
                   submit({ ...confirmed, forceBookOnBreak: true });
                 }}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5"
+                className="h-8 rounded-md text-[13px] bg-warning hover:bg-warning text-white gap-1.5"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 Book on break
@@ -600,16 +600,16 @@ export function CreateAppointmentDialog({
             aria-modal="true"
             aria-labelledby="outside-hours-title"
             onClick={(e) => e.stopPropagation()}
-            className="w-105 rounded-2xl border border-[#e5edf5] bg-white p-6"
+            className="w-105 rounded-2xl border border-border bg-white p-6"
             style={{ boxShadow: "0 12px 40px rgba(18,42,66,0.2)" }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-5 w-5 text-[#F59E0B]" strokeWidth={1.75} />
-              <h3 id="outside-hours-title" className="text-[16px] font-semibold text-[#061b31]">
+              <Clock className="h-5 w-5 text-warning" strokeWidth={1.75} />
+              <h3 id="outside-hours-title" className="text-[16px] font-semibold text-foreground">
                 Outside opening hours
               </h3>
             </div>
-            <p className="text-[13px] text-[#425466] mb-4">
+            <p className="text-[13px] text-fg-secondary mb-4">
               This time is outside the branch&apos;s opening hours
               {hoursConfirm.hours ? (
                 <>
@@ -634,7 +634,7 @@ export function CreateAppointmentDialog({
                   submit({ ...confirmed, forceOutsideHours: true });
                 }}
                 disabled={submitting}
-                className="h-8 rounded-md text-[13px] bg-[#F59E0B] hover:bg-[#D97706] text-white gap-1.5"
+                className="h-8 rounded-md text-[13px] bg-warning hover:bg-warning text-white gap-1.5"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
                 Book anyway

@@ -43,7 +43,7 @@ export function AppointmentTabs({ active, counts, onChange }: Props) {
       role="tablist"
       aria-label="Appointment status"
       onKeyDown={handleKeyDown}
-      className="flex items-center gap-1 border-b border-[#e5edf5] bg-white overflow-x-auto"
+      className="flex items-center gap-1 border-b border-border bg-white overflow-x-auto"
     >
       {TABS.map((tab) => {
         const isActive = tab.id === active;
@@ -61,26 +61,26 @@ export function AppointmentTabs({ active, counts, onChange }: Props) {
             aria-label={`${tab.label}, ${count ?? 0} appointment${count === 1 ? "" : "s"}`}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.id)}
-            className={`relative inline-flex shrink-0 items-center gap-2 px-4 h-11 text-[14px] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] ${
+            className={`relative inline-flex shrink-0 items-center gap-2 px-4 h-11 text-[14px] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand ${
               isActive
-                ? "text-[#635BFF] font-semibold"
-                : "text-[#425466] font-medium hover:text-[#0A2540]"
+                ? "text-brand font-semibold"
+                : "text-fg-secondary font-medium hover:text-foreground"
             }`}
           >
             {tab.label}
             {isActive ? (
-              <span className="inline-flex items-center justify-center min-w-5.5 h-5 px-1.5 rounded-full bg-[#F0EEFF] text-[12px] font-medium text-[#635BFF] tabular-nums">
+              <span className="inline-flex items-center justify-center min-w-5.5 h-5 px-1.5 rounded-full bg-brand-subtle text-[12px] font-medium text-brand tabular-nums">
                 {count ?? 0}
               </span>
             ) : (
-              <span className="text-[12px] text-[#697386] tabular-nums">
+              <span className="text-[12px] text-fg-muted tabular-nums">
                 ({count ?? 0})
               </span>
             )}
             {isActive && (
               <span
                 aria-hidden="true"
-                className="absolute left-3 right-3 -bottom-px h-0.5 bg-[#635BFF] transition-all"
+                className="absolute left-3 right-3 -bottom-px h-0.5 bg-brand transition-all"
               />
             )}
           </button>

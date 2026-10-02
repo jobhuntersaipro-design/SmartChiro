@@ -42,7 +42,7 @@ export function BranchPortalSettingsCard({ branchId }: { branchId: string }) {
   }, [branchId]);
 
   if (loadError) return <p className={ALERT_ERROR}>{loadError}</p>;
-  if (saved === null) return <div className="p-6 text-[#697386]">Loading patient portal settings…</div>;
+  if (saved === null) return <div className="p-6 text-fg-muted">Loading patient portal settings…</div>;
 
   const error = hoursError(value);
   const dirty = !error && Number(value) !== saved;
@@ -69,10 +69,10 @@ export function BranchPortalSettingsCard({ branchId }: { branchId: string }) {
   }
 
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] bg-white p-6 shadow-(--shadow-card)">
+    <div className="rounded-panel border border-border bg-white p-6 shadow-(--shadow-card)">
       <div className="mb-4">
-        <h3 className="text-[18px] font-medium text-[#0A2540]">Patient portal</h3>
-        <p className="text-[14px] text-[#697386]">
+        <h3 className="text-[18px] font-medium text-foreground">Patient portal</h3>
+        <p className="text-[14px] text-fg-muted">
           Patients sign in at <span className="font-mono">/portal</span> with the email on their record to see
           appointments, packages and receipts.
         </p>
@@ -100,7 +100,7 @@ export function BranchPortalSettingsCard({ branchId }: { branchId: string }) {
       {error ? (
         <p className={FIELD_ERROR}>{error}</p>
       ) : (
-        <p id="portal-cancel-hours-hint" className="mt-1 text-[13px] text-[#697386]">
+        <p id="portal-cancel-hours-hint" className="mt-1 text-[13px] text-fg-muted">
           Patients can cancel a booked appointment online until this many hours before it starts; after that they call
           the clinic.
         </p>

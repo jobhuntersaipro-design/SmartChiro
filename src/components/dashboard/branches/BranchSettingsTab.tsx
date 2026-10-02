@@ -174,7 +174,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       {/* Operating Hours */}
       <Section title="Operating Hours">
         {!hasAnyHours(hours) && (
-          <p className="mb-3 rounded-[4px] border border-[#F5D9A8] bg-[#FFF8EB] px-3 py-2 text-[13px] text-[#8A5A00]">
+          <p className="mb-3 rounded-control border border-warning/25 bg-warning-subtle px-3 py-2 text-[13px] text-warning">
             Opening hours aren&apos;t set — bookings can&apos;t be checked against them. Set the days this branch is open.
           </p>
         )}
@@ -187,7 +187,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
                   type="button"
                   onClick={() => toggleDay(day)}
                   className={`w-24 text-left text-[14px] font-medium cursor-pointer ${
-                    isOpen ? "text-[#061b31]" : "text-[#c1c9d2]"
+                    isOpen ? "text-foreground" : "text-border-strong"
                   }`}
                 >
                   {DAY_LABELS[day]}
@@ -198,18 +198,18 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
                       type="time"
                       value={hours[day]?.open ?? "09:00"}
                       onChange={(e) => updateDayHours(day, "open", e.target.value)}
-                      className="w-28 h-8 rounded-md border-[#e5edf5] text-[14px]"
+                      className="w-28 h-8 rounded-md border-border text-[14px]"
                     />
-                    <span className="text-[13px] text-[#64748d]">to</span>
+                    <span className="text-[13px] text-fg-secondary">to</span>
                     <Input
                       type="time"
                       value={hours[day]?.close ?? "18:00"}
                       onChange={(e) => updateDayHours(day, "close", e.target.value)}
-                      className="w-28 h-8 rounded-md border-[#e5edf5] text-[14px]"
+                      className="w-28 h-8 rounded-md border-border text-[14px]"
                     />
                     <button
                       onClick={() => toggleDay(day)}
-                      className="text-[12px] text-[#DF1B41] hover:underline cursor-pointer"
+                      className="text-[12px] text-danger hover:underline cursor-pointer"
                     >
                       Close
                     </button>
@@ -217,7 +217,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
                 ) : (
                   <button
                     onClick={() => toggleDay(day)}
-                    className="text-[13px] text-[#533afd] hover:underline cursor-pointer"
+                    className="text-[13px] text-brand hover:underline cursor-pointer"
                   >
                     Set hours
                   </button>
@@ -280,16 +280,16 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="h-9 px-6 bg-[#533afd] hover:bg-[#4434d4] text-white rounded-md text-[14px] font-medium cursor-pointer"
+            className="h-9 px-6 bg-primary hover:bg-primary/90 text-white rounded-md text-[14px] font-medium cursor-pointer"
           >
             {saving ? "Saving..." : "Save Changes"}
           </Button>
-          {error && <p className="text-[14px] text-[#DF1B41]">{error}</p>}
-          {success && <p className="text-[14px] text-[#30B130]">Saved successfully</p>}
+          {error && <p className="text-[14px] text-danger">{error}</p>}
+          {success && <p className="text-[14px] text-success">Saved successfully</p>}
         </div>
       )}
       {!isOwner && (
-        <p className="text-[13px] text-[#64748d]">
+        <p className="text-[13px] text-fg-secondary">
           Only the branch owner can edit these settings.
         </p>
       )}
@@ -318,19 +318,19 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
 
       {/* Danger Zone */}
       {isOwner && (
-        <div className="rounded-[6px] border border-[#DF1B41]/20 bg-[#FEF2F4] px-5 py-4">
+        <div className="rounded-panel border border-danger/20 bg-danger-subtle px-5 py-4">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-4 w-4 text-[#DF1B41]" strokeWidth={1.5} />
-            <h3 className="text-[15px] font-medium text-[#DF1B41]">Danger Zone</h3>
+            <AlertTriangle className="h-4 w-4 text-danger" strokeWidth={1.5} />
+            <h3 className="text-[15px] font-medium text-danger">Danger Zone</h3>
           </div>
-          <p className="text-[13px] text-[#64748d] mb-3">
+          <p className="text-[13px] text-fg-secondary mb-3">
             Permanently delete this branch and all its data. This cannot be undone.
           </p>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setDeleteOpen(true)}
-            className="rounded-md border-[#DF1B41]/30 text-[#DF1B41] hover:bg-[#DF1B41] hover:text-white text-[14px] cursor-pointer"
+            className="rounded-md border-danger/30 text-danger hover:bg-danger hover:text-white text-[14px] cursor-pointer"
           >
             Delete Branch
           </Button>
@@ -365,7 +365,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-[15px] font-medium text-[#061b31] mb-3 pb-2 border-b border-[#e5edf5]">{title}</h3>
+      <h3 className="text-[15px] font-medium text-foreground mb-3 pb-2 border-b border-border">{title}</h3>
       <div className="space-y-3">{children}</div>
     </div>
   );
@@ -374,7 +374,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[13px] font-medium text-[#64748d] mb-1">{label}</label>
+      <label className="block text-[13px] font-medium text-fg-secondary mb-1">{label}</label>
       {children}
     </div>
   );

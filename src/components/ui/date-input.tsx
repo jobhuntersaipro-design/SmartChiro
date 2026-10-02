@@ -37,8 +37,8 @@ export interface DateInputProps extends NativeInputProps {
 }
 
 const BASE_INPUT =
-  "flex h-9 w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-3 text-[15px] text-[#0A2540] tabular-nums placeholder:text-[#A3ACB9] transition-colors focus:outline-none focus:ring-1 focus:ring-[#635BFF] focus:border-[#635BFF] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60";
-const INVALID_INPUT = "border-[#DF1B41]/60 focus:ring-[#DF1B41] focus:border-[#DF1B41]";
+  "flex h-9 w-full rounded-control border border-border bg-surface-muted px-3 text-[15px] text-foreground tabular-nums placeholder:text-fg-disabled transition-colors focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white disabled:cursor-not-allowed disabled:opacity-60";
+const INVALID_INPUT = "border-danger/60 focus:ring-danger focus:border-danger";
 
 /**
  * Date field that shows and accepts dd/mm/yyyy (also d/m/yyyy, dd-mm-yyyy,
@@ -145,7 +145,7 @@ export function DateInput({
           <PopoverTrigger
             disabled={disabled}
             aria-label="Choose date from calendar"
-            className="absolute right-1 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-[4px] text-[#697386] transition-colors hover:bg-[#F0F3F7] hover:text-[#0A2540] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] disabled:pointer-events-none disabled:opacity-50"
+            className="absolute right-1 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-hover hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-brand disabled:pointer-events-none disabled:opacity-50"
           >
             <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
           </PopoverTrigger>
@@ -175,7 +175,7 @@ export function DateInput({
         </Popover>
       </div>
       {visibleError && (
-        <p id={errorId} role="alert" className="mt-1 text-[12px] text-[#DF1B41]">
+        <p id={errorId} role="alert" className="mt-1 text-[12px] text-danger">
           {visibleError}
         </p>
       )}

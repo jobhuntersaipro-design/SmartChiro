@@ -51,7 +51,7 @@ export function XrayFilterBar({ state, onChange, count }: XrayFilterBarProps) {
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[13px] font-medium text-[#061b31]">X-Rays ({count})</span>
+      <span className="text-[13px] font-medium text-foreground">X-Rays ({count})</span>
       <div className="flex flex-wrap gap-1.5 ml-2">
         {BODY_REGIONS.map((r) => (
           <Chip key={r} active={state.bodyRegions.includes(r)} onClick={() => toggleRegion(r)}>
@@ -71,7 +71,7 @@ export function XrayFilterBar({ state, onChange, count }: XrayFilterBarProps) {
         <select
           value={state.sort}
           onChange={(e) => onChange({ ...state, sort: e.target.value as SortBy })}
-          className="rounded-md border border-[#e5edf5] bg-white px-2 py-1 text-[12px] text-[#425466]"
+          className="rounded-md border border-border bg-white px-2 py-1 text-[12px] text-fg-secondary"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>

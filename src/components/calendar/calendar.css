@@ -1,11 +1,11 @@
 /* ───────────────────────────────────────────────────────────────────────
    Stripe-themed overrides for react-big-calendar.
    Aligns the calendar with SmartChiro's design tokens:
-     border       #e5edf5
-     muted text   #64748d
-     primary      #635BFF
-     today bg     #F0EEFF
-     hover bg     #F0F3F7
+     border       var(--border)
+     muted text   var(--text-secondary)
+     primary      var(--brand)
+     today bg     var(--brand-subtle)
+     hover bg     var(--surface-hover)
      monospace    'SF Mono', 'Fira Code', monospace
    ─────────────────────────────────────────────────────────────────────── */
 
@@ -14,14 +14,14 @@
   font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 13px;
-  color: #0a2540;
+  color: var(--foreground);
   height: 100%;
 }
 
 .rbc-month-view,
 .rbc-time-view,
 .rbc-agenda-view {
-  border-color: #e5edf5;
+  border-color: var(--border);
   background: white;
 }
 
@@ -35,7 +35,7 @@
 .rbc-time-header > .rbc-row:first-child,
 .rbc-time-header > .rbc-row + .rbc-row,
 .rbc-day-slot .rbc-time-slot {
-  border-color: #e5edf5 !important;
+  border-color: var(--border) !important;
 }
 
 /* Header row: weekday labels */
@@ -43,8 +43,8 @@
   padding: 8px 6px;
   font-weight: 500;
   font-size: 12px;
-  color: #64748d;
-  border-bottom: 1px solid #e5edf5;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -52,47 +52,47 @@
 /* Time gutter (left side hour labels) */
 .rbc-time-gutter,
 .rbc-time-gutter .rbc-timeslot-group {
-  background: #fafbfd;
+  background: var(--surface-subtle);
 }
 .rbc-label {
   font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
   font-size: 11px;
-  color: #64748d;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 /* Hour rows */
 .rbc-day-slot .rbc-timeslot-group {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--surface-hover);
 }
 .rbc-time-slot {
-  border-top-color: #f1f5f9 !important;
+  border-top-color: var(--surface-hover) !important;
 }
 
 /* Today highlight */
 .rbc-today {
-  background-color: #F0EEFF !important;
+  background-color: var(--brand-subtle) !important;
 }
 
 /* Off-range cells (Month view) */
 .rbc-off-range-bg {
-  background: #fafbfd;
+  background: var(--surface-subtle);
 }
 .rbc-off-range {
-  color: #cbd5e1;
+  color: var(--border-strong);
 }
 
 /* Selected slot (drag-to-select range) */
 .rbc-slot-selection {
-  background: #635BFF20;
-  border: 1px solid #635BFF;
-  color: #061b31;
+  background: var(--brand-subtle);
+  border: 1px solid var(--brand);
+  color: var(--foreground);
   font-weight: 500;
 }
 
 /* Now line */
 .rbc-current-time-indicator {
-  background-color: #DF1B41;
+  background-color: var(--danger);
   height: 2px;
 }
 
@@ -105,7 +105,7 @@
   filter: brightness(0.97);
 }
 .rbc-event.rbc-selected {
-  outline: 2px solid #635BFF;
+  outline: 2px solid var(--brand);
   outline-offset: -2px;
 }
 
@@ -119,21 +119,21 @@
 
 /* Resource header (Day view with multiple doctors) */
 .rbc-time-header-cell {
-  border-bottom: 1px solid #e5edf5;
+  border-bottom: 1px solid var(--border);
 }
 .rbc-time-header-content > .rbc-row.rbc-row-resource {
-  border-bottom: 2px solid #e5edf5;
-  background: #fafbfd;
+  border-bottom: 2px solid var(--border);
+  background: var(--surface-subtle);
 }
 
 /* Month-view "show more" link */
 .rbc-show-more {
-  color: #635BFF;
+  color: var(--brand);
   font-weight: 500;
   font-size: 11px;
 }
 .rbc-show-more:hover {
-  color: #4434d4;
+  color: var(--brand-strong);
   text-decoration: underline;
 }
 

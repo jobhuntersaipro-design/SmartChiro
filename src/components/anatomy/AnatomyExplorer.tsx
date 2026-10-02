@@ -32,7 +32,7 @@ import type { FocusRequest, PartClickOptions } from "./AnatomyViewer";
 const AnatomyViewer = dynamic(() => import("./AnatomyViewer"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center bg-[#1A1F36] text-white/70">
+    <div className="flex h-full items-center justify-center bg-canvas text-white/70">
       <Loader2 className="h-6 w-6 animate-spin" strokeWidth={1.5} />
     </div>
   ),
@@ -170,12 +170,12 @@ export function AnatomyExplorer() {
     <div className="flex h-full min-h-150 flex-col">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-light tracking-[-0.22px] text-[#061b31]">Anatomy</h1>
-          <p className="mt-0.5 text-[14px] text-[#64748d]">
+          <h1 className="text-[22px] font-light tracking-[-0.22px] text-foreground">Anatomy</h1>
+          <p className="mt-0.5 text-[14px] text-fg-secondary">
             Explore the skeleton and muscle groups in 3D — click a structure to select it
           </p>
         </div>
-        <div role="tablist" aria-label="Anatomy layer" className="flex rounded-md border border-[#e5edf5] bg-white p-0.5">
+        <div role="tablist" aria-label="Anatomy layer" className="flex rounded-md border border-border bg-white p-0.5">
           {LAYERS.map((l) => (
             <button
               key={l.key}
@@ -185,8 +185,8 @@ export function AnatomyExplorer() {
               onPointerEnter={l.key === "muscles" ? preloadMuscles : undefined}
               onFocus={l.key === "muscles" ? preloadMuscles : undefined}
               className={cn(
-                "rounded-[4px] px-3.5 py-1 text-[14px] font-medium transition-colors",
-                layer === l.key ? "bg-[#ededfc] text-[#533afd]" : "text-[#425466] hover:bg-[#f6f9fc] hover:text-[#061b31]"
+                "rounded-control px-3.5 py-1 text-[14px] font-medium transition-colors",
+                layer === l.key ? "bg-brand-subtle text-brand" : "text-fg-secondary hover:bg-surface-muted hover:text-foreground"
               )}
             >
               {l.label}
@@ -196,7 +196,7 @@ export function AnatomyExplorer() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-        <div className="relative min-h-105 flex-1 overflow-hidden rounded-[6px] border border-[#e5edf5] shadow-(--shadow-card)">
+        <div className="relative min-h-105 flex-1 overflow-hidden rounded-panel border border-border shadow-(--shadow-card)">
           <AnatomyViewer
             layer={layer}
             selectedIds={selectedIds}
@@ -241,7 +241,7 @@ export function AnatomyExplorer() {
             )}
           </div>
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-[#0A2540]/70 to-transparent px-3 pb-2.5 pt-8">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-foreground/70 to-transparent px-3 pb-2.5 pt-8">
             <p className="hidden text-[12px] text-white/70 md:block">
               Drag the model to rotate · Drag empty space to move · Scroll to zoom · Shift+click to multi-select
               {isMuscles && " · Alt+click for a single muscle"} · Esc to clear
@@ -258,7 +258,7 @@ export function AnatomyExplorer() {
           </div>
         </div>
 
-        <aside className="flex max-h-150 w-full flex-col overflow-hidden rounded-[6px] border border-[#e5edf5] bg-white shadow-(--shadow-card) lg:max-h-none lg:w-85">
+        <aside className="flex max-h-150 w-full flex-col overflow-hidden rounded-panel border border-border bg-white shadow-(--shadow-card) lg:max-h-none lg:w-85">
           <SelectionCard
             layer={layer}
             items={selectionItems}
@@ -267,10 +267,10 @@ export function AnatomyExplorer() {
             onClear={clearSelection}
           />
 
-          <div className="border-b border-[#e5edf5] p-3">
+          <div className="border-b border-border p-3">
             <div className="relative">
               <SearchIcon
-                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748d]"
+                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-secondary"
                 strokeWidth={1.75}
               />
               <input
@@ -278,7 +278,7 @@ export function AnatomyExplorer() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={layer === "skeleton" ? "Search bones, e.g. L5, femur…" : "Search muscles, e.g. psoas…"}
-                className="h-8 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-8 pr-3 text-[14px] text-[#061b31] placeholder:text-[#94a3b8] focus:border-[#533afd] focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+                className="h-8 w-full rounded-md border border-border bg-surface-muted pl-8 pr-3 text-[14px] text-foreground placeholder:text-fg-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
           </div>
@@ -318,10 +318,10 @@ function ViewerButton({ onClick, icon: Icon, label, active }: ViewerButtonProps)
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "flex items-center gap-1.5 rounded-[4px] border px-2 py-1 text-[13px] font-medium backdrop-blur-sm transition-colors",
+        "flex items-center gap-1.5 rounded-control border px-2 py-1 text-[13px] font-medium backdrop-blur-sm transition-colors",
         active
-          ? "border-[#635BFF] bg-[#635BFF]/85 text-white"
-          : "border-white/15 bg-[#0A2540]/60 text-white/90 hover:bg-[#0A2540]/80 hover:text-white"
+          ? "border-brand bg-brand/85 text-white"
+          : "border-white/15 bg-foreground/60 text-white/90 hover:bg-foreground/80 hover:text-white"
       )}
     >
       <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -349,7 +349,7 @@ function MuscleDepthControls({
 }: MuscleDepthControlsProps) {
   const scope = scopeLabels.length ? scopeLabels.join(", ") : "Whole body";
   return (
-    <div className="pointer-events-auto w-full max-w-66 rounded-[6px] border border-white/15 bg-[#0A2540]/70 p-2.5 text-white shadow-md backdrop-blur-sm sm:w-66">
+    <div className="pointer-events-auto w-full max-w-66 rounded-panel border border-white/15 bg-foreground/70 p-2.5 text-white shadow-md backdrop-blur-sm sm:w-66">
       <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.04em] text-white/70">
         <Layers className="h-3.5 w-3.5" strokeWidth={1.75} />
         Peel to
@@ -357,7 +357,7 @@ function MuscleDepthControls({
       <div
         role="radiogroup"
         aria-label="Peel muscles to layer"
-        className="mt-1.5 grid grid-cols-3 gap-0.5 rounded-[4px] bg-white/10 p-0.5"
+        className="mt-1.5 grid grid-cols-3 gap-0.5 rounded-control bg-white/10 p-0.5"
       >
         {MUSCLE_LAYERS.map(({ layer, label }) => (
           <button
@@ -366,8 +366,8 @@ function MuscleDepthControls({
             aria-checked={peelDepth === layer}
             onClick={() => onPeelDepthChange(layer)}
             className={cn(
-              "rounded-[4px] px-1 py-1 text-[12px] font-medium transition-colors",
-              peelDepth === layer ? "bg-[#635BFF] text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
+              "rounded-control px-1 py-1 text-[12px] font-medium transition-colors",
+              peelDepth === layer ? "bg-brand text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
             )}
           >
             {label}
@@ -390,7 +390,7 @@ function MuscleDepthControls({
         step={0.01}
         value={expansion}
         onChange={(e) => onExpansionChange(Number(e.target.value))}
-        className="mt-1.5 w-full accent-[#635BFF]"
+        className="mt-1.5 w-full accent-brand"
       />
       <div className="mt-1 flex items-center gap-1 text-[12px] text-white/65">
         <span className="truncate" title={scope}>
@@ -400,7 +400,7 @@ function MuscleDepthControls({
           <button
             onClick={onClearScope}
             aria-label="Collapse all groups"
-            className="ml-auto shrink-0 rounded-[4px] p-0.5 hover:bg-white/10 hover:text-white"
+            className="ml-auto shrink-0 rounded-control p-0.5 hover:bg-white/10 hover:text-white"
           >
             <X className="h-3 w-3" strokeWidth={2} />
           </button>
@@ -421,9 +421,9 @@ interface SelectionCardProps {
 function SelectionCard({ layer, items, onRemove, onFocus, onClear }: SelectionCardProps) {
   if (items.length === 0) {
     return (
-      <div className="border-b border-[#e5edf5] px-4 py-3">
-        <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">Selection</p>
-        <p className="mt-1 text-[14px] text-[#64748d]">
+      <div className="border-b border-border px-4 py-3">
+        <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-fg-secondary">Selection</p>
+        <p className="mt-1 text-[14px] text-fg-secondary">
           {layer === "skeleton"
             ? "Click a bone in the model or pick one below."
             : "Click a muscle group in the model or pick one below."}
@@ -434,22 +434,22 @@ function SelectionCard({ layer, items, onRemove, onFocus, onClear }: SelectionCa
 
   const single = items.length === 1 ? items[0] : null;
   return (
-    <div className="border-b border-[#e5edf5] px-4 py-3">
+    <div className="border-b border-border px-4 py-3">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-[#64748d]">
+        <p className="text-[12px] font-medium uppercase tracking-[0.04em] text-fg-secondary">
           {items.length === 1 ? "Selected" : `${items.length} selected`}
         </p>
         <div className="flex gap-1">
           <button
             onClick={onFocus}
-            className="flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[13px] text-[#533afd] hover:bg-[#ededfc]"
+            className="flex items-center gap-1 rounded-control px-1.5 py-0.5 text-[13px] text-brand hover:bg-brand-subtle"
           >
             <Crosshair className="h-3.5 w-3.5" strokeWidth={1.75} />
             Focus
           </button>
           <button
             onClick={onClear}
-            className="rounded-[4px] px-1.5 py-0.5 text-[13px] text-[#64748d] hover:bg-[#f6f9fc] hover:text-[#061b31]"
+            className="rounded-control px-1.5 py-0.5 text-[13px] text-fg-secondary hover:bg-surface-muted hover:text-foreground"
           >
             Clear
           </button>
@@ -462,7 +462,7 @@ function SelectionCard({ layer, items, onRemove, onFocus, onClear }: SelectionCa
           {items.map((item) => (
             <li
               key={item.key}
-              className="flex items-center gap-1 rounded-full bg-[#ededfc] py-0.5 pl-2 pr-1 text-[12px] text-[#533afd]"
+              className="flex items-center gap-1 rounded-full bg-brand-subtle py-0.5 pl-2 pr-1 text-[12px] text-brand"
             >
               <span className="max-w-50 truncate">
                 {item.isGroup ? item.label : (findPart(layer, item.ids[0])?.short ?? item.label)}
@@ -492,12 +492,12 @@ function SelectionDetail({ layer, item }: { layer: AnatomyLayer; item: Selection
     const members = [...new Set(parts.map((p) => p.label.replace(/\b(right|left) /i, "")))];
     return (
       <div className="mt-1.5">
-        <p className="text-[16px] font-medium text-[#061b31]">{item.label}</p>
-        <p className="mt-0.5 text-[13px] text-[#64748d]">
+        <p className="text-[16px] font-medium text-foreground">{item.label}</p>
+        <p className="mt-0.5 text-[13px] text-fg-secondary">
           {groupLabel(layer, first.group)} · {parts.length} parts
           {layers.length > 0 && ` · ${layers.map(layerLabel).join(", ")}`}
         </p>
-        <p className="mt-1 line-clamp-3 text-[13px] text-[#425466]" title={members.join(", ")}>
+        <p className="mt-1 line-clamp-3 text-[13px] text-fg-secondary" title={members.join(", ")}>
           {members.join(", ")}
         </p>
       </div>
@@ -506,8 +506,8 @@ function SelectionDetail({ layer, item }: { layer: AnatomyLayer; item: Selection
 
   return (
     <div className="mt-1.5">
-      <p className="text-[16px] font-medium text-[#061b31]">{first.label}</p>
-      <p className="mt-0.5 text-[13px] text-[#64748d]">
+      <p className="text-[16px] font-medium text-foreground">{first.label}</p>
+      <p className="mt-0.5 text-[13px] text-fg-secondary">
         {groupLabel(layer, first.group)}
         {first.side !== "midline" && ` · ${first.side === "right" ? "Right" : "Left"} side`}
         {first.layer && ` · ${layerLabel(first.layer)} layer`}

@@ -83,11 +83,11 @@ export function PortalSignIn() {
   return (
     <div className="w-full max-w-105">
       <div className="mb-6 flex flex-col items-center text-center">
-        <div className="mb-4 rounded-[6px] bg-[#635BFF] px-3 py-2">
+        <div className="mb-4 rounded-panel bg-brand px-3 py-2">
           <span className="text-[14px] font-bold text-white">Smart Chiro</span>
         </div>
-        <h1 className="text-[23px] font-medium text-[#0A2540]">Patient portal</h1>
-        <p className="mt-1 text-[15px] text-[#425466]">
+        <h1 className="text-[23px] font-medium text-foreground">Patient portal</h1>
+        <p className="mt-1 text-[15px] text-fg-secondary">
           See your appointments, packages and receipts.
         </p>
       </div>
@@ -119,7 +119,7 @@ export function PortalSignIn() {
                 className={INPUT}
                 aria-describedby="portal-email-hint"
               />
-              <p id="portal-email-hint" className="mt-1.5 text-[14px] text-[#697386]">
+              <p id="portal-email-hint" className="mt-1.5 text-[14px] text-fg-muted">
                 Use the email the clinic has on file. We&apos;ll send you a 6-digit code.
               </p>
             </div>
@@ -165,8 +165,8 @@ export function PortalSignIn() {
                 className={`${INPUT} text-center font-mono text-[23px] tracking-[0.4em]`}
                 aria-describedby="portal-code-hint"
               />
-              <p id="portal-code-hint" className="mt-1.5 text-[14px] text-[#697386]">
-                Sent to <span className="font-medium text-[#0A2540]">{email}</span>. It expires in 10 minutes.
+              <p id="portal-code-hint" className="mt-1.5 text-[14px] text-fg-muted">
+                Sent to <span className="font-medium text-foreground">{email}</span>. It expires in 10 minutes.
               </p>
             </div>
             {error && (
@@ -192,7 +192,7 @@ export function PortalSignIn() {
               </button>
               <button
                 type="button"
-                className={`${LINK} disabled:cursor-not-allowed disabled:text-[#A3ACB9] disabled:no-underline`}
+                className={`${LINK} disabled:cursor-not-allowed disabled:text-fg-disabled disabled:no-underline`}
                 disabled={busy || cooldown > 0}
                 onClick={() => void requestCode()}
               >
@@ -203,7 +203,7 @@ export function PortalSignIn() {
         )}
       </div>
 
-      <p className="mt-6 text-center text-[14px] text-[#697386]">
+      <p className="mt-6 text-center text-[14px] text-fg-muted">
         Clinic staff? <Link href="/login" className={LINK}>Sign in here</Link>
       </p>
     </div>

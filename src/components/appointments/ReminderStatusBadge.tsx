@@ -65,17 +65,17 @@ export function ReminderStatusBadge({ appointmentId }: Props) {
         {p.label}
       </button>
       {open && rows && (
-        <div className="absolute right-0 z-20 mt-1 w-80 rounded-[6px] border border-[#E3E8EE] bg-white p-3 shadow-md">
-          <div className="mb-2 text-[12px] uppercase tracking-wide text-[#697386]">
+        <div className="absolute right-0 z-20 mt-1 w-80 rounded-panel border border-border bg-white p-3 shadow-md">
+          <div className="mb-2 text-[12px] uppercase tracking-wide text-fg-muted">
             Reminders
           </div>
           <ul className="space-y-1.5 text-[13px]">
             {rows.map((r) => (
               <li key={r.id} className="flex items-center justify-between">
-                <span className="text-[#425466]">
+                <span className="text-fg-secondary">
                   {r.channel} · {r.offsetMin}m before
                 </span>
-                <span className="text-[#0A2540]">{r.status}</span>
+                <span className="text-foreground">{r.status}</span>
               </li>
             ))}
           </ul>

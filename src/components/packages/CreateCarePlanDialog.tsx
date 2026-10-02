@@ -282,7 +282,7 @@ export function CreateCarePlanDialog({
             rows={2}
             onChange={(e) => setGoals(e.target.value)}
             placeholder="e.g. Reduce lower back pain to 2/10, return to running"
-            className="w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[14px] text-[#061b31] focus:border-[#533afd] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            className="w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[14px] text-foreground focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
           />
         </div>
 
@@ -316,16 +316,16 @@ export function CreateCarePlanDialog({
               )}
             </select>
             {sellTemplate && (
-              <p className="mt-1 text-[12px] text-[#64748d]">
+              <p className="mt-1 text-[12px] text-fg-secondary">
                 A sale invoice for {formatMYR(sellTemplate.price)} is created with the plan.
               </p>
             )}
           </div>
         )}
 
-        <div className="rounded-md border border-[#e5edf5] px-3 py-3">
-          <label className="flex items-center gap-2 text-[14px] font-medium text-[#273951]">
-            <input type="checkbox" checked={book} onChange={(e) => setBook(e.target.checked)} className="h-4 w-4 accent-[#533afd]" />
+        <div className="rounded-md border border-border px-3 py-3">
+          <label className="flex items-center gap-2 text-[14px] font-medium text-foreground">
+            <input type="checkbox" checked={book} onChange={(e) => setBook(e.target.checked)} className="h-4 w-4 accent-brand" />
             Book the {totalVisits} visits now
           </label>
           {book && (
@@ -380,7 +380,7 @@ export function CreateCarePlanDialog({
                 hideEnd
               />
               {rule && !rule.ok ? (
-                <p className="text-[13px] text-[#9b6829]">{rule.error}</p>
+                <p className="text-[13px] text-warning">{rule.error}</p>
               ) : (
                 <SeriesPreviewList
                   preview={series.preview}

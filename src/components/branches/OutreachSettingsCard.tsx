@@ -17,7 +17,7 @@ type NumberKey = "recallAfterDays" | "recallCooldownDays" | "recallDailyLimit" |
 type Form = Omit<OutreachSettingsData, NumberKey | "googleReviewUrl"> & Record<NumberKey, string> & { googleReviewUrl: string };
 
 const inputClass =
-  "h-8 rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-2.5 text-[14px] text-[#0A2540] focus:outline-none focus:ring-1 focus:ring-[#635BFF] disabled:opacity-60";
+  "h-8 rounded-control border border-border bg-surface-muted px-2.5 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand disabled:opacity-60";
 
 function toForm(s: OutreachSettingsData): Form {
   return {
@@ -45,7 +45,7 @@ function NumberField({
   disabled: boolean;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 text-[14px] text-[#425466]">
+    <label className="flex items-center justify-between gap-3 text-[14px] text-fg-secondary">
       <span className="min-w-0">{label}</span>
       <span className="flex shrink-0 items-center gap-1.5">
         <input
@@ -87,7 +87,7 @@ export function OutreachSettingsCard({ branchId, canEdit, branch }: OutreachSett
   }, [logOpen, log, loadLog]);
 
   if (hidden) return null;
-  if (!form) return <div className="p-6 text-[#697386]">Loading recall &amp; review settings…</div>;
+  if (!form) return <div className="p-6 text-fg-muted">Loading recall &amp; review settings…</div>;
 
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((f) => (f ? { ...f, [key]: value } : f));
   const disabled = !canEdit || saving;
@@ -136,34 +136,34 @@ export function OutreachSettingsCard({ branchId, canEdit, branch }: OutreachSett
   ]);
 
   return (
-    <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-6 shadow-(--shadow-card)">
+    <div className="rounded-panel border border-border bg-white p-6 shadow-(--shadow-card)">
       <div className="mb-4">
-        <div className="text-[18px] font-medium text-[#0A2540]">Recall &amp; Review Requests</div>
-        <div className="text-[14px] text-[#697386]">
+        <div className="text-[18px] font-medium text-foreground">Recall &amp; Review Requests</div>
+        <div className="text-[14px] text-fg-muted">
           Win back lapsed patients and ask for Google reviews — WhatsApp first, email as fallback. Only patients who gave marketing consent are contacted.
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <section className="space-y-2.5">
-          <label className="flex items-center gap-2 text-[15px] font-medium text-[#0A2540]">
+          <label className="flex items-center gap-2 text-[15px] font-medium text-foreground">
             <input type="checkbox" checked={form.recallEnabled} disabled={disabled} onChange={(e) => set("recallEnabled", e.target.checked)} />
             Recall lapsed patients
           </label>
           <NumberField label="Recall after last visit" suffix="days" value={form.recallAfterDays} disabled={disabled} onChange={(v) => set("recallAfterDays", v)} />
           <NumberField label="Don't recall again for" suffix="days" value={form.recallCooldownDays} disabled={disabled} onChange={(v) => set("recallCooldownDays", v)} />
           <NumberField label="At most per day" suffix="patients" value={form.recallDailyLimit} disabled={disabled} onChange={(v) => set("recallDailyLimit", v)} />
-          <p className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-3 text-[14px] leading-relaxed text-[#425466]">{recallPreview}</p>
+          <p className="rounded-panel border border-border bg-surface-muted p-3 text-[14px] leading-relaxed text-fg-secondary">{recallPreview}</p>
         </section>
 
         <section className="space-y-2.5">
-          <label className="flex items-center gap-2 text-[15px] font-medium text-[#0A2540]">
+          <label className="flex items-center gap-2 text-[15px] font-medium text-foreground">
             <input type="checkbox" checked={form.reviewEnabled} disabled={disabled} onChange={(e) => set("reviewEnabled", e.target.checked)} />
             Ask for a Google review after a visit
           </label>
           <NumberField label="Send after a completed visit" suffix="hours" value={form.reviewDelayHours} disabled={disabled} onChange={(v) => set("reviewDelayHours", v)} />
           <NumberField label="Ask each patient at most every" suffix="days" value={form.reviewCooldownDays} disabled={disabled} onChange={(v) => set("reviewCooldownDays", v)} />
-          <label className="flex flex-col gap-1 text-[14px] text-[#425466]">
+          <label className="flex flex-col gap-1 text-[14px] text-fg-secondary">
             Google review link
             <input
               type="url"
@@ -174,19 +174,19 @@ export function OutreachSettingsCard({ branchId, canEdit, branch }: OutreachSett
               className={`${inputClass} w-full`}
             />
           </label>
-          <p className="rounded-[6px] border border-[#E3E8EE] bg-[#F6F9FC] p-3 text-[14px] leading-relaxed text-[#425466]">{reviewPreview}</p>
+          <p className="rounded-panel border border-border bg-surface-muted p-3 text-[14px] leading-relaxed text-fg-secondary">{reviewPreview}</p>
         </section>
       </div>
-      <p className="mt-3 text-[13px] text-[#697386]">
+      <p className="mt-3 text-[13px] text-fg-muted">
         Messages go out between 9 am and 8 pm clinic time, in the patient&apos;s language (English, Bahasa Melayu or 中文). Patients can reply STOP to opt out.
       </p>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#E3E8EE] pt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <button
           type="button"
           onClick={() => setLogOpen((o) => !o)}
           aria-expanded={logOpen}
-          className="inline-flex items-center gap-1 text-[14px] font-medium text-[#635BFF] hover:underline"
+          className="inline-flex items-center gap-1 text-[14px] font-medium text-brand hover:underline"
         >
           {logOpen ? <ChevronDown className="h-4 w-4" strokeWidth={1.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={1.5} />}
           Outreach log (last 100)
@@ -196,7 +196,7 @@ export function OutreachSettingsCard({ branchId, canEdit, branch }: OutreachSett
             type="button"
             onClick={save}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 rounded-[4px] bg-[#635BFF] px-4 py-2 text-[14px] text-white hover:bg-[#5851EB] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-control bg-primary px-4 py-2 text-[14px] text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />}
             Save recall &amp; review settings
@@ -206,7 +206,7 @@ export function OutreachSettingsCard({ branchId, canEdit, branch }: OutreachSett
       {logOpen && (
         <div className="mt-3">
           {log === null ? (
-            <div className="h-12 animate-pulse rounded bg-[#F6F9FC]" />
+            <div className="h-12 animate-pulse rounded bg-surface-muted" />
           ) : (
             <OutreachLogList items={log} showPatient emptyText="No recall or review messages yet." />
           )}

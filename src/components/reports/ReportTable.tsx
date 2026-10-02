@@ -36,11 +36,11 @@ interface ReportTableProps<T> {
 export function ReportTable<T>({ columns, rows, footer, rowKey, empty, caption }: ReportTableProps<T>) {
   const align = (c: ReportColumn<T>) => (c.align === "right" ? "text-right" : "text-left");
   return (
-    <div className="overflow-x-auto rounded-[4px] border border-[#e5edf5]">
+    <div className="overflow-x-auto rounded-control border border-border">
       <table className="w-full text-[14px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b border-[#e5edf5] bg-[#f6f9fc] text-[13px] font-medium text-[#64748d]">
+          <tr className="border-b border-border bg-surface-muted text-[13px] font-medium text-fg-secondary">
             {columns.map((c) => (
               <th key={c.header} scope="col" className={cn("px-3 py-2 font-medium whitespace-nowrap", align(c))}>
                 {c.header}
@@ -51,15 +51,15 @@ export function ReportTable<T>({ columns, rows, footer, rowKey, empty, caption }
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-3 py-6 text-center text-[14px] text-[#64748d]">
+              <td colSpan={columns.length} className="px-3 py-6 text-center text-[14px] text-fg-secondary">
                 {empty}
               </td>
             </tr>
           ) : (
             rows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc]">
+              <tr key={rowKey(row)} className="border-b border-border last:border-b-0 hover:bg-surface-muted">
                 {columns.map((c) => (
-                  <td key={c.header} className={cn("px-3 py-2 text-[#273951] tabular-nums", align(c), c.className)}>
+                  <td key={c.header} className={cn("px-3 py-2 text-foreground tabular-nums", align(c), c.className)}>
                     {c.render(row)}
                   </td>
                 ))}
@@ -69,7 +69,7 @@ export function ReportTable<T>({ columns, rows, footer, rowKey, empty, caption }
         </tbody>
         {footer && rows.length > 0 && (
           <tfoot>
-            <tr className="border-t border-[#e5edf5] bg-[#f6f9fc] font-medium text-[#061b31]">
+            <tr className="border-t border-border bg-surface-muted font-medium text-foreground">
               {columns.map((c) => (
                 <td key={c.header} className={cn("px-3 py-2 tabular-nums whitespace-nowrap", align(c))}>
                   {c.render(footer)}

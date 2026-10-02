@@ -148,14 +148,14 @@ function TimeOffSection({
   }
 
   return (
-    <section className="bg-white border border-[#e5edf5] rounded-[6px] p-5">
+    <section className="bg-white border border-border rounded-panel p-5">
       <header className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-[15px] font-semibold text-[#061b31] flex items-center gap-2">
-            <CalendarOff className="h-4 w-4 text-[#635BFF]" strokeWidth={1.75} />
+          <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+            <CalendarOff className="h-4 w-4 text-brand" strokeWidth={1.75} />
             Time off
           </h3>
-          <p className="text-[12px] text-[#697386]">
+          <p className="text-[12px] text-fg-muted">
             Annual leave, sick leave, conferences, etc.
           </p>
         </div>
@@ -163,7 +163,7 @@ function TimeOffSection({
           <Button
             size="sm"
             onClick={() => setAdding(true)}
-            className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+            className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} />
             Add leave
@@ -172,10 +172,10 @@ function TimeOffSection({
       </header>
 
       {adding && (
-        <div className="mb-4 p-4 bg-[#f6f9fc] border border-[#e5edf5] rounded-[6px] space-y-3">
+        <div className="mb-4 p-4 bg-surface-muted border border-border rounded-panel space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-medium text-[#425466] mb-1">Type</label>
+              <label className="block text-[12px] font-medium text-fg-secondary mb-1">Type</label>
               <Select
                 value={draft.type}
                 items={LEAVE_TYPES}
@@ -194,7 +194,7 @@ function TimeOffSection({
               </Select>
             </div>
             <div>
-              <label className="block text-[12px] font-medium text-[#425466] mb-1">
+              <label className="block text-[12px] font-medium text-fg-secondary mb-1">
                 Branch (optional)
               </label>
               <Select
@@ -222,34 +222,34 @@ function TimeOffSection({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-medium text-[#425466] mb-1">From</label>
+              <label className="block text-[12px] font-medium text-fg-secondary mb-1">From</label>
               <DateInput
                 aria-label="From"
                 value={draft.startDate}
                 onChange={(iso) => setDraft((d) => ({ ...d, startDate: iso }))}
-                inputClassName="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
+                inputClassName="w-full h-9 rounded-md border border-border bg-white px-2 text-[13px]"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-medium text-[#425466] mb-1">To</label>
+              <label className="block text-[12px] font-medium text-fg-secondary mb-1">To</label>
               <DateInput
                 aria-label="To"
                 value={draft.endDate}
                 min={draft.startDate || undefined}
                 onChange={(iso) => setDraft((d) => ({ ...d, endDate: iso }))}
-                inputClassName="w-full h-9 rounded-md border border-[#e5edf5] bg-white px-2 text-[13px]"
+                inputClassName="w-full h-9 rounded-md border border-border bg-white px-2 text-[13px]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#425466] mb-1">
+            <label className="block text-[12px] font-medium text-fg-secondary mb-1">
               Notes (optional)
             </label>
             <textarea
               rows={2}
               value={draft.notes}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-              className="w-full rounded-md border border-[#e5edf5] bg-white px-2 py-1.5 text-[13px]"
+              className="w-full rounded-md border border-border bg-white px-2 py-1.5 text-[13px]"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -266,7 +266,7 @@ function TimeOffSection({
               size="sm"
               onClick={add}
               disabled={submitting || !draft.startDate || !draft.endDate || draft.endDate < draft.startDate}
-              className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+              className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
             >
               {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               Add
@@ -276,11 +276,11 @@ function TimeOffSection({
       )}
 
       {loading ? (
-        <div className="text-center py-6 text-[13px] text-[#697386]">Loading…</div>
+        <div className="text-center py-6 text-[13px] text-fg-muted">Loading…</div>
       ) : rows.length === 0 ? (
-        <p className="text-[13px] text-[#697386] py-2">No time off scheduled.</p>
+        <p className="text-[13px] text-fg-muted py-2">No time off scheduled.</p>
       ) : (
-        <ul className="divide-y divide-[#e5edf5]">
+        <ul className="divide-y divide-border">
           {rows.map((r) => {
             const start = new Date(r.startDate);
             const end = new Date(r.endDate);
@@ -292,25 +292,25 @@ function TimeOffSection({
                 className="flex items-start justify-between gap-3 py-2.5"
               >
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-[#061b31]">
+                  <p className="text-[13px] font-medium text-foreground">
                     {typeLabel}
                     {r.branch && (
-                      <span className="ml-2 text-[12px] font-normal text-[#697386]">
+                      <span className="ml-2 text-[12px] font-normal text-fg-muted">
                         · {r.branch.name}
                       </span>
                     )}
                   </p>
-                  <p className="text-[12px] text-[#425466] tabular-nums">
+                  <p className="text-[12px] text-fg-secondary tabular-nums">
                     {clinicDateLabel(start, "numeric")} → {clinicDateLabel(end, "numeric")}
                   </p>
                   {r.notes && (
-                    <p className="text-[12px] text-[#697386] mt-0.5">{r.notes}</p>
+                    <p className="text-[12px] text-fg-muted mt-0.5">{r.notes}</p>
                   )}
                 </div>
                 {canEdit && (
                   <button
                     onClick={() => remove(r.id)}
-                    className="text-[#697386] hover:text-[#DF1B41] transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-[#FDE8EC]"
+                    className="text-fg-muted hover:text-danger transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-danger-subtle"
                     aria-label="Delete leave"
                   >
                     <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -400,14 +400,14 @@ function BreakTimeSection({
   }
 
   return (
-    <section className="bg-white border border-[#e5edf5] rounded-[6px] p-5">
+    <section className="bg-white border border-border rounded-panel p-5">
       <header className="flex items-start justify-between mb-4 gap-3">
         <div>
-          <h3 className="text-[15px] font-semibold text-[#061b31] flex items-center gap-2">
-            <Coffee className="h-4 w-4 text-[#F59E0B]" strokeWidth={1.75} />
+          <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+            <Coffee className="h-4 w-4 text-warning" strokeWidth={1.75} />
             Break times
           </h3>
-          <p className="text-[12px] text-[#697386]">
+          <p className="text-[12px] text-fg-muted">
             Recurring weekly breaks (e.g. lunch). Bookings on these slots require confirmation.
           </p>
         </div>
@@ -432,9 +432,9 @@ function BreakTimeSection({
       </header>
 
       {loading ? (
-        <div className="text-center py-6 text-[13px] text-[#697386]">Loading…</div>
+        <div className="text-center py-6 text-[13px] text-fg-muted">Loading…</div>
       ) : slots.length === 0 ? (
-        <p className="text-[13px] text-[#697386] py-2 mb-3">
+        <p className="text-[13px] text-fg-muted py-2 mb-3">
           No break times set.
         </p>
       ) : (
@@ -442,7 +442,7 @@ function BreakTimeSection({
           {slots.map((s, idx) => (
             <li
               key={idx}
-              className="flex items-center gap-2 p-2 bg-[#f6f9fc] border border-[#e5edf5] rounded-md"
+              className="flex items-center gap-2 p-2 bg-surface-muted border border-border rounded-md"
             >
               <Select
                 value={String(s.dayOfWeek)}
@@ -470,9 +470,9 @@ function BreakTimeSection({
                   updateSlot(idx, { startMinute: timeStrToMinutes(e.target.value) })
                 }
                 disabled={!canEdit}
-                className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px] tabular-nums"
+                className="h-8 rounded-md border border-border bg-white px-2 text-[12px] tabular-nums"
               />
-              <span className="text-[12px] text-[#697386]">→</span>
+              <span className="text-[12px] text-fg-muted">→</span>
               <input
                 type="time"
                 value={minutesToTimeStr(s.endMinute)}
@@ -480,7 +480,7 @@ function BreakTimeSection({
                   updateSlot(idx, { endMinute: timeStrToMinutes(e.target.value) })
                 }
                 disabled={!canEdit}
-                className="h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px] tabular-nums"
+                className="h-8 rounded-md border border-border bg-white px-2 text-[12px] tabular-nums"
               />
               <input
                 type="text"
@@ -488,12 +488,12 @@ function BreakTimeSection({
                 value={s.label ?? ""}
                 onChange={(e) => updateSlot(idx, { label: e.target.value })}
                 disabled={!canEdit}
-                className="flex-1 h-8 rounded-md border border-[#e5edf5] bg-white px-2 text-[12px]"
+                className="flex-1 h-8 rounded-md border border-border bg-white px-2 text-[12px]"
               />
               {canEdit && (
                 <button
                   onClick={() => removeSlot(idx)}
-                  className="text-[#697386] hover:text-[#DF1B41] transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-[#FDE8EC]"
+                  className="text-fg-muted hover:text-danger transition-colors h-7 w-7 flex items-center justify-center rounded-md hover:bg-danger-subtle"
                   aria-label="Remove slot"
                 >
                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -517,13 +517,13 @@ function BreakTimeSection({
           </Button>
           <div className="flex items-center gap-2">
             {savedAt && (
-              <span className="text-[12px] text-[#15be53]">Saved</span>
+              <span className="text-[12px] text-success">Saved</span>
             )}
             <Button
               size="sm"
               onClick={save}
               disabled={saving}
-              className="h-8 rounded-md bg-[#635BFF] hover:bg-[#5851EB] text-white text-[13px] gap-1.5"
+              className="h-8 rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] gap-1.5"
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />}
               Save break times

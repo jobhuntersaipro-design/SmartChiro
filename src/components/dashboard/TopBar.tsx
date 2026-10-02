@@ -33,20 +33,20 @@ export function TopBar({ onOpenMenu }: { onOpenMenu?: () => void }) {
           type="button"
           onClick={onOpenMenu}
           aria-label="Open navigation"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[#425466] hover:bg-[#f6f9fc] md:hidden"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-fg-secondary hover:bg-surface-muted md:hidden"
         >
           <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
       )}
       <form role="search" onSubmit={handleSubmit} className="relative w-full max-w-120">
-        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748d]" strokeWidth={2} />
+        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-secondary" strokeWidth={2} />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Search patients"
           placeholder={placeholder}
-          className="flex h-8 w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] pl-9 pr-3 text-[15px] text-[#061b31] placeholder:text-[#64748d] focus:outline-none focus:ring-1 focus:ring-[#533afd] focus:border-[#533afd] focus:bg-white transition-all duration-200"
+          className="flex h-8 w-full rounded-md border border-border bg-surface-muted pl-9 pr-3 text-[15px] text-foreground placeholder:text-fg-secondary focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand focus:bg-white transition-all duration-200"
         />
       </form>
     </header>

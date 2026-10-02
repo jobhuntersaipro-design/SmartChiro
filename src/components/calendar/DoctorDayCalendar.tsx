@@ -176,7 +176,7 @@ export function DoctorDayCalendar({
   if (doctors.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
-        <p className="text-[14px] text-[#697386]">
+        <p className="text-[14px] text-fg-muted">
           No doctors at this branch.
         </p>
       </div>
@@ -184,22 +184,22 @@ export function DoctorDayCalendar({
   }
 
   return (
-    <div className="relative bg-white border border-[#e5edf5] rounded-[6px] overflow-hidden">
+    <div className="relative bg-white border border-border rounded-panel overflow-hidden">
       {loading && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/60 pointer-events-none">
-          <Loader2 className="h-5 w-5 text-[#635BFF] animate-spin" strokeWidth={2} />
+          <Loader2 className="h-5 w-5 text-brand animate-spin" strokeWidth={2} />
         </div>
       )}
 
       {/* Sticky column headers — doctor avatars + names + count */}
       <div
-        className="sticky top-0 z-20 flex bg-white border-b border-[#e5edf5]"
+        className="sticky top-0 z-20 flex bg-white border-b border-border"
         style={{
           gridTemplateColumns: `80px repeat(${doctors.length}, minmax(220px, 1fr))`,
           display: "grid",
         }}
       >
-        <div className="px-2 py-3 text-[11px] font-medium text-[#697386] tabular-nums border-r border-[#e5edf5] flex items-end justify-center">
+        <div className="px-2 py-3 text-[11px] font-medium text-fg-muted tabular-nums border-r border-border flex items-end justify-center">
           GMT
           <br />
           {clinicUtcOffsetLabel(date)}
@@ -211,14 +211,14 @@ export function DoctorDayCalendar({
           return (
             <div
               key={d.id}
-              className="px-3 py-3 border-r border-[#e5edf5] last:border-r-0 flex items-center gap-2 min-w-0"
+              className="px-3 py-3 border-r border-border last:border-r-0 flex items-center gap-2 min-w-0"
             >
               <DoctorAvatar doctor={d} />
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#061b31] truncate" title={d.name ?? "Unassigned"}>
+                <p className="text-[14px] font-semibold text-foreground truncate" title={d.name ?? "Unassigned"}>
                   {d.name ?? "Unassigned"}
                 </p>
-                <p className="text-[12px] text-[#697386] truncate">
+                <p className="text-[12px] text-fg-muted truncate">
                   {todaysCount === 0
                     ? isToday ? "No appointments today" : "No appointments"
                     : plural(todaysCount, "appointment")}
@@ -243,11 +243,11 @@ export function DoctorDayCalendar({
           }}
         >
           {/* Time gutter */}
-          <div className="border-r border-[#e5edf5] relative">
+          <div className="border-r border-border relative">
             {hours.map((h) => (
               <div
                 key={h}
-                className="absolute left-0 right-2 text-[11px] text-[#697386] tabular-nums text-right pr-1 -translate-y-1/2"
+                className="absolute left-0 right-2 text-[11px] text-fg-muted tabular-nums text-right pr-1 -translate-y-1/2"
                 style={{ top: pxFromMinutes((h - startHour) * 60) }}
               >
                 {format(new Date(2020, 0, 1, h, 0), "h:mm a")}
@@ -261,14 +261,14 @@ export function DoctorDayCalendar({
               key={d.id}
               role={onSelectSlot ? "button" : undefined}
               onClick={(e) => handleColumnClick(e, d.id)}
-              className="relative border-r border-[#e5edf5] last:border-r-0 cursor-pointer"
+              className="relative border-r border-border last:border-r-0 cursor-pointer"
               style={{ height: totalHeight }}
             >
               {/* Hour grid lines */}
               {hours.map((h, i) => (
                 <div
                   key={h}
-                  className="absolute left-0 right-0 border-t border-[#f1f4f8]"
+                  className="absolute left-0 right-0 border-t border-border-subtle"
                   style={{
                     top: pxFromMinutes((h - startHour) * 60),
                     borderTopStyle: i === 0 ? "none" : "solid",
@@ -279,7 +279,7 @@ export function DoctorDayCalendar({
               {hours.slice(0, -1).map((h) => (
                 <div
                   key={`half-${h}`}
-                  className="absolute left-0 right-0 border-t border-dotted border-[#f1f4f8]"
+                  className="absolute left-0 right-0 border-t border-dotted border-border-subtle"
                   style={{ top: pxFromMinutes((h - startHour) * 60 + 30) }}
                 />
               ))}
@@ -295,10 +295,10 @@ export function DoctorDayCalendar({
                   return (
                     <div
                       key={`b-${idx}`}
-                      className="absolute left-0 right-0 bg-[#f8fafc] border-t border-b border-dashed border-[#e5edf5] flex items-center justify-center pointer-events-none"
+                      className="absolute left-0 right-0 bg-surface-subtle border-t border-b border-dashed border-border flex items-center justify-center pointer-events-none"
                       style={{ top, height, zIndex: 1 }}
                     >
-                      <span className="text-[11px] uppercase tracking-wider font-medium text-[#697386] flex items-center gap-1">
+                      <span className="text-[11px] uppercase tracking-wider font-medium text-fg-muted flex items-center gap-1">
                         ☕ {slot.label || "Break time"}
                       </span>
                     </div>
@@ -318,7 +318,7 @@ export function DoctorDayCalendar({
                       backgroundColor: "#fafbfd",
                     }}
                   >
-                    <span className="text-[11px] uppercase tracking-wider font-semibold text-[#697386]">
+                    <span className="text-[11px] uppercase tracking-wider font-semibold text-fg-muted">
                       {slot.leaveType
                         ? slot.leaveType.replace(/_/g, " ")
                         : "Not available"}
@@ -359,10 +359,10 @@ export function DoctorDayCalendar({
               className="absolute left-20 right-0 pointer-events-none z-10 flex items-center"
               style={{ top: pxFromMinutes(currentMinuteOffset) }}
             >
-              <span className="absolute -left-12 -top-2.5 inline-flex items-center justify-center bg-[#061b31] text-white text-[11px] font-medium tabular-nums rounded-[3px] px-1.5 py-0.5">
+              <span className="absolute -left-12 -top-2.5 inline-flex items-center justify-center bg-foreground text-white text-[11px] font-medium tabular-nums rounded-[3px] px-1.5 py-0.5">
                 {now && clinicTimeLabel(now)}
               </span>
-              <div className="h-0.38 w-full bg-[#DF1B41]" />
+              <div className="h-0.38 w-full bg-danger" />
             </div>
           )}
         </div>
@@ -390,7 +390,7 @@ function DoctorAvatar({ doctor }: { doctor: DoctorOption }) {
       .slice(0, 2)
       .toUpperCase() || "?";
   return (
-    <div className="h-9 w-9 rounded-full bg-[#F0EEFF] text-[12px] font-semibold text-[#635BFF] flex items-center justify-center shrink-0">
+    <div className="h-9 w-9 rounded-full bg-brand-subtle text-[12px] font-semibold text-brand flex items-center justify-center shrink-0">
       {initials}
     </div>
   );
@@ -445,7 +445,7 @@ function AppointmentBlock({
           onSelectEvent();
         }
       }}
-      className="absolute left-1 right-1 rounded-[6px] cursor-pointer transition-shadow hover:shadow-md group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#635BFF] overflow-hidden"
+      className="absolute left-1 right-1 rounded-panel cursor-pointer transition-shadow hover:shadow-md group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand overflow-hidden"
       style={{
         top,
         height,
@@ -456,7 +456,7 @@ function AppointmentBlock({
     >
       {showWaitingBand && (
         <div
-          className="absolute inset-x-0 top-0 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#92400E] bg-[#FEF3C7] border-b border-[#FDE68A] z-10"
+          className="absolute inset-x-0 top-0 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-warning bg-warning-subtle border-b border-warning/25 z-10"
           style={{
             backgroundImage:
               "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(251,191,36,0.15) 4px, rgba(251,191,36,0.15) 5px)",
@@ -469,13 +469,13 @@ function AppointmentBlock({
         <div className="flex items-start justify-between gap-1.5">
           <div className="min-w-0 flex-1">
             <p
-              className={`text-[13px] font-semibold text-[#061b31] truncate ${
+              className={`text-[13px] font-semibold text-foreground truncate ${
                 struck ? "line-through opacity-70" : ""
               }`}
             >
               {appointment.patient.firstName} {appointment.patient.lastName}
             </p>
-            <p className="text-[11px] text-[#425466] tabular-nums truncate">
+            <p className="text-[11px] text-fg-secondary tabular-nums truncate">
               {clinicTimeLabel(start)} → {clinicTimeLabel(end)}
             </p>
           </div>

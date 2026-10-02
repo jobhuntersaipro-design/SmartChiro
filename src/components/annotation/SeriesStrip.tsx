@@ -73,7 +73,7 @@ function SeriesStripView({
       <button
         type="button"
         onClick={() => setCollapsed((v) => !v)}
-        className="h-8 flex items-center justify-center text-[#cdd5e2] hover:bg-white/5"
+        className="h-8 flex items-center justify-center text-border-strong hover:bg-white/5"
         aria-label={collapsed ? 'Expand series' : 'Collapse series'}
       >
         {collapsed ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -82,8 +82,8 @@ function SeriesStripView({
       {!collapsed && (
         <>
           {/* Counter + prev/next */}
-          <div className="flex flex-col items-center gap-1 border-b border-[#1c2738] py-2">
-            <span className="text-[10px] uppercase tracking-wide text-[#697386]">
+          <div className="flex flex-col items-center gap-1 border-b border-canvas py-2">
+            <span className="text-[10px] uppercase tracking-wide text-fg-muted">
               {idx >= 0 ? `${idx + 1} of ${xrays.length}` : `${xrays.length}`}
             </span>
             <div className="flex gap-1">
@@ -91,7 +91,7 @@ function SeriesStripView({
                 type="button"
                 onClick={() => prev && navigateTo(prev.id)}
                 disabled={!prev}
-                className="rounded-md p-1 text-[#cdd5e2] enabled:hover:bg-white/5 disabled:opacity-30"
+                className="rounded-md p-1 text-border-strong enabled:hover:bg-white/5 disabled:opacity-30"
                 title="Previous X-ray (scroll up)"
                 aria-label="Previous X-ray"
               >
@@ -101,7 +101,7 @@ function SeriesStripView({
                 type="button"
                 onClick={() => next && navigateTo(next.id)}
                 disabled={!next}
-                className="rounded-md p-1 text-[#cdd5e2] enabled:hover:bg-white/5 disabled:opacity-30"
+                className="rounded-md p-1 text-border-strong enabled:hover:bg-white/5 disabled:opacity-30"
                 title="Next X-ray (scroll down)"
                 aria-label="Next X-ray"
               >
@@ -113,7 +113,7 @@ function SeriesStripView({
           {/* List */}
           {onlyOne ? (
             <div className="flex-1 flex items-center justify-center px-2 text-center">
-              <p className="text-[10px] leading-tight text-[#697386]">
+              <p className="text-[10px] leading-tight text-fg-muted">
                 No other X-rays for this patient yet
               </p>
             </div>
@@ -124,7 +124,7 @@ function SeriesStripView({
                 return (
                   <li key={x.id} className="px-2 relative">
                     {active && (
-                      <span className="absolute left-0 top-1 bottom-1 w-1 rounded-r bg-[#533afd]" />
+                      <span className="absolute left-0 top-1 bottom-1 w-1 rounded-r bg-brand" />
                     )}
                     <Link
                       href={`/dashboard/xrays/${patientId}/${x.id}/annotate`}
@@ -133,7 +133,7 @@ function SeriesStripView({
                       style={{ borderColor: active ? '#533afd' : 'transparent' }}
                       title={x.title ?? 'X-ray'}
                     >
-                      <div className="w-20 h-20 bg-[#1A1F36]">
+                      <div className="w-20 h-20 bg-canvas">
                         {x.thumbnailUrl ? (
                           <img
                             src={x.thumbnailUrl}
@@ -142,7 +142,7 @@ function SeriesStripView({
                           />
                         ) : null}
                       </div>
-                      <p className="text-[10px] text-[#cdd5e2] mt-0.5 truncate w-20 px-0.5">
+                      <p className="text-[10px] text-border-strong mt-0.5 truncate w-20 px-0.5">
                         {x.bodyRegion ? x.bodyRegion.split('_')[0].slice(0, 6) : '—'} ·{' '}
                         {new Date(x.createdAt).toLocaleDateString('en-MY', {
                           day: '2-digit', month: 'short',

@@ -46,14 +46,14 @@ export function ReminderTemplateEditor({ label, value, onChange, charLimit, bran
 
   return (
     <div className="space-y-2">
-      <label className="text-[15px] font-medium text-[#0A2540]">{label}</label>
+      <label className="text-[15px] font-medium text-foreground">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         rows={6}
-        className="w-full rounded-md border border-[#E3E8EE] bg-[#F6F9FC] px-3 py-2 text-[15px] focus:outline-none focus:ring-1 focus:ring-[#635BFF]"
+        className="w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[15px] focus:outline-none focus:ring-1 focus:ring-brand"
       />
       <div className="flex flex-wrap gap-1">
         {ALLOWED_PLACEHOLDERS.map((name) => (
@@ -61,7 +61,7 @@ export function ReminderTemplateEditor({ label, value, onChange, charLimit, bran
             key={name}
             type="button"
             onClick={() => insert(name)}
-            className="rounded-md border border-[#E3E8EE] bg-white px-2 py-1 text-[13px] text-[#425466] hover:bg-[#F0F3F7]"
+            className="rounded-md border border-border bg-white px-2 py-1 text-[13px] text-fg-secondary hover:bg-surface-hover"
           >
             {`{${name}}`}
           </button>
@@ -70,18 +70,18 @@ export function ReminderTemplateEditor({ label, value, onChange, charLimit, bran
       {charLimit && (
         <div
           className={`text-[13px] ${
-            value.length > charLimit ? "text-[#DF1B41]" : "text-[#697386]"
+            value.length > charLimit ? "text-danger" : "text-fg-muted"
           }`}
         >
           {value.length} / {charLimit} chars
         </div>
       )}
-      {!v.ok && <div className="text-[13px] text-[#DF1B41]">Error: {v.message}</div>}
-      <div className="rounded-[6px] border border-[#E3E8EE] bg-white p-3 text-[14px] text-[#0A2540] whitespace-pre-wrap">
-        <div className="mb-1 text-[12px] uppercase tracking-wide text-[#697386]">
+      {!v.ok && <div className="text-[13px] text-danger">Error: {v.message}</div>}
+      <div className="rounded-panel border border-border bg-white p-3 text-[14px] text-foreground whitespace-pre-wrap">
+        <div className="mb-1 text-[12px] uppercase tracking-wide text-fg-muted">
           Preview
         </div>
-        {v.ok ? preview : <span className="text-[#697386]">— invalid template —</span>}
+        {v.ok ? preview : <span className="text-fg-muted">— invalid template —</span>}
       </div>
     </div>
   );

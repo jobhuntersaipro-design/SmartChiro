@@ -11,7 +11,7 @@ interface Props {
 }
 
 const inputClass =
-  "h-8 w-full rounded-[4px] border border-[#E3E8EE] bg-[#F6F9FC] px-2.5 text-[14px] text-[#0A2540] placeholder:text-[#A3ACB9] focus:outline-none focus:ring-1 focus:ring-[#635BFF]";
+  "h-8 w-full rounded-control border border-border bg-surface-muted px-2.5 text-[14px] text-foreground placeholder:text-fg-disabled focus:outline-none focus:ring-1 focus:ring-brand";
 
 /** Connect with IDs + token copied from Meta's dashboard (test number, BSPs). */
 export function WhatsAppManualConnectForm({ branchId, onConnected, onError }: Props) {
@@ -39,23 +39,23 @@ export function WhatsAppManualConnectForm({ branchId, onConnected, onError }: Pr
   }
 
   return (
-    <form onSubmit={submit} className="mt-3 space-y-3 rounded-[6px] border border-[#E3E8EE] bg-white p-4">
-      <p className="text-[14px] text-[#697386]">
+    <form onSubmit={submit} className="mt-3 space-y-3 rounded-panel border border-border bg-white p-4">
+      <p className="text-[14px] text-fg-muted">
         From Meta for Developers → your app → WhatsApp → API Setup. Use a System User token with{" "}
         <code className="text-[13px]">whatsapp_business_messaging</code> and{" "}
         <code className="text-[13px]">whatsapp_business_management</code> for anything longer than a 24-hour test.
       </p>
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="block text-[14px] text-[#425466]">
+        <label className="block text-[14px] text-fg-secondary">
           WhatsApp Business Account ID
           <input className={`${inputClass} mt-1`} inputMode="numeric" value={wabaId} onChange={(e) => setWabaId(e.target.value)} required />
         </label>
-        <label className="block text-[14px] text-[#425466]">
+        <label className="block text-[14px] text-fg-secondary">
           Phone number ID
           <input className={`${inputClass} mt-1`} inputMode="numeric" value={phoneNumberId} onChange={(e) => setPhoneNumberId(e.target.value)} required />
         </label>
       </div>
-      <label className="block text-[14px] text-[#425466]">
+      <label className="block text-[14px] text-fg-secondary">
         Access token
         <input
           className={`${inputClass} mt-1`}
@@ -70,7 +70,7 @@ export function WhatsAppManualConnectForm({ branchId, onConnected, onError }: Pr
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-[4px] bg-[#635BFF] px-3 py-1.5 text-[14px] text-white hover:bg-[#5851EB] disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-control bg-primary px-3 py-1.5 text-[14px] text-white hover:bg-primary/90 disabled:opacity-50"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />}
           Connect

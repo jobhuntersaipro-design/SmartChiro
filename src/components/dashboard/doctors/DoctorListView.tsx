@@ -163,15 +163,15 @@ export function DoctorListView({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="h-7 w-32 bg-[#F6F9FC] rounded animate-pulse" />
-            <div className="h-4 w-48 bg-[#F6F9FC] rounded animate-pulse mt-2" />
+            <div className="h-7 w-32 bg-surface-muted rounded animate-pulse" />
+            <div className="h-4 w-48 bg-surface-muted rounded animate-pulse mt-2" />
           </div>
         </div>
         <div className="grid grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-20 bg-[#F6F9FC] rounded-[6px] animate-pulse"
+              className="h-20 bg-surface-muted rounded-panel animate-pulse"
             />
           ))}
         </div>
@@ -179,7 +179,7 @@ export function DoctorListView({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-48 bg-[#F6F9FC] rounded-[6px] animate-pulse"
+              className="h-48 bg-surface-muted rounded-panel animate-pulse"
             />
           ))}
         </div>
@@ -192,10 +192,10 @@ export function DoctorListView({
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 rounded-[6px] px-4 py-3 text-[14px] font-medium shadow-lg transition-all ${
+          className={`fixed top-4 right-4 z-50 rounded-panel px-4 py-3 text-[14px] font-medium shadow-lg transition-all ${
             toast.type === "success"
-              ? "bg-[#108c3d] text-white"
-              : "bg-[#df1b41] text-white"
+              ? "bg-success text-white"
+              : "bg-danger text-white"
           }`}
         >
           {toast.message}
@@ -205,15 +205,15 @@ export function DoctorListView({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-light text-[#061b31] tracking-[-0.22px]">
+          <h1 className="text-[22px] font-light text-foreground tracking-[-0.22px]">
             {pageTitle}
           </h1>
-          <p className="text-[14px] text-[#64748d] mt-0.5">{pageSubtitle}</p>
+          <p className="text-[14px] text-fg-secondary mt-0.5">{pageSubtitle}</p>
         </div>
         {isAdmin && (
           <Button
             onClick={() => setCreateOpen(true)}
-            className="h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
+            className="h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
           >
             <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
             Add staff
@@ -227,19 +227,19 @@ export function DoctorListView({
       {/* Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748d]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-secondary" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search doctors..."
-            className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] pl-9 text-[14px] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+            className="h-9 rounded-md border-border bg-surface-muted pl-9 text-[14px] focus:border-brand focus:ring-1 focus:ring-brand"
           />
         </div>
 
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          className="h-9 rounded-md border border-[#e5edf5] bg-[#F6F9FC] px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+          className="h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
         >
           <option value="all">All Branches</option>
           {branchOptions.map((b) => (
@@ -252,7 +252,7 @@ export function DoctorListView({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 rounded-md border border-[#e5edf5] bg-[#F6F9FC] px-3 text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd] focus:outline-none"
+          className="h-9 rounded-md border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -264,8 +264,8 @@ export function DoctorListView({
             onClick={() => setViewMode("grid")}
             className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
               viewMode === "grid"
-                ? "bg-[#ededfc] text-[#533afd]"
-                : "text-[#64748d] hover:bg-[#f6f9fc]"
+                ? "bg-brand-subtle text-brand"
+                : "text-fg-secondary hover:bg-surface-muted"
             }`}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -274,8 +274,8 @@ export function DoctorListView({
             onClick={() => setViewMode("list")}
             className={`h-9 w-9 flex items-center justify-center rounded-md transition-colors ${
               viewMode === "list"
-                ? "bg-[#ededfc] text-[#533afd]"
-                : "text-[#64748d] hover:bg-[#f6f9fc]"
+                ? "bg-brand-subtle text-brand"
+                : "text-fg-secondary hover:bg-surface-muted"
             }`}
           >
             <List className="h-4 w-4" />
@@ -355,13 +355,13 @@ function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 rounded-full bg-[#F6F9FC] p-4">
-        <Stethoscope className="h-8 w-8 text-[#64748d]" strokeWidth={1.5} />
+      <div className="mb-4 rounded-full bg-surface-muted p-4">
+        <Stethoscope className="h-8 w-8 text-fg-secondary" strokeWidth={1.5} />
       </div>
-      <h3 className="text-[16px] font-medium text-[#061b31] mb-1">
+      <h3 className="text-[16px] font-medium text-foreground mb-1">
         {hasSearch ? "No doctors found" : "No doctors yet"}
       </h3>
-      <p className="text-[14px] text-[#64748d] max-w-75">
+      <p className="text-[14px] text-fg-secondary max-w-75">
         {hasSearch
           ? "Try adjusting your search or filters."
           : "Add your first doctor to get started managing your clinic."}
@@ -369,7 +369,7 @@ function EmptyState({
       {!hasSearch && isAdmin && (
         <Button
           onClick={onAdd}
-          className="mt-4 h-9 rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[14px] font-medium px-4"
+          className="mt-4 h-9 rounded-md bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
           Add staff
@@ -394,23 +394,23 @@ function DoctorTable({
 }) {
   const router = useRouter();
   return (
-    <div className="rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden">
+    <div className="rounded-panel border border-border bg-white overflow-hidden">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-[#e5edf5]">
-            <th className="text-left px-4 py-3 text-[13px] font-medium text-[#273951] uppercase tracking-wide">
+          <tr className="border-b border-border">
+            <th className="text-left px-4 py-3 text-[13px] font-medium text-foreground uppercase tracking-wide">
               Name / Email
             </th>
-            <th className="text-left px-4 py-3 text-[13px] font-medium text-[#273951] uppercase tracking-wide">
+            <th className="text-left px-4 py-3 text-[13px] font-medium text-foreground uppercase tracking-wide">
               Branch
             </th>
-            <th className="text-left px-4 py-3 text-[13px] font-medium text-[#273951] uppercase tracking-wide">
+            <th className="text-left px-4 py-3 text-[13px] font-medium text-foreground uppercase tracking-wide">
               Status
             </th>
-            <th className="text-right px-4 py-3 text-[13px] font-medium text-[#273951] uppercase tracking-wide">
+            <th className="text-right px-4 py-3 text-[13px] font-medium text-foreground uppercase tracking-wide">
               Patients
             </th>
-            <th className="text-right px-4 py-3 text-[13px] font-medium text-[#273951] uppercase tracking-wide">
+            <th className="text-right px-4 py-3 text-[13px] font-medium text-foreground uppercase tracking-wide">
               Joined
             </th>
             {isAdmin && (
@@ -422,12 +422,12 @@ function DoctorTable({
           {doctors.map((d) => (
             <tr
               key={d.id}
-              className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#F0F3F7] transition-colors cursor-pointer"
+              className="border-b border-border last:border-b-0 hover:bg-surface-hover transition-colors cursor-pointer"
               onClick={() => router.push(`/dashboard/doctors/${d.id}`)}
             >
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-[#ededfc] flex items-center justify-center text-[11px] font-medium text-[#533afd] shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-brand-subtle flex items-center justify-center text-[11px] font-medium text-brand shrink-0">
                     {d.name
                       ? d.name
                           .split(/\s+/)
@@ -438,10 +438,10 @@ function DoctorTable({
                       : d.email.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <div className="text-[14px] font-medium text-[#061b31]">
+                    <div className="text-[14px] font-medium text-foreground">
                       {d.name ?? "Unnamed"}
                     </div>
-                    <div className="text-[13px] text-[#64748d]">{d.email}</div>
+                    <div className="text-[13px] text-fg-secondary">{d.email}</div>
                   </div>
                 </div>
               </td>
@@ -450,7 +450,7 @@ function DoctorTable({
                   {d.branches.map((b) => (
                     <span
                       key={b.id}
-                      className="text-[12px] text-[#533afd] bg-[#ededfc] rounded-full px-2 py-0.5"
+                      className="text-[12px] text-brand bg-brand-subtle rounded-full px-2 py-0.5"
                     >
                       {b.name}
                     </span>
@@ -461,8 +461,8 @@ function DoctorTable({
                 <span
                   className={`rounded-md px-1.5 py-0.25 text-[10px] font-light ${
                     d.isActive
-                      ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
-                      : "bg-[#F0F3F7] text-[#64748d]"
+                      ? "bg-[rgba(21,190,83,0.2)] text-success border border-[rgba(21,190,83,0.4)]"
+                      : "bg-surface-hover text-fg-secondary"
                   }`}
                 >
                   {d.isActive ? "Active" : "Inactive"}
@@ -471,14 +471,14 @@ function DoctorTable({
               </td>
               <td className="px-4 py-3 text-right">
                 <span
-                  className="text-[14px] text-[#061b31]"
+                  className="text-[14px] text-foreground"
                   style={{ fontFeatureSettings: '"tnum"' }}
                 >
                   {d.stats.patientCount}
                 </span>
               </td>
               <td className="px-4 py-3 text-right">
-                <span className="text-[13px] text-[#64748d]">
+                <span className="text-[13px] text-fg-secondary">
                   {new Date(d.createdAt).toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE,
                     month: "short",
                     year: "2-digit",
@@ -493,7 +493,7 @@ function DoctorTable({
                         e.stopPropagation();
                         onToggleStatus(d);
                       }}
-                      className="text-[12px] text-[#64748d] hover:text-[#061b31] px-1"
+                      className="text-[12px] text-fg-secondary hover:text-foreground px-1"
                       title={d.isActive ? "Deactivate" : "Activate"}
                     >
                       {d.isActive ? "Deactivate" : "Activate"}
@@ -503,7 +503,7 @@ function DoctorTable({
                         e.stopPropagation();
                         onRemove(d);
                       }}
-                      className="text-[12px] text-[#df1b41] hover:text-[#c4183c] px-1"
+                      className="text-[12px] text-danger hover:text-danger px-1"
                     >
                       Remove
                     </button>

@@ -200,10 +200,10 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-4 py-2.5 rounded-[6px] text-[14px] font-medium shadow-md transition-all ${
+          className={`fixed top-4 right-4 z-50 px-4 py-2.5 rounded-panel text-[14px] font-medium shadow-md transition-all ${
             toast.type === "success"
-              ? "bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]"
-              : "bg-[#fef2f2] text-[#df1b41] border border-[#fecaca]"
+              ? "bg-success-subtle text-success border border-success/25"
+              : "bg-danger-subtle text-danger border border-danger/25"
           }`}
         >
           {toast.message}
@@ -213,13 +213,13 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
       {/* ── Account Section ── */}
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <User className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-          <h2 className="text-[16px] font-medium text-[#061b31]">Account</h2>
+          <User className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
+          <h2 className="text-[16px] font-medium text-foreground">Account</h2>
         </div>
 
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
+        <div className="rounded-panel border border-border bg-white shadow-(--shadow-card)">
           {/* Avatar row */}
-          <div className="flex items-center gap-4 p-5 border-b border-[#e5edf5]">
+          <div className="flex items-center gap-4 p-5 border-b border-border">
             <div className="relative group">
               <Avatar className="h-16 w-16">
                 {user.image && (
@@ -228,7 +228,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                     alt={user.name ?? "User"}
                   />
                 )}
-                <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[18px] font-medium">
+                <AvatarFallback className="bg-brand-subtle text-brand text-[18px] font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -256,11 +256,11 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               />
             </div>
             <div>
-              <p className="text-[15px] font-medium text-[#061b31]">
+              <p className="text-[15px] font-medium text-foreground">
                 {user.name ?? "Unnamed"}
               </p>
-              <p className="text-[13px] text-[#64748d]">{user.email}</p>
-              <p className="text-[12px] text-[#a3acb9] mt-0.5">
+              <p className="text-[13px] text-fg-secondary">{user.email}</p>
+              <p className="text-[12px] text-fg-disabled mt-0.5">
                 Member since {formatDate(user.memberSince)}
               </p>
             </div>
@@ -270,7 +270,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+                <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                   Full Name
                 </label>
                 <Input
@@ -278,11 +278,11 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name"
                   maxLength={100}
-                  className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+                <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                   Phone Number
                 </label>
                 <Input
@@ -290,20 +290,20 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +60 12 345 6789"
                   maxLength={20}
-                  className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+              <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                 Email Address
               </label>
               <Input
                 value={user.email}
                 disabled
-                className="h-9 rounded-md border-[#e5edf5] bg-[#f6f9fc] text-[14px] text-[#64748d]"
+                className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-fg-secondary"
               />
-              <p className="text-[12px] text-[#a3acb9] mt-1">
+              <p className="text-[12px] text-fg-disabled mt-1">
                 Email cannot be changed.
               </p>
             </div>
@@ -311,7 +311,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             {/* Branches */}
             {user.branches.length > 0 && (
               <div>
-                <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+                <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                   Branches
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -319,7 +319,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                     <Badge
                       key={b.id}
                       variant="secondary"
-                      className="rounded-full bg-[#ededfc] text-[#533afd] text-[12px] font-medium border-0 hover:bg-[#ededfc]"
+                      className="rounded-full bg-brand-subtle text-brand text-[12px] font-medium border-0 hover:bg-brand-subtle"
                     >
                       {roleLabel(b.role)}{" "}
                       — {b.name}
@@ -331,7 +331,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
           </div>
 
           {/* Save bar */}
-          <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-[#e5edf5]">
+          <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
             <Button
               variant="outline"
               size="sm"
@@ -340,7 +340,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 setPhone(user.phone ?? "");
               }}
               disabled={!hasAccountChanges() || savingAccount}
-              className="rounded-md border-[#e5edf5] text-[13px] cursor-pointer"
+              className="rounded-md border-border text-[13px] cursor-pointer"
             >
               Cancel
             </Button>
@@ -348,7 +348,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               size="sm"
               onClick={handleSaveAccount}
               disabled={!hasAccountChanges() || savingAccount}
-              className="rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[13px] cursor-pointer"
+              className="rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] cursor-pointer"
             >
               {savingAccount ? (
                 <>
@@ -366,21 +366,21 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
       {/* ── Security Section ── */}
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <Shield className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-          <h2 className="text-[16px] font-medium text-[#061b31]">Security</h2>
+          <Shield className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
+          <h2 className="text-[16px] font-medium text-foreground">Security</h2>
         </div>
 
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
+        <div className="rounded-panel border border-border bg-white shadow-(--shadow-card)">
           <div className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Lock className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-              <h3 className="text-[14px] font-medium text-[#061b31]">
+              <Lock className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
+              <h3 className="text-[14px] font-medium text-foreground">
                 {user.hasPassword ? "Change Password" : "Set Password"}
               </h3>
             </div>
 
             {!user.hasPassword && (
-              <p className="text-[13px] text-[#64748d] mb-4 px-0.5">
+              <p className="text-[13px] text-fg-secondary mb-4 px-0.5">
                 You signed up with Google. Set a password to also log in with
                 email and password.
               </p>
@@ -389,7 +389,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             <div className="space-y-3 max-w-90">
               {user.hasPassword && (
                 <div>
-                  <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+                  <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                     Current Password
                   </label>
                   <div className="relative">
@@ -398,14 +398,14 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                      className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                     />
                     <button
                       type="button"
                       onClick={() =>
                         setShowCurrentPassword(!showCurrentPassword)
                       }
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] transition-colors cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-secondary hover:text-foreground transition-colors cursor-pointer"
                     >
                       {showCurrentPassword ? (
                         <EyeOff className="h-4 w-4" strokeWidth={1.5} />
@@ -418,7 +418,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               )}
 
               <div>
-                <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+                <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                   New Password
                 </label>
                 <div className="relative">
@@ -427,12 +427,12 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] pr-9 focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                    className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground pr-9 focus:border-brand focus:ring-1 focus:ring-brand"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748d] hover:text-[#061b31] transition-colors cursor-pointer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-secondary hover:text-foreground transition-colors cursor-pointer"
                   >
                     {showNewPassword ? (
                       <EyeOff className="h-4 w-4" strokeWidth={1.5} />
@@ -444,7 +444,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-[#64748d] mb-1.5">
+                <label className="block text-[13px] font-medium text-fg-secondary mb-1.5">
                   Confirm New Password
                 </label>
                 <Input
@@ -452,14 +452,14 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password"
-                  className="h-9 rounded-md border-[#e5edf5] bg-[#F6F9FC] text-[14px] text-[#061b31] focus:border-[#533afd] focus:ring-1 focus:ring-[#533afd]"
+                  className="h-9 rounded-md border-border bg-surface-muted text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
           </div>
 
           {/* Save bar */}
-          <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-[#e5edf5]">
+          <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
             <Button
               variant="outline"
               size="sm"
@@ -469,7 +469,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 setConfirmPassword("");
               }}
               disabled={!hasPasswordInput || savingPassword}
-              className="rounded-md border-[#e5edf5] text-[13px] cursor-pointer"
+              className="rounded-md border-border text-[13px] cursor-pointer"
             >
               Cancel
             </Button>
@@ -477,7 +477,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
               size="sm"
               onClick={handleChangePassword}
               disabled={!hasPasswordInput || savingPassword}
-              className="rounded-md bg-[#533afd] hover:bg-[#4434d4] text-white text-[13px] cursor-pointer"
+              className="rounded-md bg-primary hover:bg-primary/90 text-white text-[13px] cursor-pointer"
             >
               {savingPassword ? (
                 <>
@@ -497,18 +497,18 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
       {/* ── Connected Accounts Section ── */}
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <KeyRound className="h-4 w-4 text-[#64748d]" strokeWidth={1.5} />
-          <h2 className="text-[16px] font-medium text-[#061b31]">
+          <KeyRound className="h-4 w-4 text-fg-secondary" strokeWidth={1.5} />
+          <h2 className="text-[16px] font-medium text-foreground">
             Connected Accounts
           </h2>
         </div>
 
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_1px_1px_rgba(0,0,0,0.03),0_3px_6px_rgba(18,42,66,0.02)]">
-          <div className="divide-y divide-[#e5edf5]">
+        <div className="rounded-panel border border-border bg-white shadow-(--shadow-card)">
+          <div className="divide-y divide-border">
             {/* Google */}
             <div className="flex items-center justify-between p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#f6f9fc]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-muted">
                   <svg
                     className="h-5 w-5"
                     viewBox="0 0 24 24"
@@ -533,10 +533,10 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-[14px] font-medium text-[#061b31]">
+                  <p className="text-[14px] font-medium text-foreground">
                     Google
                   </p>
-                  <p className="text-[12px] text-[#64748d]">
+                  <p className="text-[12px] text-fg-secondary">
                     {user.linkedProviders.includes("google")
                       ? "Connected"
                       : "Not connected"}
@@ -547,8 +547,8 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 variant="secondary"
                 className={`rounded-full text-[12px] font-medium border-0 ${
                   user.linkedProviders.includes("google")
-                    ? "bg-[#ecfdf5] text-[#059669]"
-                    : "bg-[#f6f9fc] text-[#a3acb9]"
+                    ? "bg-success-subtle text-success"
+                    : "bg-surface-muted text-fg-disabled"
                 }`}
               >
                 {user.linkedProviders.includes("google")
@@ -560,17 +560,17 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
             {/* Email/Password */}
             <div className="flex items-center justify-between p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#f6f9fc]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-surface-muted">
                   <Lock
-                    className="h-5 w-5 text-[#64748d]"
+                    className="h-5 w-5 text-fg-secondary"
                     strokeWidth={1.5}
                   />
                 </div>
                 <div>
-                  <p className="text-[14px] font-medium text-[#061b31]">
+                  <p className="text-[14px] font-medium text-foreground">
                     Email & Password
                   </p>
-                  <p className="text-[12px] text-[#64748d]">
+                  <p className="text-[12px] text-fg-secondary">
                     {user.hasPassword
                       ? "Password is set"
                       : "No password set"}
@@ -581,8 +581,8 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 variant="secondary"
                 className={`rounded-full text-[12px] font-medium border-0 ${
                   user.hasPassword
-                    ? "bg-[#ecfdf5] text-[#059669]"
-                    : "bg-[#f6f9fc] text-[#a3acb9]"
+                    ? "bg-success-subtle text-success"
+                    : "bg-surface-muted text-fg-disabled"
                 }`}
               >
                 {user.hasPassword ? "Active" : "Not set"}

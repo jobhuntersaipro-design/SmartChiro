@@ -14,7 +14,7 @@ export function ExternalLink({ href, children, className }: ExternalLinkProps) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={className ?? "text-[#533afd] hover:underline"}
+      className={className ?? "text-brand hover:underline"}
     >
       {children}
     </a>

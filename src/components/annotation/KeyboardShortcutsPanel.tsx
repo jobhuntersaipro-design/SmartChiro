@@ -133,7 +133,7 @@ export function KeyboardShortcutsPanel({ isOpen, onClose }: KeyboardShortcutsPan
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex items-center justify-center transition-colors hover:bg-[#f6f9fc]"
+            className="flex items-center justify-center transition-colors hover:bg-surface-muted"
             style={{ width: 32, height: 32, borderRadius: 4, color: "#64748d" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

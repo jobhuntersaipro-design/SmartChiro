@@ -84,12 +84,12 @@ export function AppointmentSidebarFilters({
   return (
     <aside
       aria-label="Appointment filters"
-      className="hidden xl:flex w-70 shrink-0 flex-col gap-4 border-r border-[#e5edf5] bg-white p-4 overflow-y-auto"
+      className="hidden xl:flex w-70 shrink-0 flex-col gap-4 border-r border-border bg-white p-4 overflow-y-auto"
     >
       {/* Branch */}
       {branches.length > 1 && (
         <div>
-          <label className="block text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-1.5">
+          <label className="block text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-1.5">
             Branch
           </label>
           <Select
@@ -114,11 +114,11 @@ export function AppointmentSidebarFilters({
 
       {/* Doctor multi-select */}
       <div>
-        <label className="block text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-1.5">
+        <label className="block text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-1.5">
           Doctor
         </label>
         <Popover>
-          <PopoverTrigger className="inline-flex items-center w-full h-9 px-3 rounded-md border border-[#e5edf5] bg-white text-[13px] text-[#061b31] hover:bg-[#fafbfd] transition-colors">
+          <PopoverTrigger className="inline-flex items-center w-full h-9 px-3 rounded-md border border-border bg-white text-[13px] text-foreground hover:bg-surface-subtle transition-colors">
             <span className="truncate">
               {doctorIds.length === 0
                 ? "All doctors"
@@ -166,10 +166,10 @@ export function AppointmentSidebarFilters({
 
       {/* Mini calendar */}
       <div>
-        <label className="block text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-1.5">
+        <label className="block text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-1.5">
           Date
         </label>
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white">
+        <div className="rounded-panel border border-border bg-white">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -178,7 +178,7 @@ export function AppointmentSidebarFilters({
             modifiers={{ hasAppointment: markerDatesParsed }}
             modifiersClassNames={{
               hasAppointment:
-                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-[#635BFF]",
+                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-brand",
             }}
           />
         </div>
@@ -186,25 +186,25 @@ export function AppointmentSidebarFilters({
 
       {/* Quick toggles */}
       <div>
-        <label className="block text-[11px] uppercase tracking-wider font-semibold text-[#697386] mb-1.5">
+        <label className="block text-[11px] uppercase tracking-wider font-semibold text-fg-muted mb-1.5">
           Show
         </label>
         <div className="flex flex-col gap-1.5">
-          <label className="flex items-center gap-2 text-[13px] text-[#425466] cursor-pointer">
+          <label className="flex items-center gap-2 text-[13px] text-fg-secondary cursor-pointer">
             <input
               type="checkbox"
               checked={showCancelled}
               onChange={(e) => onShowCancelledChange(e.target.checked)}
-              className="h-3.5 w-3.5 rounded-[3px] border-[#e5edf5] accent-[#635BFF]"
+              className="h-3.5 w-3.5 rounded-[3px] border-border accent-brand"
             />
             Show cancelled
           </label>
-          <label className="flex items-center gap-2 text-[13px] text-[#425466] cursor-pointer">
+          <label className="flex items-center gap-2 text-[13px] text-fg-secondary cursor-pointer">
             <input
               type="checkbox"
               checked={showNoShow}
               onChange={(e) => onShowNoShowChange(e.target.checked)}
-              className="h-3.5 w-3.5 rounded-[3px] border-[#e5edf5] accent-[#635BFF]"
+              className="h-3.5 w-3.5 rounded-[3px] border-border accent-brand"
             />
             Show no-show
           </label>
@@ -214,7 +214,7 @@ export function AppointmentSidebarFilters({
       {filtersDirty && (
         <button
           onClick={onClearFilters}
-          className="text-[12px] text-[#635BFF] hover:underline self-start"
+          className="text-[12px] text-brand hover:underline self-start"
         >
           Clear filters
         </button>

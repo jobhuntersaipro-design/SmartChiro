@@ -91,15 +91,15 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
       <div className="space-y-6">
         {/* Today's Schedule */}
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="rounded-panel border border-border bg-white"
           style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
         >
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h3 className="text-[16px] font-normal text-[#061b31]">{"Today's Schedule"}</h3>
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-[16px] font-normal text-foreground">{"Today's Schedule"}</h3>
           </div>
           {scheduleLoading ? (
             <div className="p-5 space-y-3">
-              {[1, 2, 3].map((i) => <div key={i} className="h-10 rounded bg-[#e5edf5] animate-pulse" />)}
+              {[1, 2, 3].map((i) => <div key={i} className="h-10 rounded bg-border animate-pulse" />)}
             </div>
           ) : (
             <ScheduleTable appointments={appointments} showDoctor showBranch={false} />
@@ -111,16 +111,16 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
       <div className="space-y-6">
         {/* Quick Info */}
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="rounded-panel border border-border bg-white"
           style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
         >
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h3 className="text-[16px] font-normal text-[#061b31]">Quick Info</h3>
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-[16px] font-normal text-foreground">Quick Info</h3>
           </div>
           <div className="px-5 py-4 space-y-4">
             {/* Operating Hours */}
             <div>
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#64748d] mb-2">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-fg-secondary mb-2">
                 <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
                 Operating Hours
               </div>
@@ -130,8 +130,8 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
                     const hours = operatingHours[day];
                     return (
                       <div key={day} className="flex items-center justify-between text-[13px]">
-                        <span className="text-[#273951]">{DAY_LABELS[day]}</span>
-                        <span className={hours ? "text-[#273951]" : "text-[#c1c9d2]"}>
+                        <span className="text-foreground">{DAY_LABELS[day]}</span>
+                        <span className={hours ? "text-foreground" : "text-border-strong"}>
                           {hours ? formatDayHours(hours) : "Closed"}
                         </span>
                       </div>
@@ -139,13 +139,13 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
                   })}
                 </div>
               ) : (
-                <div className="rounded-[4px] border border-[#F5D9A8] bg-[#FFF8EB] px-3 py-2 text-[13px] text-[#8A5A00]">
+                <div className="rounded-control border border-warning/25 bg-warning-subtle px-3 py-2 text-[13px] text-warning">
                   Opening hours aren&apos;t set — bookings can&apos;t be checked against them.{" "}
                   {onSetHours ? (
                     <button
                       type="button"
                       onClick={onSetHours}
-                      className="font-medium text-[#533afd] hover:underline cursor-pointer"
+                      className="font-medium text-brand hover:underline cursor-pointer"
                     >
                       Set hours
                     </button>
@@ -159,20 +159,20 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
             {/* Details */}
             {branch.treatmentRooms && (
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-[#64748d]">Treatment Rooms</span>
-                <span className="text-[#273951]">{branch.treatmentRooms}</span>
+                <span className="text-fg-secondary">Treatment Rooms</span>
+                <span className="text-foreground">{branch.treatmentRooms}</span>
               </div>
             )}
             {branch.clinicType && (
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-[#64748d]">Clinic Type</span>
-                <span className="text-[#273951]">{formatClinicType(branch.clinicType)}</span>
+                <span className="text-fg-secondary">Clinic Type</span>
+                <span className="text-foreground">{formatClinicType(branch.clinicType)}</span>
               </div>
             )}
             {branch.licenseNumber && (
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-[#64748d]">License</span>
-                <span className="text-[#273951]">{branch.licenseNumber}</span>
+                <span className="text-fg-secondary">License</span>
+                <span className="text-foreground">{branch.licenseNumber}</span>
               </div>
             )}
           </div>
@@ -180,15 +180,15 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
 
         {/* Top Doctors */}
         <div
-          className="rounded-[6px] border border-[#e5edf5] bg-white"
+          className="rounded-panel border border-border bg-white"
           style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
         >
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
-            <h3 className="text-[16px] font-normal text-[#061b31]">Top Doctors</h3>
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-[16px] font-normal text-foreground">Top Doctors</h3>
           </div>
           <div className="px-5 py-3">
             {topDoctors.length === 0 ? (
-              <p className="text-[13px] text-[#64748d] py-3">No doctors in this branch.</p>
+              <p className="text-[13px] text-fg-secondary py-3">No doctors in this branch.</p>
             ) : (
               <div className="space-y-3">
                 {topDoctors.map((doc) => {
@@ -197,13 +197,13 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
                     <div key={doc.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <Avatar className="h-7 w-7">
-                          <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[11px] font-medium">
+                          <AvatarFallback className="bg-brand-subtle text-brand text-[11px] font-medium">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-[14px] text-[#061b31]">{doc.name ?? doc.email}</span>
+                        <span className="text-[14px] text-foreground">{doc.name ?? doc.email}</span>
                       </div>
-                      <span className="text-[13px] text-[#64748d]">
+                      <span className="text-[13px] text-fg-secondary">
                         {doc.patientCount ?? 0} patients
                       </span>
                     </div>

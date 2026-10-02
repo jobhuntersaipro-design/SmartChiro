@@ -97,7 +97,7 @@ export function SlotPickerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl" showCloseButton={false}>
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-[16px] font-medium text-[#061b31]">
+          <DialogTitle className="text-[16px] font-medium text-foreground">
             Choose an X-ray
           </DialogTitle>
           <Button
@@ -111,7 +111,7 @@ export function SlotPickerDialog({
         </DialogHeader>
 
         {/* Tab bar */}
-        <div className="flex gap-4 border-b border-[#e5edf5] -mx-4 px-4 mt-1">
+        <div className="flex gap-4 border-b border-border -mx-4 px-4 mt-1">
           <button
             type="button"
             onClick={() => setTab("existing")}
@@ -141,25 +141,25 @@ export function SlotPickerDialog({
           {tab === "existing" && (
             <>
               {loading && (
-                <div className="flex items-center justify-center py-12 text-[13px] text-[#64748d]">
+                <div className="flex items-center justify-center py-12 text-[13px] text-fg-secondary">
                   Loading X-rays…
                 </div>
               )}
               {error && (
-                <div className="flex items-center justify-center py-12 text-[13px] text-[#DF1B41]">
+                <div className="flex items-center justify-center py-12 text-[13px] text-danger">
                   {error}
                 </div>
               )}
               {!loading && !error && visibleXrays.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-[13px] text-[#64748d]">
+                  <p className="text-[13px] text-fg-secondary">
                     No other X-rays available for this patient.
                   </p>
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => setTab("upload")}
-                    className="mt-2 text-[13px] text-[#533afd] hover:bg-transparent hover:underline px-0"
+                    className="mt-2 text-[13px] text-brand hover:bg-transparent hover:underline px-0"
                   >
                     Upload one instead
                   </Button>
@@ -172,9 +172,9 @@ export function SlotPickerDialog({
                       key={x.id}
                       type="button"
                       onClick={() => pickExisting(x)}
-                      className="text-left group rounded-[6px] border border-[#e5edf5] bg-white overflow-hidden transition-colors hover:border-[#533afd]"
+                      className="text-left group rounded-panel border border-border bg-white overflow-hidden transition-colors hover:border-brand"
                     >
-                      <div className="h-30 bg-[#1A1F36] flex items-center justify-center overflow-hidden">
+                      <div className="h-30 bg-canvas flex items-center justify-center overflow-hidden">
                         {x.thumbnailUrl ? (
                           <Image
                             src={x.thumbnailUrl}
@@ -185,14 +185,14 @@ export function SlotPickerDialog({
                             className="w-full h-full object-contain"
                           />
                         ) : (
-                          <ScanLine className="w-8 h-8 text-[#4a5568] opacity-40" />
+                          <ScanLine className="w-8 h-8 text-fg-secondary opacity-40" />
                         )}
                       </div>
                       <div className="px-2.5 py-1.5">
-                        <p className="text-[12px] font-medium text-[#061b31] truncate">
+                        <p className="text-[12px] font-medium text-foreground truncate">
                           {x.title || "Untitled"}
                         </p>
-                        <p className="text-[10px] text-[#64748d]">
+                        <p className="text-[10px] text-fg-secondary">
                           {new Date(x.createdAt).toLocaleDateString("en-MY", {
                             day: "numeric",
                             month: "short",

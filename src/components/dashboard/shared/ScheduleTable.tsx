@@ -65,24 +65,24 @@ export function ScheduleTable({
   }
 
   const rows = appointments.slice(0, 10);
-  const th = "px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-[#64748d] whitespace-nowrap";
+  const th = "px-4 py-2.5 text-left text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary whitespace-nowrap";
 
   return (
     <>
     {/* Phones: one card per appointment instead of a sideways-scrolling table. */}
-    <ul className="sm:hidden divide-y divide-[#e5edf5]">
+    <ul className="sm:hidden divide-y divide-border">
       {rows.map((appt) => (
         <li key={appt.id} className="px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Link
                 href={appointmentHref(appt)}
-                className="block truncate text-[15px] font-medium text-[#061b31] hover:text-[#533afd]"
+                className="block truncate text-[15px] font-medium text-foreground hover:text-brand"
                 title={`${appt.patient.firstName} ${appt.patient.lastName}`}
               >
                 {appt.patient.firstName} {appt.patient.lastName}
               </Link>
-              <p className="text-[13px] text-[#64748d] tabular-nums truncate">
+              <p className="text-[13px] text-fg-secondary tabular-nums truncate">
                 {formatAppointmentTime(appt.dateTime)}
                 {showDoctor && appt.doctor ? ` · ${appt.doctor.name}` : ""}
               </p>
@@ -107,7 +107,7 @@ export function ScheduleTable({
     <div className="relative hidden sm:block overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-[#e5edf5]">
+          <tr className="border-b border-border">
             <th className={th}>When</th>
             <th className={th}>Patient</th>
             {showDoctor && <th className={th}>Doctor</th>}
@@ -122,7 +122,7 @@ export function ScheduleTable({
             return (
               <tr
                 key={appt.id}
-                className="border-b border-[#e5edf5] last:border-b-0 hover:bg-[#f6f9fc] transition-colors duration-200 cursor-pointer"
+                className="border-b border-border last:border-b-0 hover:bg-surface-muted transition-colors duration-200 cursor-pointer"
                 onClick={() => router.push(appointmentHref(appt))}
               >
                 {/* Today's list — the time is enough; the full date is on hover. */}
@@ -130,34 +130,34 @@ export function ScheduleTable({
                   <time
                     dateTime={appt.dateTime}
                     title={formatAppointmentDateTime(appt.dateTime) ?? undefined}
-                    className="text-[14px] text-[#273951] tabular-nums"
+                    className="text-[14px] text-foreground tabular-nums"
                   >
                     {formatAppointmentTime(appt.dateTime)}
                   </time>
                 </td>
-                <td className="px-4 py-3 text-[15px] text-[#273951] whitespace-nowrap">
+                <td className="px-4 py-3 text-[15px] text-foreground whitespace-nowrap">
                   <Link
                     href={`/dashboard/patients/${appt.patient.id}/details`}
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:text-[#533afd] hover:underline"
+                    className="hover:text-brand hover:underline"
                   >
                     {appt.patient.firstName} {appt.patient.lastName}
                   </Link>
                 </td>
                 {showDoctor && (
-                  <td className="px-4 py-3 text-[15px] text-[#273951] whitespace-nowrap">
+                  <td className="px-4 py-3 text-[15px] text-foreground whitespace-nowrap">
                     {appt.doctor?.name ?? "—"}
                   </td>
                 )}
                 {showBranch && (
                   <td
-                    className="px-4 py-3 text-[15px] text-[#273951] whitespace-nowrap truncate max-w-40"
+                    className="px-4 py-3 text-[15px] text-foreground whitespace-nowrap truncate max-w-40"
                     title={appt.branch?.name}
                   >
                     {appt.branch?.name ?? "—"}
                   </td>
                 )}
-                <td className="px-4 py-3 text-[14px] text-[#64748d] truncate max-w-40" title={appt.notes ?? undefined}>
+                <td className="px-4 py-3 text-[14px] text-fg-secondary truncate max-w-40" title={appt.notes ?? undefined}>
                   {appt.notes ?? "—"}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">

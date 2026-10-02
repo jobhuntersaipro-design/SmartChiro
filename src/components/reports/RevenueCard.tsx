@@ -93,7 +93,7 @@ export function RevenueCard({ query, multiBranch }: { query: ReportQuery; multiB
           </div>
           <div className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-[14px] font-medium text-[#425466]">Collected vs invoiced per {data.granularity}</h3>
+              <h3 className="text-[14px] font-medium text-fg-secondary">Collected vs invoiced per {data.granularity}</h3>
               <Legend />
             </div>
             <TrendChart points={data.trend} granularity={data.granularity} />

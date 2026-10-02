@@ -51,12 +51,12 @@ function getTodayDayKey(): string {
 }
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  SCHEDULED: { bg: "bg-[#ededfc]", text: "text-[#533afd]" },
-  CHECKED_IN: { bg: "bg-[rgba(21,190,83,0.15)]", text: "text-[#108c3d]" },
-  IN_PROGRESS: { bg: "bg-[rgba(5,112,222,0.15)]", text: "text-[#0570DE]" },
-  COMPLETED: { bg: "bg-[rgba(21,190,83,0.2)]", text: "text-[#108c3d]" },
-  CANCELLED: { bg: "bg-[#F0F3F7]", text: "text-[#64748d]" },
-  NO_SHOW: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-[#DF1B41]" },
+  SCHEDULED: { bg: "bg-brand-subtle", text: "text-brand" },
+  CHECKED_IN: { bg: "bg-[rgba(21,190,83,0.15)]", text: "text-success" },
+  IN_PROGRESS: { bg: "bg-[rgba(5,112,222,0.15)]", text: "text-info" },
+  COMPLETED: { bg: "bg-[rgba(21,190,83,0.2)]", text: "text-success" },
+  CANCELLED: { bg: "bg-surface-hover", text: "text-fg-secondary" },
+  NO_SHOW: { bg: "bg-[rgba(223,27,65,0.12)]", text: "text-danger" },
 };
 
 function formatTime(iso: string): string {
@@ -102,49 +102,49 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
       {/* Left column */}
       <div className="space-y-6">
         {/* Today's Agenda */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white">
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
+        <div className="rounded-panel border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-[#533afd]" strokeWidth={1.5} />
-              <h2 className="text-[16px] font-medium text-[#061b31]">Today&apos;s Agenda</h2>
-              <span className="text-[13px] text-[#64748d] ml-auto">
+              <CalendarDays className="h-4 w-4 text-brand" strokeWidth={1.5} />
+              <h2 className="text-[16px] font-medium text-foreground">Today&apos;s Agenda</h2>
+              <span className="text-[13px] text-fg-secondary ml-auto">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </span>
             </div>
           </div>
-          <div className="divide-y divide-[#e5edf5]">
+          <div className="divide-y divide-border">
             {loadingAppts ? (
               <div className="px-5 py-4 space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 bg-[#F6F9FC] rounded animate-pulse" />
+                  <div key={i} className="h-4 bg-surface-muted rounded animate-pulse" />
                 ))}
               </div>
             ) : appointments.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <CalendarDays className="h-8 w-8 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-                <p className="text-[14px] text-[#64748d]">No appointments scheduled for today</p>
+                <CalendarDays className="h-8 w-8 mx-auto text-border mb-2" strokeWidth={1} />
+                <p className="text-[14px] text-fg-secondary">No appointments scheduled for today</p>
               </div>
             ) : (
               appointments.map((a) => {
                 const colors = statusColors[a.status] ?? statusColors.SCHEDULED;
                 return (
-                  <div key={a.id} className="px-5 py-3 flex items-center gap-4 hover:bg-[#F6F9FC] transition-colors">
+                  <div key={a.id} className="px-5 py-3 flex items-center gap-4 hover:bg-surface-muted transition-colors">
                     <div className="w-20 shrink-0">
-                      <span className="text-[14px] font-medium text-[#061b31]">{formatTime(a.dateTime)}</span>
+                      <span className="text-[14px] font-medium text-foreground">{formatTime(a.dateTime)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-[#64748d] shrink-0" strokeWidth={1.5} />
-                        <span className="text-[14px] text-[#061b31] truncate">
+                        <User className="h-3.5 w-3.5 text-fg-secondary shrink-0" strokeWidth={1.5} />
+                        <span className="text-[14px] text-foreground truncate">
                           {a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Unknown"}
                         </span>
                       </div>
                       {a.notes && (
-                        <p className="text-[12px] text-[#64748d] truncate mt-0.5 ml-5.5">{a.notes}</p>
+                        <p className="text-[12px] text-fg-secondary truncate mt-0.5 ml-5.5">{a.notes}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-[12px] text-[#64748d]">{a.duration}min</span>
+                      <span className="text-[12px] text-fg-secondary">{a.duration}min</span>
                       <span className={`rounded-md px-1.5 py-0.25 text-[11px] font-light ${colors.bg} ${colors.text}`}>
                         {a.status.replace("_", " ")}
                       </span>
@@ -157,39 +157,39 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
         </div>
 
         {/* Recent Visits */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white">
-          <div className="px-5 py-4 border-b border-[#e5edf5]">
+        <div className="rounded-panel border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-[#0570DE]" strokeWidth={1.5} />
-              <h2 className="text-[16px] font-medium text-[#061b31]">Recent Visits</h2>
+              <FileText className="h-4 w-4 text-info" strokeWidth={1.5} />
+              <h2 className="text-[16px] font-medium text-foreground">Recent Visits</h2>
             </div>
           </div>
-          <div className="divide-y divide-[#e5edf5]">
+          <div className="divide-y divide-border">
             {loadingVisits ? (
               <div className="px-5 py-4 space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-4 bg-[#F6F9FC] rounded animate-pulse" />
+                  <div key={i} className="h-4 bg-surface-muted rounded animate-pulse" />
                 ))}
               </div>
             ) : visits.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <FileText className="h-8 w-8 mx-auto text-[#e5edf5] mb-2" strokeWidth={1} />
-                <p className="text-[14px] text-[#64748d]">No visits recorded yet</p>
+                <FileText className="h-8 w-8 mx-auto text-border mb-2" strokeWidth={1} />
+                <p className="text-[14px] text-fg-secondary">No visits recorded yet</p>
               </div>
             ) : (
               visits.map((v) => (
-                <div key={v.id} className="px-5 py-3 hover:bg-[#F6F9FC] transition-colors">
+                <div key={v.id} className="px-5 py-3 hover:bg-surface-muted transition-colors">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-[#64748d]" strokeWidth={1.5} />
-                      <span className="text-[14px] text-[#061b31]">
+                      <User className="h-3.5 w-3.5 text-fg-secondary" strokeWidth={1.5} />
+                      <span className="text-[14px] text-foreground">
                         {v.patient ? `${v.patient.firstName} ${v.patient.lastName}` : "Unknown"}
                       </span>
                     </div>
-                    <span className="text-[12px] text-[#64748d]">{formatDate(v.visitDate)}</span>
+                    <span className="text-[12px] text-fg-secondary">{formatDate(v.visitDate)}</span>
                   </div>
                   {v.assessment && (
-                    <p className="text-[13px] text-[#64748d] line-clamp-2 ml-5.5">{v.assessment}</p>
+                    <p className="text-[13px] text-fg-secondary line-clamp-2 ml-5.5">{v.assessment}</p>
                   )}
                 </div>
               ))
@@ -201,8 +201,8 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
       {/* Right sidebar */}
       <div className="space-y-5">
         {/* Quick Info */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
-          <h3 className="text-[13px] font-medium text-[#273951] uppercase tracking-wide mb-3">
+        <div className="rounded-panel border border-border bg-white px-5 py-4">
+          <h3 className="text-[13px] font-medium text-foreground uppercase tracking-wide mb-3">
             Quick Info
           </h3>
           <div className="space-y-2.5">
@@ -225,8 +225,8 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
         </div>
 
         {/* Working Hours */}
-        <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
-          <h3 className="text-[13px] font-medium text-[#273951] uppercase tracking-wide mb-3">
+        <div className="rounded-panel border border-border bg-white px-5 py-4">
+          <h3 className="text-[13px] font-medium text-foreground uppercase tracking-wide mb-3">
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />
               Working Hours
@@ -241,13 +241,13 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                   <div
                     key={key}
                     className={`flex items-center justify-between text-[13px] rounded-md px-2 py-1 ${
-                      isToday ? "bg-[#ededfc]" : ""
+                      isToday ? "bg-brand-subtle" : ""
                     }`}
                   >
-                    <span className={`w-20 ${isToday ? "text-[#533afd] font-medium" : "text-[#64748d]"}`}>
+                    <span className={`w-20 ${isToday ? "text-brand font-medium" : "text-fg-secondary"}`}>
                       {dayLabels[key]}
                     </span>
-                    <span className={isToday ? "text-[#533afd] font-medium" : day ? "text-[#061b31]" : "text-[#c1c9d2]"}>
+                    <span className={isToday ? "text-brand font-medium" : day ? "text-foreground" : "text-border-strong"}>
                       {day ? `${day.start} - ${day.end}` : "Off"}
                     </span>
                   </div>
@@ -255,14 +255,14 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
               })}
             </div>
           ) : (
-            <p className="text-[13px] text-[#64748d]">No schedule set</p>
+            <p className="text-[13px] text-fg-secondary">No schedule set</p>
           )}
         </div>
 
         {/* Branches */}
         {doctor.branches.length > 0 && (
-          <div className="rounded-[6px] border border-[#e5edf5] bg-white px-5 py-4">
-            <h3 className="text-[13px] font-medium text-[#273951] uppercase tracking-wide mb-3">
+          <div className="rounded-panel border border-border bg-white px-5 py-4">
+            <h3 className="text-[13px] font-medium text-foreground uppercase tracking-wide mb-3">
               Branches
             </h3>
             <div className="space-y-2">
@@ -270,12 +270,12 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
                 <div key={b.id} className="flex items-center justify-between">
                   <Link
                     href={`/dashboard/branches/${b.id}`}
-                    className="text-[14px] text-[#061b31] hover:text-[#533afd] transition-colors flex items-center gap-1"
+                    className="text-[14px] text-foreground hover:text-brand transition-colors flex items-center gap-1"
                   >
                     {b.name}
-                    <ChevronRight className="h-3 w-3 text-[#c1c9d2]" strokeWidth={1.5} />
+                    <ChevronRight className="h-3 w-3 text-border-strong" strokeWidth={1.5} />
                   </Link>
-                  <span className="text-[12px] text-[#533afd] bg-[#ededfc] rounded-full px-2 py-0.5">
+                  <span className="text-[12px] text-brand bg-brand-subtle rounded-full px-2 py-0.5">
                     {roleLabel(b.role)}
                   </span>
                 </div>
@@ -291,8 +291,8 @@ export function DoctorOverviewTab({ doctorId, doctor }: DoctorOverviewTabProps) 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
-      <span className="text-[13px] text-[#64748d] shrink-0">{label}</span>
-      <span className="text-[13px] text-[#061b31] text-right">{value}</span>
+      <span className="text-[13px] text-fg-secondary shrink-0">{label}</span>
+      <span className="text-[13px] text-foreground text-right">{value}</span>
     </div>
   );
 }

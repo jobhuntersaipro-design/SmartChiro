@@ -1,11 +1,11 @@
 import type { EInvoiceStatusValue } from "@/types/einvoice";
 
 const STYLE: Record<EInvoiceStatusValue, { label: string; className: string }> = {
-  NOT_SUBMITTED: { label: "Not submitted", className: "bg-[#f6f9fc] text-[#425466] border-[#e5edf5]" },
-  SUBMITTED: { label: "Validating", className: "bg-[#EAF2FE] text-[#0570DE] border-[#0570DE]/20" },
-  VALID: { label: "Valid", className: "bg-[#E7F6E7] text-[#1f7a1f] border-[#30B130]/25" },
-  INVALID: { label: "Invalid", className: "bg-[#FDE8EC] text-[#b41a36] border-[#DF1B41]/20" },
-  CANCELLED: { label: "Cancelled", className: "bg-[#f6f9fc] text-[#697386] border-[#e5edf5]" },
+  NOT_SUBMITTED: { label: "Not submitted", className: "bg-surface-muted text-fg-secondary border-border" },
+  SUBMITTED: { label: "Validating", className: "bg-info-subtle text-info border-info/20" },
+  VALID: { label: "Valid", className: "bg-success-subtle text-success border-success/25" },
+  INVALID: { label: "Invalid", className: "bg-danger-subtle text-danger border-danger/20" },
+  CANCELLED: { label: "Cancelled", className: "bg-surface-muted text-fg-muted border-border" },
 };
 
 /** LHDN e-invoice status as a pill. */

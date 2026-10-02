@@ -176,12 +176,12 @@ export function PackageTemplateDialog({ open, branchId, template, onClose, onSav
           </div>
         </div>
         {perSession !== null && (
-          <p className="-mt-2 text-[12px] text-[#64748d] tabular-nums">RM {perSession.toFixed(2)} per session</p>
+          <p className="-mt-2 text-[12px] text-fg-secondary tabular-nums">RM {perSession.toFixed(2)} per session</p>
         )}
         <div>
           <span className={LABEL_CLASS}>Redeems for</span>
           <TreatmentTypePicker value={form.treatmentTypes} onChange={(v) => set("treatmentTypes", v)} />
-          <p className="mt-1 text-[12px] text-[#64748d]">None selected = any treatment uses a session.</p>
+          <p className="mt-1 text-[12px] text-fg-secondary">None selected = any treatment uses a session.</p>
         </div>
         <div>
           <label htmlFor="pkg-description" className={LABEL_CLASS}>Description (optional)</label>
@@ -191,16 +191,16 @@ export function PackageTemplateDialog({ open, branchId, template, onClose, onSav
             maxLength={500}
             rows={2}
             onChange={(e) => set("description", e.target.value)}
-            className="w-full rounded-md border border-[#e5edf5] bg-[#f6f9fc] px-3 py-2 text-[14px] text-[#061b31] focus:border-[#533afd] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#533afd]"
+            className="w-full rounded-md border border-border bg-surface-muted px-3 py-2 text-[14px] text-foreground focus:border-brand focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand"
           />
         </div>
         {template && (
-          <label className="flex items-center gap-2 text-[14px] text-[#273951]">
+          <label className="flex items-center gap-2 text-[14px] text-foreground">
             <input
               type="checkbox"
               checked={form.isActive}
               onChange={(e) => set("isActive", e.target.checked)}
-              className="h-4 w-4 accent-[#533afd]"
+              className="h-4 w-4 accent-brand"
             />
             On sale
           </label>

@@ -38,35 +38,35 @@ export function CertificateAlertsCard({ branchParam }: CertificateAlertsCardProp
   return (
     <section
       aria-labelledby="cert-alerts-heading"
-      className="rounded-[6px] border border-[#e5edf5] bg-white shadow-(--shadow-card)"
+      className="rounded-panel border border-border bg-white shadow-(--shadow-card)"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[#e5edf5] px-5 py-3">
-        <h2 id="cert-alerts-heading" className="flex items-center gap-2 text-[16px] font-normal text-[#061b31]">
-          <ShieldAlert className="h-4 w-4 text-[#DF1B41]" strokeWidth={1.75} />
+      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-5 py-3">
+        <h2 id="cert-alerts-heading" className="flex items-center gap-2 text-[16px] font-normal text-foreground">
+          <ShieldAlert className="h-4 w-4 text-danger" strokeWidth={1.75} />
           Practising certificates
         </h2>
-        <span className="text-[13px] text-[#64748d]">
+        <span className="text-[13px] text-fg-secondary">
           {expired > 0 ? `${expired} expired · ` : ""}
           {rows.length - expired} expiring within 60 days
         </span>
       </div>
-      <ul className="divide-y divide-[#e5edf5]">
+      <ul className="divide-y divide-border">
         {rows.map((r) => (
           <li key={r.userId} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-2.5">
             <div className="min-w-0">
               <Link
                 href={`/dashboard/doctors/${r.userId}?tab=professional`}
-                className="text-[15px] text-[#061b31] hover:text-[#533afd] hover:underline"
+                className="text-[15px] text-foreground hover:text-brand hover:underline"
               >
                 {displayDoctorName(r.name)}
               </Link>
-              <p className="truncate text-[13px] text-[#64748d]">
+              <p className="truncate text-[13px] text-fg-secondary">
                 {r.apcNumber ? `APC ${r.apcNumber}` : "APC no. not recorded"}
                 {r.branches.length > 0 && ` · ${r.branches.join(", ")}`}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[14px] tabular-nums text-[#425466] whitespace-nowrap">{formatDateInput(r.expiresOn)}</span>
+              <span className="text-[14px] tabular-nums text-fg-secondary whitespace-nowrap">{formatDateInput(r.expiresOn)}</span>
               <span className={cn("rounded-full border px-2 py-px text-[12px] whitespace-nowrap", STAGE_TONE[r.stage])}>
                 {describeExpiry(r.daysLeft)}
               </span>

@@ -80,11 +80,11 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-5 w-28 rounded bg-[#e5edf5] animate-pulse" />
-        <div className="h-32 rounded-[6px] bg-[#e5edf5] animate-pulse" />
+        <div className="h-5 w-28 rounded bg-border animate-pulse" />
+        <div className="h-32 rounded-panel bg-border animate-pulse" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 rounded-[6px] bg-[#e5edf5] animate-pulse" />
+            <div key={i} className="h-20 rounded-panel bg-border animate-pulse" />
           ))}
         </div>
       </div>
@@ -94,9 +94,9 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
   if (!doctor) {
     return (
       <div className="py-12 text-center">
-        <Stethoscope className="h-12 w-12 mx-auto text-[#e5edf5] mb-3" strokeWidth={1} />
-        <p className="text-[15px] text-[#64748d]">Doctor not found or you don&apos;t have access.</p>
-        <Link href="/dashboard/doctors" className="text-[14px] text-[#533afd] hover:underline mt-2 inline-block">
+        <Stethoscope className="h-12 w-12 mx-auto text-border mb-3" strokeWidth={1} />
+        <p className="text-[15px] text-fg-secondary">Doctor not found or you don&apos;t have access.</p>
+        <Link href="/dashboard/doctors" className="text-[14px] text-brand hover:underline mt-2 inline-block">
           Back to Doctors
         </Link>
       </div>
@@ -118,7 +118,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
       {/* Back link */}
       <Link
         href="/dashboard/doctors"
-        className="inline-flex items-center gap-1.5 text-[14px] text-[#64748d] hover:text-[#061b31] transition-colors"
+        className="inline-flex items-center gap-1.5 text-[14px] text-fg-secondary hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
         Back to Doctors
@@ -126,7 +126,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
 
       {/* Header card */}
       <div
-        className="rounded-[6px] border border-[#e5edf5] bg-white px-6 py-5"
+        className="rounded-panel border border-border bg-white px-6 py-5"
         style={{ boxShadow: "rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px" }}
       >
         <div className="flex items-start justify-between">
@@ -135,27 +135,27 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
               {doctor.image && (
                 <AvatarImage src={doctor.image} alt={doctor.name ?? "Doctor"} />
               )}
-              <AvatarFallback className="bg-[#ededfc] text-[#533afd] text-[16px] font-medium">
+              <AvatarFallback className="bg-brand-subtle text-brand text-[16px] font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-[23px] font-light text-[#061b31]">
+                <h1 className="text-[23px] font-light text-foreground">
                   {doctor.name ?? "Unnamed"}
                 </h1>
                 <span
                   className={`rounded-md px-2 py-0.5 text-[11px] font-light ${
                     doctor.profile?.isActive !== false
-                      ? "bg-[rgba(21,190,83,0.2)] text-[#108c3d] border border-[rgba(21,190,83,0.4)]"
-                      : "bg-[#F0F3F7] text-[#64748d]"
+                      ? "bg-[rgba(21,190,83,0.2)] text-success border border-[rgba(21,190,83,0.4)]"
+                      : "bg-surface-hover text-fg-secondary"
                   }`}
                 >
                   {doctor.profile?.isActive !== false ? "Active" : "Inactive"}
                 </span>
                 <CertificateBadge expiresOn={doctor.profile?.apcExpiresOn ?? null} />
               </div>
-              <div className="flex items-center gap-4 mt-1 text-[14px] text-[#64748d]">
+              <div className="flex items-center gap-4 mt-1 text-[14px] text-fg-secondary">
                 {doctor.email && (
                   <span className="flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -172,7 +172,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
               {specialties.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {specialties.map((s) => (
-                    <span key={s} className="text-[12px] text-[#533afd] bg-[#ededfc] rounded-full px-2.5 py-0.5">
+                    <span key={s} className="text-[12px] text-brand bg-brand-subtle rounded-full px-2.5 py-0.5">
                       {s}
                     </span>
                   ))}
@@ -186,7 +186,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
               <Link href={`/dashboard/settings/${doctorId}`}>
                 <Button
                   variant="outline"
-                  className="h-9 rounded-md text-[14px] border-[#e5edf5] gap-1.5"
+                  className="h-9 rounded-md text-[14px] border-border gap-1.5"
                 >
                   <Settings className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Settings
@@ -202,14 +202,14 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
         {statCards.map((s) => (
           <div
             key={s.label}
-            className="rounded-[6px] border border-[#e5edf5] bg-white px-4 py-3"
+            className="rounded-panel border border-border bg-white px-4 py-3"
           >
             <div className="flex items-center gap-2 mb-1">
               <s.icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={1.5} />
-              <span className="text-[13px] text-[#64748d]">{s.label}</span>
+              <span className="text-[13px] text-fg-secondary">{s.label}</span>
             </div>
             <div
-              className="text-[22px] font-light text-[#061b31]"
+              className="text-[22px] font-light text-foreground"
               style={{ fontFeatureSettings: '"tnum"' }}
             >
               {s.value}
@@ -219,7 +219,7 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
       </div>
 
       {/* Tab navigation */}
-      <div className="border-b border-[#e5edf5]">
+      <div className="border-b border-border">
         <div className="flex gap-0">
           {TABS.map((tab) => (
             <button
@@ -227,8 +227,8 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
               onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-[#533afd] text-[#533afd]"
-                  : "border-transparent text-[#64748d] hover:text-[#061b31]"
+                  ? "border-brand text-brand"
+                  : "border-transparent text-fg-secondary hover:text-foreground"
               }`}
             >
               {tab.label}

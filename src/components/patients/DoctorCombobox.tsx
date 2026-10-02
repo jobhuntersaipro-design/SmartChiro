@@ -63,25 +63,25 @@ export function DoctorCombobox({ value, onChange, disabled, branchId }: Props) {
         type="button"
         disabled={disabled}
         onClick={() => setOpen(!open)}
-        className="flex w-full h-9 items-center justify-between rounded-md border border-[#e5edf5] bg-white px-3 text-[14px] text-[#061b31] hover:border-[#c1c9d2] focus:outline-none focus:ring-1 focus:ring-[#533afd] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="flex w-full h-9 items-center justify-between rounded-md border border-border bg-white px-3 text-[14px] text-foreground hover:border-border-strong focus:outline-none focus:ring-1 focus:ring-brand disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <span className="inline-flex items-center gap-1.5 min-w-0">
-          <User className="h-3.5 w-3.5 text-[#64748d] flex-shrink-0" strokeWidth={1.75} />
-          <span className={`truncate ${value ? "" : "text-[#94a3b8]"}`}>{label}</span>
+          <User className="h-3.5 w-3.5 text-fg-secondary flex-shrink-0" strokeWidth={1.75} />
+          <span className={`truncate ${value ? "" : "text-fg-muted"}`}>{label}</span>
         </span>
-        <ChevronsUpDown className="h-3.5 w-3.5 text-[#64748d] flex-shrink-0" strokeWidth={1.75} />
+        <ChevronsUpDown className="h-3.5 w-3.5 text-fg-secondary flex-shrink-0" strokeWidth={1.75} />
       </button>
 
       {open && (
         <div
-          className="absolute left-0 right-0 top-10 z-30 rounded-[6px] border border-[#e5edf5] bg-white py-1 max-h-65 overflow-y-auto"
+          className="absolute left-0 right-0 top-10 z-30 rounded-panel border border-border bg-white py-1 max-h-65 overflow-y-auto"
           style={{ boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 8px 24px rgba(18,42,66,0.06)" }}
         >
           {loading && (
-            <div className="px-3 py-2 text-[13px] text-[#64748d]">Loading…</div>
+            <div className="px-3 py-2 text-[13px] text-fg-secondary">Loading…</div>
           )}
           {!loading && doctors.length === 0 && (
-            <div className="px-3 py-2 text-[13px] text-[#64748d]">No doctors found</div>
+            <div className="px-3 py-2 text-[13px] text-fg-secondary">No doctors found</div>
           )}
           {!loading &&
             doctors.map((d) => {
@@ -94,10 +94,10 @@ export function DoctorCombobox({ value, onChange, disabled, branchId }: Props) {
                     onChange(d);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-[#273951] hover:bg-[#f6f9fc] transition-colors"
+                  className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-foreground hover:bg-surface-muted transition-colors"
                 >
                   <span className="truncate">{d.name}</span>
-                  {selected && <Check className="h-3.5 w-3.5 text-[#533afd] flex-shrink-0" strokeWidth={2} />}
+                  {selected && <Check className="h-3.5 w-3.5 text-brand flex-shrink-0" strokeWidth={2} />}
                 </button>
               );
             })}
