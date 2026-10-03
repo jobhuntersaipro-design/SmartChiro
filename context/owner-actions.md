@@ -24,18 +24,19 @@ as you go. Last updated 2026-10-03, after the Google sign-up merge.
 
 The "Sign up with Google" / "Sign in with Google" buttons only appear once these
 keys are set. New Google accounts go straight in (Google has already verified the
-email) and get the 30-day trial.
+email) and get the 30-day trial. Every new account gets a welcome email (Resend,
+from `noreply@smartchiro.org`) once its email is verified.
 
 - [ ] Google Cloud Console → APIs & Services → **OAuth consent screen**: app name
   SmartChiro, your support email, authorised domain `smartchiro.org`, scopes
   `openid`, `email`, `profile`. Set the publishing status to **In production**
   (in "Testing" only the test users you list can sign in).
-- [ ] **Credentials → Create credentials → OAuth client ID → Web application**:
+- [x] **Credentials → Create credentials → OAuth client ID → Web application**:
   - Authorised JavaScript origins: `https://smartchiro.org` and
     `https://www.smartchiro.org`.
   - Authorised redirect URI: `https://smartchiro.org/api/auth/callback/google`.
-- [ ] In Vercel (Production), add `AUTH_GOOGLE_ID` (the client ID) and
-  `AUTH_GOOGLE_SECRET` (the client secret), then redeploy.
+- [x] In Vercel (Production), add `AUTH_GOOGLE_ID` (the client ID) and
+  `AUTH_GOOGLE_SECRET` (the client secret), then redeploy. Done 2026-10-03.
 
 ## 2. Email (Resend)
 

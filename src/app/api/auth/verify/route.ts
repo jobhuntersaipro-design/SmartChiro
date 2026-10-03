@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
@@ -51,6 +52,9 @@ export async function GET(req: NextRequest) {
       where: { token },
     }),
   ])
+
+  // Best effort: a failed welcome email never undoes the verification.
+  await sendWelcomeEmail(user).catch((err) => console.error('[auth] welcome email failed:', err))
 
   return NextResponse.redirect(new URL('/verify-email?status=success', req.url))
 }

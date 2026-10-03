@@ -1,7 +1,8 @@
 import { Resend } from 'resend'
 import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
-import { CLINIC_TIME_ZONE } from '@/lib/clinic-time'
+import { CLINIC_TIME_ZONE, clinicDateLabel } from '@/lib/clinic-time'
+import { PLANS, TRIAL_DAYS } from '@/lib/plans'
 
 // Created on first use: constructing Resend without a key throws, which used
 // to crash any route importing this module (e.g. /login, build page-data
@@ -89,6 +90,95 @@ export async function sendVerificationEmail(email: string, name: string) {
   if (error) {
     console.error('Failed to send verification email:', error)
     throw new Error('Failed to send verification email')
+  }
+}
+
+// ─── Welcome ───
+
+const WELCOME_STEPS = [
+  ['Set up your clinic', 'Add your branch: address, opening hours and the doctors who work there.'],
+  ['Add your patients', 'Profiles, medical history, visits and SOAP notes in one place.'],
+  ['Upload and annotate X-rays', 'Measure on the film, and try AI pelvis analysis on an AP pelvis X-ray.'],
+  ['Book appointments', 'Calendar, online booking and WhatsApp or email reminders.'],
+] as const
+
+/**
+ * Sent once, when an account becomes verified: after the email link for
+ * password sign-ups, straight away for Google sign-ups. Callers treat it as
+ * best effort (a failed send never blocks sign-up).
+ */
+export async function sendWelcomeEmail(user: { email: string; name: string | null; trialEndsAt: Date | null }) {
+  const name = user.name?.trim() || 'there'
+  const trialEnd = user.trialEndsAt ? clinicDateLabel(user.trialEndsAt) : null
+  const trialLine = trialEnd
+    ? `Your ${TRIAL_DAYS}-day free trial has started: every feature is yours until ${trialEnd}. No card needed.`
+    : 'Your account is ready.'
+  const priceLine = `After the trial, SmartChiro Pro is RM ${PLANS.month.amount} a month or RM ${PLANS.year.amount.toLocaleString('en-MY')} a year.`
+  const dashboardUrl = `${APP_URL}/dashboard`
+
+  const { error } = await resend().emails.send({
+    from: 'SmartChiro <noreply@smartchiro.org>',
+    to: user.email,
+    subject: 'Welcome to SmartChiro',
+    text: [
+      `Hi ${name},`,
+      '',
+      `Welcome to SmartChiro. ${trialLine}`,
+      '',
+      'Getting started:',
+      ...WELCOME_STEPS.map(([title, body], i) => `${i + 1}. ${title}: ${body}`),
+      '',
+      `Open SmartChiro: ${dashboardUrl}`,
+      '',
+      priceLine,
+      '',
+      'SmartChiro — See More. Treat Better.',
+    ].join('\n'),
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background: #7747ff; border-radius: 6px; padding: 8px 12px; text-align: center;">
+            <span style="color: white; font-size: 14px; font-weight: bold;">Smart Chiro</span>
+          </div>
+        </div>
+        <h1 style="color: #0b0b0b; font-size: 23px; font-weight: 600; text-align: center; margin-bottom: 8px;">
+          Welcome to SmartChiro, ${escapeHtml(name)}
+        </h1>
+        <p style="color: #0b0b0b; font-size: 15px; line-height: 1.5; text-align: center; margin-bottom: 28px;">
+          ${escapeHtml(trialLine)}
+        </p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 28px;">
+          ${WELCOME_STEPS.map(
+            ([title, body], i) => `
+          <tr>
+            <td style="vertical-align: top; width: 32px; padding: 6px 0;">
+              <div style="width: 24px; height: 24px; border-radius: 12px; background: #f1ecff; color: #7747ff; font-size: 13px; font-weight: 600; text-align: center; line-height: 24px;">${i + 1}</div>
+            </td>
+            <td style="padding: 6px 0;">
+              <div style="color: #0b0b0b; font-size: 15px; font-weight: 600;">${title}</div>
+              <div style="color: #585858; font-size: 14px; line-height: 1.45;">${body}</div>
+            </td>
+          </tr>`,
+          ).join('')}
+        </table>
+        <div style="text-align: center; margin-bottom: 28px;">
+          <a href="${dashboardUrl}" style="display: inline-block; background: #0b0b0b; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 999px;">
+            Open SmartChiro
+          </a>
+        </div>
+        <p style="color: #585858; font-size: 13px; line-height: 1.5; text-align: center;">
+          ${escapeHtml(priceLine)}
+        </p>
+        <hr style="border: none; border-top: 1px solid #e9e9e9; margin: 32px 0;" />
+        <p style="color: #585858; font-size: 13px; text-align: center;">
+          SmartChiro — See More. Treat Better.
+        </p>
+      </div>
+    `,
+  })
+
+  if (error) {
+    throw new Error(`Failed to send welcome email: ${error.message}`)
   }
 }
 

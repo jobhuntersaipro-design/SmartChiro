@@ -1,5 +1,6 @@
 import type { User } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export interface GoogleProfile {
   email: string
@@ -25,12 +26,14 @@ export interface GoogleAccount {
  * default 30-day trial. An existing account that never verified its email is
  * marked verified and loses its password: whoever set that password never
  * proved they own the address, so it can't be allowed to sign in alongside
- * the real owner. A verified account just gets Google linked.
+ * the real owner. A verified account just gets Google linked. Accounts
+ * that become verified here get the welcome email.
  */
 export async function resolveGoogleUser(profile: GoogleProfile, account: GoogleAccount): Promise<User> {
   // Registration stores emails in lowercase.
   const email = profile.email.toLowerCase()
   let user = await prisma.user.findUnique({ where: { email } })
+  const welcome = !user?.emailVerified
 
   if (!user) {
     user = await prisma.user.create({
@@ -61,5 +64,9 @@ export async function resolveGoogleUser(profile: GoogleProfile, account: GoogleA
       id_token: account.id_token,
     },
   })
+
+  if (welcome) {
+    await sendWelcomeEmail(user).catch((err) => console.error('[auth] welcome email failed:', err))
+  }
   return user
 }

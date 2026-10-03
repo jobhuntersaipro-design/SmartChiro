@@ -1,11 +1,15 @@
-import { describe, it, expect, afterAll } from 'vitest'
+import { describe, it, expect, afterAll, beforeEach, vi } from 'vitest'
 import { prisma } from '@/lib/prisma'
 import { resolveGoogleUser } from '../auth/google'
+
+const mockSendWelcome = vi.fn()
+vi.mock('@/lib/email', () => ({ sendWelcomeEmail: (...args: unknown[]) => mockSendWelcome(...args) }))
 
 const PREFIX = `test-google-${Date.now()}`
 const account = (id: string) => ({ type: 'oidc', provider: 'google', providerAccountId: `${PREFIX}-${id}` })
 
 describe('resolveGoogleUser', () => {
+  beforeEach(() => mockSendWelcome.mockReset().mockResolvedValue(undefined))
   afterAll(async () => {
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
   })
@@ -20,6 +24,14 @@ describe('resolveGoogleUser', () => {
     expect(user.password).toBeNull()
     expect((user.trialEndsAt!.getTime() - Date.now()) / 86_400_000).toBeCloseTo(30, 0)
     expect(await prisma.account.count({ where: { userId: user.id, provider: 'google' } })).toBe(1)
+    expect(mockSendWelcome).toHaveBeenCalledTimes(1)
+    expect(mockSendWelcome.mock.calls[0][0]).toMatchObject({ email: `${PREFIX}-new@gmail.com`, name: 'Dr New' })
+  })
+
+  it('signs up even when the welcome email fails', async () => {
+    mockSendWelcome.mockRejectedValueOnce(new Error('Resend down'))
+    const user = await resolveGoogleUser({ email: `${PREFIX}-mailfail@gmail.com` }, account('mailfail'))
+    expect(user.emailVerified).not.toBeNull()
   })
 
   it('signs the same Google account in again without duplicating anything', async () => {
@@ -28,6 +40,8 @@ describe('resolveGoogleUser', () => {
     expect(second.id).toBe(first.id)
     expect(await prisma.account.count({ where: { userId: first.id } })).toBe(1)
     expect(await prisma.user.count({ where: { email: `${PREFIX}-again@gmail.com` } })).toBe(1)
+    // Welcome once, on the first sign-in only.
+    expect(mockSendWelcome).toHaveBeenCalledTimes(1)
   })
 
   it('verifies a never-verified account and drops the password whoever registered it set', async () => {
@@ -38,6 +52,7 @@ describe('resolveGoogleUser', () => {
     expect(user.id).toBe(squatter.id)
     expect(user.emailVerified).not.toBeNull()
     expect(user.password).toBeNull()
+    expect(mockSendWelcome).toHaveBeenCalledTimes(1)
   })
 
   it('links Google to a verified password account and keeps its password', async () => {
@@ -48,5 +63,6 @@ describe('resolveGoogleUser', () => {
     expect(user.id).toBe(verified.id)
     expect(user.password).toBe('real-hash')
     expect(await prisma.account.count({ where: { userId: verified.id, provider: 'google' } })).toBe(1)
+    expect(mockSendWelcome).not.toHaveBeenCalled()
   })
 })
