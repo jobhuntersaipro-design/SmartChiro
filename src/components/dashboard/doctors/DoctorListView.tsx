@@ -12,6 +12,7 @@ import { CreateDoctorDialog } from "./CreateDoctorDialog";
 import { RemoveDoctorDialog } from "./RemoveDoctorDialog";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
 import { CertificateBadge } from "@/components/certificates/CertificateBadge";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface DoctorListViewProps {
   userId: string;
@@ -35,6 +36,8 @@ export function DoctorListView({
   const [branchFilter, setBranchFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  // The table needs a wide screen; phones always get the cards.
+  const isPhone = useMediaQuery("(max-width: 767px)");
 
   const [createOpen, setCreateOpen] = useState(false);
   const [removeDoctorState, setRemoveDoctorState] = useState<{
@@ -167,7 +170,7 @@ export function DoctorListView({
             <div className="h-4 w-48 bg-surface-muted rounded animate-pulse mt-2" />
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
@@ -175,7 +178,7 @@ export function DoctorListView({
             />
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
@@ -225,8 +228,8 @@ export function DoctorListView({
       <DoctorSummaryStats doctors={doctors} />
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center gap-2 md:flex-nowrap md:gap-3">
+        <div className="relative basis-full md:basis-auto md:flex-1 md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-secondary" />
           <Input
             value={search}
@@ -239,7 +242,7 @@ export function DoctorListView({
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
-          className="h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+          className="h-9 min-w-0 flex-1 md:flex-none rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
         >
           <option value="all">All Branches</option>
           {branchOptions.map((b) => (
@@ -252,14 +255,14 @@ export function DoctorListView({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
+          className="h-9 min-w-0 flex-1 md:flex-none rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
 
-        <div className="flex gap-1">
+        <div className="hidden md:flex gap-1">
           <button
             onClick={() => setViewMode("grid")}
             className={`h-9 w-9 flex items-center justify-center rounded-control transition-colors ${
@@ -290,7 +293,7 @@ export function DoctorListView({
           isAdmin={isAdmin}
           onAdd={() => setCreateOpen(true)}
         />
-      ) : viewMode === "grid" ? (
+      ) : viewMode === "grid" || isPhone ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((d) => (
             <DoctorCard

@@ -107,7 +107,7 @@ function StatCard({
         {icon}
         <span>{label}</span>
       </div>
-      <div className="mt-2 text-[20px] font-semibold text-foreground tabular-nums">
+      <div className="mt-2 text-[17px] font-semibold text-foreground tabular-nums sm:text-[20px]">
         {primary}
       </div>
       <div className="text-[12px] text-fg-muted mt-0.5">{secondary}</div>

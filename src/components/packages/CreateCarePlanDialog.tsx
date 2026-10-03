@@ -330,7 +330,7 @@ export function CreateCarePlanDialog({
           </label>
           {book && (
             <div className="mt-3 space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
                   <label htmlFor="care-plan-time" className={LABEL_CLASS}>Time</label>
                   <input id="care-plan-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className={FIELD_CLASS} />

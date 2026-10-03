@@ -158,7 +158,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
         <FieldRow label="Street Address">
           <Input value={form.address} onChange={(e) => updateField("address", e.target.value)} className="settings-input" />
         </FieldRow>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FieldRow label="City">
             <Input value={form.city} onChange={(e) => updateField("city", e.target.value)} className="settings-input" />
           </FieldRow>
@@ -182,7 +182,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
           {DAY_ORDER.map((day) => {
             const isOpen = !!hours[day];
             return (
-              <div key={day} className="flex items-center gap-3">
+              <div key={day} className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <button
                   type="button"
                   onClick={() => toggleDay(day)}
@@ -198,14 +198,14 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
                       type="time"
                       value={hours[day]?.open ?? "09:00"}
                       onChange={(e) => updateDayHours(day, "open", e.target.value)}
-                      className="w-28 h-8 rounded-control border-border text-[14px]"
+                      className="w-30 h-8 px-2 rounded-control border-border text-[14px]"
                     />
                     <span className="text-[13px] text-fg-secondary">to</span>
                     <Input
                       type="time"
                       value={hours[day]?.close ?? "18:00"}
                       onChange={(e) => updateDayHours(day, "close", e.target.value)}
-                      className="w-28 h-8 rounded-control border-border text-[14px]"
+                      className="w-30 h-8 px-2 rounded-control border-border text-[14px]"
                     />
                     <button
                       onClick={() => toggleDay(day)}

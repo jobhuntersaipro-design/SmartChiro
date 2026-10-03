@@ -174,7 +174,7 @@ function VisitCard({
             setExpanded(!expanded);
           }
         }}
-        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left"
+        className="flex w-full cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3.5 text-left sm:flex-nowrap"
       >
         {/* Date */}
         <VisitDateCell iso={visit.visitDate} />
@@ -198,7 +198,7 @@ function VisitCard({
 
         {/* Chief Complaint (truncated) */}
         {visit.chiefComplaint && (
-          <span className="text-[13px] text-foreground truncate flex-1 min-w-0">
+          <span className="order-last basis-full truncate text-[13px] text-foreground sm:order-none sm:basis-auto sm:flex-1 min-w-0">
             {visit.chiefComplaint}
           </span>
         )}
@@ -236,9 +236,9 @@ function VisitCard({
 
         {/* Expand icon */}
         {expanded ? (
-          <ChevronUp className="h-4 w-4 text-fg-secondary flex-shrink-0" strokeWidth={1.5} />
+          <ChevronUp className="ml-auto h-4 w-4 text-fg-secondary flex-shrink-0" strokeWidth={1.5} />
         ) : (
-          <ChevronDown className="h-4 w-4 text-fg-secondary flex-shrink-0" strokeWidth={1.5} />
+          <ChevronDown className="ml-auto h-4 w-4 text-fg-secondary flex-shrink-0" strokeWidth={1.5} />
         )}
       </div>
 

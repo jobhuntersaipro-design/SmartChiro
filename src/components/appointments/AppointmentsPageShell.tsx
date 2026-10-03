@@ -140,9 +140,9 @@ export function AppointmentsPageShell({
   }, [viewMode, branchId, doctorIds, selectedDate, activeTab, selectedAppointmentId]);
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-110px)]">
+    <div className="flex flex-col gap-4 md:h-[calc(100vh-110px)]">
       {/* Top bar */}
-      <div className="flex flex-col gap-3 px-4 pt-4 sm:flex-row sm:items-baseline sm:justify-between sm:px-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between sm:px-6 sm:pt-4">
         <div className="min-w-0">
           <h1 className="text-[23px] font-medium tracking-[-0.18px] text-foreground">
             Appointments
@@ -222,7 +222,7 @@ export function AppointmentsPageShell({
             onChanged={() => setRefreshKey((k) => k + 1)}
           />
         ) : (
-          <div className="px-6 pb-4 h-full">
+          <div className="h-[calc(100dvh-80px)] min-h-120 pb-4 sm:px-6 md:h-full">
             <AppointmentsCalendarView
               currentUserId={currentUserId}
               branches={branches}

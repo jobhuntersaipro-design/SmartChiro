@@ -54,6 +54,9 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+/** Week view opens at the start of the working day, not midnight. */
+const SCROLL_TO_TIME = new Date(1970, 0, 1, 7);
+
 // react-big-calendar's withDragAndDrop HOC types don't propagate the extra
 // onEventDrop / onEventResize props cleanly through `Calendar`'s generics.
 // Cast to a permissive component type so the JSX usage compiles; runtime is unchanged.
@@ -616,13 +619,14 @@ export function AppointmentsCalendarView({
           />
         </div>
       ) : (
-      <div className="relative flex-1 min-h-0 rounded-panel border border-border bg-white overflow-hidden">
+      <div className="relative flex-1 min-h-0 rounded-panel border border-border bg-white overflow-x-auto overflow-y-hidden">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
             <Loader2 className="h-5 w-5 text-brand animate-spin" strokeWidth={2} />
           </div>
         )}
         {mounted && (
+        <div className={view === Views.WEEK ? "h-full min-w-175" : "h-full"}>
         <DnDCalendar
           localizer={localizer}
           events={events}
@@ -644,6 +648,7 @@ export function AppointmentsCalendarView({
           resizable
           step={15}
           timeslots={4}
+          scrollToTime={SCROLL_TO_TIME}
           components={{
             event: ({ event }: { event: CalendarEvent }) => (
               <AppointmentEventCard event={event} />
@@ -671,6 +676,7 @@ export function AppointmentsCalendarView({
           }
           toolbar={false}
         />
+        </div>
         )}
       </div>
       )}

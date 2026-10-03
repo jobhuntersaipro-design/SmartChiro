@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Patient, CreatePatientData } from "@/types/patient";
 import { PatientTable, SortKey, SortDir } from "@/components/patients/PatientTable";
 import { PatientCard } from "@/components/patients/PatientCard";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { PatientTableSkeleton } from "@/components/patients/PatientTableSkeleton";
 import { BranchStatsCards } from "@/components/patients/BranchStatsCards";
 import { UpcomingAppointmentsSection } from "@/components/patients/UpcomingAppointmentsSection";
@@ -105,6 +106,9 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
   const [statusFilter, setStatusFilter] = useState("all");
   const [doctorFilter, setDoctorFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  // The table needs a wide screen; phones always get the cards.
+  const isPhone = useMediaQuery("(max-width: 767px)");
+  const shownView = isPhone ? "grid" : viewMode;
   const [sortKey, setSortKey] = useState<SortKey>("upcomingAppointment");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [addOpen, setAddOpen] = useState(() => {
@@ -262,7 +266,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
     setToast("Patient deleted");
   }
 
-  const selectClass = "h-8 rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand appearance-none";
+  const selectClass = "h-8 min-w-0 flex-1 md:flex-none rounded-control border border-border bg-surface-muted px-3 text-[14px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand appearance-none";
 
   return (
     <div>
@@ -286,8 +290,8 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
 
       {/* Filter bar — sticky to top of viewport while scrolling */}
       <div className="sticky top-13 z-20 -mx-2 px-2 py-2 bg-surface-muted/95 backdrop-blur-sm mb-3 border-b border-transparent supports-[backdrop-filter]:bg-surface-muted/80">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
+        <div className="flex flex-wrap items-center gap-2 md:flex-nowrap md:gap-3">
+          <div className="relative basis-full md:basis-auto md:flex-1">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-secondary pointer-events-none" strokeWidth={1.75} />
             <input
               ref={searchRef}
@@ -327,7 +331,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
             </button>
           )}
 
-          <div className="flex items-center rounded-md border border-border bg-surface-muted overflow-hidden">
+          <div className="hidden md:flex items-center rounded-md border border-border bg-surface-muted overflow-hidden">
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center justify-center h-8 w-8 transition-colors ${viewMode === "list" ? "bg-white text-brand" : "text-fg-secondary hover:text-foreground"}`}
@@ -380,7 +384,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         />
       )}
 
-      {!loading && !error && filtered.length > 0 && viewMode === "list" && (
+      {!loading && !error && filtered.length > 0 && shownView === "list" && (
         <PatientTable
           patients={filtered}
           onEdit={(p) => setEditPatient(p)}
@@ -392,7 +396,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         />
       )}
 
-      {!loading && !error && filtered.length > 0 && viewMode === "grid" && (
+      {!loading && !error && filtered.length > 0 && shownView === "grid" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((patient) => (
             <PatientCard key={patient.id} patient={patient} showBranch={multiBranch} />

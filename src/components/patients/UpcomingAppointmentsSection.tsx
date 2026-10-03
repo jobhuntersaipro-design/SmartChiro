@@ -356,7 +356,7 @@ export function UpcomingAppointmentsSection({
       style={{ boxShadow: SHADOW_CARD }}
     >
       {/* Row 1 — title + range tabs */}
-      <div className="flex items-center justify-between gap-3 px-4 h-12 border-b border-border">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2 min-h-12 border-b border-border">
         <button
           type="button"
           onClick={toggleCollapsed}
@@ -406,7 +406,7 @@ export function UpcomingAppointmentsSection({
 
       {/* Row 2 — filters (only when expanded and there's something to filter) */}
       {!collapsed && (branchOptions.length > 1 || doctorOptions.length > 1) && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-surface-subtle">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-border bg-surface-subtle">
           <span className="text-[12px] text-fg-muted uppercase tracking-[0.06em] font-medium mr-1">
             Filter
           </span>

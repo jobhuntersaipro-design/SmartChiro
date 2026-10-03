@@ -107,7 +107,7 @@ export function PackageCatalogCard({ branchId, canManage }: Props) {
         <ul className="-mx-6 divide-y divide-border border-y border-border">
           {templates.map((t) => (
             <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3 hover:bg-surface-hover">
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 grow basis-full sm:basis-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`text-[15px] font-medium ${t.isActive ? "text-foreground" : "text-fg-muted"}`}>{t.name}</span>
                   <span

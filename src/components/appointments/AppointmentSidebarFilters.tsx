@@ -46,6 +46,7 @@ interface Props {
   onShowNoShowChange: (v: boolean) => void;
   onClearFilters: () => void;
   filtersDirty: boolean;
+  className?: string;
 }
 
 export function AppointmentSidebarFilters({
@@ -63,6 +64,7 @@ export function AppointmentSidebarFilters({
   onShowNoShowChange,
   onClearFilters,
   filtersDirty,
+  className = "hidden xl:flex w-70 shrink-0 flex-col gap-4 border-r border-border bg-white p-4 overflow-y-auto",
 }: Props) {
   const branch = branches.find((b) => b.id === branchId);
   const doctors = branch?.doctors ?? [];
@@ -84,7 +86,7 @@ export function AppointmentSidebarFilters({
   return (
     <aside
       aria-label="Appointment filters"
-      className="hidden xl:flex w-70 shrink-0 flex-col gap-4 border-r border-border bg-white p-4 overflow-y-auto"
+      className={className}
     >
       {/* Branch */}
       {branches.length > 1 && (

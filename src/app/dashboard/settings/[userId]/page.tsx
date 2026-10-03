@@ -45,7 +45,7 @@ export default async function SettingsPage({
   const linkedProviders = user.accounts.map((a) => a.provider);
 
   return (
-    <div className="px-8 py-6">
+    <div>
       {/* Breadcrumb */}
       <div className="mb-6">
         <Link

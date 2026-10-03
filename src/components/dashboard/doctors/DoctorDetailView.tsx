@@ -126,11 +126,11 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
 
       {/* Header card */}
       <div
-        className="rounded-panel border border-border bg-white px-6 py-5"
+        className="rounded-panel border border-border bg-white px-4 py-5 md:px-6"
         style={{ boxShadow: "var(--shadow-card)" }}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-4">
             <Avatar className="h-14 w-14 shrink-0">
               {doctor.image && (
                 <AvatarImage src={doctor.image} alt={doctor.name ?? "Doctor"} />
@@ -139,8 +139,8 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className="flex items-center gap-2.5">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                 <h1 className="text-[23px] font-medium text-foreground">
                   {doctor.name ?? "Unnamed"}
                 </h1>
@@ -155,10 +155,10 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
                 </span>
                 <CertificateBadge expiresOn={doctor.profile?.apcExpiresOn ?? null} />
               </div>
-              <div className="flex items-center gap-4 mt-1 text-[14px] text-fg-secondary">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-[14px] text-fg-secondary">
                 {doctor.email && (
-                  <span className="flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span className="flex min-w-0 items-center gap-1.5 break-all">
+                    <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
                     {doctor.email}
                   </span>
                 )}
@@ -220,12 +220,12 @@ export function DoctorDetailView({ doctorId, currentUserId, isAdminLike }: Docto
 
       {/* Tab navigation */}
       <div className="border-b border-border">
-        <div className="flex gap-0">
+        <div className="flex gap-0 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors ${
+              className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? "border-brand text-brand"
                   : "border-transparent text-fg-secondary hover:text-foreground"

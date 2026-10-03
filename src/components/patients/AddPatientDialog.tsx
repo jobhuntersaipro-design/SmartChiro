@@ -370,7 +370,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 </div>
 
                 {/* IC + DOB + Gender */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <FormField label="IC Number (NRIC)" error={errors.icNumber}>
                     <IconInput icon={CreditCard}>
                       <input
@@ -414,7 +414,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 </div>
 
                 {/* Nationality — defaults to Malaysia for a MyKad; SST applies to non-Malaysians */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <FormField label="Nationality">
                     <NationalitySelect
                       value={effectiveNationality(form.nationality, form.icNumber)}
@@ -425,7 +425,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 </div>
 
                 {/* Race + Marital + Blood */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <FormField label="Race">
                     <IconInput icon={Users}>
                       <select value={form.race || ""} onChange={(e) => updateField("race", e.target.value)} className={selectClass}>
@@ -530,7 +530,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                 </div>
 
                 {/* City + State + Postcode */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <FormField label="City">
                     <IconInput icon={Building2}>
                       <input type="text" value={form.city || ""} onChange={(e) => updateField("city", e.target.value)} placeholder="Kuala Lumpur" className={inputClass} />
@@ -570,7 +570,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <FormField label="Contact Name">
                     <IconInput icon={User}>
                       <input type="text" value={form.emergencyName || ""} onChange={(e) => updateField("emergencyName", e.target.value)} placeholder="Fatimah Rahman" className={inputClass} />
@@ -666,7 +666,7 @@ export function AddPatientDialog({ open, onOpenChange, onAdd, branchDoctors, isA
                   <div className="flex-1 h-px bg-border" />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   <FormField label="Initial Treatment Fee">
                     <IconInput icon={Banknote}>
                       <input

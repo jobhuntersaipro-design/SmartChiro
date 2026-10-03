@@ -198,17 +198,17 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
       </div>
 
       <div className="relative overflow-x-auto rounded-panel border border-border bg-white shadow-(--shadow-card)">
-        <table className="w-full min-w-230">
+        <table className="w-full md:min-w-230">
           <thead>
             <tr className="border-b border-border text-left text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary whitespace-nowrap">
               <th className="py-2.5 pl-4 pr-3">Invoice</th>
               <th className="px-3 py-2.5">Patient</th>
-              <th className="px-3 py-2.5">Issued</th>
-              <th className="px-3 py-2.5 text-right">Total</th>
-              <th className="px-3 py-2.5 text-right">Paid</th>
+              <th className="hidden md:table-cell px-3 py-2.5">Issued</th>
+              <th className="hidden md:table-cell px-3 py-2.5 text-right">Total</th>
+              <th className="hidden md:table-cell px-3 py-2.5 text-right">Paid</th>
               <th className="px-3 py-2.5 text-right">Balance</th>
-              <th className="px-3 py-2.5">Status</th>
-              <th className="px-3 py-2.5"><span className="sr-only">Actions</span></th>
+              <th className="hidden md:table-cell px-3 py-2.5">Status</th>
+              <th className="hidden md:table-cell px-3 py-2.5"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -251,8 +251,11 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
                       >
                         {row.invoiceNumber}
                       </button>
+                      <span className="mt-1 block md:hidden">
+                        <InvoiceStatusBadge status={row.status} />
+                      </span>
                     </td>
-                    <td className="px-3 py-3 text-[15px] whitespace-nowrap">
+                    <td className="px-3 py-3 text-[15px] md:whitespace-nowrap">
                       <Link
                         href={`/dashboard/patients/${row.patient.id}/details?tab=billing`}
                         className="text-foreground hover:text-brand hover:underline"
@@ -263,14 +266,14 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
                         <span className="block text-[13px] text-fg-secondary">{row.branch.name}</span>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-[14px] tabular-nums text-fg-secondary whitespace-nowrap">
+                    <td className="hidden md:table-cell px-3 py-3 text-[14px] tabular-nums text-fg-secondary whitespace-nowrap">
                       {dateMY(row.createdAt)}
                       <span className="block text-[13px] text-fg-secondary">
                         {row.status === "PAID" && row.paidAt ? `Paid ${dateMY(row.paidAt)}` : row.dueDate && open ? `Due ${dateMY(row.dueDate)}` : "\u00a0"}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-right text-[15px] tabular-nums text-foreground whitespace-nowrap">{formatMYR(row.amount)}</td>
-                    <td className="px-3 py-3 text-right text-[15px] tabular-nums text-fg-secondary whitespace-nowrap">
+                    <td className="hidden md:table-cell px-3 py-3 text-right text-[15px] tabular-nums text-foreground whitespace-nowrap">{formatMYR(row.amount)}</td>
+                    <td className="hidden md:table-cell px-3 py-3 text-right text-[15px] tabular-nums text-fg-secondary whitespace-nowrap">
                       {row.amountPaid ? formatMYR(row.amountPaid) : "—"}
                     </td>
                     <td
@@ -280,10 +283,10 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
                     >
                       {open ? formatMYR(row.balance) : "—"}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="hidden md:table-cell px-3 py-3 whitespace-nowrap">
                       <InvoiceStatusBadge status={row.status} />
                     </td>
-                    <td className="py-2 pl-3 pr-4 text-right whitespace-nowrap">
+                    <td className="hidden md:table-cell py-2 pl-3 pr-4 text-right whitespace-nowrap">
                       <span className="inline-flex items-center gap-1.5">
                         {row.status === "DRAFT" && (
                           <button

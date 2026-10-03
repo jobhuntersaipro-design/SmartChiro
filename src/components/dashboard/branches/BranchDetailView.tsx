@@ -72,7 +72,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       <div className="space-y-6">
         <div className="h-6 w-32 rounded bg-border animate-pulse" />
         <div className="h-32 rounded-panel bg-border animate-pulse" />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[1, 2, 3, 4].map((i) => <div key={i} className="h-20 rounded-panel bg-border animate-pulse" />)}
         </div>
       </div>
@@ -182,12 +182,12 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
 
       {/* Tabs */}
       <div className="border-b border-border">
-        <nav className="flex gap-0 -mb-px">
+        <nav className="flex gap-0 -mb-px overflow-x-auto">
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
-              className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors cursor-pointer ${
                 activeTab === tab.id
                   ? "border-brand text-brand"
                   : "border-transparent text-fg-secondary hover:text-foreground hover:border-border-strong"

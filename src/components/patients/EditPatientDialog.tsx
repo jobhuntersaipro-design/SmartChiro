@@ -190,7 +190,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                   <input type="text" value={form.lastName || ""} onChange={(e) => update("lastName", e.target.value)} className={inputClass} />
                 </FormField>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <FormField label="IC Number">
                   <input type="text" value={form.icNumber || ""} onChange={(e) => update("icNumber", e.target.value)} className={inputClass} />
                 </FormField>
@@ -214,7 +214,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                   </select>
                 </FormField>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <FormField label="Nationality">
                   <NationalitySelect
                     value={effectiveNationality(nationality, form.icNumber)}
@@ -233,7 +233,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                   />
                 </FormField>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <FormField label="Race">
                   <select value={form.race || ""} onChange={(e) => update("race", e.target.value)} className={selectClass}>
                     <option value="">Select...</option>
@@ -294,7 +294,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
                   <input type="text" value={form.addressLine2 || ""} onChange={(e) => update("addressLine2", e.target.value)} className={inputClass} />
                 </FormField>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <FormField label="City">
                   <input type="text" value={form.city || ""} onChange={(e) => update("city", e.target.value)} className={inputClass} />
                 </FormField>
@@ -314,7 +314,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
 
             <SectionHeading>Emergency Contact & Medical</SectionHeading>
             <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <FormField label="Emergency Name">
                   <input type="text" value={form.emergencyName || ""} onChange={(e) => update("emergencyName", e.target.value)} className={inputClass} />
                 </FormField>
@@ -381,7 +381,7 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
             </div>
 
             <SectionHeading>Pricing (RM)</SectionHeading>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <FormField label="Initial Treatment Fee">
                 <input type="number" min={0} step="0.01" value={form.initialTreatmentFee || ""} onChange={(e) => update("initialTreatmentFee", e.target.value)} placeholder="250.00" className={inputClass} />
               </FormField>

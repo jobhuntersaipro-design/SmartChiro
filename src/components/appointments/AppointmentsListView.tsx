@@ -244,39 +244,49 @@ export function AppointmentsListView({
     );
   }
 
+  // Shared by the desktop sidebar and the folded panel on smaller screens.
+  const filterProps = {
+    branches,
+    branchId,
+    doctorIds,
+    selectedDate,
+    showCancelled,
+    showNoShow,
+    markerDates,
+    onBranchChange: (id: string) => {
+      onBranchChange(id);
+      onDoctorIdsChange([]);
+    },
+    onDoctorIdsChange,
+    onDateChange: (d: Date) => {
+      onDateChange(d);
+      if (activeTab !== "today" && activeTab !== "all") {
+        onActiveTabChange("all");
+      }
+    },
+    onShowCancelledChange: setShowCancelled,
+    onShowNoShowChange: setShowNoShow,
+    onClearFilters: () => {
+      onDoctorIdsChange([]);
+      setShowCancelled(false);
+      setShowNoShow(false);
+    },
+    filtersDirty,
+  };
+
   return (
-    <div className="flex h-[calc(100vh-110px)]">
-      <AppointmentSidebarFilters
-        branches={branches}
-        branchId={branchId}
-        doctorIds={doctorIds}
-        selectedDate={selectedDate}
-        showCancelled={showCancelled}
-        showNoShow={showNoShow}
-        markerDates={markerDates}
-        onBranchChange={(id) => {
-          onBranchChange(id);
-          onDoctorIdsChange([]);
-        }}
-        onDoctorIdsChange={onDoctorIdsChange}
-        onDateChange={(d) => {
-          onDateChange(d);
-          if (activeTab !== "today" && activeTab !== "all") {
-            onActiveTabChange("all");
-          }
-        }}
-        onShowCancelledChange={setShowCancelled}
-        onShowNoShowChange={setShowNoShow}
-        onClearFilters={() => {
-          onDoctorIdsChange([]);
-          setShowCancelled(false);
-          setShowNoShow(false);
-        }}
-        filtersDirty={filtersDirty}
-      />
+    <div className="flex md:h-[calc(100vh-110px)]">
+      <AppointmentSidebarFilters {...filterProps} />
 
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-        <div className="px-6 pt-6 pb-3 flex flex-col gap-4 overflow-hidden">
+        <div className="pb-3 flex flex-col gap-4 overflow-hidden sm:px-6 sm:pt-6">
+          <details className="xl:hidden rounded-panel border border-border bg-white">
+            <summary className="cursor-pointer px-4 py-2.5 text-[14px] font-medium text-foreground">Filters</summary>
+            <AppointmentSidebarFilters
+              {...filterProps}
+              className="flex flex-col gap-4 border-t border-border p-4"
+            />
+          </details>
           <AppointmentStatCards
             appointments={appointments}
             selectedDate={selectedDate}
@@ -290,7 +300,7 @@ export function AppointmentsListView({
           />
         </div>
 
-        <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pb-6">
+        <div className="relative flex-1 min-h-0 overflow-y-auto pb-6 sm:px-6">
           {loading && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 pointer-events-none">
               <Loader2

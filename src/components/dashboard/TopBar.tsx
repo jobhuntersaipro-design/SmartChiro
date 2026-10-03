@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, Search } from "lucide-react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const LONG_PLACEHOLDER = "Search patients — name, IC or phone";
 
@@ -10,15 +11,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   // The long hint doesn't fit a phone; start short (SSR-safe) and widen on larger screens.
-  const [placeholder, setPlaceholder] = useState("Search");
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const apply = () => setPlaceholder(mq.matches ? LONG_PLACEHOLDER : "Search");
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
+  const placeholder = useMediaQuery("(min-width: 640px)") ? LONG_PLACEHOLDER : "Search";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
