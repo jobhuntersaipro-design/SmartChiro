@@ -262,7 +262,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
               <span className="text-[13px] text-fg-secondary">or continue with</span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <GoogleSignInButton label="Register using Google" />
+            <GoogleSignInButton label="Sign up with Google" />
           </>
         )}
       </div>

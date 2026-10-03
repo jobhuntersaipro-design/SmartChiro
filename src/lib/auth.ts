@@ -4,7 +4,7 @@ import { compare } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { BranchRole } from '@prisma/client'
 import authConfig from './auth.config'
-import { sendVerificationEmail } from './email'
+import { resolveGoogleUser } from './auth/google'
 import { loadBranchContext } from './branch-context'
 import { cache } from 'react'
 
@@ -137,84 +137,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account, profile, credentials }) {
       console.log('[AUTH] signIn callback:', { provider: account?.provider, userId: user?.id, hasCredentials: !!credentials })
-      // For OAuth (Google), create or link user + require email verification
+      // Google: sign up (new account, already verified by Google) or sign in.
       if (account?.provider === 'google' && profile?.email) {
         // Refuse sign-in if Google itself didn't verify the email. Without
         // this, an attacker with a Workspace config that hasn't confirmed the
-        // address could link to the victim's SmartChiro account via the email
-        // match below.
+        // address could take over the victim's SmartChiro account, which
+        // resolveGoogleUser finds by email.
         const emailVerifiedByGoogle = (profile as { email_verified?: boolean }).email_verified
         if (!emailVerifiedByGoogle) {
           console.warn('[AUTH] rejecting Google sign-in: email_verified is false', profile.email)
           return false
         }
 
-        let dbUser = await prisma.user.findUnique({
-          where: { email: profile.email },
-        })
-
-        if (!dbUser) {
-          dbUser = await prisma.user.create({
-            data: {
-              email: profile.email,
-              name: profile.name ?? null,
-              image: (profile as Record<string, unknown>).picture as string ?? null,
-            },
-          })
-        }
-
-        // Link OAuth account if not already linked
-        const existingAccount = await prisma.account.findUnique({
-          where: {
-            provider_providerAccountId: {
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-            },
+        const dbUser = await resolveGoogleUser(
+          {
+            email: profile.email,
+            name: profile.name ?? null,
+            picture: ((profile as Record<string, unknown>).picture as string | undefined) ?? null,
           },
-        })
-
-        if (!existingAccount) {
-          await prisma.account.create({
-            data: {
-              userId: dbUser.id,
-              type: account.type,
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              access_token: account.access_token,
-              refresh_token: account.refresh_token,
-              expires_at: account.expires_at,
-              token_type: account.token_type,
-              scope: account.scope,
-              id_token: account.id_token,
-            },
-          })
-        }
+          account,
+        )
 
         if (dbUser.disabledAt) {
           return '/login?error=account_disabled'
-        }
-
-        // Block unverified users and send verification email — but throttle
-        // so repeated sign-in attempts can't be used to bomb the inbox.
-        // Tokens have a 24h expiry, so a token that expires more than
-        // 23h55m from now was created within the last 5 minutes.
-        if (!dbUser.emailVerified) {
-          const FRESH_TOKEN_WINDOW_MS = 5 * 60 * 1000
-          const TOKEN_TTL_MS = 24 * 60 * 60 * 1000
-          const recentToken = await prisma.verificationToken.findFirst({
-            where: {
-              identifier: dbUser.email,
-              expires: { gt: new Date(Date.now() + TOKEN_TTL_MS - FRESH_TOKEN_WINDOW_MS) },
-            },
-          })
-          if (!recentToken) {
-            try {
-              await sendVerificationEmail(dbUser.email, dbUser.name ?? 'there')
-            } catch (e) {
-              console.error('Failed to send verification email for Google user:', e)
-            }
-          }
-          return '/verify-email'
         }
 
         // Set active branch

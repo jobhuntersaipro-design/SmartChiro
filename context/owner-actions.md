@@ -2,7 +2,7 @@
 
 Things only the clinic owner can do: accounts, credentials, production data and
 business decisions. The code for every item is already on `main`. Tick items off here
-as you go. Last updated 2026-10-03, after the trial / Stripe billing / super admin merge.
+as you go. Last updated 2026-10-03, after the Google sign-up merge.
 
 ## 1. Before deploying this merge
 
@@ -19,6 +19,23 @@ as you go. Last updated 2026-10-03, after the trial / Stripe billing / super adm
   `x-cron-secret: $CRON_SECRET`.
 - [ ] **Env vars already needed:** `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`,
   `NEXT_PUBLIC_APP_URL`, and the `R2_*` settings.
+
+## 1a. Sign up with Google
+
+The "Sign up with Google" / "Sign in with Google" buttons only appear once these
+keys are set. New Google accounts go straight in (Google has already verified the
+email) and get the 30-day trial.
+
+- [ ] Google Cloud Console → APIs & Services → **OAuth consent screen**: app name
+  SmartChiro, your support email, authorised domain `smartchiro.org`, scopes
+  `openid`, `email`, `profile`. Set the publishing status to **In production**
+  (in "Testing" only the test users you list can sign in).
+- [ ] **Credentials → Create credentials → OAuth client ID → Web application**:
+  - Authorised JavaScript origins: `https://smartchiro.org` and
+    `https://www.smartchiro.org`.
+  - Authorised redirect URI: `https://smartchiro.org/api/auth/callback/google`.
+- [ ] In Vercel (Production), add `AUTH_GOOGLE_ID` (the client ID) and
+  `AUTH_GOOGLE_SECRET` (the client secret), then redeploy.
 
 ## 2. Email (Resend)
 
