@@ -1,0 +1,64 @@
+/**
+ * Contract of POST /api/viewer/detect-landmarks — AI pelvic landmark
+ * detection on an AP pelvis (or AP full-spine) radiograph.
+ *
+ * Request: { xrayId: string }
+ *
+ * 200 → DetectLandmarksResponse (image accepted, landmarks placed)
+ * 422 → DetectLandmarksRejection (image not suitable for AI analysis)
+ * other → { error: string; message: string }
+ */
+
+/** What the first (gate) pass saw in the image. */
+export interface PelvisImageAssessment {
+  isRadiograph: boolean;
+  projection: "AP" | "PA" | "lateral" | "oblique" | "other" | "unknown";
+  region: "pelvis" | "full_spine" | "lumbar" | "hip" | "chest" | "other";
+  visible: {
+    iliacCrests: boolean;
+    femoralHeads: boolean;
+    ischialTuberosities: boolean;
+    sacrum: boolean;
+    pubicSymphysis: boolean;
+  };
+  hipImplant: boolean;
+  /** Measurement lines or landmark dots burnt into the image (side markers don't count). */
+  overlays: boolean;
+  quality: "good" | "fair" | "poor";
+  /** Side marker letter and the image side it sits on, if one is legible. */
+  sideMarker: { letter: "R" | "L"; imageSide: "left" | "right" } | null;
+  /** Bony pelvis box in original-image pixels: [x0, y0, x1, y1]. */
+  pelvisBox: [number, number, number, number] | null;
+  notes: string;
+}
+
+export interface DetectedLandmark {
+  /** Paper number, 1-16 (Moon et al., Heliyon 2024, Fig. 2). */
+  id: number;
+  /** PelvicLandmarkKey, stored as shape.landmarkName. */
+  key: string;
+  /** Original-image pixels, top-left origin. */
+  x: number;
+  y: number;
+  /** 0-1: the model's confidence combined with agreement between runs. */
+  confidence: number;
+}
+
+export interface DetectLandmarksResponse {
+  landmarks: DetectedLandmark[];
+  assessment: PelvisImageAssessment;
+  /** Image side holding the patient's right, and how that was decided. */
+  patientRightOn: "left" | "right";
+  sideSource: "marker" | "assumed";
+  /** Accepted, but with caveats the user should see (e.g. ischial tuberosities out of view). */
+  warnings: string[];
+  model: string;
+}
+
+export interface DetectLandmarksRejection {
+  error: "NOT_SUITABLE";
+  message: string;
+  /** Plain-language reasons the image was rejected, one per line. */
+  reasons: string[];
+  assessment: PelvisImageAssessment;
+}

@@ -2,7 +2,7 @@
 
 Things only the clinic owner can do: accounts, credentials, production data and
 business decisions. The code for every item is already on `main`. Tick items off here
-as you go. Last updated 2026-09-29, after the Improvement Plan merge.
+as you go. Last updated 2026-10-03, after the AI Pelvis Analysis merge.
 
 ## 1. Before deploying this merge
 
@@ -55,6 +55,18 @@ Full steps are in `context/features/whatsapp-cloud-api-spec.md` §8 and §11.
 - [ ] Add a CORS rule to the bucket that allows `PUT` from the app origin, so
   X-ray uploads go straight to R2. Until then, uploads fall back to the server,
   which only accepts files up to 4 MB.
+
+## 4a. AI pelvis analysis (Anthropic)
+
+- [ ] **Add `ANTHROPIC_API_KEY` to the Production environment in Vercel.** It is
+  currently set for Preview only, so on smartchiro.org the "Detect landmarks"
+  button answers "AI analysis isn't set up" until the key is added (then redeploy).
+- [ ] **Budget for it.** Each analysis makes up to 11 model calls (Claude Opus 5.5):
+  about 25–45 seconds and roughly US$0.20–0.35 per film. Limited to 6 analyses
+  per user per 10 minutes.
+- [ ] **Calibrate films for mm.** Results are in pixels until a calibration line is
+  drawn on the film (a ruler or known-size marker); the paper's normal ranges
+  (e.g. FHHD < 10 mm) are only judged in mm.
 
 ## 5. LHDN MyInvois (e-invoicing)
 

@@ -3,6 +3,7 @@
 import { memo } from "react";
 import type { BaseShape } from "@/types/annotation";
 import { formatMeasurement, LANDMARK_LABEL_SENTINEL } from "@/lib/measurements";
+import { landmarkByKey } from "@/lib/pelvic-landmarks";
 
 // A vertex label of LANDMARK_LABEL_SENTINEL means "snap-followed a landmark
 // — render no inline label." `null` to VertexMarker omits the label and
@@ -35,11 +36,13 @@ interface ShapeRendererProps {
    * When set, length/area readouts convert to mm/cm/mm²/cm² instead of px/px².
    */
   pixelsPerMm?: number;
+  /** Landmarks only: show just "11 R" (number + patient side), e.g. while the pelvic construction lines are drawn. */
+  compactLabel?: boolean;
 }
 
 // Memoised: the canvas re-renders on every pointer move while drawing, but
 // only the shape being drawn changes — the rest keep identical props.
-export const ShapeRenderer = memo(function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm }: ShapeRendererProps) {
+export const ShapeRenderer = memo(function ShapeRenderer({ shape, zoom, vertexLabels, selected, pixelsPerMm, compactLabel }: ShapeRendererProps) {
   const sw = shape.style.strokeWidth / zoom;
   const dashArray =
     shape.style.lineDash.length > 0
@@ -62,9 +65,9 @@ export const ShapeRenderer = memo(function ShapeRenderer({ shape, zoom, vertexLa
         />
       )}
 
-      {/* ─── AI Landmark (cyan dot + label, dashed ring when AI-source) ─── */}
+      {/* ─── Landmark (red = AI, green = reviewed, dashed when AI is unsure) ─── */}
       {shape.type === "landmark" && shape.points.length >= 1 && (
-        <LandmarkRenderer shape={shape} zoom={zoom} selected={selected} />
+        <LandmarkRenderer shape={shape} zoom={zoom} selected={selected} compactLabel={compactLabel} />
       )}
 
       {/* ─── Legacy line shape (kept for backwards-compat with old saves) ─── */}
@@ -921,19 +924,22 @@ function PointRenderer({
 //
 // Visual identity uses traffic-light colors so the review state is obvious at
 // a glance:
-//   - RED solid ring  → source = "ai" (placed by the model, not yet reviewed)
-//   - GREEN solid ring → source = "manual" (user has dragged / accepted)
-//   - Amber ring        → currently selected (overrides both)
-// Label sits off to the right of the dot showing the displayName, which is
-// much more useful than a 1-character index for anatomical features.
+//   - RED ring   → source = "ai" (placed by the model, not yet reviewed);
+//                  DASHED when the model's confidence is below 0.5
+//   - GREEN ring → source = "manual" (user has dragged / accepted)
+//   - Amber ring → currently selected (overrides both)
+// Label sits off to the right of the dot showing shape.label (e.g.
+// "1 R Femoral head"), which is much more useful than a 1-character index.
 function LandmarkRenderer({
   shape,
   zoom,
   selected,
+  compactLabel,
 }: {
   shape: BaseShape;
   zoom: number;
   selected?: boolean;
+  compactLabel?: boolean;
 }) {
   const p = shape.points[0];
   if (!p) return null;
@@ -941,14 +947,18 @@ function LandmarkRenderer({
   const ringWidth = 1.75 / zoom;
   const dotRadius = 2 / zoom;
   const labelFont = 11 / zoom;
-  const labelOffset = (ringRadius + 4) / 1;
+  const labelOffset = ringRadius + 4 / zoom;
   const isAi = shape.landmarkSource !== "manual";
+  const uncertain = isAi && shape.landmarkConfidence != null && shape.landmarkConfidence < 0.5;
   const ringColor = selected
     ? "#FBBF24" // amber selection override
     : isAi
       ? "#EF4444" // red — unreviewed AI placement
       : "#10B981"; // green — user-reviewed / manual
-  const label = shape.label ?? shape.landmarkName ?? "";
+  const def = compactLabel && shape.landmarkName ? landmarkByKey(shape.landmarkName) : undefined;
+  const label = def
+    ? `${def.id}${shape.landmarkSide ? ` ${shape.landmarkSide}` : ""}`
+    : shape.label ?? shape.landmarkName ?? "";
 
   return (
     <g>
@@ -962,13 +972,15 @@ function LandmarkRenderer({
         strokeWidth={ringWidth + 1.5 / zoom}
         fill="none"
       />
-      {/* Solid status ring (red = AI, green = manual, amber = selected) */}
+      {/* Status ring (red = AI, green = manual, amber = selected); dashed
+          for low-confidence AI placements */}
       <circle
         cx={p.x}
         cy={p.y}
         r={ringRadius}
         stroke={ringColor}
         strokeWidth={ringWidth}
+        strokeDasharray={uncertain ? `${3 / zoom} ${2.5 / zoom}` : undefined}
         fill="none"
       />
       {/* Center dot */}

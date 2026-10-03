@@ -32,9 +32,17 @@ import {
 } from "@/lib/measurements";
 import {
   computePelvicAnalysis,
-  formatParamValue,
-  type ParamResult,
+  formatDegrees,
+  formatLength,
+  type Length,
+  type ParamStatus,
+  type PelvicParam,
 } from "@/lib/pelvic-analysis";
+import { landmarkById, landmarkByKey, landmarkLabel, patientSideOf } from "@/lib/pelvic-landmarks";
+import { cn } from "@/lib/utils";
+import { patientRightOnOf, pelvicLandmarkShapes, pelvicPointsOf } from "./PelvisOverlay";
+
+export type PanelTab = "layers" | "properties" | "measurements";
 
 const shapeIcons: Record<ShapeType, React.ReactNode> = {
   point: <Dot size={20} strokeWidth={2.5} />,
@@ -88,6 +96,9 @@ function buildPerTypeIndices(shapes: BaseShape[]): Map<string, number> {
 
 function getShapeDisplayName(shape: BaseShape, perTypeIndex: number): string {
   if (shape.label) return shape.label;
+  if (shape.type === "landmark" && shape.landmarkName) {
+    return humanizeLandmarkName(shape.landmarkName, shape.landmarkSide);
+  }
   return `${effectiveDisplayType(shape)} ${perTypeIndex}`;
 }
 
@@ -226,6 +237,15 @@ interface PropertiesPanelProps {
    * user clicks "Reset all" to revert their manual adjustments en masse.
    */
   onResetLandmarksToAi?: (ids: string[]) => void;
+  /** Controlled tab, so the canvas can switch to Measurements after an AI run. */
+  activeTab: PanelTab;
+  onTabChange: (tab: PanelTab) => void;
+  /** Pelvic analysis unit; "px" whenever the film is uncalibrated. */
+  pelvisUnit: "mm" | "px";
+  onPelvisUnitChange: (unit: "mm" | "px") => void;
+  /** Whether the pelvic construction lines are drawn on the film. */
+  pelvisOverlayOn: boolean;
+  onPelvisOverlayChange: (on: boolean) => void;
 }
 
 function PropertiesPanelView({
@@ -247,9 +267,13 @@ function PropertiesPanelView({
   onClearCalibration,
   onEditCalibration,
   onResetLandmarksToAi,
+  activeTab,
+  onTabChange: setActiveTab,
+  pelvisUnit,
+  onPelvisUnitChange,
+  pelvisOverlayOn,
+  onPelvisOverlayChange,
 }: PropertiesPanelProps) {
-  const [activeTab, setActiveTab] = useState<"layers" | "properties" | "measurements">("layers");
-
   // ─── Selection / multi-select / bulk-delete helpers ───
   // Cmd/Ctrl+click toggles a layer in/out of the selection; plain click
   // replaces the selection with just that layer.
@@ -730,6 +754,10 @@ function PropertiesPanelView({
             <PelvicAnalysisSection
               shapes={shapes}
               pixelsPerMm={pixelsPerMm}
+              unit={pelvisUnit}
+              onUnitChange={onPelvisUnitChange}
+              overlayOn={pelvisOverlayOn}
+              onOverlayChange={onPelvisOverlayChange}
               onResetLandmarksToAi={onResetLandmarksToAi}
             />
             <MeasurementSummary
@@ -1554,36 +1582,35 @@ function NumberInput({
 
 // ─── Pelvic Analysis Section ───
 //
-// Mounted at the top of the Measurements tab when at least one landmark
-// shape is present. Recomputes the four Heliyon parameters (FHHD, ICHD,
-// ALFHRF, DOCS) on every render — landmark drags push fresh `shapes` props
-// through, so values stay live without any explicit listener.
-//
-// Each row renders the computed value when all required landmarks are
-// present; otherwise it lists the missing landmark names so the user knows
-// what to place. When px-only (no calibration), a one-line hint nudges the
-// user toward the calibration tool.
+// Mounted at the top of the Measurements tab when the film has landmarks.
+// Recomputes the radiographic parameters of Moon et al. (Heliyon 2024) on
+// every render — landmark drags push fresh `shapes` props through, so values
+// stay live without any explicit listener. Rows whose landmarks are absent
+// list the missing landmark numbers so the user knows what to place.
 function PelvicAnalysisSection({
   shapes,
   pixelsPerMm,
+  unit,
+  onUnitChange,
+  overlayOn,
+  onOverlayChange,
   onResetLandmarksToAi,
 }: {
   shapes: BaseShape[];
   pixelsPerMm?: number;
+  unit: "mm" | "px";
+  onUnitChange: (unit: "mm" | "px") => void;
+  overlayOn: boolean;
+  onOverlayChange: (on: boolean) => void;
   onResetLandmarksToAi?: (ids: string[]) => void;
 }) {
-  const landmarkShapes = shapes.filter(
-    (s) => s.type === "landmark" && s.visible && s.points.length >= 1,
-  );
-  const landmarks = landmarkShapes
-    .map((s) => ({
-      name: s.landmarkName ?? "",
-      x: s.points[0].x,
-      y: s.points[0].y,
-    }))
-    .filter((l) => l.name !== "");
+  const landmarkShapes = pelvicLandmarkShapes(shapes);
+  if (landmarkShapes.length === 0) return null;
 
-  if (landmarks.length === 0) return null;
+  const points = pelvicPointsOf(landmarkShapes);
+  const placed = Object.keys(points).length;
+  const patientRightOn = patientRightOnOf(landmarkShapes);
+  const analysis = computePelvicAnalysis(points, { pixelsPerMm, patientRightOn });
 
   // Manual landmarks that still remember where the AI placed them are the
   // candidates for "Reset all" — anything else either is still AI-placed or
@@ -1597,125 +1624,164 @@ function PelvicAnalysisSection({
     )
     .map((s) => s.id);
 
-  const analysis = computePelvicAnalysis(landmarks, pixelsPerMm ?? null);
-  const params: ParamResult[] = [
-    analysis.fhhd,
-    analysis.ichd,
-    analysis.alfhrf,
-    analysis.docs,
-  ];
-  const hasMm = pixelsPerMm != null && pixelsPerMm > 0;
-
   return (
-    <div
-      className="p-3"
-      style={{ borderBottom: "1px solid #e9e9e9" }}
-    >
-      <div className="flex items-baseline justify-between mb-2 gap-2">
-        <p className="text-xs font-medium" style={{ color: "#0b0b0b" }}>
-          Pelvic Analysis
-        </p>
+    <section aria-labelledby="pelvic-analysis-title" className="border-b border-border p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 id="pelvic-analysis-title" className="text-xs font-medium text-foreground">
+          Pelvic analysis
+        </h3>
         <div className="flex items-baseline gap-2">
           {resettableIds.length > 0 && onResetLandmarksToAi && (
             <button
               type="button"
               onClick={() => onResetLandmarksToAi(resettableIds)}
-              className="text-[10px] transition-colors"
-              style={{ color: "#7747ff" }}
+              className="text-[10px] text-brand transition-colors hover:text-brand-strong"
               title={`Revert ${resettableIds.length} manually adjusted landmark${resettableIds.length === 1 ? "" : "s"} back to the AI suggestion.`}
             >
               Reset all to AI
             </button>
           )}
-          <span className="text-[10px]" style={{ color: "#585858" }}>
-            {landmarks.length} landmark{landmarks.length === 1 ? "" : "s"}
-          </span>
+          <span className="text-[10px] tabular-nums text-fg-muted">{placed}/16 landmarks</span>
         </div>
       </div>
-      {!hasMm && (
-        <p
-          className="text-[10px] mb-2 px-2 py-1"
-          style={{
-            backgroundColor: "#FEF6E6",
-            border: "1px solid #F5E0B5",
-            borderRadius: 10,
-            color: "#9A6712",
-          }}
-        >
-          Calibrate to display distances in mm
+      <p className="mt-0.5 text-[10px] text-fg-muted">Moon et al., Heliyon 2024 · 16 landmarks</p>
+
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <div role="radiogroup" aria-label="Distance unit" className="inline-flex rounded-control bg-surface-muted p-0.5">
+          {(["px", "mm"] as const).map((u) => (
+            <button
+              key={u}
+              type="button"
+              role="radio"
+              aria-checked={unit === u}
+              disabled={u === "mm" && !analysis.calibrated}
+              onClick={() => onUnitChange(u)}
+              title={u === "mm" && !analysis.calibrated ? "Calibrate to see mm" : undefined}
+              className={cn(
+                "rounded-control px-2.5 py-0.5 text-[11px] font-medium transition-colors disabled:cursor-not-allowed disabled:text-fg-disabled",
+                unit === u
+                  ? "bg-surface text-foreground shadow-(--shadow-resting)"
+                  : "text-fg-secondary hover:text-foreground",
+              )}
+            >
+              {u}
+            </button>
+          ))}
+        </div>
+        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-fg-secondary">
+          <input
+            type="checkbox"
+            checked={overlayOn}
+            onChange={(e) => onOverlayChange(e.target.checked)}
+            className="size-3.5 accent-brand"
+          />
+          Show lines on film
+        </label>
+      </div>
+      {!analysis.calibrated && (
+        <p className="mt-2 rounded-control bg-warning-subtle px-2 py-1 text-[10px] text-warning">
+          Calibrate to see mm: draw a line of known length with the Calibrate tool (K).
         </p>
       )}
-      <div className="space-y-1.5">
-        {params.map((p) => (
-          <PelvicParamRow key={p.id} result={p} />
-        ))}
-      </div>
-    </div>
+
+      {placed === 0 ? (
+        <p className="mt-2 text-[11px] text-fg-secondary">
+          These landmarks come from an older AI version. Run AI pelvis analysis again to measure.
+        </p>
+      ) : (
+        <ul className="mt-1 divide-y divide-border">
+          {analysis.params.map((param) => (
+            <li key={param.id} className="py-2">
+              <PelvicParamRow param={param} unit={unit} patientRightOn={patientRightOn} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-1 text-[10px] text-fg-muted">
+        R/L are patient sides (patient&apos;s right on the image {patientRightOn}).
+      </p>
+    </section>
   );
 }
 
-function PelvicParamRow({ result }: { result: ParamResult }) {
-  const formatted = formatParamValue(result);
-  const isMissing = result.value === null;
+const PARAM_STATUS: Record<ParamStatus, { text: string; className: string }> = {
+  normal: { text: "Normal", className: "bg-success-subtle text-success" },
+  outside: { text: "Outside range", className: "bg-danger-subtle text-danger" },
+  uncalibrated: { text: "Needs mm", className: "bg-surface-muted text-fg-muted" },
+  missing: { text: "Missing", className: "bg-surface-muted text-fg-muted" },
+};
+
+function PelvicParamRow({
+  param,
+  unit,
+  patientRightOn,
+}: {
+  param: PelvicParam;
+  unit: "mm" | "px";
+  patientRightOn: "left" | "right";
+}) {
+  const status = PARAM_STATUS[param.status];
+  const fmt = (v: Length | null) => (v ? formatLength(v, unit) : "—");
+  const headline =
+    param.kind === "pair"
+      ? param.diff
+        ? `Δ ${fmt(param.diff)}`
+        : "—"
+      : param.degrees != null
+        ? formatDegrees(param.degrees)
+        : fmt(param.value);
+  const missingNames = param.missing
+    .map((id) => {
+      const def = landmarkById(id);
+      return def ? landmarkLabel(def, patientSideOf(def.imageSide, patientRightOn)) : String(id);
+    })
+    .join(", ");
 
   return (
-    <div
-      className="flex items-baseline justify-between gap-2 px-2 py-1"
-      style={{
-        backgroundColor: isMissing ? "#f8f8f8" : "#ffffff",
-        border: "1px solid #e9e9e9",
-        borderRadius: 10,
-      }}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-1.5">
-          <span
-            className="text-xs font-medium tabular-nums"
-            style={{ color: "#0b0b0b" }}
-          >
-            {result.label}
-          </span>
-          <span
-            className="text-[10px] truncate"
-            style={{ color: "#585858" }}
-            title={result.description}
-          >
-            {result.description}
-          </span>
-        </div>
-        {isMissing && result.missing.length > 0 && (
-          <p
-            className="text-[10px] mt-0.5 italic"
-            style={{ color: "#9A6712" }}
-            title={result.missing.join(", ")}
-          >
-            Missing: {result.missing.map(humanizeLandmarkName).join(", ")}
-          </p>
-        )}
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-medium text-foreground">{param.label}</span>
+        <span className="text-xs font-medium tabular-nums text-foreground">{headline}</span>
       </div>
-      <span
-        className="text-xs font-medium tabular-nums shrink-0"
-        style={{ color: isMissing ? "#a4a4a4" : "#7747ff" }}
-      >
-        {formatted ?? "—"}
-      </span>
+      <p className="text-[10px] text-fg-muted">{param.description}</p>
+      {param.id === "SAM" && (
+        <p className="text-[10px] text-warning">AI is least reliable on the sacrum: check landmarks 7, 11 and 12.</p>
+      )}
+      {param.kind === "pair" && (
+        <dl className="mt-1 flex gap-3 text-[11px] tabular-nums">
+          <div className="flex gap-1">
+            <dt className="text-fg-muted">R</dt>
+            <dd className="text-foreground">{fmt(param.right)}</dd>
+          </div>
+          <div className="flex gap-1">
+            <dt className="text-fg-muted">L</dt>
+            <dd className="text-foreground">{fmt(param.left)}</dd>
+          </div>
+        </dl>
+      )}
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <span className="min-w-0 text-[10px] text-fg-secondary">
+          {[param.direction, `normal ${param.normal}`].filter(Boolean).join(" · ")}
+        </span>
+        <span className={cn("shrink-0 rounded-full px-1.5 py-px text-[10px] font-medium", status.className)}>
+          {status.text}
+        </span>
+      </div>
+      {param.missing.length > 0 && (
+        <p className="mt-0.5 text-[10px] text-fg-muted" title={missingNames}>
+          Missing: {param.missing.join(", ")}
+        </p>
+      )}
     </div>
   );
 }
 
-// snake_case landmark id → terse human label for the "missing" hint line.
-// Kept local to the panel: the canonical displayName lives on each shape's
-// `label` field once placed, but missing landmarks have no shape yet.
-function humanizeLandmarkName(name: string): string {
-  const map: Record<string, string> = {
-    top_of_left_femoral_head: "L femoral head",
-    top_of_right_femoral_head: "R femoral head",
-    top_of_left_iliac_crest: "L iliac crest",
-    top_of_right_iliac_crest: "R iliac crest",
-    second_sacral_tubercle: "S2 tubercle",
-    center_of_symphysis_pubis: "symphysis pubis",
-  };
-  return map[name] ?? name.replace(/_/g, " ");
+// Landmark key → label like "1 R Femoral head" via the catalog. Names from
+// the older landmark set aren't in it and are shown as written.
+function humanizeLandmarkName(name: string, side?: "R" | "L"): string {
+  const def = landmarkByKey(name);
+  return def ? landmarkLabel(def, side ?? null) : name.replace(/_/g, " ");
 }
 
 // Memoised: the canvas re-renders on every pointer move while drawing; the

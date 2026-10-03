@@ -133,14 +133,26 @@ export interface BaseShape {
   // Landmark (AI-detected anatomical points — kind: "landmark")
   // The single point lives in points[0]; these fields capture the metadata
   // needed for the review-and-adjust UX.
-  /** Canonical snake_case name — e.g. "top_of_femoral_head_1". Unique per response. */
+  /**
+   * A `PelvicLandmarkKey` from `@/lib/pelvic-landmarks` (Moon et al. 2024),
+   * e.g. "femoral_head_top_img_left". Older annotations may hold names from
+   * the previous landmark set; those are shown as-is and left out of the
+   * pelvic analysis.
+   */
   landmarkName?: string;
   /**
    * Whether this landmark was placed by AI or by the user. AI landmarks
-   * render with a dashed ring; once dragged, source flips to "manual" and
-   * the ring becomes solid so the user can see what they've reviewed.
+   * render with a red ring; once dragged, source flips to "manual" and the
+   * ring turns green so the user can see what they've reviewed.
    */
   landmarkSource?: "ai" | "manual";
+  /** Patient side ("R" / "L") of a paired landmark; absent for midline ones. */
+  landmarkSide?: "R" | "L";
+  /**
+   * AI confidence, 0-1 (AI-placed landmarks only). Below 0.5 the ring is
+   * dashed so the user checks it first.
+   */
+  landmarkConfidence?: number;
   /**
    * The original AI-suggested position, captured at detection time and
    * preserved through user drags so we can offer a "Reset to AI" affordance.

@@ -21,6 +21,7 @@ import {
 } from "@/types/annotation";
 import {
   orientationCss,
+  orientPoint,
   orientRect,
   orientShape,
   unorientVector,
@@ -45,7 +46,7 @@ import {
 } from "@/lib/measurements";
 import { AnnotationHeader } from "./AnnotationHeader";
 import { AnnotationToolbar } from "./AnnotationToolbar";
-import { PropertiesPanel } from "./PropertiesPanel";
+import { PropertiesPanel, type PanelTab } from "./PropertiesPanel";
 import { ZoomBar } from "./ZoomBar";
 import { StatusBar } from "./StatusBar";
 import { SelectionOverlay } from "./SelectionOverlay";
@@ -61,6 +62,10 @@ import { RecentCommitUndo } from "./RecentCommitUndo";
 import { CalibrationDialog } from "./CalibrationDialog";
 import { CascadeDeleteDialog } from "./CascadeDeleteDialog";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
+import { PelvisOverlay, pelvicLandmarkShapes } from "./PelvisOverlay";
+import { PelvisRejectedDialog } from "./PelvisRejectedDialog";
+import { landmarkById, landmarkByKey, landmarkLabel, patientSideOf } from "@/lib/pelvic-landmarks";
+import type { DetectLandmarksRejection, DetectLandmarksResponse } from "@/types/pelvis";
 import { useViewerInputs } from "@/hooks/useViewerInputs";
 import { useStableCallbacks } from "@/hooks/useStableCallbacks";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
@@ -144,8 +149,15 @@ export function AnnotationCanvas({
   // Keyboard shortcuts panel
   const [shortcutsPanelOpen, setShortcutsPanelOpen] = useState(false);
 
-  // AI Landmark Detection (trial feature)
+  // AI pelvis analysis: request state, the gate's rejection, the right
+  // panel's tab (switched to Measurements after a run) and the overlay.
   const [detectingLandmarks, setDetectingLandmarks] = useState(false);
+  const [pelvisRejection, setPelvisRejection] = useState<DetectLandmarksRejection | null>(null);
+  const [pelvisRejectionOpen, setPelvisRejectionOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState<PanelTab>("layers");
+  const [pelvisOverlayOn, setPelvisOverlayOn] = useState(true);
+  // Preferred unit; px is forced while the film is uncalibrated.
+  const [pelvisUnitPref, setPelvisUnitPref] = useState<"mm" | "px">("mm");
 
   // Image cycling between X-rays in this patient is exposed via J/K (and
   // arrow up/down) in PatientImageSidebar. The wheel is reserved for
@@ -234,6 +246,7 @@ export function AnnotationCanvas({
     imageWidth: activeImageWidth,
     imageHeight: activeImageHeight,
   });
+  const fitToRect = viewport.fitToRect;
   const imageAdj = useImageAdjustments(
     initialAdjustments ?? { ...DEFAULT_IMAGE_ADJUSTMENTS }
   );
@@ -406,94 +419,147 @@ export function AnnotationCanvas({
     [undoRedo, autoSave, interaction]
   );
 
-  // AI Landmark Detection — POST { xrayId } to the privacy-isolated route,
-  // receive landmark coords, and add them all in a single undo batch so one
-  // Cmd+Z removes the whole AI overlay. Failure paths surface as toasts and
-  // never block the rest of the annotation flow.
+  // AI pelvis analysis — POST { xrayId } to the privacy-isolated route. The
+  // server first checks the film is one it can analyse (422 NOT_SUITABLE →
+  // rejection dialog, nothing placed), then returns the 16 landmarks of
+  // Moon et al. (2024). They REPLACE any landmarks already on the film, in
+  // one undo batch (removals + additions) so one Cmd+Z brings the previous
+  // set back. Failures surface as toasts and never block the annotation flow.
   //
-  // We deliberately do NOT send a viewport crop here even when the user is
-  // zoomed in. The prompt leans heavily on relative-position cues ("the
-  // iliac crest is the highest visible bone", "the ischial tuberosity sits
-  // below the obturator foramen") that depend on Claude seeing the WHOLE
-  // pelvic anatomy plus surrounding context. Cropping loses that context
-  // and empirically degrades accuracy. The server still supports a cropBox
-  // parameter for future use (e.g., a second-pass refinement around
-  // already-placed landmarks).
+  // The whole film is sent, never a viewport crop: the landmarks are placed
+  // relative to the whole pelvis, and cropping loses that context.
+  const detectAbortRef = useRef<AbortController | null>(null);
+  // A late response must not land on another film: abort when the X-ray
+  // changes or the viewer unmounts.
+  useEffect(() => () => detectAbortRef.current?.abort(), [xrayId]);
+  // Latest shapes for when the ~30 s request returns.
+  const shapesRef = useRef(shapes);
+  useEffect(() => {
+    shapesRef.current = shapes;
+  }, [shapes]);
+
   const handleDetectLandmarks = useCallback(async () => {
-    if (detectingLandmarks) return;
+    if (detectAbortRef.current) return;
+    const controller = new AbortController();
+    detectAbortRef.current = controller;
     setDetectingLandmarks(true);
+    const toastId = toast.loading("Checking the X-ray and placing landmarks…", {
+      description: "Takes about 30 seconds.",
+    });
+    const outcome = { id: toastId, description: undefined };
     try {
       const res = await fetch("/api/viewer/detect-landmarks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ xrayId }),
+        signal: controller.signal,
       });
+      const body = (await res.json().catch(() => null)) as
+        | DetectLandmarksResponse
+        | DetectLandmarksRejection
+        | { error?: string; message?: string }
+        | null;
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string; message?: string } | null;
-        toast.error(body?.message ?? `Landmark detection failed (${res.status})`);
+        if (res.status === 422 && body && "error" in body && body.error === "NOT_SUITABLE") {
+          toast.dismiss(toastId);
+          setPelvisRejection(body as DetectLandmarksRejection);
+          setPelvisRejectionOpen(true);
+          return;
+        }
+        const message = body && "message" in body ? body.message : undefined;
+        toast.error(message ?? `Landmark detection failed (${res.status})`, outcome);
         return;
       }
-      const data = (await res.json()) as {
-        landmarks: Array<{
-          name: string;
-          displayName: string;
-          x: number;
-          y: number;
-        }>;
-      };
-      if (!data.landmarks || data.landmarks.length === 0) {
-        toast.warning(
-          "No landmarks returned — the AI is pelvic-only and may not have found the pelvis in this image.",
-        );
+      const data = body as DetectLandmarksResponse | null;
+      if (!data?.landmarks?.length) {
+        toast.warning("No landmarks were returned for this X-ray.", outcome);
         return;
       }
 
-      // Build LandmarkShape entries; one undo batch so Cmd+Z removes them all.
-      const baseZ = shapes.length === 0 ? 1 : Math.max(...shapes.map((s) => s.zIndex)) + 1;
-      const landmarkShapes: BaseShape[] = data.landmarks.map((lm, i) => ({
-        id: `landmark-${Date.now()}-${i}`,
-        type: "landmark",
-        label: lm.displayName,
-        zIndex: baseZ + i,
-        visible: true,
-        locked: false,
-        style: { ...DEFAULT_SHAPE_STYLE, strokeColor: "#22D3EE" },
-        x: lm.x,
-        y: lm.y,
-        width: 0,
-        height: 0,
-        rotation: 0,
-        points: [{ x: lm.x, y: lm.y }],
-        text: null,
-        fontSize: null,
-        measurement: null,
-        landmarkName: lm.name,
-        landmarkSource: "ai",
-        landmarkOriginalX: lm.x,
-        landmarkOriginalY: lm.y,
-      }));
+      const current = shapesRef.current;
+      const removed = current.filter((s) => s.type === "landmark");
+      const removedIds = new Set(removed.map((s) => s.id));
+      const baseZ = current.length === 0 ? 1 : Math.max(...current.map((s) => s.zIndex)) + 1;
+      const stamp = Date.now();
+      const added: BaseShape[] = [];
+      data.landmarks.forEach((lm, i) => {
+        const def = landmarkByKey(lm.key) ?? landmarkById(lm.id);
+        if (!def) return;
+        const side = patientSideOf(def.imageSide, data.patientRightOn);
+        added.push({
+          id: `landmark-${stamp}-${i}`,
+          type: "landmark",
+          label: landmarkLabel(def, side),
+          zIndex: baseZ + added.length,
+          visible: true,
+          locked: false,
+          style: { ...DEFAULT_SHAPE_STYLE, strokeColor: "#22D3EE" },
+          x: lm.x,
+          y: lm.y,
+          width: 0,
+          height: 0,
+          rotation: 0,
+          points: [{ x: lm.x, y: lm.y }],
+          text: null,
+          fontSize: null,
+          measurement: null,
+          landmarkName: def.key,
+          landmarkSource: "ai",
+          landmarkOriginalX: lm.x,
+          landmarkOriginalY: lm.y,
+          landmarkSide: side ?? undefined,
+          landmarkConfidence: lm.confidence,
+        });
+      });
 
-      setShapes((prev) => [...prev, ...landmarkShapes]);
-      undoRedo.pushBatch(
-        landmarkShapes.map((s) => ({
+      setShapes((prev) => [...prev.filter((s) => !removedIds.has(s.id)), ...added]);
+      undoRedo.pushBatch([
+        ...removed.map((s) => ({
+          type: "DELETE_SHAPE" as const,
+          shapeBefore: s,
+          shapeAfter: null,
+          shapeId: s.id,
+        })),
+        ...added.map((s) => ({
           type: "ADD_SHAPE" as const,
           shapeBefore: null,
           shapeAfter: s,
           shapeId: s.id,
-        }))
-      );
+        })),
+      ]);
       autoSave.markDirty();
-      interaction.setSelectedShapeIds(landmarkShapes.map((s) => s.id));
+      // Nothing selected, so the red / green / dashed review state shows
+      // instead of 16 amber selection rings.
+      interaction.setSelectedShapeIds([]);
+      // On full-spine films the pelvis is small at fit zoom; frame it.
+      const placed = added.map((s) => (orientation ? orientPoint(s.points[0], orientation) : s.points[0]));
+      const xs = placed.map((p) => p.x);
+      const ys = placed.map((p) => p.y);
+      const box = { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+      if (placed.length > 0 && box.width * box.height < 0.35 * activeImageWidth * activeImageHeight) {
+        const margin = 0.12 * Math.max(box.width, box.height);
+        fitToRect({ x: box.x - margin, y: box.y - margin, width: box.width + 2 * margin, height: box.height + 2 * margin });
+      }
+      setPelvisOverlayOn(true);
+      setPanelTab("measurements");
+      setPropertiesPanelOpen(true);
       toast.success(
-        `Placed ${landmarkShapes.length} landmark${landmarkShapes.length === 1 ? "" : "s"}. Drag to adjust.`,
+        `Placed ${added.length} landmark${added.length === 1 ? "" : "s"}. Dashed rings are less certain — check them.`,
+        outcome,
       );
+      for (const warning of data.warnings ?? []) toast.warning(warning);
     } catch (err) {
+      if (controller.signal.aborted) {
+        toast.dismiss(toastId);
+        return;
+      }
       console.error("detect-landmarks error:", err);
-      toast.error("Could not reach landmark detection service.");
+      toast.error("Could not reach landmark detection service.", outcome);
     } finally {
+      if (detectAbortRef.current === controller) detectAbortRef.current = null;
       setDetectingLandmarks(false);
     }
-  }, [detectingLandmarks, xrayId, shapes, undoRedo, autoSave, interaction]);
+  }, [xrayId, undoRedo, autoSave, interaction, setPropertiesPanelOpen, orientation, activeImageWidth, activeImageHeight, fitToRect]);
 
   const handleDeleteShapes = useCallback(
     (ids: string[]) => {
@@ -1628,6 +1694,35 @@ export function AnnotationCanvas({
       ? orientRect(interaction.marqueeRect, orientation)
       : interaction.marqueeRect;
 
+  // Pelvic construction lines go between the shapes and the landmark dots
+  // (displayShapes keeps landmarks last), so the dots stay grabbable on top.
+  const pelvisLandmarks = useMemo(() => pelvicLandmarkShapes(shapes), [shapes]);
+  const calibrated = (imageAdj.adjustments.pixelsPerMm ?? 0) > 0;
+  const pelvisUnit = calibrated ? pelvisUnitPref : "px";
+  const firstLandmark = displayShapes.findIndex((s) => s.type === "landmark");
+  const landmarkSplit = firstLandmark < 0 ? displayShapes.length : firstLandmark;
+  const renderShape = (shape: BaseShape) => (
+    <ShapeRenderer
+      key={shape.id}
+      shape={shape}
+      zoom={viewport.transform.zoom}
+      vertexLabels={vertexLabelsByShape.get(shape.id)}
+      selected={interaction.selectedShapeIds.includes(shape.id)}
+      pixelsPerMm={imageAdj.adjustments.pixelsPerMm}
+      compactLabel={pelvisOverlayOn && !interaction.selectedShapeIds.includes(shape.id)}
+    />
+  );
+  const pelvisOverlay =
+    pelvisOverlayOn && pelvisLandmarks.length > 0 ? (
+      <PelvisOverlay
+        landmarks={pelvisLandmarks}
+        pixelsPerMm={imageAdj.adjustments.pixelsPerMm}
+        unit={pelvisUnit}
+        zoom={viewport.transform.zoom}
+        orientation={orientation}
+      />
+    ) : null;
+
   // Stable identities so the memo'd panel and series strip skip the per-move
   // re-renders while a shape is being drawn.
   const panelHandlers = useStableCallbacks({
@@ -1815,17 +1910,9 @@ export function AnnotationCanvas({
                     className="absolute inset-0"
                     style={{ overflow: "visible" }}
                   >
-                    {displayShapes
-                      .map((shape) => (
-                        <ShapeRenderer
-                          key={shape.id}
-                          shape={shape}
-                          zoom={viewport.transform.zoom}
-                          vertexLabels={vertexLabelsByShape.get(shape.id)}
-                          selected={interaction.selectedShapeIds.includes(shape.id)}
-                          pixelsPerMm={imageAdj.adjustments.pixelsPerMm}
-                        />
-                      ))}
+                    {displayShapes.slice(0, landmarkSplit).map(renderShape)}
+                    {pelvisOverlay}
+                    {displayShapes.slice(landmarkSplit).map(renderShape)}
                     {/* Rubber-band selection rectangle (image-space). Stroke
                         width is divided by zoom so it stays 1px on screen. */}
                     {displayMarquee && (
@@ -2085,10 +2172,13 @@ export function AnnotationCanvas({
                             className="absolute inset-0"
                             style={{ overflow: "visible" }}
                           >
-                            {displayShapes
-                              .map((shape) => (
-                                <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} />
-                              ))}
+                            {displayShapes.slice(0, landmarkSplit).map((shape) => (
+                              <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} />
+                            ))}
+                            {pelvisOverlay}
+                            {displayShapes.slice(landmarkSplit).map((shape) => (
+                              <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} compactLabel={pelvisOverlayOn} />
+                            ))}
                           </svg>
                         </div>
                         <SelectionOverlay shapes={shapes} selectedShapeIds={interaction.selectedShapeIds} transform={pointerTransform} />
@@ -2256,6 +2346,12 @@ export function AnnotationCanvas({
           isOpen={propertiesPanelOpen}
           pixelsPerMm={imageAdj.adjustments.pixelsPerMm}
           dependentCounts={dependentCounts}
+          activeTab={panelTab}
+          onTabChange={setPanelTab}
+          pelvisUnit={pelvisUnit}
+          onPelvisUnitChange={setPelvisUnitPref}
+          pelvisOverlayOn={pelvisOverlayOn}
+          onPelvisOverlayChange={setPelvisOverlayOn}
           {...panelHandlers}
         />
       </div>
@@ -2288,6 +2384,13 @@ export function AnnotationCanvas({
           onCancel={closeCalibrationEdit}
         />
       )}
+
+      {/* AI pelvis analysis: the gate decided this film can't be analysed. */}
+      <PelvisRejectedDialog
+        open={pelvisRejectionOpen}
+        rejection={pelvisRejection}
+        onClose={() => setPelvisRejectionOpen(false)}
+      />
 
       {/* Cascade-delete dialog — opens when the user tries to delete a
           landmark that other measurements have snap-followed. */}

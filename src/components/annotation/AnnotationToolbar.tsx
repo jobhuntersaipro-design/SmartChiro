@@ -195,7 +195,7 @@ export function AnnotationToolbar({
             title={
               detectLandmarksDisabled
                 ? "Available in single-view mode with an active X-ray"
-                : "Detect anatomical landmarks — image bytes are sent to Anthropic. No patient information is included. AI placement is approximate; verify and adjust."
+                : "AI pelvis analysis: checks the film is an AP pelvis, then places the 16 landmarks of Moon et al. (2024). Image pixels only are sent to Anthropic — no patient details. Check every landmark."
             }
             className="flex items-center justify-center transition-colors"
             style={{

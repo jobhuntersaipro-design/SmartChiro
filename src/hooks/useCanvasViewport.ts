@@ -136,6 +136,25 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     setTransform({ zoom, panX, panY });
   }, [imageWidth, imageHeight, clampZoom]);
 
+  // Zoom so an image-space rectangle fills the view (e.g. the pelvis on a
+  // full-spine film after AI landmark detection).
+  const fitToRect = useCallback(
+    (r: { x: number; y: number; width: number; height: number }) => {
+      const container = containerRef.current;
+      if (!container || r.width <= 0 || r.height <= 0) return;
+      const rect = container.getBoundingClientRect();
+      const PAD = 24;
+      const zoom = clampZoom(Math.min((rect.width - PAD * 2) / r.width, (rect.height - PAD * 2) / r.height));
+      userAdjustedRef.current = true;
+      setTransform({
+        zoom,
+        panX: rect.width / 2 - (r.x + r.width / 2) * zoom,
+        panY: rect.height / 2 - (r.y + r.height / 2) * zoom,
+      });
+    },
+    [clampZoom],
+  );
+
   // Zoom to 100% (1:1 pixel mapping), centered
   const zoomToActual = useCallback(() => {
     const container = containerRef.current;
@@ -238,6 +257,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     zoomAtCenter,
     fitToViewport,
     zoomToActual,
+    fitToRect,
     handleWheel,
     pan,
     toImageSpace,

@@ -1,21 +1,21 @@
-# Current Feature: Arc UI Revamp (site-wide)
+# Current Feature: AI Pelvis Analysis (validity check + 16 landmarks + 10 parameters)
 
 ## Status
 
-Done — merged to `main` 2026-10-02.
+In progress — branch `claude/blissful-knuth-9c1br4`.
 
 ## Spec
 
-`context/features/arc-ui-revamp-spec.md`
+`context/features/pelvis-ai-landmarks-spec.md` (paper: Moon et al., Heliyon 2024, PMC11040132)
 
 ## Goals
 
-1. Foundation — Arc tokens, fonts, shadcn variable mapping — done
-2. Primitives — restyle `src/components/ui/*` — done
-3. Token sweep — hardcoded hex/radius/shadow classes → tokens — done
-4. Shell — sidebar, top bar, mobile drawer, auth pages — done
-5. Page polish — every dashboard area, booking, portal — done
-6. Docs — design sections in project-overview, coding-standard, DESIGN.md — done
+1. Check first: reject films that aren't an AP/PA pelvis view with iliac crests through femoral heads in view (or that have a hip implant / poor quality), with reasons
+2. Detect the paper's 16 landmarks (pelvis crop, median of 3 runs, anchored refinement of 1–6 and 8), with per-landmark confidence
+3. Compute the paper's 10 parameters (FHHD, ALFHRF, ICHD, DOCS, IM R/L, SAM R/L, ISM R/L) in px, or mm when calibrated, against the paper's normal ranges, with patient-side direction
+4. Draw the Fig. 5 construction lines on the film, live while dragging
+5. Fix the dead panel (landmark name mismatch), re-run replaces the old set, stop the broken bias correction
+6. Opus 5.5 + structured output + refusal fallback; SDK 0.131
 
 ## Notes
 
@@ -24,7 +24,7 @@ Done — merged to `main` 2026-10-02.
 - Everything the owner still has to do (credentials, deploy, data clean-up, open decisions) lives in `context/owner-actions.md`.
 
 ### Deferred / Parked Features
-- **AI Landmark Detection (X-Ray Viewer)** — in progress on `main` (branch `feat/xray-ai-landmarks` merged 2026-09-24). Goals, locked decisions and privacy boundary preserved at `context/features/xray-ai-landmarks-goals.md`.
+- **AI Landmark Detection (X-Ray Viewer)** — superseded by the current feature (AI Pelvis Analysis). Privacy boundary carried over; original goals kept at `context/features/xray-ai-landmarks-goals.md`.
 - **WhatsApp Worker (Baileys)** — superseded by the Meta Cloud API feature above (never built). Old specs kept for reference:
   - `docs/superpowers/specs/2026-04-29-smartchiro-wa-worker-contract.md`
   - `docs/superpowers/specs/2026-04-30-wa-worker-implementation.md`

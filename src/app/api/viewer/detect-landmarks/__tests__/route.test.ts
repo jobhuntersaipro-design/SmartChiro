@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
-import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
+import { resetRateLimits } from "@/lib/booking/rate-limit";
+import type { DetectLandmarksResponse, PelvisImageAssessment } from "@/types/pelvis";
 
 // Auth mock — same shape used across other route tests in this repo.
 const mockAuth = vi.fn();
@@ -9,9 +10,9 @@ vi.mock("@/lib/auth", () => ({
   auth: (...args: unknown[]) => mockAuth(...args),
 }));
 
-// Anthropic vision mock — captures the args we pass so we can assert the
-// privacy boundary (no xrayId/patientId/filename leakage).
-const mockDetectLandmarks = vi.fn();
+// Vision mock — captures the args we pass so we can assert the privacy
+// boundary (no xrayId/patientId/filename leakage).
+const mockAnalysePelvis = vi.fn();
 const VisionApiErrorRef = vi.hoisted(() =>
   class VisionApiError extends Error {
     code: string;
@@ -23,7 +24,7 @@ const VisionApiErrorRef = vi.hoisted(() =>
   },
 );
 vi.mock("@/lib/anthropic-vision", () => ({
-  detectLandmarks: (...args: unknown[]) => mockDetectLandmarks(...args),
+  analysePelvis: (...args: unknown[]) => mockAnalysePelvis(...args),
   VisionApiError: VisionApiErrorRef,
 }));
 
@@ -35,10 +36,10 @@ let branchId: string;
 let patientId: string;
 let xrayId: string;
 let badMimeXrayId: string;
-let missingDimsXrayId: string;
+let notReadyXrayId: string;
 
 function req(body?: unknown) {
-  const init: RequestInit = {
+  const init: ConstructorParameters<typeof NextRequest>[1] = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   };
@@ -47,39 +48,39 @@ function req(body?: unknown) {
 }
 
 // Stub global fetch so the route's R2 image pull doesn't escape the test.
-// Default body is 8 zero bytes — fine for tests that don't exercise the
-// sharp() crop path; for crop tests we substitute a real generated PNG.
 const originalFetch = global.fetch;
-function stubFetch(ok: boolean, bytes?: Uint8Array) {
+function stubFetch(ok: boolean) {
   global.fetch = vi.fn(async () => ({
     ok,
-    arrayBuffer: async () => {
-      if (!bytes) return new ArrayBuffer(8);
-      // Hand back a fresh ArrayBuffer copy so Node's Buffer.from sees a
-      // clean buffer (some test environments return SharedArrayBuffer-backed
-      // Uint8Array which sharp can't decode).
-      const copy = new Uint8Array(bytes.byteLength);
-      copy.set(bytes);
-      return copy.buffer;
-    },
+    status: ok ? 200 : 500,
+    arrayBuffer: async () => new ArrayBuffer(8),
   } as unknown as Response)) as unknown as typeof global.fetch;
 }
 
-// Generate a real test PNG of the given dimensions so the route's
-// sharp().extract() call has something it can actually decode + crop.
-async function makeTestPng(width: number, height: number): Promise<Uint8Array> {
-  const bytes = await sharp({
-    create: {
-      width,
-      height,
-      channels: 3,
-      background: { r: 128, g: 128, b: 128 },
-    },
-  })
-    .png()
-    .toBuffer();
-  return new Uint8Array(bytes);
-}
+const ASSESSMENT: PelvisImageAssessment = {
+  isRadiograph: true,
+  projection: "AP",
+  region: "pelvis",
+  visible: { iliacCrests: true, femoralHeads: true, ischialTuberosities: true, sacrum: true, pubicSymphysis: true },
+  hipImplant: false,
+  overlays: false,
+  quality: "good",
+  sideMarker: null,
+  pelvisBox: [100, 100, 900, 800],
+  notes: "AP pelvis.",
+};
+
+const ACCEPTED: DetectLandmarksResponse = {
+  landmarks: [
+    { id: 1, key: "femoral_head_top_img_left", x: 300, y: 600, confidence: 0.8 },
+    { id: 2, key: "femoral_head_top_img_right", x: 700, y: 610, confidence: 0.7 },
+  ],
+  assessment: ASSESSMENT,
+  patientRightOn: "left",
+  sideSource: "assumed",
+  warnings: [],
+  model: "claude-opus-5-5",
+};
 
 describe("POST /api/viewer/detect-landmarks", () => {
   beforeAll(async () => {
@@ -119,6 +120,7 @@ describe("POST /api/viewer/detect-landmarks", () => {
       data: {
         patientId,
         uploadedById: memberId,
+        status: "READY",
         fileName: "pelvis.jpg",
         fileSize: 1024,
         mimeType: "image/jpeg",
@@ -133,27 +135,27 @@ describe("POST /api/viewer/detect-landmarks", () => {
       data: {
         patientId,
         uploadedById: memberId,
+        status: "READY",
         fileName: "scan.tiff",
         fileSize: 1024,
         mimeType: "image/tiff",
         fileUrl: "http://r2-stub/scan.tiff",
-        width: 1024,
-        height: 1024,
       },
     });
     badMimeXrayId = badMime.id;
 
-    const missingDims = await prisma.xray.create({
+    const notReady = await prisma.xray.create({
       data: {
         patientId,
         uploadedById: memberId,
-        fileName: "nodims.jpg",
+        status: "UPLOADING",
+        fileName: "pending.jpg",
         fileSize: 1024,
         mimeType: "image/jpeg",
-        fileUrl: "http://r2-stub/nodims.jpg",
+        fileUrl: "http://r2-stub/pending.jpg",
       },
     });
-    missingDimsXrayId = missingDims.id;
+    notReadyXrayId = notReady.id;
   });
 
   afterAll(async () => {
@@ -169,14 +171,20 @@ describe("POST /api/viewer/detect-landmarks", () => {
       where: { email: { startsWith: TEST_PREFIX } },
     });
     mockAuth.mockReset();
-    mockDetectLandmarks.mockReset();
+    mockAnalysePelvis.mockReset();
     global.fetch = originalFetch;
   });
 
   beforeEach(() => {
     mockAuth.mockReset();
-    mockDetectLandmarks.mockReset();
+    mockAnalysePelvis.mockReset();
+    resetRateLimits();
     stubFetch(true);
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("returns 401 when there is no session", async () => {
@@ -210,7 +218,7 @@ describe("POST /api/viewer/detect-landmarks", () => {
     const { POST } = await import("../route");
     const res = await POST(req({ xrayId }));
     expect(res.status).toBe(404);
-    expect(mockDetectLandmarks).not.toHaveBeenCalled();
+    expect(mockAnalysePelvis).not.toHaveBeenCalled();
   });
 
   it("returns 404 for an X-ray that doesn't exist", async () => {
@@ -227,331 +235,119 @@ describe("POST /api/viewer/detect-landmarks", () => {
     expect(res.status).toBe(415);
   });
 
-  it("returns 422 when the X-ray is missing dimensions", async () => {
+  it("returns 409 when the X-ray upload hasn't finished", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
     const { POST } = await import("../route");
-    const res = await POST(req({ xrayId: missingDimsXrayId }));
-    expect(res.status).toBe(422);
+    const res = await POST(req({ xrayId: notReadyXrayId }));
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "XRAY_NOT_READY" });
+    expect(mockAnalysePelvis).not.toHaveBeenCalled();
   });
 
-  it("returns 502 when R2 image fetch fails", async () => {
+  it("returns 503 AI_NOT_CONFIGURED without an Anthropic key, before fetching the film", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv("ANTHROPIC_AUTH_TOKEN", "");
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }));
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ error: "AI_NOT_CONFIGURED" });
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockAnalysePelvis).not.toHaveBeenCalled();
+  });
+
+  it("returns 502 when R2 responds with an error", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
     stubFetch(false);
     const { POST } = await import("../route");
     const res = await POST(req({ xrayId }));
     expect(res.status).toBe(502);
+    expect(await res.json()).toMatchObject({ error: "R2_FETCH_FAILED" });
   });
 
-  it("returns 413 when Anthropic rejects the image as too large", async () => {
+  it("returns 502 when the R2 fetch throws (e.g. timeout)", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-    mockDetectLandmarks.mockRejectedValueOnce(
-      new VisionApiErrorRef("image_too_large", "Image exceeds the model limit."),
-    );
-    const { POST } = await import("../route");
-    const res = await POST(req({ xrayId }));
-    expect(res.status).toBe(413);
-  });
-
-  it("returns 429 when Anthropic rate-limits the request", async () => {
-    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-    mockDetectLandmarks.mockRejectedValueOnce(
-      new VisionApiErrorRef("rate_limited", "Slow down."),
-    );
-    const { POST } = await import("../route");
-    const res = await POST(req({ xrayId }));
-    expect(res.status).toBe(429);
-  });
-
-  it("returns 502 on a generic Anthropic vision error", async () => {
-    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-    mockDetectLandmarks.mockRejectedValueOnce(
-      new VisionApiErrorRef("vision_api_error", "Bad gateway."),
-    );
+    global.fetch = vi.fn(async () => {
+      throw new DOMException("The operation timed out.", "TimeoutError");
+    }) as unknown as typeof global.fetch;
     const { POST } = await import("../route");
     const res = await POST(req({ xrayId }));
     expect(res.status).toBe(502);
+    expect(mockAnalysePelvis).not.toHaveBeenCalled();
   });
 
-  it("returns 200 + landmarks on the happy path", async () => {
+  it.each([
+    ["image_too_large", 413, "IMAGE_TOO_LARGE"],
+    ["invalid_image", 422, "INVALID_IMAGE"],
+    ["rate_limited", 429, "RATE_LIMITED"],
+    ["vision_api_error", 502, "VISION_API_ERROR"],
+  ])("maps VisionApiError %s to %i %s", async (code, status, error) => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-    mockDetectLandmarks.mockResolvedValueOnce([
-      { name: "top_of_femoral_head_1", displayName: "L femoral head", x: 200, y: 600 },
-      { name: "top_of_femoral_head_2", displayName: "R femoral head", x: 800, y: 610 },
-    ]);
+    mockAnalysePelvis.mockRejectedValueOnce(new VisionApiErrorRef(code, "Vision failed."));
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }));
+    expect(res.status).toBe(status);
+    expect(await res.json()).toEqual({ error, message: "Vision failed." });
+  });
+
+  it("returns 422 NOT_SUITABLE with reasons when the image is rejected", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    const assessment = { ...ASSESSMENT, projection: "lateral" as const };
+    const reasons = ["This looks like a lateral view; the analysis needs an AP (front-to-back) view of the pelvis."];
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "rejected", assessment, reasons });
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }));
+    expect(res.status).toBe(422);
+    expect(await res.json()).toEqual({
+      error: "NOT_SUITABLE",
+      message: "This X-ray isn't suitable for AI pelvic analysis.",
+      reasons,
+      assessment,
+    });
+  });
+
+  it("returns 200 + the DetectLandmarksResponse on the happy path", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "accepted", ...ACCEPTED });
     const { POST } = await import("../route");
     const res = await POST(req({ xrayId }));
     expect(res.status).toBe(200);
-    const body = (await res.json()) as {
-      landmarks: Array<{ name: string; x: number; y: number }>;
-    };
-    expect(body.landmarks).toHaveLength(2);
-    expect(body.landmarks[0].name).toBe("top_of_femoral_head_1");
+    expect(await res.json()).toEqual(ACCEPTED);
+  });
+
+  it("rate-limits each user to 6 analyses per 10 minutes", async () => {
+    mockAuth.mockResolvedValue({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValue({ kind: "accepted", ...ACCEPTED });
+    const { POST } = await import("../route");
+    for (let i = 0; i < 6; i++) expect((await POST(req({ xrayId }))).status).toBe(200);
+    const limited = await POST(req({ xrayId }));
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBe("100");
+    expect(mockAnalysePelvis).toHaveBeenCalledTimes(6);
   });
 
   // ─── Privacy boundary contract ───
   //
   // The route's whole reason for existence is that the X-ray ID never reaches
-  // Anthropic. These assertions pin the contract: if anyone ever wires a
-  // patient/xray/filename field into the detectLandmarks call args, this test
-  // breaks.
-  it("sends ONLY image bytes + media type + dimensions to Anthropic — no DB identifiers", async () => {
+  // Anthropic. If anyone ever wires a patient/xray/filename field into the
+  // analysePelvis call args, this test breaks.
+  it("sends ONLY image bytes to the vision lib — no DB identifiers", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-    mockDetectLandmarks.mockResolvedValueOnce([]);
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "accepted", ...ACCEPTED });
     const { POST } = await import("../route");
     await POST(req({ xrayId }));
 
-    expect(mockDetectLandmarks).toHaveBeenCalledTimes(1);
-    const callArg = mockDetectLandmarks.mock.calls[0][0] as Record<string, unknown>;
-
-    // Expected fields only.
-    expect(Object.keys(callArg).sort()).toEqual(
-      ["imageBytes", "imageHeight", "imageWidth", "mediaType"].sort(),
-    );
+    expect(mockAnalysePelvis).toHaveBeenCalledTimes(1);
+    const callArg = mockAnalysePelvis.mock.calls[0][0] as Record<string, unknown>;
+    expect(Object.keys(callArg)).toEqual(["imageBytes"]);
     expect(Buffer.isBuffer(callArg.imageBytes)).toBe(true);
-    expect(callArg.mediaType).toBe("image/jpeg");
-    expect(callArg.imageWidth).toBe(1024);
-    expect(callArg.imageHeight).toBe(1024);
 
-    // Stringify the entire payload and assert none of the leakable identifiers
-    // show up in any form. If a future change ever stuffs the xrayId into a
-    // metadata field, this serialization will catch it.
-    const serialized = JSON.stringify(
-      callArg,
-      (_k, v) => (Buffer.isBuffer(v) ? "[bytes]" : v),
-    );
+    const serialized = JSON.stringify(callArg, (k, v) => (k === "imageBytes" ? "[bytes]" : v));
     expect(serialized).not.toContain(xrayId);
     expect(serialized).not.toContain(patientId);
     expect(serialized).not.toContain(branchId);
     expect(serialized).not.toContain(memberId);
     expect(serialized).not.toContain("pelvis.jpg");
     expect(serialized).not.toContain(TEST_PREFIX);
-  });
-
-  // ─── Viewport-crop pathway ───
-  //
-  // When the client is zoomed in we accept a cropBox in image coords; the
-  // server crops with sharp, hands the smaller image to Claude, then
-  // translates the returned coordinates back into the original-image frame.
-  // The client is never aware that a crop happened.
-  describe("cropBox handling", () => {
-    it("applies the crop and translates landmark coords back into the original image", async () => {
-      const png = await makeTestPng(1024, 1024);
-      stubFetch(true, png);
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      // Claude's coords are in the CROP frame (200..700 / 300..800), so
-      // (50, 50) inside the crop maps to (250, 350) in the original image.
-      mockDetectLandmarks.mockResolvedValueOnce([
-        { name: "top_of_femoral_head_1", displayName: "L femoral head", x: 50, y: 50 },
-        { name: "top_of_femoral_head_2", displayName: "R femoral head", x: 400, y: 50 },
-      ]);
-
-      const { POST } = await import("../route");
-      const res = await POST(
-        req({
-          xrayId,
-          cropBox: { x: 200, y: 300, width: 500, height: 500 },
-        }),
-      );
-
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as {
-        landmarks: Array<{ name: string; x: number; y: number }>;
-      };
-      // 50 + 200 = 250, 50 + 300 = 350
-      expect(body.landmarks[0]).toMatchObject({ x: 250, y: 350 });
-      // 400 + 200 = 600, 50 + 300 = 350
-      expect(body.landmarks[1]).toMatchObject({ x: 600, y: 350 });
-
-      // detectLandmarks should have seen the CROP dimensions, not the
-      // original — that's how Claude knows to bound coords correctly.
-      const callArg = mockDetectLandmarks.mock.calls[0][0] as Record<string, unknown>;
-      expect(callArg.imageWidth).toBe(500);
-      expect(callArg.imageHeight).toBe(500);
-    });
-
-    it("clamps crops that extend past the image bounds", async () => {
-      const png = await makeTestPng(1024, 1024);
-      stubFetch(true, png);
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      mockDetectLandmarks.mockResolvedValueOnce([
-        { name: "x", displayName: "x", x: 10, y: 10 },
-      ]);
-
-      const { POST } = await import("../route");
-      // Box starts at (900, 900) and is "200x200" — should be clamped to
-      // (900..1024, 900..1024), i.e. 124x124 region.
-      const res = await POST(
-        req({
-          xrayId,
-          cropBox: { x: 900, y: 900, width: 200, height: 200 },
-        }),
-      );
-
-      expect(res.status).toBe(200);
-      const callArg = mockDetectLandmarks.mock.calls[0][0] as Record<string, unknown>;
-      expect(callArg.imageWidth).toBe(124);
-      expect(callArg.imageHeight).toBe(124);
-    });
-
-    it("ignores a degenerate cropBox (too small) and sends the full image", async () => {
-      const png = await makeTestPng(1024, 1024);
-      stubFetch(true, png);
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      mockDetectLandmarks.mockResolvedValueOnce([
-        { name: "x", displayName: "x", x: 100, y: 100 },
-      ]);
-
-      const { POST } = await import("../route");
-      // < 64 px wide — falls back to the full image; coords stay verbatim.
-      const res = await POST(
-        req({ xrayId, cropBox: { x: 100, y: 100, width: 10, height: 10 } }),
-      );
-
-      expect(res.status).toBe(200);
-      const callArg = mockDetectLandmarks.mock.calls[0][0] as Record<string, unknown>;
-      expect(callArg.imageWidth).toBe(1024);
-      expect(callArg.imageHeight).toBe(1024);
-      const body = (await res.json()) as { landmarks: Array<{ x: number; y: number }> };
-      expect(body.landmarks[0]).toMatchObject({ x: 100, y: 100 });
-    });
-
-    it("ignores a malformed cropBox and falls back to the full image", async () => {
-      const png = await makeTestPng(1024, 1024);
-      stubFetch(true, png);
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      mockDetectLandmarks.mockResolvedValueOnce([]);
-
-      const { POST } = await import("../route");
-      const res = await POST(
-        req({
-          xrayId,
-          cropBox: { x: "not-a-number", y: 0, width: 100, height: 100 } as unknown,
-        }),
-      );
-
-      expect(res.status).toBe(200);
-      const callArg = mockDetectLandmarks.mock.calls[0][0] as Record<string, unknown>;
-      expect(callArg.imageWidth).toBe(1024);
-    });
-  });
-
-  // ─── Bias-correction pathway ───
-  //
-  // Once a few users have dragged the same landmark on similar X-rays, the
-  // route reads those rows and applies a median normalized delta to
-  // Claude's output before responding. `?raw=1` bypasses correction so we
-  // can A/B against the model's unaided guess.
-  describe("bias correction", () => {
-    afterAll(async () => {
-      await prisma.aiLandmarkCorrection.deleteMany({ where: { xrayId } });
-    });
-
-    async function seedCorrections(
-      landmarkName: string,
-      n: number,
-      deltaFracX: number,
-      deltaFracY: number,
-    ) {
-      // Each correction is a distinct (xrayId, landmarkName) row, but the
-      // table only stores ONE row per pair. We seed against scratch X-rays
-      // so the threshold check sees enough samples.
-      for (let i = 0; i < n; i++) {
-        const scratch = await prisma.xray.create({
-          data: {
-            patientId,
-            uploadedById: memberId,
-            fileName: `scratch-${i}.jpg`,
-            fileSize: 1024,
-            mimeType: "image/jpeg",
-            fileUrl: `http://r2-stub/scratch-${i}.jpg`,
-            width: 1000,
-            height: 1000,
-          },
-        });
-        await prisma.aiLandmarkCorrection.create({
-          data: {
-            xrayId: scratch.id,
-            userId: memberId,
-            landmarkName,
-            displayName: landmarkName,
-            aiX: 100,
-            aiY: 100,
-            finalX: 100 + deltaFracX * 1000,
-            finalY: 100 + deltaFracY * 1000,
-            imageWidth: 1000,
-            imageHeight: 1000,
-          },
-        });
-      }
-    }
-
-    it("applies median normalized delta from prior corrections", async () => {
-      await seedCorrections("top_of_femoral_head_1", 3, 0.05, -0.02);
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      mockDetectLandmarks.mockResolvedValueOnce([
-        { name: "top_of_femoral_head_1", displayName: "L femoral head", x: 200, y: 300 },
-      ]);
-
-      const { POST } = await import("../route");
-      const res = await POST(req({ xrayId }));
-      expect(res.status).toBe(200);
-      const body = (await res.json()) as {
-        landmarks: Array<{ name: string; x: number; y: number }>;
-        meta: { biasApplied: number; rawMode: boolean };
-      };
-      // x: 200 + 0.05 * 1024 = 251.2
-      // y: 300 + (-0.02) * 1024 = 279.52
-      expect(body.landmarks[0].x).toBeCloseTo(251.2, 4);
-      expect(body.landmarks[0].y).toBeCloseTo(279.52, 4);
-      expect(body.meta.biasApplied).toBe(1);
-      expect(body.meta.rawMode).toBe(false);
-    });
-
-    it("skips correction when ?raw=1 is set on the query string", async () => {
-      // Reuse the seeded corrections from the previous test.
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      mockDetectLandmarks.mockResolvedValueOnce([
-        { name: "top_of_femoral_head_1", displayName: "L femoral head", x: 200, y: 300 },
-      ]);
-
-      const { POST } = await import("../route");
-      const reqWithRaw = new NextRequest(
-        "http://localhost:3000/api/viewer/detect-landmarks?raw=1",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ xrayId }),
-        },
-      );
-      const res = await POST(reqWithRaw);
-      const body = (await res.json()) as {
-        landmarks: Array<{ x: number; y: number }>;
-        meta: { biasApplied: number; rawMode: boolean };
-      };
-      expect(body.landmarks[0].x).toBe(200);
-      expect(body.landmarks[0].y).toBe(300);
-      expect(body.meta.rawMode).toBe(true);
-      expect(body.meta.biasApplied).toBe(0);
-    });
-
-    it("leaves a landmark alone when fewer than the threshold of corrections exist", async () => {
-      // Only seed 1 correction for "second_sacral_tubercle" — below the
-      // default min-samples threshold of 3.
-      await seedCorrections("second_sacral_tubercle", 1, 0.1, 0.1);
-      mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
-      mockDetectLandmarks.mockResolvedValueOnce([
-        { name: "second_sacral_tubercle", displayName: "S2 tubercle", x: 500, y: 500 },
-      ]);
-
-      const { POST } = await import("../route");
-      const res = await POST(req({ xrayId }));
-      const body = (await res.json()) as {
-        landmarks: Array<{ x: number; y: number }>;
-        meta: { biasApplied: number };
-      };
-      expect(body.landmarks[0].x).toBe(500);
-      expect(body.landmarks[0].y).toBe(500);
-      expect(body.meta.biasApplied).toBe(0);
-    });
   });
 });
