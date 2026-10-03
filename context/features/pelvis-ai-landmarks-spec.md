@@ -10,16 +10,19 @@ worked: detection emitted `top_of_femoral_head_1` while the analysis looked up
 
 ## Flow
 
-`Detect landmarks` in the X-ray viewer → `POST /api/viewer/detect-landmarks { xrayId }`.
-The server checks access, fetches the film from R2 and sends **image pixels only** to
-Claude (`claude-opus-5-5`, structured JSON output, server-side refusal fallback).
+`Detect landmarks` in the X-ray viewer → `POST /api/viewer/detect-landmarks { xrayId, view }`
+(`view` = the viewer's rotation and vertical flip). The server checks access, fetches the
+film from R2, turns it upright as the viewer shows it, and sends **image pixels only** to
+Claude (`claude-opus-5-5`, structured JSON output, server-side refusal fallback). Points
+come back in the stored film's pixels; the whole run has a 105 s budget (504 `TIMEOUT`
+after that) and stops when the browser gives up.
 
 1. **Check (pass 1, effort low).** Whole film, downscaled. Reports: radiograph or not,
    projection, region, which pelvic structures are fully visible, hip implant, drawn
    overlays, quality, the R/L side marker and a box around the bony pelvis.
    `decideSuitability` (pure code) **rejects** unless: radiograph · AP or PA · both
-   iliac crests, both femoral heads, sacrum and symphysis visible · no hip implant ·
-   quality not poor. This is the paper's inclusion rule ("the region from the iliac
+   iliac crests, both femoral heads, sacrum and symphysis visible · upright · no hip
+   implant · quality not poor. This is the paper's inclusion rule ("the region from the iliac
    crest to the femoral head") plus its implant exclusion. Rejection → HTTP 422
    `NOT_SUITABLE` with plain-language reasons, shown in a dialog.
    Accepted with warnings: ischial tuberosities out of view (common on full-spine
@@ -27,7 +30,7 @@ Claude (`claude-opus-5-5`, structured JSON output, server-side refusal fallback)
 2. **Detect (pass 2, effort high).** Crop to the pelvis box (+6%), ask for the 16
    landmarks three times in parallel, take the per-landmark median. Confidence =
    model confidence × agreement between runs; spatial order rule (14, 11, 13, 7, 15,
-   12, 16 along S2) halves confidence where violated.
+   12, 16 along S2) halves confidence where violated; refinement never raises it.
 3. **Refine (pass 3, effort medium).** Landmarks 1–6 and 8 only: zoomed crop with a
    marker at the estimate; accept the adjustment if it stays near the estimate.
 
@@ -65,8 +68,11 @@ Femur base line (FBL) = line 1–2 (`u` direction, `n` normal).
 | ISM R/L | lateral ilium to medial sacrum along `u` (14–13, 16–15) | \|R−L\| < 5 mm |
 
 Units: px always; mm when the film is calibrated (calibration line → `pixelsPerMm`);
-mm ranges are only judged when calibrated. The viewer draws the construction lines
-(Fig. 5 style) and they follow the landmarks live while dragging.
+mm ranges are only judged when calibrated. Parameters are measured in the frame the
+viewer shows (rotation/flips applied), so "lower" means lower on screen. The viewer draws
+the construction lines (Fig. 5 style) and they follow the landmarks live while dragging.
+Re-running detection moves the existing landmarks (same shapes), so rulers snapped to
+them follow.
 
 ## Measured accuracy (development check — one film, treat as indicative)
 

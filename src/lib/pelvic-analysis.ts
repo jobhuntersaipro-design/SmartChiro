@@ -5,7 +5,8 @@
  *
  * Reference frame (paper + its Fig. 5):
  *   - Femur base line (FBL): the line through the tops of the femoral heads
- *     (landmarks 1 and 2). `u` is its unit direction, `n` its unit normal.
+ *     (landmarks 1 and 2). `u` is its unit direction (1 → 2), `n` its unit
+ *     normal, pointing down the image.
  *   - Lines "parallel to the femur base line" are measured apart along `n`;
  *     lines "perpendicular to the femur base line" are measured apart along `u`.
  *   - FHHD and ALFHRF use the image axes (the standing film's true vertical).
@@ -18,12 +19,20 @@
  *   SAM      |(P11 - P7)·u| and |(P12 - P7)·u|      normal |R - L| < 5 mm
  *   ISM      |(P14 - P13)·u| and |(P16 - P15)·u|    normal |R - L| < 5 mm
  *
- * Coordinates are original-image pixels, +y down. Millimetres come from the
- * film's calibration (pixels per mm); without it, distances stay in pixels
- * and the mm thresholds can't be judged.
+ * Coordinates are pixels of the film as displayed (upright), +y down: the
+ * viewer orients the stored points first (`orientPoint`), since "lower" and
+ * the image axes only mean something on the upright film. Millimetres come
+ * from the film's calibration (pixels per mm); without it, distances stay in
+ * pixels and the mm thresholds can't be judged.
  */
 
-import { landmarkByKey, patientSideOf, type PatientSide } from "@/lib/pelvic-landmarks";
+import type { Rotation } from "@/lib/orientation";
+import {
+  PELVIC_LANDMARKS,
+  landmarkByKey,
+  patientSideOf,
+  type PatientSide,
+} from "@/lib/pelvic-landmarks";
 
 export interface Pt {
   x: number;
@@ -112,7 +121,11 @@ interface Frame {
   n: Pt;
 }
 
-/** Unit direction of the femur base line (1 → 2) and its normal; null if degenerate. */
+/**
+ * Unit direction of the femur base line (1 → 2) and its normal; null if
+ * degenerate. The normal always points down the image, so "lower" holds
+ * whichever way 1 → 2 runs (it runs right to left on a mirrored view).
+ */
 function baseFrame(p: LandmarkPoints): Frame | null {
   const a = p[1];
   const b = p[2];
@@ -121,7 +134,8 @@ function baseFrame(p: LandmarkPoints): Frame | null {
   const len = Math.hypot(d.x, d.y);
   if (len === 0) return null;
   const u = { x: d.x / len, y: d.y / len };
-  return { u, n: { x: -u.y, y: u.x } };
+  const n = { x: -u.y, y: u.x };
+  return { u, n: n.y < 0 ? { x: -n.x, y: -n.y } : n };
 }
 
 function missingIds(p: LandmarkPoints, ids: readonly number[]): number[] {
@@ -169,7 +183,7 @@ function pair(
   patientRightOn: "left" | "right",
   word: string,
 ): PairParam {
-  const required = [...ids.imgLeft, ...ids.imgRight, ...(needsFrame ? [1, 2] : [])];
+  const required = [...new Set([...ids.imgLeft, ...ids.imgRight, ...(needsFrame ? [1, 2] : [])])];
   const missing = missingIds(p, required);
   const side = (pts: [number, number]): number | null => {
     const [a, b] = [p[pts[0]], p[pts[1]]];
@@ -293,6 +307,48 @@ export function computePelvicAnalysis(
   };
 }
 
+/**
+ * Screen side holding the patient's right, from display-frame points: where
+ * the placed patient-right landmarks sit against the patient-left ones. Null
+ * unless both sides have a landmark.
+ */
+export function patientRightOnScreen(
+  points: LandmarkPoints,
+  patientRightOn: "left" | "right",
+): "left" | "right" | null {
+  const sum = { R: 0, L: 0 };
+  const count = { R: 0, L: 0 };
+  for (const def of PELVIC_LANDMARKS) {
+    const q = points[def.id];
+    const side = patientSideOf(def.imageSide, patientRightOn);
+    if (!q || !side) continue;
+    sum[side] += q.x;
+    count[side] += 1;
+  }
+  if (!count.R || !count.L) return null;
+  return sum.R / count.R < sum.L / count.L ? "left" : "right";
+}
+
+/**
+ * The view sent with an AI request, `{ rotation, flipV }`: the film as on
+ * screen minus any horizontal mirror (the server turns the film by these and
+ * names image sides in that frame). flipH acts before the rotation, so at
+ * 90°/270° it mirrors the screen vertically; the same picture without the
+ * horizontal mirror is then the film turned a further 180°.
+ */
+export function analysisView(view: {
+  rotation?: Rotation;
+  flipH?: boolean;
+  flipV?: boolean;
+}): { rotation: Rotation; flipV: boolean } {
+  const rotation = view.rotation ?? 0;
+  const quarter = rotation === 90 || rotation === 270;
+  return {
+    rotation: view.flipH && quarter ? (((rotation + 180) % 360) as Rotation) : rotation,
+    flipV: !!view.flipV,
+  };
+}
+
 /** One decimal mm when calibrated (or asked for), whole pixels otherwise. */
 export function formatLength(value: Length, unit: "mm" | "px" = value.mm != null ? "mm" : "px"): string {
   if (unit === "mm" && value.mm != null) return `${value.mm.toFixed(1)} mm`;
@@ -355,6 +411,8 @@ export function pelvicOverlay(points: LandmarkPoints): PelvicOverlay {
   const tags: OverlayTag[] = [];
   if (!frame || !p[1] || !p[2]) return { segments, tags };
   const { u, n } = frame;
+  // Screen-left along the base line (n points down), whichever way 1 → 2 runs.
+  const left = { x: -n.y, y: n.x };
   const span = Math.hypot(p[2].x - p[1].x, p[2].y - p[1].y);
   const ext = span * 0.15;
 
@@ -367,7 +425,7 @@ export function pelvicOverlay(points: LandmarkPoints): PelvicOverlay {
     segments.push({ a: hi, b: levelEnd, role: "guide", param: "FHHD" });
     segments.push({ a: levelEnd, b: lo, role: "measure", param: "FHHD" });
     // Landmark names are drawn to the right of each point, so value tags sit to the left.
-    tags.push({ param: "FHHD", at: add(mid(levelEnd, lo), scaleBy(u, -span * 0.1)) });
+    tags.push({ param: "FHHD", at: add(mid(levelEnd, lo), scaleBy(left, span * 0.1)) });
   }
 
   const onLine = (origin: Pt, q: Pt, dir: Pt) => add(origin, scaleBy(dir, dot(sub(q, origin), dir)));
@@ -388,7 +446,7 @@ export function pelvicOverlay(points: LandmarkPoints): PelvicOverlay {
     const foot5 = onLine(p[3], p[5], u); // p5's level projected onto the line through p3
     segments.push({ a: p[3], b: foot5, role: "guide", param: "ICHD" });
     segments.push({ a: foot5, b: p[5], role: "measure", param: "ICHD" });
-    tags.push({ param: "ICHD", at: add(mid(foot5, p[5]), scaleBy(u, -span * 0.1)) });
+    tags.push({ param: "ICHD", at: add(mid(foot5, p[5]), scaleBy(left, span * 0.1)) });
   }
 
   // IM per side: from the crest down to the ischial tuberosity's level.

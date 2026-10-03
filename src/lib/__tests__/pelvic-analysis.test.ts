@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  analysisView,
   computePelvicAnalysis,
   formatDegrees,
   formatLength,
   landmarkPoints,
+  patientRightOnScreen,
   pelvicOverlay,
   type LandmarkPoints,
   type PairParam,
@@ -12,7 +14,18 @@ import {
   type Pt,
   type SingleParam,
 } from "../pelvic-analysis";
-import { PELVIC_LANDMARKS } from "../pelvic-landmarks";
+import { PELVIC_LANDMARKS, landmarkById, patientSideOf } from "../pelvic-landmarks";
+import { orientPoint, unorientPoint, type Orientation, type Rotation } from "../orientation";
+import { resolveShapeRefs } from "../measurements";
+import { DEFAULT_SHAPE_STYLE, type BaseShape } from "@/types/annotation";
+import {
+  landmarkSideSourceOf,
+  mergeDetectedLandmarks,
+  patientRightOnOf,
+  patientSideNote,
+  pelvicPointsOf,
+  plainLandmarkCopy,
+} from "@/components/annotation/PelvisOverlay";
 
 /**
  * Ground truth from the paper's own Fig. 2 (Moon et al., Heliyon 2024): the
@@ -146,6 +159,16 @@ describe("computePelvicAnalysis — geometry", () => {
     expect(single(tilted, "ALFHRF").degrees).toBeCloseTo(4 - 0.873, 2);
   });
 
+  it("keeps 'lower' on the right crest when line 1 → 2 runs right to left (mirrored view)", () => {
+    const mirrored: LandmarkPoints = {};
+    for (const [id, q] of Object.entries(FIG2)) mirrored[Number(id)] = { x: 2000 - q!.x, y: q!.y };
+    const a = computePelvicAnalysis(mirrored);
+    expect(single(a, "ICHD").value?.px).toBeCloseTo(20.933, 1);
+    expect(single(a, "ICHD").direction).toBe("L lower");
+    expect(single(a, "FHHD").direction).toBe("R lower");
+    expect(single(a, "DOCS").direction).toBe("toward R");
+  });
+
   it("reports missing landmarks by paper number", () => {
     const { 2: _gone, ...rest } = FIG2;
     void _gone;
@@ -166,6 +189,14 @@ describe("computePelvicAnalysis — geometry", () => {
     expect(im.diff).toBeNull();
     expect(im.status).toBe("missing");
     expect(im.missing).toEqual([6]);
+  });
+
+  it("lists a shared landmark once when it is missing", () => {
+    const { 7: _gone, ...rest } = FIG2;
+    void _gone;
+    const a = computePelvicAnalysis(rest);
+    expect(pair(a, "SAM").missing).toEqual([7]);
+    expect(single(a, "DOCS").missing).toEqual([7]);
   });
 
   it("gives no direction when the two sides are level", () => {
@@ -242,5 +273,228 @@ describe("formatting", () => {
     expect(formatLength({ px: 12.8, mm: 2.944 }, "px")).toBe("13 px");
     expect(formatLength({ px: 12.8, mm: null }, "mm")).toBe("13 px");
     expect(formatDegrees(0.873)).toBe("0.9°");
+  });
+});
+
+// ─── The viewer's path: stored points → displayed film → analysis ───
+
+/** Landmark shapes as the AI stores them (standard AP: patient's right on image left). */
+function landmarkShape(id: string, name: string | undefined, p: Pt, extra: Partial<BaseShape> = {}): BaseShape {
+  return {
+    id,
+    type: "landmark",
+    label: null,
+    zIndex: 1,
+    visible: true,
+    locked: false,
+    style: { ...DEFAULT_SHAPE_STYLE },
+    x: p.x,
+    y: p.y,
+    width: 0,
+    height: 0,
+    rotation: 0,
+    points: [p],
+    text: null,
+    fontSize: null,
+    measurement: null,
+    landmarkName: name,
+    ...extra,
+  };
+}
+
+function shapesOf(points: LandmarkPoints, extra: Partial<BaseShape> = {}): BaseShape[] {
+  return Object.entries(points).map(([id, p]) => {
+    const def = landmarkById(Number(id))!;
+    return landmarkShape(`lm-${id}`, def.key, p!, {
+      landmarkSide: patientSideOf(def.imageSide, "left") ?? undefined,
+      ...extra,
+    });
+  });
+}
+
+const ROTATIONS: Rotation[] = [0, 90, 180, 270];
+const W = 1600;
+const H = 1100;
+
+describe("analysisView", () => {
+  it("sends the screen's rotation and vertical flip", () => {
+    expect(analysisView({})).toEqual({ rotation: 0, flipV: false });
+    expect(analysisView({ rotation: 90, flipV: true })).toEqual({ rotation: 90, flipV: true });
+    expect(analysisView({ rotation: 180, flipH: true })).toEqual({ rotation: 180, flipV: false });
+  });
+
+  it("turns a further 180° at 90°/270° when the view is mirrored", () => {
+    expect(analysisView({ rotation: 90, flipH: true })).toEqual({ rotation: 270, flipV: false });
+    expect(analysisView({ rotation: 270, flipH: true, flipV: true })).toEqual({ rotation: 90, flipV: true });
+  });
+
+  it("gives the frame the screen shows, mirrored only by flipH", () => {
+    const p = { x: 300, y: 200 };
+    for (const rotation of ROTATIONS) {
+      for (const flipH of [false, true]) {
+        for (const flipV of [false, true]) {
+          const screen: Orientation = { rotation, flipH, flipV, width: W, height: H };
+          const sent = analysisView(screen);
+          const server: Orientation = { ...sent, flipH: false, width: W, height: H };
+          const onScreen = orientPoint(p, screen);
+          const analysed = orientPoint(p, server);
+          expect(onScreen.x).toBeCloseTo(flipH ? W - analysed.x : analysed.x, 9);
+          expect(onScreen.y).toBeCloseTo(analysed.y, 9);
+        }
+      }
+    }
+  });
+});
+
+describe("pelvic analysis on a rotated / flipped view", () => {
+  const upright = computePelvicAnalysis(FIG2);
+
+  // The film is stored in any orientation; the user turns it upright on
+  // screen (rotation × flipH × flipV). The server places the landmarks on
+  // the upright film it was sent (analysisView), returned in stored pixels.
+  for (const rotation of ROTATIONS) {
+    for (const flipH of [false, true]) {
+      for (const flipV of [false, true]) {
+        it(`matches the upright result at ${rotation}°${flipH ? " + flip H" : ""}${flipV ? " + flip V" : ""}`, () => {
+          const screen: Orientation = { rotation, flipH, flipV, width: W, height: H };
+          const server: Orientation = { ...analysisView(screen), flipH: false, width: W, height: H };
+          const stored: LandmarkPoints = {};
+          for (const [id, q] of Object.entries(FIG2)) stored[Number(id)] = unorientPoint(q!, server);
+          const shapes = shapesOf(stored);
+
+          const points = pelvicPointsOf(shapes, screen);
+          const a = computePelvicAnalysis(points, { patientRightOn: patientRightOnOf(shapes) });
+
+          for (const id of ["FHHD", "ICHD", "DOCS"] as const) {
+            expect(single(a, id).value?.px).toBeCloseTo(single(upright, id).value!.px, 6);
+          }
+          expect(single(a, "ALFHRF").degrees).toBeCloseTo(single(upright, "ALFHRF").degrees!, 6);
+          for (const id of ["IM", "SAM", "ISM"] as const) {
+            expect(pair(a, id).right?.px).toBeCloseTo(pair(upright, id).right!.px, 6);
+            expect(pair(a, id).left?.px).toBeCloseTo(pair(upright, id).left!.px, 6);
+          }
+          expect(a.params.map((p) => p.direction)).toEqual(upright.params.map((p) => p.direction));
+          expect(patientSideNote(shapes, screen)).toBe(
+            `R/L are patient sides: patient's right on the ${flipH ? "right" : "left"} of the screen.`,
+          );
+        });
+      }
+    }
+  }
+
+  it("would misread a sideways film measured in stored pixels", () => {
+    const screen: Orientation = { rotation: 90, flipH: false, flipV: false, width: W, height: H };
+    const stored: LandmarkPoints = {};
+    for (const [id, q] of Object.entries(FIG2)) stored[Number(id)] = unorientPoint(q!, screen);
+    expect(single(computePelvicAnalysis(stored), "ALFHRF").degrees).toBeGreaterThan(80);
+  });
+});
+
+describe("patientRightOnScreen", () => {
+  it("compares where the patient-right landmarks sit against the patient-left ones", () => {
+    expect(patientRightOnScreen(FIG2, "left")).toBe("left");
+    expect(patientRightOnScreen(FIG2, "right")).toBe("right");
+  });
+
+  it("is unknown without a landmark on each side", () => {
+    expect(patientRightOnScreen({ 1: FIG2[1], 7: FIG2[7] }, "left")).toBeNull();
+  });
+});
+
+describe("patientSideNote", () => {
+  it("says whether R/L came from the film's marker", () => {
+    expect(landmarkSideSourceOf(shapesOf(FIG2))).toBeNull();
+    expect(patientSideNote(shapesOf(FIG2, { landmarkSideSource: "marker" }))).toBe(
+      "R/L are patient sides: patient's right on the left of the screen, from the R/L marker.",
+    );
+    expect(patientSideNote(shapesOf({ 7: FIG2[7] }, { landmarkSideSource: "assumed" }))).toBe(
+      "R/L are patient sides: assumed (no side marker found).",
+    );
+  });
+});
+
+describe("mergeDetectedLandmarks", () => {
+  const femLeft = landmarkShape("keep-1", "femoral_head_top_img_left", { x: 1, y: 1 }, {
+    landmarkSource: "manual",
+    landmarkSide: "R",
+    zIndex: 4,
+  });
+  const femLeftDup = landmarkShape("dup-1", "femoral_head_top_img_left", { x: 2, y: 2 });
+  const crest = landmarkShape("crest", "iliac_crest_top_img_left", { x: 3, y: 3 });
+  const legacy = landmarkShape("legacy", "top_of_femoral_head_1", { x: 4, y: 4 });
+  const ruler: BaseShape = {
+    ...landmarkShape("ruler", undefined, { x: 1, y: 1 }),
+    type: "ruler",
+    points: [{ x: 1, y: 1 }, { x: 50, y: 1 }],
+    pointRefs: [{ shapeId: "keep-1", vertexIndex: 0 }, null],
+  };
+  const current = [femLeft, femLeftDup, crest, legacy, ruler];
+  const merge = mergeDetectedLandmarks(
+    current,
+    {
+      landmarks: [
+        { id: 1, key: "femoral_head_top_img_left", x: 100, y: 200, confidence: 0.9 },
+        { id: 7, key: "s2_tubercle", x: 300, y: 150, confidence: 0.4 },
+      ],
+      patientRightOn: "right",
+      sideSource: "marker",
+    },
+    42,
+  );
+
+  it("moves a landmark already on the film, keeping its id", () => {
+    expect(merge.modified).toHaveLength(1);
+    const { before, after } = merge.modified[0];
+    expect(before).toBe(femLeft);
+    expect(after).toMatchObject({
+      id: "keep-1",
+      zIndex: 4,
+      points: [{ x: 100, y: 200 }],
+      landmarkSource: "ai",
+      landmarkOriginalX: 100,
+      landmarkOriginalY: 200,
+      landmarkSide: "L",
+      landmarkSideSource: "marker",
+      landmarkConfidence: 0.9,
+      label: "1 L Femoral head",
+    });
+  });
+
+  it("adds new keys and removes duplicates, keys not returned and older names", () => {
+    expect(merge.added.map((s) => [s.id, s.landmarkName, s.landmarkSide, s.landmarkSideSource])).toEqual([
+      ["landmark-42-1", "s2_tubercle", undefined, "marker"],
+    ]);
+    expect(merge.removed.map((s) => s.id)).toEqual(["dup-1", "crest", "legacy"]);
+  });
+
+  it("keeps measurements snapped to a moved landmark following it", () => {
+    const after = current
+      .filter((s) => !merge.removed.includes(s))
+      .map((s) => merge.modified.find((m) => m.before.id === s.id)?.after ?? s);
+    const byId = new Map(after.map((s) => [s.id, s]));
+    expect(resolveShapeRefs(ruler, byId).points[0]).toEqual({ x: 100, y: 200 });
+  });
+});
+
+describe("plainLandmarkCopy", () => {
+  it("drops the catalog key and AI metadata, so only the original is measured", () => {
+    const original = landmarkShape("a", "symphysis_pubis", { x: 10, y: 10 }, {
+      landmarkSource: "ai",
+      landmarkSide: undefined,
+      landmarkSideSource: "assumed",
+      landmarkOriginalX: 10,
+      landmarkOriginalY: 10,
+      landmarkConfidence: 0.8,
+    });
+    const copy = plainLandmarkCopy({ ...original, id: "b", points: [{ x: 30, y: 30 }] });
+    expect(copy).toMatchObject({ landmarkName: undefined, landmarkSideSource: undefined, landmarkSource: "manual" });
+    expect(copy.landmarkOriginalX).toBeUndefined();
+    expect(copy.landmarkConfidence).toBeUndefined();
+    expect(pelvicPointsOf([original, copy])[8]).toEqual({ x: 10, y: 10 });
+  });
+
+  it("leaves other shapes alone", () => {
+    const line = { ...landmarkShape("l", undefined, { x: 0, y: 0 }), type: "line" as const };
+    expect(plainLandmarkCopy(line)).toBe(line);
   });
 });

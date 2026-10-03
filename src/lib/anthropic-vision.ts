@@ -1,14 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
+import { unorientPoint } from "@/lib/orientation";
 import {
   PELVIC_LANDMARKS,
   PELVIC_LANDMARK_ORDER_RULE,
   landmarkById,
   type PelvicLandmarkDef,
 } from "@/lib/pelvic-landmarks";
+import type { Point } from "@/types/annotation";
 import type {
   DetectLandmarksResponse,
   DetectedLandmark,
+  PelvisAnalysisView,
   PelvisImageAssessment,
 } from "@/types/pelvis";
 
@@ -17,18 +20,26 @@ import type {
  * after Moon et al., Heliyon 2024 (PMC11040132): 16 landmarks, from which
  * `pelvic-analysis.ts` computes the paper's 10 parameters.
  *
- * Three passes, each a Claude vision call with structured JSON output:
- *   1. Assess (effort low): the whole film, downscaled. Is it an AP pelvis we
- *      can analyse, where is the bony pelvis, is there a side marker?
- *      `decideSuitability` turns the answer into accept / reject in code.
+ * The film is first turned upright the way the viewer shows it (its rotation
+ * and vertical flip, never its horizontal flip), then three passes, each a
+ * Claude vision call with structured JSON output:
+ *   1. Assess (effort low): the whole film, downscaled. Is it an upright AP
+ *      pelvis we can analyse, where is the bony pelvis, is there a side
+ *      marker? `decideSuitability` turns the answer into accept / reject in
+ *      code.
  *   2. Locate (effort high): crop to the pelvis box + 6%, ask for all 16
  *      points 3 times in parallel and take the per-axis median. Runs that
  *      disagree lower the confidence, and so does breaking the
  *      left-to-right order along S2.
  *   3. Refine (effort medium): bone-edge points 1-6 and 8 only, each in a
  *      2x zoomed window with a magenta cross on the estimate. Small moves are
- *      kept, jumps ignored. (Refining 14/16 and the sacral group made them
- *      worse in evaluation.)
+ *      kept, jumps ignored, and confidence never rises above pass 2's.
+ *      (Refining 14/16 and the sacral group made them worse in evaluation.)
+ *      Skipped when less than 20 s of the deadline is left.
+ *
+ * Time: every call carries the caller's abort signal and a timeout that ends
+ * it 2 s before the deadline. Running out of time (or being aborted) before
+ * pass 2 finishes is a `timeout` VisionApiError; pass 3 keeps pass 2's points.
  *
  * Measured with this pipeline on a labelled test film: mean radial error
  * ~3.4 mm, 69-75% of landmarks within 4 mm, FHHD / ALFHRF / ICHD within
@@ -40,13 +51,23 @@ import type {
  *
  * Coordinates: the model answers in the pixel grid of the image it was SENT
  * (each prompt states that grid's exact size); a `Frame` maps them back to
- * ORIGINAL image pixels.
+ * the upright film's pixels, and `storedMapping` from there to the STORED
+ * image's pixels (view undone, scaled to the X-ray's recorded size).
  */
 
 export const VISION_MODEL = "claude-opus-5-5";
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 const MAX_TOKENS = 16000;
-const REQUEST_OPTIONS = { timeout: 60_000, maxRetries: 1 };
+/** Longest any one model call may take; each also ends DEADLINE_MARGIN before the deadline. */
+const CALL_TIMEOUT = 45_000;
+const DEADLINE_MARGIN = 2_000;
+/** Time that must be left before pass 3 starts. */
+const REFINE_MIN_REMAINING = 20_000;
+/** Stored vs decoded aspect-ratio mismatch worth a warning. */
+const ASPECT_TOLERANCE = 0.02;
+const TIMEOUT_MESSAGE = "The AI analysis took too long. Please try again.";
+const API_ERROR_MESSAGE = "The AI service returned an error. Please try again.";
+const RATE_LIMITED_MESSAGE = "The AI service is busy; try again in a minute.";
 
 /** Long edge of every image we send. */
 const MAX_SENT_EDGE = 1568;
@@ -79,7 +100,7 @@ export interface Landmark {
 
 export class VisionApiError extends Error {
   constructor(
-    public readonly code: "image_too_large" | "invalid_image" | "vision_api_error" | "rate_limited",
+    public readonly code: "image_too_large" | "invalid_image" | "vision_api_error" | "rate_limited" | "timeout",
     message: string,
   ) {
     super(message);
@@ -87,11 +108,21 @@ export class VisionApiError extends Error {
   }
 }
 
-/** Auto-oriented 8-bit grayscale pixels in the original image's grid. */
-interface Film {
-  pixels: Buffer;
+interface Size {
   width: number;
   height: number;
+}
+
+/** 8-bit grayscale pixels: the decoded image (EXIF orientation applied), or that turned upright. */
+interface Film extends Size {
+  pixels: Buffer;
+}
+
+/** One analysis's model client, abort signal and deadline (epoch ms; Infinity when none). */
+interface Call {
+  client: Anthropic;
+  signal?: AbortSignal;
+  deadline: number;
 }
 
 /** A rectangle of the film, in original pixels. */
@@ -241,6 +272,62 @@ export function orderViolations(points: ReadonlyMap<number, { x: number }>): Set
   return bad;
 }
 
+// ─── Upright frame ───
+
+/**
+ * Upright-film point → decoded-film point. The upright film is the decoded
+ * one flipped vertically (if `flipV`) then rotated clockwise, i.e. the
+ * viewer's display = C + R·S·(p − C) shifted so its box starts at (0, 0).
+ */
+function fromUpright(q: Point, decoded: Size, upright: Size, view: PelvisAnalysisView): Point {
+  const display = {
+    x: q.x + (decoded.width - upright.width) / 2,
+    y: q.y + (decoded.height - upright.height) / 2,
+  };
+  return unorientPoint(display, {
+    flipH: false,
+    flipV: view.flipV,
+    rotation: view.rotation,
+    width: decoded.width,
+    height: decoded.height,
+  });
+}
+
+interface StoredMapping {
+  /** Upright-film point → stored-image point. */
+  map: (q: Point) => Point;
+  /** Stored image size (the decoded size when the X-ray's size isn't recorded). */
+  size: Size;
+}
+
+/**
+ * Upright film → stored image: undo the view, then scale per axis by
+ * stored / decoded size (they differ when the record's width and height
+ * don't match the file).
+ */
+function storedMapping(
+  decoded: Size,
+  upright: Size,
+  view: PelvisAnalysisView,
+  stored?: Size | null,
+): StoredMapping {
+  const size = stored ?? decoded;
+  const sx = size.width / decoded.width;
+  const sy = size.height / decoded.height;
+  if (Math.abs(sx / sy - 1) > ASPECT_TOLERANCE) {
+    console.warn(
+      `pelvis AI: stored size ${size.width}x${size.height} and decoded size ${decoded.width}x${decoded.height} have different aspect ratios`,
+    );
+  }
+  return {
+    size,
+    map: (q) => {
+      const p = fromUpright(q, decoded, upright, view);
+      return { x: p.x * sx, y: p.y * sy };
+    },
+  };
+}
+
 // ─── Suitability ───
 
 const VIEW_NEEDED = "the analysis needs an AP (front-to-back) view of the pelvis.";
@@ -261,10 +348,10 @@ export interface Suitability {
 }
 
 /**
- * Accept only an AP/PA radiograph showing the paper's region (iliac crests
- * to femoral heads, with the sacrum and symphysis), no hip implant, bone
- * outlines traceable and a located pelvis. Ischial tuberosities are optional
- * (they only feed IM).
+ * Accept only an upright AP/PA radiograph showing the paper's region (iliac
+ * crests to femoral heads, with the sacrum and symphysis), no hip implant,
+ * bone outlines traceable and a located pelvis. Ischial tuberosities are
+ * optional (they only feed IM).
  */
 export function decideSuitability(a: PelvisImageAssessment): Suitability {
   if (!a.isRadiograph) {
@@ -280,6 +367,9 @@ export function decideSuitability(a: PelvisImageAssessment): Suitability {
   if (missing.length === REQUIRED_VISIBLE.length) {
     reasons.push("The pelvis isn't in this image; the analysis needs the region from the iliac crests to the femoral heads.");
   } else {
+    if (!a.upright) {
+      reasons.push("The film appears rotated or upside down. Rotate it upright in the viewer, then run the analysis again.");
+    }
     reasons.push(...missing);
   }
   if (missing.length === 0 && !a.pelvisBox) reasons.push("The pelvis couldn't be located in the image.");
@@ -340,6 +430,7 @@ export function parseAssessment(value: unknown, frame: Frame): PelvisImageAssess
     isRadiograph: value.isRadiograph === true,
     projection: oneOf(value.projection, PROJECTIONS, "unknown"),
     region: oneOf(value.region, REGIONS, "other"),
+    upright: value.upright === true,
     visible: {
       iliacCrests: visible.iliacCrests === true,
       femoralHeads: visible.femoralHeads === true,
@@ -393,6 +484,7 @@ function assessPrompt(w: number, h: number): string {
     "- isRadiograph: true only for a medical X-ray image (not a photo, an app screenshot, a drawing or a document).",
     "- projection: AP, PA, lateral, oblique, other or unknown.",
     "- region: pelvis, full_spine, lumbar, hip, chest or other.",
+    "- upright: Is the pelvis upright: iliac crests toward the top of the image and femurs pointing down?",
     "- visible: for each structure, true only if it is fully inside the image, on BOTH sides for paired structures: iliacCrests, femoralHeads, ischialTuberosities, sacrum, pubicSymphysis.",
     "- hipImplant: a prosthesis, screws or plates at the hips or pelvis.",
     "- overlays: measurement lines or landmark dots drawn on the image. Side markers such as R or L do not count.",
@@ -439,6 +531,7 @@ const ASSESSMENT_SCHEMA = object({
   isRadiograph: BOOLEAN,
   projection: { type: "string", enum: PROJECTIONS },
   region: { type: "string", enum: REGIONS },
+  upright: BOOLEAN,
   visible: object({
     iliacCrests: BOOLEAN,
     femoralHeads: BOOLEAN,
@@ -503,6 +596,21 @@ async function loadFilm(bytes: Buffer): Promise<Film> {
   }
 }
 
+/** One sharp operation on a film, back to 1-channel raw. */
+async function filmStep(film: Film, op: (image: sharp.Sharp) => sharp.Sharp): Promise<Film> {
+  const { data, info } = await op(sharp(film.pixels, { raw: { width: film.width, height: film.height, channels: 1 } }))
+    .grayscale()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return { pixels: data, width: info.width, height: info.height };
+}
+
+/** The film as the viewer shows it, minus any horizontal flip: flipped vertically, then rotated clockwise (separate steps, so the order is certain). */
+async function uprightFilm(film: Film, view: PelvisAnalysisView): Promise<Film> {
+  const flipped = view.flipV ? await filmStep(film, (image) => image.flip()) : film;
+  return view.rotation === 0 ? flipped : filmStep(flipped, (image) => image.rotate(view.rotation));
+}
+
 /** Cut `frame` out of the film, resize to its sent size, stretch contrast, JPEG. */
 async function renderFrame(film: Film, frame: Frame, cross?: { x: number; y: number }): Promise<Buffer> {
   let image = sharp(film.pixels, { raw: { width: film.width, height: film.height, channels: 1 } })
@@ -528,16 +636,25 @@ function crossSvg(frame: Frame, { x, y }: { x: number; y: number }): Buffer {
 
 // ─── Model calls ───
 
+/** Signal, retries and a timeout that ends the call DEADLINE_MARGIN before the deadline; throws once time is up. */
+function requestOptions(call: Call, maxRetries: number) {
+  const timeout = Math.min(CALL_TIMEOUT, call.deadline - Date.now() - DEADLINE_MARGIN);
+  if (call.signal?.aborted || timeout <= 0) throw new VisionApiError("timeout", TIMEOUT_MESSAGE);
+  return { timeout, maxRetries, signal: call.signal };
+}
+
 async function askJson(
-  client: Anthropic,
+  call: Call,
   image: Buffer,
   text: string,
   effort: Effort,
   schema: Record<string, unknown>,
+  maxRetries: number,
 ): Promise<unknown> {
+  const options = requestOptions(call, maxRetries);
   let response: Anthropic.Beta.BetaMessage;
   try {
-    response = await client.beta.messages.create(
+    response = await call.client.beta.messages.create(
       {
         model: VISION_MODEL,
         max_tokens: MAX_TOKENS,
@@ -554,14 +671,22 @@ async function askJson(
           },
         ],
       },
-      REQUEST_OPTIONS,
+      options,
     );
   } catch (err) {
-    if (err instanceof Anthropic.RateLimitError) {
-      throw new VisionApiError("rate_limited", "The AI service is busy; try again in a minute.");
+    if (
+      err instanceof Anthropic.APIUserAbortError ||
+      err instanceof Anthropic.APIConnectionTimeoutError ||
+      call.signal?.aborted
+    ) {
+      throw new VisionApiError("timeout", TIMEOUT_MESSAGE);
     }
     if (err instanceof Anthropic.APIError) {
-      throw new VisionApiError("vision_api_error", `The AI request failed: ${err.message}`);
+      // Anthropic's message stays in the server log; the client gets a generic one.
+      console.error("pelvis AI request failed:", { status: err.status, requestID: err.requestID, message: err.message });
+      throw err instanceof Anthropic.RateLimitError
+        ? new VisionApiError("rate_limited", RATE_LIMITED_MESSAGE)
+        : new VisionApiError("vision_api_error", API_ERROR_MESSAGE);
     }
     throw err;
   }
@@ -581,16 +706,16 @@ async function askJson(
 }
 
 /** Pass 1: what is this image, and where is the pelvis? */
-async function assessImage(client: Anthropic, film: Film): Promise<PelvisImageAssessment> {
+async function assessImage(call: Call, film: Film): Promise<PelvisImageAssessment> {
   const frame = standardFrame({ left: 0, top: 0, width: film.width, height: film.height });
   const image = await renderFrame(film, frame);
-  const answer = await askJson(client, image, assessPrompt(frame.sentWidth, frame.sentHeight), "low", ASSESSMENT_SCHEMA);
+  const answer = await askJson(call, image, assessPrompt(frame.sentWidth, frame.sentHeight), "low", ASSESSMENT_SCHEMA, 1);
   return parseAssessment(answer, frame);
 }
 
-/** Pass 2: all 16 landmarks on the pelvis crop, median of parallel runs; original px. */
+/** Pass 2: all 16 landmarks on the pelvis crop, median of parallel runs; film px. No retries: one failed run of three is tolerated. */
 async function locateLandmarks(
-  client: Anthropic,
+  call: Call,
   film: Film,
   pelvisBox: Box,
 ): Promise<{ points: LandmarkPoints; crop: Frame }> {
@@ -599,7 +724,7 @@ async function locateLandmarks(
   const prompt = locatePrompt(crop.sentWidth, crop.sentHeight);
   const settled = await Promise.allSettled(
     Array.from({ length: LOCATE_RUNS }, () =>
-      askJson(client, image, prompt, "high", LOCATE_SCHEMA).then(parseLandmarkRun),
+      askJson(call, image, prompt, "high", LOCATE_SCHEMA, 0).then(parseLandmarkRun),
     ),
   );
   const runs = settled.flatMap((s) => (s.status === "fulfilled" ? [s.value] : []));
@@ -620,9 +745,13 @@ async function locateLandmarks(
   return { points, crop };
 }
 
-/** Pass 3: a zoomed second look at each bone-edge landmark; keeps the pass-2 point on failure or a jump. */
+/**
+ * Pass 3: a zoomed second look at each bone-edge landmark; keeps the pass-2
+ * point on failure or a jump. No retries. Confidence can only stay or drop:
+ * the runs' disagreement in pass 2 still stands.
+ */
 async function refineLandmarks(
-  client: Anthropic,
+  call: Call,
   film: Film,
   { points, crop }: { points: LandmarkPoints; crop: Frame },
 ): Promise<LandmarkPoints> {
@@ -643,65 +772,108 @@ async function refineLandmarks(
         const radius = Math.round((REFINE_HINT * cropLong * frame.sentWidth) / frame.width);
         const image = await renderFrame(film, frame, cross);
         const answer = parsePoint(
-          await askJson(client, image, refinePrompt(frame, cross, def, radius), "medium", POINT_SCHEMA),
+          await askJson(call, image, refinePrompt(frame, cross, def, radius), "medium", POINT_SCHEMA, 0),
         );
         const moved = toOriginal(frame, answer.x, answer.y);
         if (Math.hypot(moved.x - p.x, moved.y - p.y) < REFINE_MAX_MOVE * cropLong) {
-          refined.set(def.id, { ...moved, confidence: Math.max(p.confidence, answer.confidence * 0.9) });
+          refined.set(def.id, { ...moved, confidence: Math.min(p.confidence, answer.confidence * 0.9) });
         }
       } catch (err) {
-        console.warn(`pelvis refine of landmark ${def.id} failed; keeping the first estimate:`, err);
+        if (!call.signal?.aborted) {
+          console.warn(`pelvis refine of landmark ${def.id} failed; keeping the first estimate:`, err);
+        }
       }
     }),
   );
   return refined;
 }
 
-function toDetected(points: LandmarkPoints, film: Film): DetectedLandmark[] {
+function toDetected(points: LandmarkPoints, stored: StoredMapping): DetectedLandmark[] {
   return PELVIC_LANDMARKS.flatMap((def) => {
     const p = points.get(def.id);
     if (!p) return [];
+    const s = stored.map(p);
     return [
       {
         id: def.id,
         key: def.key,
-        x: clamp(p.x, 0, film.width),
-        y: clamp(p.y, 0, film.height),
+        x: clamp(s.x, 0, stored.size.width),
+        y: clamp(s.y, 0, stored.size.height),
         confidence: p.confidence,
       },
     ];
   });
 }
 
+/** The assessment with its pelvis box moved from the upright film to stored pixels. */
+function storedAssessment(a: PelvisImageAssessment, stored: StoredMapping): PelvisImageAssessment {
+  if (!a.pelvisBox) return a;
+  const [x0, y0, x1, y1] = a.pelvisBox;
+  const p = stored.map({ x: x0, y: y0 });
+  const q = stored.map({ x: x1, y: y1 });
+  return {
+    ...a,
+    pelvisBox: [
+      Math.round(Math.min(p.x, q.x)),
+      Math.round(Math.min(p.y, q.y)),
+      Math.round(Math.max(p.x, q.x)),
+      Math.round(Math.max(p.y, q.y)),
+    ],
+  };
+}
+
 /**
- * Gate, then locate and refine the 16 landmarks. Coordinates come back in
- * the original image's pixels (EXIF orientation applied, as browsers show
- * it); dimensions are read from the bytes, not the database.
+ * Gate, then locate and refine the 16 landmarks on the film turned upright
+ * by `view`. Coordinates (landmarks and the pelvis box) come back in the
+ * STORED image's pixels: EXIF orientation applied, as browsers show it,
+ * scaled to `storedSize` when given. Image sides in landmark keys and the
+ * side marker are those of the upright film.
  */
 export async function analysePelvis(opts: {
   imageBytes: Buffer;
+  /** The viewer's rotation and vertical flip; default upright as stored. */
+  view?: PelvisAnalysisView;
+  /** The X-ray's recorded width and height; null or omitted keeps the decoded size. */
+  storedSize?: Size | null;
+  /** Aborts every model call: the client went away or the deadline passed. */
+  signal?: AbortSignal;
+  /** Epoch ms by which the analysis must be done. */
+  deadlineMs?: number;
   /** Tests inject a mock; production omits it. */
   client?: Anthropic;
 }): Promise<PelvisAnalysis> {
-  const client = opts.client ?? new Anthropic();
-  const film = await loadFilm(opts.imageBytes);
+  const call: Call = {
+    client: opts.client ?? new Anthropic(),
+    signal: opts.signal,
+    deadline: opts.deadlineMs ?? Infinity,
+  };
+  const view = opts.view ?? { rotation: 0, flipV: false };
+  const decoded = await loadFilm(opts.imageBytes);
+  const film = await uprightFilm(decoded, view);
+  const stored = storedMapping(decoded, film, view, opts.storedSize);
 
-  const assessment = await assessImage(client, film);
+  const assessment = await assessImage(call, film);
   const verdict = decideSuitability(assessment);
   if (!verdict.suitable || !assessment.pelvisBox) {
-    return { kind: "rejected", assessment, reasons: verdict.reasons };
+    return { kind: "rejected", assessment: storedAssessment(assessment, stored), reasons: verdict.reasons };
   }
 
-  const located = await locateLandmarks(client, film, assessment.pelvisBox);
+  const located = await locateLandmarks(call, film, assessment.pelvisBox);
   if (!assessment.visible.ischialTuberosities) {
     for (const id of ISCHIAL_IDS) located.points.delete(id);
   }
-  const refined = await refineLandmarks(client, film, located);
+  let refined = located.points;
+  const remaining = call.deadline - Date.now();
+  if (remaining >= REFINE_MIN_REMAINING) {
+    refined = await refineLandmarks(call, film, located);
+  } else {
+    console.warn(`pelvis AI: ${Math.round(remaining / 1000)} s left, skipping refinement`);
+  }
 
   return {
     kind: "accepted",
-    landmarks: toDetected(refined, film),
-    assessment,
+    landmarks: toDetected(refined, stored),
+    assessment: storedAssessment(assessment, stored),
     ...sideFromMarker(assessment.sideMarker),
     warnings: verdict.warnings,
     model: VISION_MODEL,

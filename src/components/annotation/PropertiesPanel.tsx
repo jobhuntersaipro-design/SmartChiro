@@ -39,8 +39,9 @@ import {
   type PelvicParam,
 } from "@/lib/pelvic-analysis";
 import { landmarkById, landmarkByKey, landmarkLabel, patientSideOf } from "@/lib/pelvic-landmarks";
+import type { Orientation } from "@/lib/orientation";
 import { cn } from "@/lib/utils";
-import { patientRightOnOf, pelvicLandmarkShapes, pelvicPointsOf } from "./PelvisOverlay";
+import { patientRightOnOf, patientSideNote, pelvicLandmarkShapes, pelvicPointsOf } from "./PelvisOverlay";
 
 export type PanelTab = "layers" | "properties" | "measurements";
 
@@ -221,6 +222,8 @@ interface PropertiesPanelProps {
   onTogglePanel: () => void;
   /** When set, the Measurements tab converts px values to mm/cm. */
   pixelsPerMm?: number;
+  /** The view's flip/rotate; the pelvic analysis measures the displayed film. */
+  orientation?: Orientation;
   /** Map of shapeId → number-of-dependent-shapes-that-snap-followed-it.
    *  Drives the "used by N" badge next to landmark rows. */
   dependentCounts?: Map<string, number>;
@@ -263,6 +266,7 @@ function PropertiesPanelView({
   isOpen,
   onTogglePanel,
   pixelsPerMm,
+  orientation,
   dependentCounts,
   onClearCalibration,
   onEditCalibration,
@@ -754,6 +758,7 @@ function PropertiesPanelView({
             <PelvicAnalysisSection
               shapes={shapes}
               pixelsPerMm={pixelsPerMm}
+              orientation={orientation}
               unit={pelvisUnit}
               onUnitChange={onPelvisUnitChange}
               overlayOn={pelvisOverlayOn}
@@ -1590,6 +1595,7 @@ function NumberInput({
 function PelvicAnalysisSection({
   shapes,
   pixelsPerMm,
+  orientation,
   unit,
   onUnitChange,
   overlayOn,
@@ -1598,6 +1604,7 @@ function PelvicAnalysisSection({
 }: {
   shapes: BaseShape[];
   pixelsPerMm?: number;
+  orientation?: Orientation;
   unit: "mm" | "px";
   onUnitChange: (unit: "mm" | "px") => void;
   overlayOn: boolean;
@@ -1607,7 +1614,8 @@ function PelvicAnalysisSection({
   const landmarkShapes = pelvicLandmarkShapes(shapes);
   if (landmarkShapes.length === 0) return null;
 
-  const points = pelvicPointsOf(landmarkShapes);
+  // Measured on the displayed film, like the overlay.
+  const points = pelvicPointsOf(landmarkShapes, orientation);
   const placed = Object.keys(points).length;
   const patientRightOn = patientRightOnOf(landmarkShapes);
   const analysis = computePelvicAnalysis(points, { pixelsPerMm, patientRightOn });
@@ -1698,9 +1706,7 @@ function PelvicAnalysisSection({
         </ul>
       )}
 
-      <p className="mt-1 text-[10px] text-fg-muted">
-        R/L are patient sides (patient&apos;s right on the image {patientRightOn}).
-      </p>
+      <p className="mt-1 text-[10px] text-fg-muted">{patientSideNote(landmarkShapes, orientation)}</p>
     </section>
   );
 }

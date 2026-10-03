@@ -37,11 +37,13 @@ let patientId: string;
 let xrayId: string;
 let badMimeXrayId: string;
 let notReadyXrayId: string;
+let noSizeXrayId: string;
 
-function req(body?: unknown) {
+function req(body?: unknown, signal?: AbortSignal) {
   const init: ConstructorParameters<typeof NextRequest>[1] = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal,
   };
   if (body !== undefined) init.body = JSON.stringify(body);
   return new NextRequest("http://localhost:3000/api/viewer/detect-landmarks", init);
@@ -61,6 +63,7 @@ const ASSESSMENT: PelvisImageAssessment = {
   isRadiograph: true,
   projection: "AP",
   region: "pelvis",
+  upright: true,
   visible: { iliacCrests: true, femoralHeads: true, ischialTuberosities: true, sacrum: true, pubicSymphysis: true },
   hipImplant: false,
   overlays: false,
@@ -156,6 +159,19 @@ describe("POST /api/viewer/detect-landmarks", () => {
       },
     });
     notReadyXrayId = notReady.id;
+
+    const noSize = await prisma.xray.create({
+      data: {
+        patientId,
+        uploadedById: memberId,
+        status: "READY",
+        fileName: "nosize.jpg",
+        fileSize: 1024,
+        mimeType: "image/jpeg",
+        fileUrl: "http://r2-stub/nosize.jpg",
+      },
+    });
+    noSizeXrayId = noSize.id;
   });
 
   afterAll(async () => {
@@ -211,6 +227,19 @@ describe("POST /api/viewer/detect-landmarks", () => {
     const { POST } = await import("../route");
     const res = await POST(req({}));
     expect(res.status).toBe(400);
+  });
+
+  it.each([
+    ["a non-object", "upright"],
+    ["an odd rotation", { rotation: 45, flipV: false }],
+    ["a missing flipV", { rotation: 90 }],
+    ["a non-boolean flipV", { rotation: 0, flipV: "yes" }],
+  ])("returns 400 when view is %s", async (_name, view) => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId, view }));
+    expect(res.status).toBe(400);
+    expect(mockAnalysePelvis).not.toHaveBeenCalled();
   });
 
   it("returns 404 when the requester is not in the X-ray's branch (no existence leak)", async () => {
@@ -281,6 +310,7 @@ describe("POST /api/viewer/detect-landmarks", () => {
     ["invalid_image", 422, "INVALID_IMAGE"],
     ["rate_limited", 429, "RATE_LIMITED"],
     ["vision_api_error", 502, "VISION_API_ERROR"],
+    ["timeout", 504, "TIMEOUT"],
   ])("maps VisionApiError %s to %i %s", async (code, status, error) => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
     mockAnalysePelvis.mockRejectedValueOnce(new VisionApiErrorRef(code, "Vision failed."));
@@ -288,6 +318,63 @@ describe("POST /api/viewer/detect-landmarks", () => {
     const res = await POST(req({ xrayId }));
     expect(res.status).toBe(status);
     expect(await res.json()).toEqual({ error, message: "Vision failed." });
+  });
+
+  it("returns 504 TIMEOUT when the analysis runs out of time", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    const message = "The AI analysis took too long. Please try again.";
+    mockAnalysePelvis.mockRejectedValueOnce(new VisionApiErrorRef("timeout", message));
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }));
+    expect(res.status).toBe(504);
+    expect(await res.json()).toEqual({ error: "TIMEOUT", message });
+  });
+
+  it("aborts the analysis and ends quietly when the client disconnects", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    const client = new AbortController();
+    let analysisSignal: AbortSignal | undefined;
+    mockAnalysePelvis.mockImplementationOnce(async ({ signal }: { signal: AbortSignal }) => {
+      analysisSignal = signal;
+      client.abort();
+      throw new VisionApiErrorRef("timeout", "The AI analysis took too long. Please try again.");
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }, client.signal));
+    expect(analysisSignal?.aborted).toBe(true);
+    expect(res.status).toBe(499);
+    expect(await res.text()).toBe("");
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it("passes the view, the recorded size, the abort signal and a 105 s deadline", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "accepted", ...ACCEPTED });
+    const { POST } = await import("../route");
+    const before = Date.now();
+    await POST(req({ xrayId, view: { rotation: 90, flipV: true } }));
+    const after = Date.now();
+
+    const arg = mockAnalysePelvis.mock.calls[0][0] as Record<string, unknown>;
+    expect(arg.view).toEqual({ rotation: 90, flipV: true });
+    expect(arg.storedSize).toEqual({ width: 1024, height: 1024 });
+    expect(arg.signal).toBeInstanceOf(AbortSignal);
+    expect((arg.signal as AbortSignal).aborted).toBe(false);
+    expect(arg.deadlineMs).toBeGreaterThanOrEqual(before + 105_000);
+    expect(arg.deadlineMs).toBeLessThanOrEqual(after + 105_000);
+  });
+
+  it("defaults the view to upright-as-stored and passes no size when none is recorded", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "accepted", ...ACCEPTED });
+    const { POST } = await import("../route");
+    await POST(req({ xrayId: noSizeXrayId }));
+
+    const arg = mockAnalysePelvis.mock.calls[0][0] as Record<string, unknown>;
+    expect(arg.view).toEqual({ rotation: 0, flipV: false });
+    expect(arg.storedSize).toBeNull();
   });
 
   it("returns 422 NOT_SUITABLE with reasons when the image is rejected", async () => {
@@ -331,7 +418,7 @@ describe("POST /api/viewer/detect-landmarks", () => {
   // The route's whole reason for existence is that the X-ray ID never reaches
   // Anthropic. If anyone ever wires a patient/xray/filename field into the
   // analysePelvis call args, this test breaks.
-  it("sends ONLY image bytes to the vision lib — no DB identifiers", async () => {
+  it("sends ONLY image bytes, the view, the size and timing to the vision lib — no DB identifiers", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
     mockAnalysePelvis.mockResolvedValueOnce({ kind: "accepted", ...ACCEPTED });
     const { POST } = await import("../route");
@@ -339,7 +426,7 @@ describe("POST /api/viewer/detect-landmarks", () => {
 
     expect(mockAnalysePelvis).toHaveBeenCalledTimes(1);
     const callArg = mockAnalysePelvis.mock.calls[0][0] as Record<string, unknown>;
-    expect(Object.keys(callArg)).toEqual(["imageBytes"]);
+    expect(Object.keys(callArg).sort()).toEqual(["deadlineMs", "imageBytes", "signal", "storedSize", "view"]);
     expect(Buffer.isBuffer(callArg.imageBytes)).toBe(true);
 
     const serialized = JSON.stringify(callArg, (k, v) => (k === "imageBytes" ? "[bytes]" : v));

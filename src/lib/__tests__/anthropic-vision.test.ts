@@ -29,11 +29,17 @@ interface Reply {
   json?: unknown;
 }
 
-function fakeClient(answer: (params: CreateParams) => Reply) {
-  const calls: { params: CreateParams; options: unknown }[] = [];
-  const create = vi.fn(async (params: CreateParams, options: unknown) => {
+interface Options {
+  timeout?: number;
+  maxRetries?: number;
+  signal?: AbortSignal;
+}
+
+function fakeClient(answer: (params: CreateParams) => Reply | Promise<Reply>) {
+  const calls: { params: CreateParams; options: Options }[] = [];
+  const create = vi.fn(async (params: CreateParams, options: Options) => {
     calls.push({ params, options });
-    const reply = answer(params);
+    const reply = await answer(params);
     return {
       stop_reason: reply.stop_reason ?? "end_turn",
       content: reply.json === undefined ? [] : [{ type: "text", text: JSON.stringify(reply.json) }],
@@ -48,11 +54,15 @@ function textOf(params: CreateParams): string {
   return content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("\n");
 }
 
-async function sentSize(params: CreateParams): Promise<string> {
+function imageOf(params: CreateParams): Buffer {
   const content = params.messages[0].content;
   const image = typeof content === "string" ? undefined : content.find((b) => b.type === "image");
   if (image?.type !== "image" || image.source.type !== "base64") throw new Error("no image sent");
-  const meta = await sharp(Buffer.from(image.source.data, "base64")).metadata();
+  return Buffer.from(image.source.data, "base64");
+}
+
+async function sentSize(params: CreateParams): Promise<string> {
+  const meta = await sharp(imageOf(params)).metadata();
   return `${meta.width}x${meta.height}`;
 }
 
@@ -68,6 +78,7 @@ function assessmentAnswer(overrides: Record<string, unknown> = {}) {
     isRadiograph: true,
     projection: "AP",
     region: "pelvis",
+    upright: true,
     visible: { iliacCrests: true, femoralHeads: true, ischialTuberosities: true, sacrum: true, pubicSymphysis: true },
     hipImplant: false,
     overlays: false,
@@ -151,7 +162,7 @@ describe("request payload (privacy boundary)", () => {
     await accepted(client);
 
     expect(VISION_MODEL).toBe("claude-opus-5-5");
-    for (const { params, options } of calls) {
+    for (const { params } of calls) {
       expect(params.model).toBe("claude-opus-5-5");
       expect(params.betas).toEqual(["server-side-fallback-2026-07-01"]);
       expect(params.fallbacks).toBe("default");
@@ -159,8 +170,12 @@ describe("request payload (privacy boundary)", () => {
       expect(params.output_config?.format?.type).toBe("json_schema");
       expect(params).not.toHaveProperty("thinking");
       expect(params).not.toHaveProperty("temperature");
-      expect(options).toEqual({ timeout: 60_000, maxRetries: 1 });
     }
+    // 45 s per call without a deadline; only pass 1 retries.
+    expect(calls.map((c) => c.options)).toEqual([
+      { timeout: 45_000, maxRetries: 1 },
+      ...Array.from({ length: 10 }, () => ({ timeout: 45_000, maxRetries: 0 })),
+    ]);
     expect(calls.map((c) => effortOf(c.params))).toEqual([
       "low", "high", "high", "high", "medium", "medium", "medium", "medium", "medium", "medium", "medium",
     ]);
@@ -184,12 +199,7 @@ describe("request payload (privacy boundary)", () => {
 
     const refine = calls[4].params;
     const [, cx, cy] = textOf(refine).match(/magenta cross at \((\d+), (\d+)\)/) ?? [];
-    const content = refine.messages[0].content;
-    const image = typeof content === "string" ? undefined : content.find((b) => b.type === "image");
-    if (image?.type !== "image" || image.source.type !== "base64") throw new Error("no image sent");
-    const { data, info } = await sharp(Buffer.from(image.source.data, "base64"))
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+    const { data, info } = await sharp(imageOf(refine)).raw().toBuffer({ resolveWithObject: true });
     const pixel = (x: number, y: number) => {
       const i = (y * info.width + x) * info.channels;
       return [data[i], data[i + 1], data[i + 2]];
@@ -208,6 +218,7 @@ function assessment(overrides: Partial<PelvisImageAssessment> = {}): PelvisImage
     isRadiograph: true,
     projection: "AP",
     region: "pelvis",
+    upright: true,
     visible: { iliacCrests: true, femoralHeads: true, ischialTuberosities: true, sacrum: true, pubicSymphysis: true },
     hipImplant: false,
     overlays: false,
@@ -235,10 +246,17 @@ describe("decideSuitability", () => {
     ["poor quality", { quality: "poor" }, "The image quality is too poor to trace the bone outlines."],
     ["no pelvis box", { pelvisBox: null }, "The pelvis couldn't be located in the image."],
     ["an unknown projection", { projection: "unknown" }, "The view couldn't be confirmed as AP; the analysis needs an AP (front-to-back) view of the pelvis."],
+    ["an upside-down film", { upright: false }, "The film appears rotated or upside down. Rotate it upright in the viewer, then run the analysis again."],
   ])("rejects %s", (_name, overrides, reason) => {
     const verdict = decideSuitability(assessment(overrides));
     expect(verdict.suitable).toBe(false);
     expect(verdict.reasons).toContain(reason);
+  });
+
+  it("doesn't call a film without a pelvis rotated", () => {
+    expect(decideSuitability(assessment({ region: "chest", visible: NONE_VISIBLE, pelvisBox: null, upright: false })).reasons).toEqual([
+      "The pelvis isn't in this image; the analysis needs the region from the iliac crests to the femoral heads.",
+    ]);
   });
 
   it("gives a non-radiograph a single reason", () => {
@@ -330,9 +348,9 @@ describe("analysePelvis", () => {
       expect(l.y).toBeCloseTo(expected(l.id).y, 0);
     }
     expect(result.landmarks[0].key).toBe("femoral_head_top_img_left");
-    // Unrefined: the runs' confidence. Refined: max(0.8, 0.95 × 0.9).
+    // Unrefined: the runs' confidence. Refined: min(0.8, 0.95 × 0.9).
     expect(result.landmarks.find((l) => l.id === 7)?.confidence).toBeCloseTo(0.8, 10);
-    expect(result.landmarks.find((l) => l.id === 1)?.confidence).toBeCloseTo(0.855, 10);
+    expect(result.landmarks.find((l) => l.id === 1)?.confidence).toBeCloseTo(0.8, 10);
     expect(result).toMatchObject({ patientRightOn: "left", sideSource: "assumed", warnings: [], model: VISION_MODEL });
   });
 
@@ -352,6 +370,25 @@ describe("analysePelvis", () => {
     expect(femoralHead?.confidence).toBeCloseTo(0.8, 10);
   });
 
+  it("never raises a refined landmark's confidence above pass 2's run agreement", async () => {
+    let run = 0;
+    const { client } = fakeClient((params) => {
+      const effort = effortOf(params);
+      if (effort === "low") return { json: assessmentAnswer() };
+      if (effort === "high") {
+        // The runs put landmark 1 at x, x + 30 and x - 30 sent px.
+        const shift = [0, 30, -30][run++];
+        const answer = locateAnswer(params);
+        return { json: { landmarks: answer.landmarks.map((l) => (l.id === 1 ? { ...l, x: l.x + shift } : l)) } };
+      }
+      return { json: refineAnswer(params, 0) };
+    });
+    const femoralHead = (await accepted(client)).landmarks.find((l) => l.id === 1);
+    // 0.8 × (1 − 30 / (0.03 × 1568)); the refine answer's 0.95 doesn't lift it.
+    expect(femoralHead?.confidence).toBeCloseTo(0.8 * (1 - 30 / (0.03 * 1568)), 10);
+    expect(femoralHead?.confidence).toBeLessThan(0.5);
+  });
+
   it("halves the confidence of landmarks out of S2 order", async () => {
     const { client } = pipeline({ fractions: { ...FRACTIONS, 13: [0.5, 0.45], 7: [0.45, 0.45] } });
     const result = await accepted(client);
@@ -369,6 +406,16 @@ describe("analysePelvis", () => {
         "This looks like a lateral view; the analysis needs an AP (front-to-back) view of the pelvis.",
       );
     }
+    expect(calls).toHaveLength(1);
+  });
+
+  it("rejects a film the model sees as rotated or upside down", async () => {
+    const { client, calls } = pipeline({ assessment: { upright: false } });
+    const result = await analysePelvis({ imageBytes: await filmBytes(), client });
+    expect(result).toMatchObject({
+      kind: "rejected",
+      reasons: ["The film appears rotated or upside down. Rotate it upright in the viewer, then run the analysis again."],
+    });
     expect(calls).toHaveLength(1);
   });
 
@@ -432,12 +479,33 @@ describe("analysePelvis", () => {
   });
 
   it("maps an Anthropic rate limit to rate_limited", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const { client } = fakeClient(() => {
       throw new Anthropic.RateLimitError(429, undefined, "slow down", new Headers());
     });
     await expect(analysePelvis({ imageBytes: await filmBytes(), client })).rejects.toMatchObject({
       code: "rate_limited",
+      message: "The AI service is busy; try again in a minute.",
     });
+    vi.restoreAllMocks();
+  });
+
+  it("logs Anthropic's error with its request id and gives the caller a generic message", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { client } = fakeClient(() => {
+      throw new Anthropic.InternalServerError(500, undefined, "overloaded shard eu-7", new Headers({ "request-id": "req_123" }));
+    });
+    const err = await analysePelvis({ imageBytes: await filmBytes(), client }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(VisionApiError);
+    expect(err).toMatchObject({
+      code: "vision_api_error",
+      message: "The AI service returned an error. Please try again.",
+    });
+    expect(log).toHaveBeenCalledWith(
+      "pelvis AI request failed:",
+      expect.objectContaining({ status: 500, requestID: "req_123", message: expect.stringContaining("overloaded shard eu-7") }),
+    );
+    vi.restoreAllMocks();
   });
 
   it("rejects unreadable bytes without calling the model", async () => {
@@ -453,5 +521,143 @@ describe("analysePelvis", () => {
     const huge = await sharp({ create: { width: 16385, height: 1, channels: 3, background: "#000" } }).png().toBuffer();
     await expect(analysePelvis({ imageBytes: huge, client })).rejects.toMatchObject({ code: "image_too_large" });
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe("deadline and cancellation", () => {
+  it("gives every call the signal and a timeout that ends 2 s before the deadline", async () => {
+    const { signal } = new AbortController();
+    const { client, calls } = pipeline();
+    const start = Date.now();
+    const result = await analysePelvis({ imageBytes: await filmBytes(), client, signal, deadlineMs: start + 30_000 });
+
+    expect(result.kind).toBe("accepted");
+    expect(calls).toHaveLength(11);
+    for (const [i, { options }] of calls.entries()) {
+      expect(options.signal).toBe(signal);
+      expect(options.maxRetries).toBe(i === 0 ? 1 : 0);
+      expect(options.timeout).toBeLessThanOrEqual(28_000);
+      expect(options.timeout).toBeGreaterThan(28_000 - (Date.now() - start) - 1);
+    }
+  });
+
+  it("skips refinement when less than 20 s remain, keeping the pass-2 points", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { client, calls } = pipeline({ refineDx: 28 });
+    const result = await analysePelvis({ imageBytes: await filmBytes(), client, deadlineMs: Date.now() + 19_000 });
+    if (result.kind !== "accepted") throw new Error("rejected");
+
+    expect(calls.map((c) => effortOf(c.params))).toEqual(["low", "high", "high", "high"]);
+    expect(result.landmarks.find((l) => l.id === 1)?.x).toBeCloseTo(expected(1).x, 6);
+    vi.restoreAllMocks();
+  });
+
+  it("times out without calling the model when the deadline has passed", async () => {
+    const { client, calls } = pipeline();
+    await expect(
+      analysePelvis({ imageBytes: await filmBytes(), client, deadlineMs: Date.now() }),
+    ).rejects.toMatchObject({ code: "timeout", message: "The AI analysis took too long. Please try again." });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("turns an abort during pass 2 into a timeout and makes no further calls", async () => {
+    const controller = new AbortController();
+    const { client, calls } = fakeClient((params) => {
+      if (effortOf(params) === "low") return { json: assessmentAnswer() };
+      controller.abort();
+      throw new Anthropic.APIUserAbortError();
+    });
+    await expect(
+      analysePelvis({ imageBytes: await filmBytes(), client, signal: controller.signal }),
+    ).rejects.toMatchObject({ code: "timeout" });
+    expect(calls.map((c) => effortOf(c.params))).toEqual(["low", "high"]);
+  });
+
+  it("turns pass-2 calls that time out into a timeout", async () => {
+    const { client } = fakeClient((params) => {
+      if (effortOf(params) === "low") return { json: assessmentAnswer() };
+      throw new Anthropic.APIConnectionTimeoutError();
+    });
+    await expect(analysePelvis({ imageBytes: await filmBytes(), client })).rejects.toMatchObject({ code: "timeout" });
+  });
+});
+
+describe("upright frame and stored pixels", () => {
+  /** 240x160 film, background 50, one bright pixel at (171, 37). */
+  const W = 240;
+  const H = 160;
+  const BRIGHT = { x: 171, y: 37 };
+  const brightFilm = () => {
+    const pixels = Buffer.alloc(W * H, 50);
+    pixels[BRIGHT.y * W + BRIGHT.x] = 255;
+    return sharp(pixels, { raw: { width: W, height: H, channels: 1 } }).png().toBuffer();
+  };
+
+  async function brightest(params: CreateParams) {
+    const { data, info } = await sharp(imageOf(params)).greyscale().raw().toBuffer({ resolveWithObject: true });
+    let best = 0;
+    for (let i = 1; i < data.length; i++) if (data[i] > data[best]) best = i;
+    return { x: (best % info.width) + 0.5, y: Math.floor(best / info.width) + 0.5 };
+  }
+
+  /** Pass 1 boxes the whole film; pass 2 puts every landmark on the brightest pixel it was sent. */
+  const brightPixelClient = () =>
+    fakeClient(async (params) => {
+      const effort = effortOf(params);
+      if (effort === "low") {
+        const meta = await sharp(imageOf(params)).metadata();
+        return { json: assessmentAnswer({ pelvisBox: { x0: 0, y0: 0, x1: meta.width, y1: meta.height } }) };
+      }
+      if (effort === "high") {
+        const p = await brightest(params);
+        return { json: { landmarks: Object.keys(FRACTIONS).map((id) => ({ id: Number(id), ...p, confidence: 0.8 })) } };
+      }
+      return { json: refineAnswer(params, 0) };
+    });
+
+  it.each([0, 90, 180, 270] as const)("analyses the film rotated %i°, flipped or not, and maps points back to stored pixels", async (rotation) => {
+    for (const flipV of [false, true]) {
+      const { client, calls } = brightPixelClient();
+      const result = await analysePelvis({ imageBytes: await brightFilm(), client, view: { rotation, flipV } });
+      if (result.kind !== "accepted") throw new Error(`rejected: ${result.reasons.join(" ")}`);
+
+      // Every pass sees the upright film (portrait after a quarter turn).
+      expect(await sentSize(calls[0].params)).toBe(rotation % 180 ? "320x480" : "480x320");
+      expect(await sentSize(calls[1].params)).toBe(rotation % 180 ? "320x480" : "480x320");
+      expect(result.assessment.pelvisBox).toEqual([0, 0, W, H]);
+      expect(result.landmarks).toHaveLength(16);
+      for (const l of result.landmarks) {
+        expect(Math.abs(l.x - (BRIGHT.x + 0.5)), `landmark ${l.id} x, flipV ${flipV}`).toBeLessThanOrEqual(1);
+        expect(Math.abs(l.y - (BRIGHT.y + 0.5)), `landmark ${l.id} y, flipV ${flipV}`).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it("scales coordinates to the stored size when the decoded size differs", async () => {
+    const { client } = pipeline();
+    const result = await analysePelvis({ imageBytes: await filmBytes(), client, storedSize: { width: 4000, height: 2000 } });
+    if (result.kind !== "accepted") throw new Error("rejected");
+    expect(result.assessment.pelvisBox).toEqual([1000, 500, 3000, 1500]);
+    for (const l of result.landmarks) {
+      expect(l.x).toBeCloseTo(2 * expected(l.id).x, 0);
+      expect(l.y).toBeCloseTo(2 * expected(l.id).y, 0);
+    }
+  });
+
+  it("keeps decoded coordinates without a stored size", async () => {
+    const { client } = pipeline();
+    const result = await analysePelvis({ imageBytes: await filmBytes(), client, storedSize: null });
+    if (result.kind !== "accepted") throw new Error("rejected");
+    expect(result.landmarks.find((l) => l.id === 7)?.x).toBeCloseTo(expected(7).x, 6);
+  });
+
+  it("warns when the stored and decoded aspect ratios differ", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { client } = pipeline();
+    const result = await analysePelvis({ imageBytes: await filmBytes(), client, storedSize: { width: 2000, height: 2000 } });
+    if (result.kind !== "accepted") throw new Error("rejected");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("different aspect ratios"));
+    expect(result.landmarks.find((l) => l.id === 7)?.y).toBeCloseTo(2 * expected(7).y, 0);
+    vi.restoreAllMocks();
   });
 });

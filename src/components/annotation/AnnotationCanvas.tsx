@@ -62,9 +62,9 @@ import { RecentCommitUndo } from "./RecentCommitUndo";
 import { CalibrationDialog } from "./CalibrationDialog";
 import { CascadeDeleteDialog } from "./CascadeDeleteDialog";
 import { EmptyCanvasHint } from "./EmptyCanvasHint";
-import { PelvisOverlay, pelvicLandmarkShapes } from "./PelvisOverlay";
+import { PelvisOverlay, mergeDetectedLandmarks, pelvicLandmarkShapes, plainLandmarkCopy } from "./PelvisOverlay";
 import { PelvisRejectedDialog } from "./PelvisRejectedDialog";
-import { landmarkById, landmarkByKey, landmarkLabel, patientSideOf } from "@/lib/pelvic-landmarks";
+import { analysisView } from "@/lib/pelvic-analysis";
 import type { DetectLandmarksRejection, DetectLandmarksResponse } from "@/types/pelvis";
 import { useViewerInputs } from "@/hooks/useViewerInputs";
 import { useStableCallbacks } from "@/hooks/useStableCallbacks";
@@ -419,12 +419,15 @@ export function AnnotationCanvas({
     [undoRedo, autoSave, interaction]
   );
 
-  // AI pelvis analysis — POST { xrayId } to the privacy-isolated route. The
-  // server first checks the film is one it can analyse (422 NOT_SUITABLE →
-  // rejection dialog, nothing placed), then returns the 16 landmarks of
-  // Moon et al. (2024). They REPLACE any landmarks already on the film, in
-  // one undo batch (removals + additions) so one Cmd+Z brings the previous
-  // set back. Failures surface as toasts and never block the annotation flow.
+  // AI pelvis analysis — POST { xrayId, view } to the privacy-isolated route.
+  // `view` is the screen's rotation / vertical flip, so the film is analysed
+  // upright. The server first checks the film is one it can analyse (422
+  // NOT_SUITABLE → rejection dialog, nothing placed), then returns the 16
+  // landmarks of Moon et al. (2024). They REPLACE the landmarks already on
+  // the film — a key already there keeps its shape, moved, so measurements
+  // snapped to it follow — in one undo batch, so one Cmd+Z brings the
+  // previous set back. Failures surface as toasts and never block the
+  // annotation flow.
   //
   // The whole film is sent, never a viewport crop: the landmarks are placed
   // relative to the whole pelvis, and cropping loses that context.
@@ -432,16 +435,28 @@ export function AnnotationCanvas({
   // A late response must not land on another film: abort when the X-ray
   // changes or the viewer unmounts.
   useEffect(() => () => detectAbortRef.current?.abort(), [xrayId]);
-  // Latest shapes for when the ~30 s request returns.
+  // Latest shapes and view for when the ~30 s request returns.
   const shapesRef = useRef(shapes);
   useEffect(() => {
     shapesRef.current = shapes;
   }, [shapes]);
+  const latestViewRef = useRef({ xrayId, viewMode, orientation, width: activeImageWidth, height: activeImageHeight });
+  useEffect(() => {
+    latestViewRef.current = { xrayId, viewMode, orientation, width: activeImageWidth, height: activeImageHeight };
+  });
 
   const handleDetectLandmarks = useCallback(async () => {
     if (detectAbortRef.current) return;
     const controller = new AbortController();
     detectAbortRef.current = controller;
+    // The film this run is for; the result is dropped if another one is
+    // active (or the view mode changed) by the time it returns.
+    const target = { xrayId, viewMode, activeXrayId: activeXrayIdRef.current };
+    const targetChanged = () =>
+      latestViewRef.current.xrayId !== target.xrayId ||
+      latestViewRef.current.viewMode !== target.viewMode ||
+      activeXrayIdRef.current !== target.activeXrayId;
+    const discarded = "The X-ray changed while the AI was working; the result was discarded.";
     setDetectingLandmarks(true);
     const toastId = toast.loading("Checking the X-ray and placing landmarks…", {
       description: "Takes about 30 seconds.",
@@ -451,7 +466,7 @@ export function AnnotationCanvas({
       const res = await fetch("/api/viewer/detect-landmarks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ xrayId }),
+        body: JSON.stringify({ xrayId, view: analysisView(imageAdj.adjustments) }),
         signal: controller.signal,
       });
       const body = (await res.json().catch(() => null)) as
@@ -459,6 +474,10 @@ export function AnnotationCanvas({
         | DetectLandmarksRejection
         | { error?: string; message?: string }
         | null;
+      if (targetChanged()) {
+        toast.info(discarded, outcome);
+        return;
+      }
       if (!res.ok) {
         if (res.status === 422 && body && "error" in body && body.error === "NOT_SUITABLE") {
           toast.dismiss(toastId);
@@ -476,49 +495,25 @@ export function AnnotationCanvas({
         return;
       }
 
-      const current = shapesRef.current;
-      const removed = current.filter((s) => s.type === "landmark");
+      const { modified, added, removed } = mergeDetectedLandmarks(shapesRef.current, data, Date.now());
       const removedIds = new Set(removed.map((s) => s.id));
-      const baseZ = current.length === 0 ? 1 : Math.max(...current.map((s) => s.zIndex)) + 1;
-      const stamp = Date.now();
-      const added: BaseShape[] = [];
-      data.landmarks.forEach((lm, i) => {
-        const def = landmarkByKey(lm.key) ?? landmarkById(lm.id);
-        if (!def) return;
-        const side = patientSideOf(def.imageSide, data.patientRightOn);
-        added.push({
-          id: `landmark-${stamp}-${i}`,
-          type: "landmark",
-          label: landmarkLabel(def, side),
-          zIndex: baseZ + added.length,
-          visible: true,
-          locked: false,
-          style: { ...DEFAULT_SHAPE_STYLE, strokeColor: "#22D3EE" },
-          x: lm.x,
-          y: lm.y,
-          width: 0,
-          height: 0,
-          rotation: 0,
-          points: [{ x: lm.x, y: lm.y }],
-          text: null,
-          fontSize: null,
-          measurement: null,
-          landmarkName: def.key,
-          landmarkSource: "ai",
-          landmarkOriginalX: lm.x,
-          landmarkOriginalY: lm.y,
-          landmarkSide: side ?? undefined,
-          landmarkConfidence: lm.confidence,
-        });
-      });
-
-      setShapes((prev) => [...prev.filter((s) => !removedIds.has(s.id)), ...added]);
+      const movedById = new Map(modified.map((m) => [m.after.id, m.after]));
+      setShapes((prev) => [
+        ...prev.filter((s) => !removedIds.has(s.id)).map((s) => movedById.get(s.id) ?? s),
+        ...added,
+      ]);
       undoRedo.pushBatch([
         ...removed.map((s) => ({
           type: "DELETE_SHAPE" as const,
           shapeBefore: s,
           shapeAfter: null,
           shapeId: s.id,
+        })),
+        ...modified.map((m) => ({
+          type: "MODIFY_SHAPE" as const,
+          shapeBefore: m.before,
+          shapeAfter: m.after,
+          shapeId: m.after.id,
         })),
         ...added.map((s) => ({
           type: "ADD_SHAPE" as const,
@@ -531,12 +526,15 @@ export function AnnotationCanvas({
       // Nothing selected, so the red / green / dashed review state shows
       // instead of 16 amber selection rings.
       interaction.setSelectedShapeIds([]);
-      // On full-spine films the pelvis is small at fit zoom; frame it.
-      const placed = added.map((s) => (orientation ? orientPoint(s.points[0], orientation) : s.points[0]));
+      // On full-spine films the pelvis is small at fit zoom; frame it (in the
+      // view as it is now, not as it was when the request started).
+      const view = latestViewRef.current;
+      const placedShapes = [...modified.map((m) => m.after), ...added];
+      const placed = placedShapes.map((s) => (view.orientation ? orientPoint(s.points[0], view.orientation) : s.points[0]));
       const xs = placed.map((p) => p.x);
       const ys = placed.map((p) => p.y);
       const box = { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
-      if (placed.length > 0 && box.width * box.height < 0.35 * activeImageWidth * activeImageHeight) {
+      if (placed.length > 0 && box.width * box.height < 0.35 * view.width * view.height) {
         const margin = 0.12 * Math.max(box.width, box.height);
         fitToRect({ x: box.x - margin, y: box.y - margin, width: box.width + 2 * margin, height: box.height + 2 * margin });
       }
@@ -544,13 +542,14 @@ export function AnnotationCanvas({
       setPanelTab("measurements");
       setPropertiesPanelOpen(true);
       toast.success(
-        `Placed ${added.length} landmark${added.length === 1 ? "" : "s"}. Dashed rings are less certain — check them.`,
+        `Placed ${placed.length} landmark${placed.length === 1 ? "" : "s"}. Dashed rings are less certain — check them.`,
         outcome,
       );
       for (const warning of data.warnings ?? []) toast.warning(warning);
     } catch (err) {
       if (controller.signal.aborted) {
-        toast.dismiss(toastId);
+        if (targetChanged()) toast.info(discarded, outcome);
+        else toast.dismiss(toastId);
         return;
       }
       console.error("detect-landmarks error:", err);
@@ -559,7 +558,7 @@ export function AnnotationCanvas({
       if (detectAbortRef.current === controller) detectAbortRef.current = null;
       setDetectingLandmarks(false);
     }
-  }, [xrayId, undoRedo, autoSave, interaction, setPropertiesPanelOpen, orientation, activeImageWidth, activeImageHeight, fitToRect]);
+  }, [xrayId, viewMode, imageAdj.adjustments, undoRedo, autoSave, interaction, setPropertiesPanelOpen, fitToRect]);
 
   const handleDeleteShapes = useCallback(
     (ids: string[]) => {
@@ -815,6 +814,8 @@ export function AnnotationCanvas({
   // ─── Multi-View: Switch active slot → swap shapes per xray ───
   const prevActiveSlotRef = useRef(activeSlotIndex);
   useEffect(() => {
+    // A landmark run started on the previous view must not land on this one.
+    detectAbortRef.current?.abort();
     if (viewMode === "single") return;
     const prevIndex = prevActiveSlotRef.current;
     const prevSlot = gridSlots[prevIndex];
@@ -1378,7 +1379,7 @@ export function AnnotationCanvas({
       if (mod && e.key.toLowerCase() === "v" && clipboardRef.current.length > 0) {
         e.preventDefault();
         const pasted: BaseShape[] = clipboardRef.current.map((s) => ({
-          ...s,
+          ...plainLandmarkCopy(s),
           id: crypto.randomUUID(),
           x: s.x + 20,
           y: s.y + 20,
@@ -2345,6 +2346,7 @@ export function AnnotationCanvas({
           currentStyle={currentStyle}
           isOpen={propertiesPanelOpen}
           pixelsPerMm={imageAdj.adjustments.pixelsPerMm}
+          orientation={orientation}
           dependentCounts={dependentCounts}
           activeTab={panelTab}
           onTabChange={setPanelTab}

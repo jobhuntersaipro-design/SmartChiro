@@ -148,6 +148,8 @@ export interface BaseShape {
   landmarkSource?: "ai" | "manual";
   /** Patient side ("R" / "L") of a paired landmark; absent for midline ones. */
   landmarkSide?: "R" | "L";
+  /** How the AI decided R/L: the film's side marker, or the standard AP convention. */
+  landmarkSideSource?: "marker" | "assumed";
   /**
    * AI confidence, 0-1 (AI-placed landmarks only). Below 0.5 the ring is
    * dashed so the user checks it first.

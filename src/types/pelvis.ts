@@ -2,18 +2,40 @@
  * Contract of POST /api/viewer/detect-landmarks — AI pelvic landmark
  * detection on an AP pelvis (or AP full-spine) radiograph.
  *
- * Request: { xrayId: string }
+ * Request: DetectLandmarksRequest
  *
  * 200 → DetectLandmarksResponse (image accepted, landmarks placed)
  * 422 → DetectLandmarksRejection (image not suitable for AI analysis)
+ * 504 → { error: "TIMEOUT"; message } (the analysis ran out of time; try again)
  * other → { error: string; message: string }
+ *
+ * The film is analysed upright as the viewer shows it: its `view` rotation
+ * and vertical flip applied, any horizontal flip ignored. "Image left/right"
+ * (landmark keys, side marker, patientRightOn) means the sides of that
+ * upright frame. Coordinates are always STORED-image pixels: the X-ray's own
+ * grid (EXIF orientation applied), top-left origin, before any view
+ * transform.
  */
 
-/** What the first (gate) pass saw in the image. */
+/** The viewer's rotation and vertical flip (imageAdjustments.rotation / flipV; never flipH). */
+export interface PelvisAnalysisView {
+  rotation: 0 | 90 | 180 | 270;
+  flipV: boolean;
+}
+
+export interface DetectLandmarksRequest {
+  xrayId: string;
+  /** Defaults to { rotation: 0, flipV: false }. */
+  view?: PelvisAnalysisView;
+}
+
+/** What the first (gate) pass saw in the upright film. */
 export interface PelvisImageAssessment {
   isRadiograph: boolean;
   projection: "AP" | "PA" | "lateral" | "oblique" | "other" | "unknown";
   region: "pelvis" | "full_spine" | "lumbar" | "hip" | "chest" | "other";
+  /** Iliac crests toward the top and femurs pointing down; false is a rejection. */
+  upright: boolean;
   visible: {
     iliacCrests: boolean;
     femoralHeads: boolean;
@@ -25,9 +47,9 @@ export interface PelvisImageAssessment {
   /** Measurement lines or landmark dots burnt into the image (side markers don't count). */
   overlays: boolean;
   quality: "good" | "fair" | "poor";
-  /** Side marker letter and the image side it sits on, if one is legible. */
+  /** Side marker letter and the (upright) image side it sits on, if one is legible. */
   sideMarker: { letter: "R" | "L"; imageSide: "left" | "right" } | null;
-  /** Bony pelvis box in original-image pixels: [x0, y0, x1, y1]. */
+  /** Bony pelvis box in stored-image pixels: [x0, y0, x1, y1]. */
   pelvisBox: [number, number, number, number] | null;
   notes: string;
 }
@@ -35,9 +57,9 @@ export interface PelvisImageAssessment {
 export interface DetectedLandmark {
   /** Paper number, 1-16 (Moon et al., Heliyon 2024, Fig. 2). */
   id: number;
-  /** PelvicLandmarkKey, stored as shape.landmarkName. */
+  /** PelvicLandmarkKey (image sides of the upright frame), stored as shape.landmarkName. */
   key: string;
-  /** Original-image pixels, top-left origin. */
+  /** Stored-image pixels, top-left origin. */
   x: number;
   y: number;
   /** 0-1: the model's confidence combined with agreement between runs. */
@@ -47,7 +69,7 @@ export interface DetectedLandmark {
 export interface DetectLandmarksResponse {
   landmarks: DetectedLandmark[];
   assessment: PelvisImageAssessment;
-  /** Image side holding the patient's right, and how that was decided. */
+  /** Upright-frame image side holding the patient's right, and how that was decided. */
   patientRightOn: "left" | "right";
   sideSource: "marker" | "assumed";
   /** Accepted, but with caveats the user should see (e.g. ischial tuberosities out of view). */
