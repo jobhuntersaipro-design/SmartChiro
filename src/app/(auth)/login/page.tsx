@@ -10,18 +10,22 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string }>
+  searchParams: Promise<{ reset?: string; error?: string }>
 }) {
   const session = await auth()
   if (hasSessionUser(session)) redirect('/dashboard')
 
   const googleEnabled = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
-  const { reset } = await searchParams
+  const { reset, error } = await searchParams
   const resetSuccess = reset === 'success'
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
-      <LoginForm googleEnabled={googleEnabled} resetSuccess={resetSuccess} />
+      <LoginForm
+        googleEnabled={googleEnabled}
+        resetSuccess={resetSuccess}
+        accountDisabled={error === 'account_disabled'}
+      />
     </div>
   )
 }

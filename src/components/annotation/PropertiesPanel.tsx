@@ -39,6 +39,7 @@ import {
   type PelvicParam,
 } from "@/lib/pelvic-analysis";
 import { landmarkById, landmarkByKey, landmarkLabel, patientSideOf } from "@/lib/pelvic-landmarks";
+import { pelvicSummary, pelvicSummaryText, type PelvicSummary } from "@/lib/pelvic-summary";
 import type { Orientation } from "@/lib/orientation";
 import { cn } from "@/lib/utils";
 import { patientRightOnOf, patientSideNote, pelvicLandmarkShapes, pelvicPointsOf } from "./PelvisOverlay";
@@ -1697,6 +1698,8 @@ function PelvicAnalysisSection({
           These landmarks come from an older AI version. Run AI pelvis analysis again to measure.
         </p>
       ) : (
+        <>
+        <PelvicSummaryCard summary={pelvicSummary(analysis, analysis.calibrated ? unit : "px")} />
         <ul className="mt-1 divide-y divide-border">
           {analysis.params.map((param) => (
             <li key={param.id} className="py-2">
@@ -1704,10 +1707,64 @@ function PelvicAnalysisSection({
             </li>
           ))}
         </ul>
+        </>
       )}
 
       <p className="mt-1 text-[10px] text-fg-muted">{patientSideNote(landmarkShapes, orientation)}</p>
     </section>
+  );
+}
+
+// What the numbers say, for the doctor: findings (out-of-range first) and
+// what to check next. Suggestions, never a diagnosis.
+function PelvicSummaryCard({ summary }: { summary: PelvicSummary }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(pelvicSummaryText(summary));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Couldn't copy to the clipboard.");
+    }
+  };
+  return (
+    <div className="mt-2 rounded-panel border border-border bg-surface-subtle p-2.5" aria-label="Summary for the doctor">
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="text-[11px] font-medium text-foreground">Summary</h4>
+        <button
+          type="button"
+          onClick={copy}
+          className="shrink-0 text-[10px] text-brand transition-colors hover:text-brand-strong"
+          title="Copy the summary for the visit notes"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className="mt-0.5 text-[11px] text-fg-secondary">{summary.headline}</p>
+      {summary.findings.length > 0 && (
+        <ul className="mt-1.5 space-y-0.5">
+          {summary.findings.map((f) => (
+            <li key={f.id} className={cn("text-[10px] leading-snug", f.outside ? "text-danger" : "text-fg-secondary")}>
+              {f.text}
+            </li>
+          ))}
+        </ul>
+      )}
+      {summary.suggestions.length > 0 && (
+        <>
+          <h5 className="mt-2 text-[10px] font-medium uppercase tracking-wide text-fg-muted">Suggested next checks</h5>
+          <ul className="mt-0.5 list-disc space-y-0.5 pl-3.5">
+            {summary.suggestions.map((s) => (
+              <li key={s} className="text-[10px] leading-snug text-foreground">
+                {s}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <p className="mt-1.5 text-[9px] text-fg-muted">AI-assisted measurements: confirm clinically before acting on them.</p>
+    </div>
   );
 }
 

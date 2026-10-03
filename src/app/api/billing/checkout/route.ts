@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { priceIdFor, stripeClient } from "@/lib/stripe";
+import { isPaidStatus } from "@/lib/plans";
+
+/**
+ * POST /api/billing/checkout { interval: "month" | "year" } → { url }
+ *
+ * Starts a Stripe Checkout for SmartChiro Pro. Days left in the free trial
+ * carry over: the subscription's first charge waits until the trial ends.
+ */
+
+const BodySchema = z.object({ interval: z.enum(["month", "year"]) });
+
+/** Stripe needs a trial end at least 48 h ahead; shorter remainders start billing now. */
+const MIN_TRIAL_CARRY_MS = 49 * 3600_000;
+
+export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const parsed = BodySchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "interval must be month or year" }, { status: 400 });
+
+  const stripe = stripeClient();
+  if (!stripe) {
+    return NextResponse.json({ error: "Online payment isn't set up yet. Please contact SmartChiro." }, { status: 503 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, email: true, name: true, stripeCustomerId: true, subscriptionStatus: true, trialEndsAt: true },
+  });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (isPaidStatus(user.subscriptionStatus)) {
+    return NextResponse.json({ error: "You already have a subscription. Use Manage billing to change it." }, { status: 409 });
+  }
+
+  try {
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name ?? undefined,
+        metadata: { userId: user.id },
+      });
+      customerId = customer.id;
+      await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
+    }
+
+    const origin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    const trialLeft = user.trialEndsAt ? user.trialEndsAt.getTime() - Date.now() : 0;
+    const checkout = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      client_reference_id: user.id,
+      line_items: [{ price: await priceIdFor(stripe, parsed.data.interval), quantity: 1 }],
+      subscription_data: {
+        metadata: { userId: user.id },
+        ...(trialLeft >= MIN_TRIAL_CARRY_MS ? { trial_end: Math.floor(user.trialEndsAt!.getTime() / 1000) } : {}),
+      },
+      success_url: `${origin}/api/billing/confirm?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/dashboard/billing`,
+    });
+    return NextResponse.json({ url: checkout.url });
+  } catch (err) {
+    console.error("[billing] checkout failed:", err);
+    return NextResponse.json({ error: "Couldn't start the payment. Please try again." }, { status: 502 });
+  }
+}

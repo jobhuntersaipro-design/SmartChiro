@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import {
   validateXrayFile,
   generateThumbnail,
-  shouldConfirmNotXray,
-  NOT_XRAY_CONFIRM_MESSAGE,
   type ImageDimensions,
 } from '@/lib/xray-validation'
 import {
@@ -80,28 +78,15 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
 
       // Step 2: Generate thumbnail
       let thumbnail: Blob
-      let colourScore: number
       try {
         setStage('generating-thumbnail')
-        const result = await generateThumbnail(file)
-        thumbnail = result.thumbnail
-        colourScore = result.colourfulness
+        thumbnail = await generateThumbnail(file)
       } catch (err) {
         setStage('error')
         setError(err instanceof Error ? err.message : 'Thumbnail generation failed.')
         return
       }
 
-      // A colour photo or phone screenshot is almost never a film — ask first.
-      if (shouldConfirmNotXray(dimensions, colourScore) && !window.confirm(NOT_XRAY_CONFIRM_MESSAGE)) {
-        URL.revokeObjectURL(previewUrl)
-        setPreview(null)
-        setFileName(null)
-        setFileSize(0)
-        setStage('idle')
-        if (fileInputRef.current) fileInputRef.current.value = ''
-        return
-      }
 
       // Step 3: Upload straight to storage (see uploadXray), then confirm.
       try {

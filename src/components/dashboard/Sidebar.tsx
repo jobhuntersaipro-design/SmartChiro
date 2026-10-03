@@ -20,6 +20,8 @@ import {
   Check,
   FileText,
   BarChart3,
+  CreditCard,
+  ShieldCheck,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { BranchRole } from "@prisma/client";
@@ -59,6 +61,8 @@ interface SidebarUser {
   /** "All branches" scope is on / may be switched on. */
   allBranches?: boolean;
   canUseAllBranches?: boolean;
+  superAdmin?: boolean;
+  trialDaysLeft?: number | null;
 }
 
 const ROLE_LABEL = ROLE_LABELS;
@@ -194,10 +198,12 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 px-3 pt-3">
         <div className="space-y-0.5">
-          {navItems
-            .filter((item) => !item.roles || (user.branchRole !== null && item.roles.includes(user.branchRole)))
-            .filter((item) => !item.capability || hasCapabilityInScope(user, item.capability))
-            .map((item) => {
+          {[
+            ...navItems
+              .filter((item) => !item.roles || (user.branchRole !== null && item.roles.includes(user.branchRole)))
+              .filter((item) => !item.capability || hasCapabilityInScope(user, item.capability)),
+            ...(user.superAdmin ? [{ label: "Super admin", href: "/dashboard/admin", icon: ShieldCheck }] : []),
+          ].map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
@@ -230,6 +236,25 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
 
       {/* Bottom section */}
       <div className="px-3 pb-3 space-y-0.5">
+        {user.trialDaysLeft != null && (
+          <Link
+            href="/dashboard/billing"
+            title={`Free trial: ${user.trialDaysLeft} day${user.trialDaysLeft === 1 ? "" : "s"} left. See plans`}
+            className={cn(
+              "mb-2 flex items-center gap-2 rounded-control bg-brand-subtle px-3 py-1.5 text-[13px] text-brand transition-colors hover:bg-brand-subtle/70",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <CreditCard className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+            {collapsed ? (
+              <span className="sr-only">Free trial</span>
+            ) : (
+              <span className="min-w-0 truncate">
+                Free trial · <span className="font-medium">{user.trialDaysLeft} day{user.trialDaysLeft === 1 ? "" : "s"} left</span>
+              </span>
+            )}
+          </Link>
+        )}
         {/* New Appointment — opens the create dialog on the Appointments page */}
         <Link
           href="/dashboard/appointments?create=1"
@@ -297,6 +322,12 @@ export function Sidebar({ collapsed, onToggle, user }: SidebarProps) {
               <DropdownMenuItem className="gap-2 text-[14px] text-foreground cursor-pointer">
                 <Settings className="h-4 w-4" strokeWidth={1.5} />
                 Settings
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/dashboard/billing">
+              <DropdownMenuItem className="gap-2 text-[14px] text-foreground cursor-pointer">
+                <CreditCard className="h-4 w-4" strokeWidth={1.5} />
+                Plan &amp; billing
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />

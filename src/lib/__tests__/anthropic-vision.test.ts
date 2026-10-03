@@ -354,6 +354,25 @@ describe("analysePelvis", () => {
     expect(result).toMatchObject({ patientRightOn: "left", sideSource: "assumed", warnings: [], model: VISION_MODEL });
   });
 
+  it("reports progress: check, then each detect run, then each refined landmark", async () => {
+    const { client } = pipeline();
+    const seen: string[] = [];
+    await analysePelvis({
+      imageBytes: await filmBytes(),
+      client,
+      onProgress: (p) => seen.push(`${p.stage} ${p.done}/${p.total}`),
+    });
+    expect(seen).toEqual([
+      "check 0/1",
+      "check 1/1",
+      "detect 0/3",
+      "detect 1/3",
+      "detect 2/3",
+      "detect 3/3",
+      ...Array.from({ length: 8 }, (_, i) => `refine ${i}/7`),
+    ]);
+  });
+
   it("moves a refined landmark by the zoomed answer, mapped back from the zoom window", async () => {
     const { client } = pipeline({ refineDx: 28 });
     const result = await accepted(client);

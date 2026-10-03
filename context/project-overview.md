@@ -425,12 +425,13 @@ model PatientDocument {
 
 | Plan | Price | Details |
 | --- | --- | --- |
-| Free Trial | RM 0 (30 days) | Full access to all features for 30 days — no credit card required. After trial expires, account becomes read‑only until upgraded. |
-| Pro | RM 399/mo | Unlimited doctors, patients, X‑rays, AI analysis, landmark detection, comparative overlays, multi‑clinic, full annotation suite, SOAP notes, scheduling, invoicing, export, priority support |
+| Free Trial | RM 0 (30 days) | Every feature for 30 days, no credit card. When it ends without a subscription, the dashboard shows the plan page until they subscribe (data is kept). |
+| Pro (monthly) | RM 550/mo | Every feature: unlimited patients and staff, X-ray annotation, AI pelvis analysis (10 X-rays per doctor per day, adjustable by super admins), scheduling, reminders, invoicing, e-invoicing, reports, multi-branch |
+| Pro (yearly) | RM 6,000/yr | Same features; RM 500/mo equivalent, saves RM 600 (9%) a year vs monthly |
 
 > Stripe for subscriptions + webhooks for plan syncing
 > All prices in MYR
-> Trial‑to‑paid conversion flow: in‑app banner countdown → upgrade prompt → read‑only lock after 30 days
+> Trial‑to‑paid flow: sidebar countdown → Plan & billing page → Stripe Checkout (trial days carry over). Staff are covered by their branch owner's plan. Super admins (`SUPER_ADMIN_EMAILS`) manage sign‑ups at `/dashboard/admin`.
 
 ---
 

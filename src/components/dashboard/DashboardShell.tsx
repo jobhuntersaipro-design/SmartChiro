@@ -19,6 +19,10 @@ interface SidebarUser {
   /** "All branches" scope is on / may be switched on. */
   allBranches?: boolean;
   canUseAllBranches?: boolean;
+  /** Runs the platform (SUPER_ADMIN_EMAILS): sees the Super admin page. */
+  superAdmin?: boolean;
+  /** Days left in the account holder's free trial; null when not on trial. */
+  trialDaysLeft?: number | null;
 }
 
 export function DashboardShell({

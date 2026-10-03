@@ -7,7 +7,12 @@
  * 200 → DetectLandmarksResponse (image accepted, landmarks placed)
  * 422 → DetectLandmarksRejection (image not suitable for AI analysis)
  * 504 → { error: "TIMEOUT"; message } (the analysis ran out of time; try again)
+ * 429 → { error: "DAILY_LIMIT" | "RATE_LIMITED"; message }
  * other → { error: string; message: string }
+ *
+ * With `Accept: application/x-ndjson` a request that gets as far as the
+ * analysis answers 200 with one JSON object per line: DetectLandmarksProgress
+ * lines, then a single DetectLandmarksDone carrying the status and body above.
  *
  * The film is analysed upright as the viewer shows it: its `view` rotation
  * and vertical flip applied, any horizontal flip ignored. "Image left/right"
@@ -75,6 +80,31 @@ export interface DetectLandmarksResponse {
   /** Accepted, but with caveats the user should see (e.g. ischial tuberosities out of view). */
   warnings: string[];
   model: string;
+  /** X-rays analysed today against the user's daily limit (this one included). */
+  usage?: AiUsageToday;
+}
+
+export interface AiUsageToday {
+  used: number;
+  limit: number;
+}
+
+export type AnalysisStage = "load" | "check" | "detect" | "refine";
+
+export interface DetectLandmarksProgress {
+  type: "progress";
+  stage: AnalysisStage;
+  label: string;
+  /** 0-100: where the bar is now. */
+  percent: number;
+  /** 0-100: where it will be after the next step; the bar may creep toward it meanwhile. */
+  ceiling: number;
+}
+
+export interface DetectLandmarksDone {
+  type: "done";
+  status: number;
+  body: DetectLandmarksResponse | DetectLandmarksRejection | { error: string; message: string };
 }
 
 export interface DetectLandmarksRejection {

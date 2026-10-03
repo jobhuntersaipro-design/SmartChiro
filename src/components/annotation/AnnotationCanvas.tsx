@@ -75,6 +75,9 @@ import { FirstRunOverlay } from "./FirstRunOverlay";
 import { NotesDrawer } from "./NotesDrawer";
 import { useXrayNotes } from "@/hooks/useXrayNotes";
 import { Toaster } from "@/components/ui/sonner";
+import { AnalysisProgressCard } from "./AnalysisProgressCard";
+import { FilmLoadingOverlay } from "./FilmLoadingOverlay";
+import { readDetectAnswer } from "@/lib/detect-landmarks-client";
 
 interface AnnotationCanvasProps {
   imageUrl: string;
@@ -133,6 +136,7 @@ export function AnnotationCanvas({
     [],
   );
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   // When the browser has the image cached, the `<img>`'s onLoad event can
   // fire BEFORE React attaches the handler — we'd be stuck with imageLoaded
   // = false forever, which disables Detect Landmarks (and anything else
@@ -152,9 +156,13 @@ export function AnnotationCanvas({
   // AI pelvis analysis: request state, the gate's rejection, the right
   // panel's tab (switched to Measurements after a run) and the overlay.
   const [detectingLandmarks, setDetectingLandmarks] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<{ label: string; percent: number; ceiling: number } | null>(null);
   const [pelvisRejection, setPelvisRejection] = useState<DetectLandmarksRejection | null>(null);
   const [pelvisRejectionOpen, setPelvisRejectionOpen] = useState(false);
-  const [panelTab, setPanelTab] = useState<PanelTab>("layers");
+  // A film that already has pelvic landmarks opens on its measurements and summary.
+  const [panelTab, setPanelTab] = useState<PanelTab>(() =>
+    pelvicLandmarkShapes(initialCanvasState?.shapes ?? []).length > 0 ? "measurements" : "layers",
+  );
   const [pelvisOverlayOn, setPelvisOverlayOn] = useState(true);
   // Preferred unit; px is forced while the film is uncalibrated.
   const [pelvisUnitPref, setPelvisUnitPref] = useState<"mm" | "px">("mm");
@@ -458,40 +466,39 @@ export function AnnotationCanvas({
       activeXrayIdRef.current !== target.activeXrayId;
     const discarded = "The X-ray changed while the AI was working; the result was discarded.";
     setDetectingLandmarks(true);
-    const toastId = toast.loading("Checking the X-ray and placing landmarks…", {
-      description: "Takes about 30 seconds.",
-    });
-    const outcome = { id: toastId, description: undefined };
+    setAnalysisProgress({ label: "Starting", percent: 0, ceiling: 4 });
     try {
       const res = await fetch("/api/viewer/detect-landmarks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
         body: JSON.stringify({ xrayId, view: analysisView(imageAdj.adjustments) }),
         signal: controller.signal,
       });
-      const body = (await res.json().catch(() => null)) as
+      const answer = await readDetectAnswer(res, (p) =>
+        setAnalysisProgress({ label: p.label, percent: p.percent, ceiling: p.ceiling }),
+      );
+      const body = answer.body as
         | DetectLandmarksResponse
         | DetectLandmarksRejection
         | { error?: string; message?: string }
         | null;
       if (targetChanged()) {
-        toast.info(discarded, outcome);
+        toast.info(discarded);
         return;
       }
-      if (!res.ok) {
-        if (res.status === 422 && body && "error" in body && body.error === "NOT_SUITABLE") {
-          toast.dismiss(toastId);
+      if (answer.status !== 200) {
+        if (answer.status === 422 && body && "error" in body && body.error === "NOT_SUITABLE") {
           setPelvisRejection(body as DetectLandmarksRejection);
           setPelvisRejectionOpen(true);
           return;
         }
         const message = body && "message" in body ? body.message : undefined;
-        toast.error(message ?? `Landmark detection failed (${res.status})`, outcome);
+        toast.error(message ?? `Landmark detection failed (${answer.status})`);
         return;
       }
       const data = body as DetectLandmarksResponse | null;
       if (!data?.landmarks?.length) {
-        toast.warning("No landmarks were returned for this X-ray.", outcome);
+        toast.warning("No landmarks were returned for this X-ray.");
         return;
       }
 
@@ -543,20 +550,24 @@ export function AnnotationCanvas({
       setPropertiesPanelOpen(true);
       toast.success(
         `Placed ${placed.length} landmark${placed.length === 1 ? "" : "s"}. Dashed rings are less certain — check them.`,
-        outcome,
+        {
+          description: data.usage
+            ? `${data.usage.used} of ${data.usage.limit} X-rays analysed today.`
+            : undefined,
+        },
       );
       for (const warning of data.warnings ?? []) toast.warning(warning);
     } catch (err) {
       if (controller.signal.aborted) {
-        if (targetChanged()) toast.info(discarded, outcome);
-        else toast.dismiss(toastId);
+        if (targetChanged()) toast.info(discarded);
         return;
       }
       console.error("detect-landmarks error:", err);
-      toast.error("Could not reach landmark detection service.", outcome);
+      toast.error("Could not reach landmark detection service.");
     } finally {
       if (detectAbortRef.current === controller) detectAbortRef.current = null;
       setDetectingLandmarks(false);
+      setAnalysisProgress(null);
     }
   }, [xrayId, viewMode, imageAdj.adjustments, undoRedo, autoSave, interaction, setPropertiesPanelOpen, fitToRect]);
 
@@ -1839,6 +1850,9 @@ export function AnnotationCanvas({
 
         {/* Canvas Area */}
         <div className="relative flex flex-1 flex-col">
+          {analysisProgress && (
+            <AnalysisProgressCard {...analysisProgress} onCancel={() => detectAbortRef.current?.abort()} />
+          )}
           {viewMode === "single" ? (
             <div ref={canvasRootRef} className="relative flex flex-1 flex-col">
               <div
@@ -1857,6 +1871,7 @@ export function AnnotationCanvas({
                 onDoubleClick={handleDoubleClick}
               >
                 <ToolIndicatorChip activeTool={interaction.activeTool} />
+                {!imageLoaded && <FilmLoadingOverlay failed={imageFailed} />}
                 {/* Image Layer */}
                 <div
                   className="absolute origin-top-left"
@@ -1891,6 +1906,7 @@ export function AnnotationCanvas({
                       height: imageHeight,
                     }}
                     onLoad={() => setImageLoaded(true)}
+                    onError={() => setImageFailed(true)}
                     draggable={false}
                   />
                 </div>
@@ -2131,6 +2147,7 @@ export function AnnotationCanvas({
                         >
                           Change
                         </button>
+                        {!imageLoaded && <FilmLoadingOverlay compact />}
                         <div
                           className="absolute origin-top-left"
                           style={{

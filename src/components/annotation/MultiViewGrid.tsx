@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BaseShape, ViewMode, ViewportSlot } from "@/types/annotation";
 import { ShapeRenderer } from "./ShapeRenderer";
+import { FilmLoadingOverlay } from "./FilmLoadingOverlay";
 
 export interface ViewportState {
   zoom: number;
@@ -284,6 +285,7 @@ export function ViewportCell({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
+      {!imageLoaded && <FilmLoadingOverlay compact />}
       {/* Image */}
       <div
         className="absolute origin-top-left"

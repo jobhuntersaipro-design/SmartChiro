@@ -2,7 +2,7 @@
 
 Things only the clinic owner can do: accounts, credentials, production data and
 business decisions. The code for every item is already on `main`. Tick items off here
-as you go. Last updated 2026-10-03, after the AI Pelvis Analysis merge.
+as you go. Last updated 2026-10-03, after the trial / Stripe billing / super admin merge.
 
 ## 1. Before deploying this merge
 
@@ -58,15 +58,45 @@ Full steps are in `context/features/whatsapp-cloud-api-spec.md` §8 and §11.
 
 ## 4a. AI pelvis analysis (Anthropic)
 
-- [ ] **Add `ANTHROPIC_API_KEY` to the Production environment in Vercel.** It is
-  currently set for Preview only, so on smartchiro.org the "Detect landmarks"
-  button answers "AI analysis isn't set up" until the key is added (then redeploy).
+- [x] **Add `ANTHROPIC_API_KEY` to the Production environment in Vercel.** Done
+  2026-10-03; live from the next deploy.
 - [ ] **Budget for it.** Each analysis makes up to 11 model calls (Claude Opus 5.5):
-  about 25–45 seconds and roughly US$0.20–0.35 per film. Limited to 6 analyses
-  per user per 10 minutes.
+  about 25–45 seconds and roughly US$0.20–0.35 per film. Limited to 10 different
+  X-rays per doctor per day (change per person on the Super admin page) and
+  6 analyses per user per 10 minutes.
 - [ ] **Calibrate films for mm.** Results are in pixels until a calibration line is
   drawn on the film (a ruler or known-size marker); the paper's normal ranges
   (e.g. FHHD < 10 mm) are only judged in mm.
+
+## 4b. Subscriptions (Stripe) and super admin
+
+Every account now gets a 30-day free trial; existing accounts got 30 days from this
+deploy. When a trial ends without a subscription, the dashboard shows the plan page
+until they subscribe (data is kept). Staff are covered by their branch owner's plan,
+and your own clinic never lapses while you are a super admin.
+
+- [ ] **Stripe keys.** In Vercel (Production), add `STRIPE_SECRET_KEY` (live secret
+  key, `sk_live_…`; test with `sk_test_…` on Preview first). Until it's set, the
+  Subscribe button says "Online payment isn't set up yet." The SmartChiro Pro
+  product and its MYR prices (RM550/month, RM6,000/year) are created in your Stripe
+  account automatically on the first checkout.
+- [ ] **Stripe webhook.** Stripe Dashboard → Developers → Webhooks → add endpoint
+  `https://smartchiro.org/api/billing/webhook` with events `checkout.session.completed`,
+  `customer.subscription.created`, `customer.subscription.updated`,
+  `customer.subscription.deleted`. Put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+  (Renewals, failed payments and cancellations only reach the app through this.)
+- [ ] **Stripe customer portal.** Stripe Dashboard → Settings → Billing → Customer
+  portal: save the settings once (allow cancel, card update, invoices, and switching
+  between the two prices). "Manage billing" needs it.
+- [ ] **Stripe account in MYR.** Make sure the account can charge in MYR (a Malaysian
+  Stripe account can). Decide with your tax agent whether the subscription needs
+  SST / e-invoices; nothing is added to the price today.
+- [ ] **Super admin.** `SUPER_ADMIN_EMAILS` in Vercel (Production) lists who sees
+  **Super admin** in the sidebar (comma-separated sign-in emails). It was set to the
+  email on your Claude account on 2026-10-03; change it if you sign in to SmartChiro
+  with a different one (then redeploy).
+- [ ] **Before 30 days are up:** tell existing clinics about the trial and the
+  plan, or extend their trials on the Super admin page (Manage → Free trial ends).
 
 ## 5. LHDN MyInvois (e-invoicing)
 

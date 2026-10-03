@@ -21,6 +21,18 @@ model User {
   stripeCustomerId     String? @unique
   stripeSubscriptionId String? @unique
 
+  /// End of the free trial; every new account gets 30 days (src/lib/subscription.ts).
+  trialEndsAt           DateTime? @default(dbgenerated("(now() + '30 days'::interval)"))
+  /// Stripe subscription status (active, trialing, past_due, canceled…), kept in sync by the webhook.
+  subscriptionStatus    String?
+  /// "month" or "year".
+  subscriptionInterval  String?
+  subscriptionPeriodEnd DateTime?
+  /// X-rays this user may run AI analysis on per clinic day; super admins change it.
+  aiDailyLimit          Int       @default(10)
+  /// Set by a super admin to block sign-in.
+  disabledAt            DateTime?
+
   activeBranchId String?
   /// Owner/admin of 2+ branches working across all of them ("All branches" in the sidebar).
   allBranches    Boolean @default(false)
@@ -47,11 +59,23 @@ model User {
   appointmentSeries   AppointmentSeries[]    @relation("SeriesDoctor")
   paymentsReceived    Payment[]              @relation("PaymentReceivedBy")
   einvoiceSubmissions EInvoiceSubmission[]   @relation("EInvoiceSubmittedBy")
+  aiUsage             AiUsage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([email])
+}
+
+/// One AI pelvis analysis that succeeded; the daily limit counts distinct X-rays per clinic day.
+model AiUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xrayId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model Account {

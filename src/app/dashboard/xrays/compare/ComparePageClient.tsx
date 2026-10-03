@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Link2, Link2Off, ZoomIn, ZoomOut } from "lucide-react";
 import { ZOOM_MIN, ZOOM_MAX, ZOOM_SCROLL_STEP } from "@/types/annotation";
 import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { FilmLoadingOverlay } from "@/components/annotation/FilmLoadingOverlay";
 
 interface XrayInfo {
   id: string;
@@ -39,6 +40,11 @@ export function ComparePageClient({
   const [dividerPos, setDividerPos] = useState(50); // percentage
   const [isDraggingDivider, setIsDraggingDivider] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
+  const [loadedUrls, setLoadedUrls] = useState<ReadonlySet<string>>(new Set());
+  const markLoaded = useCallback(
+    (url: string) => setLoadedUrls((prev) => (prev.has(url) ? prev : new Set(prev).add(url))),
+    [],
+  );
   const [panStart, setPanStart] = useState<{ x: number; y: number; side: "left" | "right" } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -261,6 +267,7 @@ export function ComparePageClient({
             <span className="text-[13px] font-medium text-white">{leftXray.title}</span>
             <span className="ml-2 text-[12px] text-fg-muted">{formatDate(leftXray.createdAt)}</span>
           </div>
+          {!loadedUrls.has(leftXray.fileUrl) && <FilmLoadingOverlay compact />}
           <div
             ref={leftCanvasRef}
             className="h-full w-full cursor-grab active:cursor-grabbing"
@@ -280,6 +287,11 @@ export function ComparePageClient({
                 alt={leftXray.title}
                 width={leftXray.width}
                 height={leftXray.height}
+                // A cached film can finish loading before hydration, when onLoad no longer fires.
+                ref={(img) => {
+                  if (img?.complete && img.naturalWidth > 0) markLoaded(leftXray.fileUrl);
+                }}
+                onLoad={() => markLoaded(leftXray.fileUrl)}
                 draggable={false}
                 style={{ maxWidth: "none" }}
               />
@@ -305,6 +317,7 @@ export function ComparePageClient({
             <span className="text-[13px] font-medium text-white">{rightXray.title}</span>
             <span className="ml-2 text-[12px] text-fg-muted">{formatDate(rightXray.createdAt)}</span>
           </div>
+          {!loadedUrls.has(rightXray.fileUrl) && <FilmLoadingOverlay compact />}
           <div
             ref={rightCanvasRef}
             className="h-full w-full cursor-grab active:cursor-grabbing"
@@ -324,6 +337,11 @@ export function ComparePageClient({
                 alt={rightXray.title}
                 width={rightXray.width}
                 height={rightXray.height}
+                // A cached film can finish loading before hydration, when onLoad no longer fires.
+                ref={(img) => {
+                  if (img?.complete && img.naturalWidth > 0) markLoaded(rightXray.fileUrl);
+                }}
+                onLoad={() => markLoaded(rightXray.fileUrl)}
                 draggable={false}
                 style={{ maxWidth: "none" }}
               />

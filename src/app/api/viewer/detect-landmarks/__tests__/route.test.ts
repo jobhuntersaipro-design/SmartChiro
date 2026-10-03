@@ -23,9 +23,10 @@ const VisionApiErrorRef = vi.hoisted(() =>
     }
   },
 );
-vi.mock("@/lib/anthropic-vision", () => ({
+vi.mock("@/lib/anthropic-vision", async (importOriginal) => ({
   analysePelvis: (...args: unknown[]) => mockAnalysePelvis(...args),
   VisionApiError: VisionApiErrorRef,
+  progressEvent: (await importOriginal<typeof import("@/lib/anthropic-vision")>()).progressEvent,
 }));
 
 const TEST_PREFIX = `test-detect-landmarks-${Date.now()}`;
@@ -39,10 +40,10 @@ let badMimeXrayId: string;
 let notReadyXrayId: string;
 let noSizeXrayId: string;
 
-function req(body?: unknown, signal?: AbortSignal) {
+function req(body?: unknown, signal?: AbortSignal, accept?: string) {
   const init: ConstructorParameters<typeof NextRequest>[1] = {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(accept ? { Accept: accept } : {}) },
     signal,
   };
   if (body !== undefined) init.body = JSON.stringify(body);
@@ -399,7 +400,79 @@ describe("POST /api/viewer/detect-landmarks", () => {
     const { POST } = await import("../route");
     const res = await POST(req({ xrayId }));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(ACCEPTED);
+    expect(await res.json()).toEqual({ ...ACCEPTED, usage: { used: expect.any(Number), limit: 10 } });
+  });
+
+  it("streams progress lines, then the result, when asked for NDJSON", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    mockAnalysePelvis.mockImplementationOnce(async (opts: { onProgress: (p: unknown) => void }) => {
+      opts.onProgress({ stage: "check", done: 0, total: 1 });
+      opts.onProgress({ stage: "detect", done: 1, total: 3 });
+      return { kind: "accepted", ...ACCEPTED };
+    });
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }, undefined, "application/x-ndjson"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("application/x-ndjson");
+    const lines = (await res.text()).trim().split("\n").map((l) => JSON.parse(l));
+    expect(lines.map((l) => l.type)).toEqual(["progress", "progress", "progress", "progress", "done"]);
+    expect(lines.map((l) => l.stage).slice(0, 4)).toEqual(["load", "load", "check", "detect"]);
+    const percents = lines.slice(0, 4).map((l) => l.percent);
+    expect(percents).toEqual([...percents].sort((a, b) => a - b));
+    expect(lines[4]).toMatchObject({ type: "done", status: 200, body: { landmarks: ACCEPTED.landmarks } });
+  });
+
+  it("streams a rejection as a done line with status 422", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "rejected", assessment: ASSESSMENT, reasons: ["Lateral view"] });
+    const { POST } = await import("../route");
+    const res = await POST(req({ xrayId }, undefined, "application/x-ndjson"));
+    const last = JSON.parse((await res.text()).trim().split("\n").at(-1)!);
+    expect(last).toMatchObject({ type: "done", status: 422, body: { error: "NOT_SUITABLE", reasons: ["Lateral view"] } });
+  });
+
+  it("limits each user to aiDailyLimit different X-rays per day; re-runs are free", async () => {
+    mockAuth.mockResolvedValue({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValue({ kind: "accepted", ...ACCEPTED });
+    const { POST } = await import("../route");
+    await prisma.aiUsage.deleteMany({ where: { userId: memberId } });
+    expect((await POST(req({ xrayId }))).status).toBe(200);
+    await prisma.user.update({ where: { id: memberId }, data: { aiDailyLimit: 1 } });
+    try {
+      const again = await POST(req({ xrayId }));
+      expect(again.status).toBe(200);
+      expect((await again.json()).usage).toEqual({ used: 1, limit: 1 });
+      const other = await POST(req({ xrayId: noSizeXrayId }));
+      expect(other.status).toBe(429);
+      expect((await other.json()).error).toBe("DAILY_LIMIT");
+    } finally {
+      await prisma.user.update({ where: { id: memberId }, data: { aiDailyLimit: 10 } });
+    }
+  });
+
+  it("returns 402 once the free trial has ended, unless a branch owner's plan covers the user", async () => {
+    mockAuth.mockResolvedValue({ user: { id: memberId } });
+    mockAnalysePelvis.mockResolvedValue({ kind: "accepted", ...ACCEPTED });
+    const { POST } = await import("../route");
+    await prisma.user.update({ where: { id: memberId }, data: { trialEndsAt: new Date(Date.now() - 1000) } });
+    try {
+      const expired = await POST(req({ xrayId }));
+      expect(expired.status).toBe(402);
+      expect((await expired.json()).error).toBe("SUBSCRIPTION_REQUIRED");
+      expect(mockAnalysePelvis).not.toHaveBeenCalled();
+
+      const owner = await prisma.user.create({
+        data: { email: `${TEST_PREFIX}-owner@t.com`, subscriptionStatus: "active" },
+      });
+      await prisma.branchMember.create({ data: { userId: owner.id, branchId, role: "OWNER" } });
+      expect((await POST(req({ xrayId }))).status).toBe(200);
+      await prisma.branchMember.deleteMany({ where: { userId: owner.id } });
+    } finally {
+      await prisma.user.update({
+        where: { id: memberId },
+        data: { trialEndsAt: new Date(Date.now() + 30 * 86_400_000) },
+      });
+    }
   });
 
   it("rate-limits each user to 6 analyses per 10 minutes", async () => {
@@ -426,7 +499,7 @@ describe("POST /api/viewer/detect-landmarks", () => {
 
     expect(mockAnalysePelvis).toHaveBeenCalledTimes(1);
     const callArg = mockAnalysePelvis.mock.calls[0][0] as Record<string, unknown>;
-    expect(Object.keys(callArg).sort()).toEqual(["deadlineMs", "imageBytes", "signal", "storedSize", "view"]);
+    expect(Object.keys(callArg).sort()).toEqual(["deadlineMs", "imageBytes", "onProgress", "signal", "storedSize", "view"]);
     expect(Buffer.isBuffer(callArg.imageBytes)).toBe(true);
 
     const serialized = JSON.stringify(callArg, (k, v) => (k === "imageBytes" ? "[bytes]" : v));

@@ -6,8 +6,6 @@ import { ChevronLeft, ChevronRight, ImageIcon, Upload, X, Loader2, CheckCircle, 
 import {
   validateXrayFile,
   generateThumbnail,
-  shouldConfirmNotXray,
-  NOT_XRAY_CONFIRM_MESSAGE,
   type ImageDimensions,
 } from "@/lib/xray-validation";
 import { uploadXray } from "@/lib/xray-upload-client";
@@ -182,11 +180,8 @@ export function PatientImageSidebar({
       }
 
       let thumbnail: Blob;
-      let colourScore: number;
       try {
-        const result = await generateThumbnail(entry.file);
-        thumbnail = result.thumbnail;
-        colourScore = result.colourfulness;
+        thumbnail = await generateThumbnail(entry.file);
       } catch {
         setUploadFiles((prev) =>
           prev.map((f) =>
@@ -198,18 +193,6 @@ export function PatientImageSidebar({
         return false;
       }
 
-      // A colour photo or phone screenshot is almost never a film — ask first.
-      if (
-        shouldConfirmNotXray(dimensions, colourScore) &&
-        !window.confirm(`${entry.file.name}: ${NOT_XRAY_CONFIRM_MESSAGE}`)
-      ) {
-        setUploadFiles((prev) =>
-          prev.map((f) =>
-            f.id === entry.id ? { ...f, status: "error", error: "Skipped — not uploaded" } : f
-          )
-        );
-        return false;
-      }
 
       // Upload
       setUploadFiles((prev) =>

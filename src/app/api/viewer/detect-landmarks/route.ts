@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getXrayCapability } from "@/lib/auth/xray";
 import { prisma } from "@/lib/prisma";
-import { analysePelvis, VisionApiError } from "@/lib/anthropic-vision";
+import { analysePelvis, progressEvent, VisionApiError, type AnalysisProgress } from "@/lib/anthropic-vision";
 import { retryAfterSeconds, takeToken, type BucketConfig } from "@/lib/booking/rate-limit";
+import { aiUsageToday, dailyLimitReached, recordAiUsage } from "@/lib/ai-usage";
+import { accountAccess } from "@/lib/subscription";
 import type {
+  DetectLandmarksDone,
   DetectLandmarksRejection,
   DetectLandmarksResponse,
   PelvisAnalysisView,
@@ -25,7 +28,15 @@ import type {
  * disconnects; then the request ends quietly (499, nobody is listening).
  *
  * 200 DetectLandmarksResponse · 422 DetectLandmarksRejection (NOT_SUITABLE)
- * · 504 TIMEOUT · otherwise { error, message }.
+ * · 504 TIMEOUT · 402 SUBSCRIPTION_REQUIRED · 429 DAILY_LIMIT / RATE_LIMITED
+ * · otherwise { error, message }.
+ *
+ * Progress: with `Accept: application/x-ndjson`, once the checks pass the
+ * answer is a 200 stream of DetectLandmarksProgress lines and one final
+ * DetectLandmarksDone carrying the status and body the JSON answer would have.
+ *
+ * Daily limit: `User.aiDailyLimit` different X-rays per clinic day
+ * (`src/lib/ai-usage.ts`), counted when an analysis places landmarks.
  */
 
 export const runtime = "nodejs";
@@ -48,9 +59,10 @@ function fail(status: number, error: string, message: string, headers?: HeadersI
   return NextResponse.json({ error, message }, { status, headers });
 }
 
-/** The client disconnected: stop without logging; the response goes nowhere. */
-function clientGone() {
-  return new NextResponse(null, { status: 499 });
+type Outcome = Omit<DetectLandmarksDone, "type">;
+
+function failure(status: number, error: string, message: string): Outcome {
+  return { status, body: { error, message } };
 }
 
 /** `view` from the body: omitted → upright as stored; null when malformed. */
@@ -97,6 +109,20 @@ export async function POST(request: NextRequest) {
     return fail(503, "AI_NOT_CONFIGURED", "AI analysis isn't set up on this server yet (ANTHROPIC_API_KEY is missing).");
   }
 
+  const access = await accountAccess(userId);
+  if (!access?.allowed) {
+    return fail(402, "SUBSCRIPTION_REQUIRED", "Your free trial has ended. Subscribe to SmartChiro Pro to keep using AI analysis.");
+  }
+
+  const usage = await aiUsageToday(userId);
+  if (dailyLimitReached(usage, xrayId)) {
+    return fail(
+      429,
+      "DAILY_LIMIT",
+      `You've used today's AI analysis limit (${usage.limit} X-ray${usage.limit === 1 ? "" : "s"}). It resets at midnight.`,
+    );
+  }
+
   if (!takeToken(`pelvis-ai:${userId}`, ANALYSIS_LIMIT)) {
     const retryAfter = retryAfterSeconds(ANALYSIS_LIMIT);
     return fail(429, "RATE_LIMITED", `Too many AI analyses; try again in ${Math.ceil(retryAfter / 60)} minutes.`, {
@@ -104,49 +130,94 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const deadlineMs = Date.now() + ANALYSIS_BUDGET_MS;
-  const signal = AbortSignal.any([request.signal, AbortSignal.timeout(ANALYSIS_BUDGET_MS)]);
+  const job = { ...xray, xrayId, userId, view, usage, signal: request.signal };
+  if (!request.headers.get("accept")?.includes("application/x-ndjson")) {
+    const outcome = await analyse(job, () => {});
+    // The client disconnected: the response goes nowhere.
+    if (!outcome) return new NextResponse(null, { status: 499 });
+    return NextResponse.json(outcome.body, { status: outcome.status });
+  }
 
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (line: object) => {
+        try {
+          controller.enqueue(encoder.encode(`${JSON.stringify(line)}\n`));
+        } catch {
+          // Stream already closed: the client went away.
+        }
+      };
+      const outcome = await analyse(job, (p) => send(progressEvent(p)));
+      if (outcome) send({ type: "done", ...outcome } satisfies DetectLandmarksDone);
+      try {
+        controller.close();
+      } catch {
+        // Already closed.
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" },
+  });
+}
+
+/** Fetch the film and run the analysis; null when the client went away. */
+async function analyse(
+  job: {
+    fileUrl: string;
+    width: number | null;
+    height: number | null;
+    xrayId: string;
+    userId: string;
+    view: PelvisAnalysisView;
+    usage: Awaited<ReturnType<typeof aiUsageToday>>;
+    signal: AbortSignal;
+  },
+  onProgress: (p: AnalysisProgress) => void,
+): Promise<Outcome | null> {
+  const deadlineMs = Date.now() + ANALYSIS_BUDGET_MS;
+  const signal = AbortSignal.any([job.signal, AbortSignal.timeout(ANALYSIS_BUDGET_MS)]);
+
+  onProgress({ stage: "load", done: 0, total: 1 });
   let imageBytes: Buffer;
   try {
-    const image = await fetch(xray.fileUrl, { signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]) });
+    const image = await fetch(job.fileUrl, { signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]) });
     if (!image.ok) throw new Error(`R2 responded ${image.status}`);
     imageBytes = Buffer.from(await image.arrayBuffer());
   } catch (err) {
-    if (request.signal.aborted) return clientGone();
+    if (job.signal.aborted) return null;
     console.error("detect-landmarks R2 fetch failed:", err);
-    return fail(502, "R2_FETCH_FAILED", "Failed to load X-ray image.");
+    return failure(502, "R2_FETCH_FAILED", "Failed to load X-ray image.");
   }
+  onProgress({ stage: "load", done: 1, total: 1 });
 
-  const storedSize = xray.width && xray.height ? { width: xray.width, height: xray.height } : null;
+  const storedSize = job.width && job.height ? { width: job.width, height: job.height } : null;
   try {
-    const result = await analysePelvis({ imageBytes, view, storedSize, signal, deadlineMs });
+    const result = await analysePelvis({ imageBytes, view: job.view, storedSize, signal, deadlineMs, onProgress });
     if (result.kind === "rejected") {
-      return NextResponse.json(
-        {
+      return {
+        status: 422,
+        body: {
           error: "NOT_SUITABLE",
           message: "This X-ray isn't suitable for AI pelvic analysis.",
           reasons: result.reasons,
           assessment: result.assessment,
         } satisfies DetectLandmarksRejection,
-        { status: 422 },
-      );
+      };
     }
     const { landmarks, assessment, patientRightOn, sideSource, warnings, model } = result;
-    return NextResponse.json({
-      landmarks,
-      assessment,
-      patientRightOn,
-      sideSource,
-      warnings,
-      model,
-    } satisfies DetectLandmarksResponse);
+    const usage = await recordAiUsage(job.userId, job.xrayId, job.usage);
+    return {
+      status: 200,
+      body: { landmarks, assessment, patientRightOn, sideSource, warnings, model, usage } satisfies DetectLandmarksResponse,
+    };
   } catch (err) {
-    if (request.signal.aborted) return clientGone();
+    if (job.signal.aborted) return null;
     if (err instanceof VisionApiError) {
-      return fail(VISION_STATUS[err.code], err.code.toUpperCase(), err.message);
+      return failure(VISION_STATUS[err.code], err.code.toUpperCase(), err.message);
     }
     console.error("detect-landmarks unexpected error:", err);
-    return fail(500, "INTERNAL_ERROR", "Unexpected server error.");
+    return failure(500, "INTERNAL_ERROR", "Unexpected server error.");
   }
 }

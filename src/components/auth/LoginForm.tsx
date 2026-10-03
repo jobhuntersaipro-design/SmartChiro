@@ -10,15 +10,20 @@ import { GoogleSignInButton } from './GoogleSignInButton'
 export function LoginForm({
   googleEnabled = false,
   resetSuccess = false,
+  accountDisabled = false,
 }: {
   googleEnabled?: boolean
   resetSuccess?: boolean
+  /** A Google sign-in was refused because a super admin disabled the account. */
+  accountDisabled?: boolean
 }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(
+    accountDisabled ? 'This account has been disabled. Contact SmartChiro support.' : '',
+  )
   const [loading, setLoading] = useState(false)
   const [emailNotVerified, setEmailNotVerified] = useState(false)
   const [resending, setResending] = useState(false)
@@ -40,6 +45,10 @@ export function LoginForm({
     if (result?.error) {
       if (result.code === 'email_not_verified') {
         setEmailNotVerified(true)
+        return
+      }
+      if (result.code === 'account_disabled') {
+        setError('This account has been disabled. Contact SmartChiro support.')
         return
       }
       setError('Invalid password or username')

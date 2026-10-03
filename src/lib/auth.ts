@@ -11,6 +11,10 @@ class EmailNotVerifiedError extends CredentialsSignin {
   code = 'email_not_verified'
 }
 
+class AccountDisabledError extends CredentialsSignin {
+  code = 'account_disabled'
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   providers: [
@@ -47,6 +51,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const isValid = await compare(password, user.password)
           if (!isValid) return null
+
+          // Turned off by a super admin.
+          if (user.disabledAt) {
+            throw new AccountDisabledError()
+          }
 
           // Block unverified users
           if (!user.emailVerified) {
@@ -164,6 +173,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               id_token: account.id_token,
             },
           })
+        }
+
+        if (dbUser.disabledAt) {
+          return '/login?error=account_disabled'
         }
 
         // Block unverified users and send verification email — but throttle

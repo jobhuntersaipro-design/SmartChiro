@@ -6,19 +6,6 @@ export const MAX_DIMENSION = 16384 // px (browser canvas limit)
 export const THUMBNAIL_MAX_EDGE = 256 // px
 export const THUMBNAIL_QUALITY = 0.8 // JPEG 80%
 
-/**
- * "Doesn't look like an X-ray" heuristics (a warning, not a block).
- * Colourfulness is the mean per-pixel max(r,g,b) − min(r,g,b) on 0–255:
- * radiographs are near-greyscale (≈0–5), photos and app screenshots are well above.
- */
-export const COLOURFULNESS_THRESHOLD = 12
-/** Phone screenshots are tall (≈9:19.5) or wide and at most this many px across. */
-export const SCREENSHOT_MAX_WIDTH = 1600
-export const SCREENSHOT_MIN_ASPECT = 0.53
-export const SCREENSHOT_MAX_ASPECT = 1.9
-export const NOT_XRAY_CONFIRM_MESSAGE =
-  "This image doesn't look like an X-ray (it looks like a colour photo or a phone screenshot). Upload it anyway?"
-
 export interface ValidationResult {
   valid: boolean
   error?: string
@@ -105,47 +92,10 @@ export async function validateXrayFile(file: File): Promise<ImageDimensions> {
 }
 
 /**
- * Mean over pixels of max(r,g,b) − min(r,g,b), 0–255, for RGBA pixel data
- * (e.g. canvas ImageData.data). Fully transparent pixels are skipped.
- */
-export function colourfulness(rgba: ArrayLike<number>): number {
-  let total = 0
-  let counted = 0
-  for (let i = 0; i + 3 < rgba.length; i += 4) {
-    if (rgba[i + 3] === 0) continue
-    const r = rgba[i]
-    const g = rgba[i + 1]
-    const b = rgba[i + 2]
-    total += Math.max(r, g, b) - Math.min(r, g, b)
-    counted++
-  }
-  return counted === 0 ? 0 : total / counted
-}
-
-/** Tall/wide and no wider than a phone screen — the shape of a phone screenshot. */
-export function looksLikePhoneScreenshot({ width, height }: ImageDimensions): boolean {
-  if (width <= 0 || height <= 0) return false
-  const aspect = width / height
-  return (aspect > SCREENSHOT_MAX_ASPECT || aspect < SCREENSHOT_MIN_ASPECT) && width <= SCREENSHOT_MAX_WIDTH
-}
-
-/** True when the image is colourful or phone-screenshot shaped, so the user should confirm it's an X-ray. */
-export function shouldConfirmNotXray(dimensions: ImageDimensions, colourScore: number): boolean {
-  return colourScore > COLOURFULNESS_THRESHOLD || looksLikePhoneScreenshot(dimensions)
-}
-
-export interface ThumbnailResult {
-  thumbnail: Blob
-  /** See colourfulness(); measured on the thumbnail pixels. */
-  colourfulness: number
-}
-
-/**
  * Generate a thumbnail from a File.
- * Returns a Blob scaled to 256px longest edge, JPEG 80% quality, plus the
- * colourfulness of those pixels for the "is this an X-ray?" check.
+ * Returns a Blob scaled to 256px longest edge, JPEG 80% quality.
  */
-export function generateThumbnail(file: File): Promise<ThumbnailResult> {
+export function generateThumbnail(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
@@ -168,11 +118,10 @@ export function generateThumbnail(file: File): Promise<ThumbnailResult> {
       }
 
       ctx.drawImage(img, 0, 0, width, height)
-      const score = colourfulness(ctx.getImageData(0, 0, width, height).data)
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            resolve({ thumbnail: blob, colourfulness: score })
+            resolve(blob)
           } else {
             reject(new Error('Failed to generate thumbnail.'))
           }

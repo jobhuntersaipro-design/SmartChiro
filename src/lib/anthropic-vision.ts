@@ -9,6 +9,8 @@ import {
 } from "@/lib/pelvic-landmarks";
 import type { Point } from "@/types/annotation";
 import type {
+  AnalysisStage,
+  DetectLandmarksProgress,
   DetectLandmarksResponse,
   DetectedLandmark,
   PelvisAnalysisView,
@@ -123,6 +125,36 @@ interface Call {
   client: Anthropic;
   signal?: AbortSignal;
   deadline: number;
+  progress: (p: AnalysisProgress) => void;
+}
+
+/** Where an analysis is: `done` of `total` model calls finished in `stage`. */
+export interface AnalysisProgress {
+  stage: AnalysisStage;
+  done: number;
+  total: number;
+}
+
+/** Share of the progress bar each stage covers, [start, end] percent; refinement tops out short of 100. */
+const STAGE_SPAN: Record<AnalysisStage, [number, number]> = {
+  load: [0, 8],
+  check: [8, 28],
+  detect: [28, 70],
+  refine: [70, 97],
+};
+
+const STAGE_LABEL: Record<AnalysisStage, string> = {
+  load: "Loading the X-ray",
+  check: "Checking it's an AP pelvis film",
+  detect: "Finding the 16 landmarks",
+  refine: "Refining landmark positions",
+};
+
+/** Progress → bar position (`percent`), the next step's position (`ceiling`) and a label. */
+export function progressEvent({ stage, done, total }: AnalysisProgress): DetectLandmarksProgress {
+  const [start, end] = STAGE_SPAN[stage];
+  const at = (n: number) => Math.round(start + ((end - start) * Math.min(n, total)) / Math.max(1, total));
+  return { type: "progress", stage, label: STAGE_LABEL[stage], percent: at(done), ceiling: at(done + 1) };
 }
 
 /** A rectangle of the film, in original pixels. */
@@ -722,9 +754,13 @@ async function locateLandmarks(
   const crop = standardFrame(expandBox(pelvisBox, film));
   const image = await renderFrame(film, crop);
   const prompt = locatePrompt(crop.sentWidth, crop.sentHeight);
+  let done = 0;
+  call.progress({ stage: "detect", done, total: LOCATE_RUNS });
   const settled = await Promise.allSettled(
     Array.from({ length: LOCATE_RUNS }, () =>
-      askJson(call, image, prompt, "high", LOCATE_SCHEMA, 0).then(parseLandmarkRun),
+      askJson(call, image, prompt, "high", LOCATE_SCHEMA, 0)
+        .then(parseLandmarkRun)
+        .finally(() => call.progress({ stage: "detect", done: ++done, total: LOCATE_RUNS })),
     ),
   );
   const runs = settled.flatMap((s) => (s.status === "fulfilled" ? [s.value] : []));
@@ -760,9 +796,12 @@ async function refineLandmarks(
   const side = Math.min(Math.round(REFINE_WINDOW * cropLong), film.width, film.height);
   const targetEdge = Math.min(MAX_SENT_EDGE, Math.round(2 * side * pass2Scale));
   const refined: LandmarkPoints = new Map(points);
+  const targets = PELVIC_LANDMARKS.filter((def) => REFINE_IDS.has(def.id) && points.has(def.id));
+  let done = 0;
+  call.progress({ stage: "refine", done, total: targets.length });
 
   await Promise.all(
-    PELVIC_LANDMARKS.filter((def) => REFINE_IDS.has(def.id) && points.has(def.id)).map(async (def) => {
+    targets.map(async (def) => {
       const p = points.get(def.id);
       if (!p) return;
       try {
@@ -782,6 +821,8 @@ async function refineLandmarks(
         if (!call.signal?.aborted) {
           console.warn(`pelvis refine of landmark ${def.id} failed; keeping the first estimate:`, err);
         }
+      } finally {
+        call.progress({ stage: "refine", done: ++done, total: targets.length });
       }
     }),
   );
@@ -839,6 +880,8 @@ export async function analysePelvis(opts: {
   signal?: AbortSignal;
   /** Epoch ms by which the analysis must be done. */
   deadlineMs?: number;
+  /** Called as each stage starts and each model call finishes. */
+  onProgress?: (p: AnalysisProgress) => void;
   /** Tests inject a mock; production omits it. */
   client?: Anthropic;
 }): Promise<PelvisAnalysis> {
@@ -846,13 +889,16 @@ export async function analysePelvis(opts: {
     client: opts.client ?? new Anthropic(),
     signal: opts.signal,
     deadline: opts.deadlineMs ?? Infinity,
+    progress: opts.onProgress ?? (() => {}),
   };
   const view = opts.view ?? { rotation: 0, flipV: false };
   const decoded = await loadFilm(opts.imageBytes);
   const film = await uprightFilm(decoded, view);
   const stored = storedMapping(decoded, film, view, opts.storedSize);
 
+  call.progress({ stage: "check", done: 0, total: 1 });
   const assessment = await assessImage(call, film);
+  call.progress({ stage: "check", done: 1, total: 1 });
   const verdict = decideSuitability(assessment);
   if (!verdict.suitable || !assessment.pelvisBox) {
     return { kind: "rejected", assessment: storedAssessment(assessment, stored), reasons: verdict.reasons };
