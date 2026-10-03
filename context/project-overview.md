@@ -426,8 +426,8 @@ model PatientDocument {
 | Plan | Price | Details |
 | --- | --- | --- |
 | Free Trial | RM 0 (30 days) | Every feature for 30 days, no credit card. When it ends without a subscription, the dashboard shows the plan page until they subscribe (data is kept). |
-| Pro (monthly) | RM 550/mo | Every feature: unlimited patients and staff, X-ray annotation, AI pelvis analysis (10 X-rays per doctor per day, adjustable by super admins), scheduling, reminders, invoicing, e-invoicing, reports, multi-branch |
-| Pro (yearly) | RM 6,000/yr | Same features; RM 500/mo equivalent, saves RM 600 (9%) a year vs monthly |
+| Pro (monthly) | RM 1,000/mo | One tier, every feature (the trial gets the same): unlimited patients and staff, X-ray annotation, AI pelvis analysis (10 X-rays per account per day, adjustable by super admins), scheduling, reminders, invoicing, e-invoicing, reports, multi-branch |
+| Pro (yearly) | RM 10,000/yr | Same features; RM 833/mo equivalent, saves RM 2,000 (17%) a year vs monthly (shown as RM 12,000 struck through) |
 
 > Stripe for subscriptions + webhooks for plan syncing
 > All prices in MYR

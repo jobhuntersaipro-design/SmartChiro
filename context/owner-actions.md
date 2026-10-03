@@ -2,7 +2,7 @@
 
 Things only the clinic owner can do: accounts, credentials, production data and
 business decisions. The code for every item is already on `main`. Tick items off here
-as you go. Last updated 2026-10-03, after the Google sign-up merge.
+as you go. Last updated 2026-10-03, after the Pro price change.
 
 ## 1. Before deploying this merge
 
@@ -80,7 +80,7 @@ Full steps are in `context/features/whatsapp-cloud-api-spec.md` §8 and §11.
   2026-10-03; live from the next deploy.
 - [ ] **Budget for it.** Each analysis makes up to 11 model calls (Claude Opus 5.5):
   about 25–45 seconds and roughly US$0.20–0.35 per film. Limited to 10 different
-  X-rays per doctor per day (change per person on the Super admin page) and
+  X-rays per account per day (change per person on the Super admin page) and
   6 analyses per user per 10 minutes.
 - [ ] **Calibrate films for mm.** Results are in pixels until a calibration line is
   drawn on the film (a ruler or known-size marker); the paper's normal ranges
@@ -96,8 +96,10 @@ and your own clinic never lapses while you are a super admin.
 - [ ] **Stripe keys.** In Vercel (Production), add `STRIPE_SECRET_KEY` (live secret
   key, `sk_live_…`; test with `sk_test_…` on Preview first). Until it's set, the
   Subscribe button says "Online payment isn't set up yet." The SmartChiro Pro
-  product and its MYR prices (RM550/month, RM6,000/year) are created in your Stripe
-  account automatically on the first checkout.
+  product and its MYR prices (RM1,000/month, RM10,000/year) are created in your Stripe
+  account automatically on the first checkout. (Price changed 2026-10-03 from
+  RM550/RM6,000: the next checkout makes the new prices; anyone already subscribed
+  stays on their old price until you move them in the Stripe dashboard.)
 - [ ] **Stripe webhook.** Stripe Dashboard → Developers → Webhooks → add endpoint
   `https://smartchiro.org/api/billing/webhook` with events `checkout.session.completed`,
   `customer.subscription.created`, `customer.subscription.updated`,

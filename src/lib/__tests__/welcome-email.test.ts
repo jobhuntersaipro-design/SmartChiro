@@ -17,7 +17,7 @@ describe('sendWelcomeEmail', () => {
     expect(msg.text).toContain('every feature is yours until 2 Nov 2026')
     expect(msg.text).toContain('1. Set up your clinic')
     expect(msg.text).toContain('/dashboard')
-    expect(msg.text).toContain('RM 550 a month or RM 6,000 a year')
+    expect(msg.text).toContain('RM 1,000 a month or RM 10,000 a year')
     expect(msg.html).toContain('Dr &lt;Lim&gt;')
     expect(msg.html).not.toContain('Dr <Lim>')
   })

@@ -8,12 +8,12 @@
 export type PlanInterval = "month" | "year";
 
 export const PLANS: Record<PlanInterval, { label: string; amount: number; per: string; lookupKey: string }> = {
-  month: { label: "Monthly", amount: 550, per: "month", lookupKey: "smartchiro_pro_monthly_myr" },
-  year: { label: "Yearly", amount: 6000, per: "year", lookupKey: "smartchiro_pro_yearly_myr" },
+  month: { label: "Monthly", amount: 1000, per: "month", lookupKey: "smartchiro_pro_monthly_myr" },
+  year: { label: "Yearly", amount: 10000, per: "year", lookupKey: "smartchiro_pro_yearly_myr" },
 };
 
 export const TRIAL_DAYS = 30;
-/** Paying monthly for a year vs the yearly price: RM 600, about 9%. */
+/** Paying monthly for a year vs the yearly price: RM 2,000, about 17%. */
 export const YEARLY_SAVING = PLANS.month.amount * 12 - PLANS.year.amount;
 export const YEARLY_SAVING_PERCENT = Math.round((YEARLY_SAVING / (PLANS.month.amount * 12)) * 100);
 

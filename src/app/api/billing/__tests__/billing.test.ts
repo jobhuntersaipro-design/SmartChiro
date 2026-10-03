@@ -90,7 +90,7 @@ describe("billing routes", () => {
   it("checkout: makes a customer, uses the yearly price and carries the trial over", async () => {
     fake.customers.create.mockResolvedValue({ id: CUSTOMER });
     fake.prices.list.mockResolvedValue({
-      data: [{ id: "price_year", unit_amount: 600000, currency: "myr", recurring: { interval: "year" } }],
+      data: [{ id: "price_year", unit_amount: 1000000, currency: "myr", recurring: { interval: "year" } }],
     });
     fake.checkout.sessions.create.mockResolvedValue({ url: "https://checkout.stripe.test/s" });
     const { POST } = await import("../checkout/route");
@@ -129,7 +129,7 @@ describe("billing routes", () => {
     const { POST } = await import("../checkout/route");
     expect((await POST(post("/api/billing/checkout", { interval: "month" }))).status).toBe(200);
     expect(fake.prices.create).toHaveBeenCalledWith(
-      expect.objectContaining({ unit_amount: 55000, currency: "myr", lookup_key: "smartchiro_pro_monthly_myr", transfer_lookup_key: true }),
+      expect.objectContaining({ unit_amount: 100000, currency: "myr", lookup_key: "smartchiro_pro_monthly_myr", transfer_lookup_key: true }),
     );
     expect(fake.checkout.sessions.create.mock.calls[0][0].line_items).toEqual([{ price: "price_new", quantity: 1 }]);
   });

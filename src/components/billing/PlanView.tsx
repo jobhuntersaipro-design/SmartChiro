@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Building2, CalendarDays, Loader2, Receipt, ScanLine, Sparkles, Users, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,13 +28,13 @@ function rm(amount: number): string {
   return `RM ${Math.round(amount).toLocaleString("en-MY")}`;
 }
 
-const FEATURES = [
-  "Unlimited patients, visits and SOAP notes",
-  "X-ray annotation and measurement tools",
-  "AI pelvis analysis (10 X-rays per doctor per day)",
-  "Appointments, online booking and WhatsApp / email reminders",
-  "Invoices, receipts, packages and LHDN e-invoicing",
-  "Reports, multiple branches and staff accounts",
+const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
+  { icon: Users, title: "Patients & records", body: "Unlimited patients, visits, SOAP notes and documents." },
+  { icon: ScanLine, title: "X-ray annotation", body: "Draw, measure and compare on every film." },
+  { icon: Sparkles, title: "AI pelvis analysis", body: "10 X-rays per account per day." },
+  { icon: CalendarDays, title: "Appointments", body: "Calendar, online booking, WhatsApp and email reminders." },
+  { icon: Receipt, title: "Billing", body: "Invoices, receipts, packages and LHDN e-invoicing." },
+  { icon: Building2, title: "Your whole clinic", body: "Reports, multiple branches and unlimited staff accounts." },
 ];
 
 export function PlanView(props: PlanViewProps) {
@@ -78,7 +78,7 @@ export function PlanView(props: PlanViewProps) {
       <div>
         <h1 className="font-heading text-[23px] font-medium text-foreground">Plan &amp; billing</h1>
         <p className="mt-1 text-[14px] text-fg-secondary">
-          One plan with every feature. The {TRIAL_DAYS}-day free trial and the paid plan include exactly the same things.
+          One plan, every feature. No tiers, no add-ons.
         </p>
       </div>
 
@@ -130,29 +130,28 @@ export function PlanView(props: PlanViewProps) {
                     </span>
                   )}
                 </div>
-                <p className="mt-2">
-                  <span className="font-heading text-[28px] font-medium tracking-tight text-foreground">
-                    {rm(PLANS[i].amount)}
+                <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
+                  {i === "year" && (
+                    <s className="text-[16px] text-fg-muted">
+                      <span className="sr-only">Was </span>
+                      {rm(PLANS.month.amount * 12)}
+                    </s>
+                  )}
+                  <span>
+                    <span className="font-heading text-[28px] font-medium tracking-tight text-foreground">
+                      {rm(PLANS[i].amount)}
+                    </span>
+                    <span className="text-[14px] text-fg-secondary"> / {PLANS[i].per}</span>
                   </span>
-                  <span className="text-[14px] text-fg-secondary"> / {PLANS[i].per}</span>
                 </p>
                 <p className="mt-1 text-[12px] text-fg-secondary">
                   {i === "year"
-                    ? `${rm(PLANS.year.amount / 12)} a month, billed yearly. ${rm(YEARLY_SAVING)} (${YEARLY_SAVING_PERCENT}%) less than ${rm(PLANS.month.amount * 12)} for 12 monthly payments.`
+                    ? `${rm(PLANS.year.amount / 12)} a month, billed yearly. ${YEARLY_SAVING_PERCENT}% off 12 monthly payments.`
                     : "Billed every month. Cancel any time."}
                 </p>
               </button>
             ))}
           </div>
-
-          <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-            {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-2 text-[13px] text-fg-secondary">
-                <Check className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={2} aria-hidden />
-                {f}
-              </li>
-            ))}
-          </ul>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Button onClick={() => go("checkout")} disabled={!billingConfigured || busy !== null || pending}>
@@ -169,6 +168,32 @@ export function PlanView(props: PlanViewProps) {
           </div>
         </section>
       )}
+
+      <section aria-labelledby="included" className="rounded-panel border border-border bg-surface p-5 shadow-(--shadow-card)">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 id="included" className="font-heading text-[17px] font-medium text-foreground">
+            Everything included
+          </h2>
+          <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-[11px] font-medium text-brand">One plan · no tiers</span>
+        </div>
+        <p className="mt-1 text-[13px] text-fg-secondary">
+          SmartChiro has a single tier: every account gets every feature below. The {TRIAL_DAYS}-day free trial includes all
+          of it too, so nothing is locked while you try it.
+        </p>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {FEATURES.map(({ icon: Icon, title, body }) => (
+            <li key={title} className="flex gap-3 rounded-panel bg-surface-subtle p-3.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface text-brand shadow-(--shadow-resting)">
+                <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+              </span>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">{title}</p>
+                <p className="mt-0.5 text-[12px] text-fg-secondary">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {props.hasStripeCustomer && (
         <div className="flex items-center gap-3">

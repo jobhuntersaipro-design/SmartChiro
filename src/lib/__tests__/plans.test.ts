@@ -6,11 +6,11 @@ const NOW = new Date("2026-10-03T04:00:00Z");
 const days = (n: number) => new Date(NOW.getTime() + n * 86_400_000);
 
 describe("plans", () => {
-  it("prices Pro at RM 550 a month or RM 6,000 a year, saving RM 600 (9%)", () => {
-    expect(PLANS.month.amount).toBe(550);
-    expect(PLANS.year.amount).toBe(6000);
-    expect(YEARLY_SAVING).toBe(600);
-    expect(YEARLY_SAVING_PERCENT).toBe(9);
+  it("prices Pro at RM 1,000 a month or RM 10,000 a year, saving RM 2,000 (17%)", () => {
+    expect(PLANS.month.amount).toBe(1000);
+    expect(PLANS.year.amount).toBe(10000);
+    expect(YEARLY_SAVING).toBe(2000);
+    expect(YEARLY_SAVING_PERCENT).toBe(17);
   });
 
   it("is subscribed while Stripe says active, trialing or past_due", () => {

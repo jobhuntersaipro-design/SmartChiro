@@ -113,7 +113,7 @@ export async function sendWelcomeEmail(user: { email: string; name: string | nul
   const trialLine = trialEnd
     ? `Your ${TRIAL_DAYS}-day free trial has started: every feature is yours until ${trialEnd}. No card needed.`
     : 'Your account is ready.'
-  const priceLine = `After the trial, SmartChiro Pro is RM ${PLANS.month.amount} a month or RM ${PLANS.year.amount.toLocaleString('en-MY')} a year.`
+  const priceLine = `After the trial, SmartChiro Pro is RM ${PLANS.month.amount.toLocaleString('en-MY')} a month or RM ${PLANS.year.amount.toLocaleString('en-MY')} a year.`
   const dashboardUrl = `${APP_URL}/dashboard`
 
   const { error } = await resend().emails.send({
