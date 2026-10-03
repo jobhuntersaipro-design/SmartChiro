@@ -4,13 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon, RotateCcw } from 'lucide-react'
 import { validateXrayFile, generateThumbnail } from '@/lib/xray-validation'
-import {
-  uploadXray,
-  BODY_REGION_OPTIONS,
-  VIEW_TYPE_OPTIONS,
-  type BodyRegion,
-  type ViewType,
-} from '@/lib/xray-upload-client'
+import { uploadXray } from '@/lib/xray-upload-client'
 
 type UploadStage = 'queued' | 'validating' | 'generating-thumbnail' | 'uploading' | 'done' | 'error'
 
@@ -18,9 +12,6 @@ interface UploadItem {
   id: string
   file: File
   preview: string
-  /** Body region and view chosen when the file was added. */
-  bodyRegion: BodyRegion | null
-  viewType: ViewType | null
   stage: UploadStage
   progress: number
   error: string | null
@@ -43,9 +34,6 @@ const STAGE_LABEL: Record<UploadStage, string> = {
   error: 'Upload failed',
 }
 
-const SELECT_CLASS =
-  'mt-1 block h-9 w-full rounded-control border border-border bg-surface-muted px-2 text-[15px] text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand'
-
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -54,13 +42,10 @@ function formatFileSize(bytes: number): string {
 
 /**
  * Drop or pick X-ray images (several at once) for a patient. Files upload one
- * after another, each with its own progress; body region and view apply to
- * the files added while they are set (the title defaults to the file name).
+ * after another, each with its own progress; the title defaults to the file name.
  */
 export function XrayUpload({ patientId, onUploadComplete, multiple = true }: XrayUploadProps) {
   const [items, setItems] = useState<UploadItem[]>([])
-  const [bodyRegion, setBodyRegion] = useState<BodyRegion | ''>('')
-  const [viewType, setViewType] = useState<ViewType | ''>('')
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const queueRef = useRef<UploadItem[]>([])
@@ -90,8 +75,6 @@ export function XrayUpload({ patientId, onUploadComplete, multiple = true }: Xra
           width: dimensions.width,
           height: dimensions.height,
           patientId,
-          bodyRegion: item.bodyRegion,
-          viewType: item.viewType,
           onProgress: (progress) => update(item.id, { progress }),
         })
         update(item.id, { stage: 'done', progress: 100, xrayId })
@@ -124,8 +107,6 @@ export function XrayUpload({ patientId, onUploadComplete, multiple = true }: Xra
         id: crypto.randomUUID(),
         file,
         preview: URL.createObjectURL(file),
-        bodyRegion: bodyRegion || null,
-        viewType: viewType || null,
         stage: 'queued',
         progress: 0,
         error: null,
@@ -136,7 +117,7 @@ export function XrayUpload({ patientId, onUploadComplete, multiple = true }: Xra
       if (fileInputRef.current) fileInputRef.current.value = ''
       void pump()
     },
-    [multiple, bodyRegion, viewType, pump]
+    [multiple, pump]
   )
 
   const remove = useCallback((item: UploadItem) => {
@@ -170,70 +151,42 @@ export function XrayUpload({ patientId, onUploadComplete, multiple = true }: Xra
   return (
     <div className="w-full">
       {showDropZone && (
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] md:items-end">
-          <label className="text-[14px] text-fg-secondary">
-            Body region
-            <select
-              value={bodyRegion}
-              onChange={(e) => setBodyRegion(e.target.value as BodyRegion | '')}
-              className={SELECT_CLASS}
-            >
-              <option value="">Not set</option>
-              {BODY_REGION_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-[14px] text-fg-secondary">
-            View
-            <select
-              value={viewType}
-              onChange={(e) => setViewType(e.target.value as ViewType | '')}
-              className={SELECT_CLASS}
-            >
-              <option value="">Not set</option>
-              {VIEW_TYPE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </label>
-          <label
-            onDrop={(e) => {
-              e.preventDefault()
-              setDragOver(false)
-              addFiles(e.dataTransfer.files)
-            }}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragOver(true)
-            }}
-            onDragLeave={() => setDragOver(false)}
-            className={`flex cursor-pointer items-center gap-3 rounded-panel border-2 border-dashed px-4 py-3 transition-colors hover:border-border-strong ${
-              dragOver ? 'border-brand bg-brand-subtle' : 'border-border bg-surface-muted'
-            }`}
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-subtle">
-              <Upload className="size-4.5 text-brand" strokeWidth={1.5} />
+        <label
+          onDrop={(e) => {
+            e.preventDefault()
+            setDragOver(false)
+            addFiles(e.dataTransfer.files)
+          }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          className={`flex cursor-pointer items-center gap-3 rounded-panel border-2 border-dashed px-4 py-3 transition-colors hover:border-border-strong ${
+            dragOver ? 'border-brand bg-brand-subtle' : 'border-border bg-surface-muted'
+          }`}
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-subtle">
+            <Upload className="size-4.5 text-brand" strokeWidth={1.5} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[15px] font-medium text-foreground">
+              {multiple ? 'Drop X-ray images here, or click to choose' : 'Drop an X-ray image here, or click to choose'}
             </span>
-            <span className="min-w-0">
-              <span className="block text-[15px] font-medium text-foreground">
-                {multiple ? 'Drop X-ray images here, or click to choose' : 'Drop an X-ray image here, or click to choose'}
-              </span>
-              <span className="block text-[13px] text-fg-secondary">
-                JPEG or PNG, up to 300 MB{multiple ? ' each. Select several at once.' : '.'}
-              </span>
+            <span className="block text-[13px] text-fg-secondary">
+              JPEG or PNG, up to 300 MB{multiple ? ' each. Select several at once.' : '.'}
             </span>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple={multiple}
-              accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-              onChange={(e) => addFiles(e.target.files)}
-              className="sr-only"
-              aria-label={multiple ? 'Choose X-ray images' : 'Choose an X-ray image'}
-            />
-          </label>
-        </div>
+          </span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple={multiple}
+            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+            onChange={(e) => addFiles(e.target.files)}
+            className="sr-only"
+            aria-label={multiple ? 'Choose X-ray images' : 'Choose an X-ray image'}
+          />
+        </label>
       )}
 
       {items.length > 0 && (

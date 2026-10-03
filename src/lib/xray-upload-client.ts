@@ -1,24 +1,6 @@
 export type BodyRegion = "CERVICAL" | "THORACIC" | "LUMBAR" | "PELVIS" | "FULL_SPINE" | "EXTREMITY" | "OTHER";
 export type ViewType = "AP" | "LATERAL" | "OBLIQUE" | "PA" | "OTHER";
 
-export const BODY_REGION_OPTIONS: { value: BodyRegion; label: string }[] = [
-  { value: "CERVICAL", label: "Cervical" },
-  { value: "THORACIC", label: "Thoracic" },
-  { value: "LUMBAR", label: "Lumbar" },
-  { value: "PELVIS", label: "Pelvis" },
-  { value: "FULL_SPINE", label: "Full spine" },
-  { value: "EXTREMITY", label: "Extremity" },
-  { value: "OTHER", label: "Other" },
-];
-
-export const VIEW_TYPE_OPTIONS: { value: ViewType; label: string }[] = [
-  { value: "AP", label: "AP" },
-  { value: "PA", label: "PA" },
-  { value: "LATERAL", label: "Lateral" },
-  { value: "OBLIQUE", label: "Oblique" },
-  { value: "OTHER", label: "Other" },
-];
-
 export interface XrayUploadInput {
   file: File;
   thumbnail: Blob;
