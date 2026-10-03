@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { canManageXray } from "@/lib/auth/xray";
+import { aiUsageToday } from "@/lib/ai-usage";
 import { AnnotationPageClient } from "./AnnotationPageClient";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
 
@@ -24,7 +25,7 @@ export default async function AnnotationPage({
   // notFound (not 403) so X-ray ids can't be probed.
   if (!(await canManageXray(session.user.id, xrayId))) notFound();
 
-  const [xray, patientSeriesRaw] = await Promise.all([
+  const [xray, patientSeriesRaw, aiUsage] = await Promise.all([
     prisma.xray.findUnique({
       where: { id: xrayId },
       include: {
@@ -39,6 +40,7 @@ export default async function AnnotationPage({
       orderBy: { createdAt: "desc" },
       select: { id: true, title: true, bodyRegion: true, thumbnailUrl: true, createdAt: true },
     }),
+    aiUsageToday(session.user.id),
   ]);
 
   if (!xray || xray.patientId !== patientId) {
@@ -72,6 +74,7 @@ export default async function AnnotationPage({
       initialAdjustments={annotation?.imageAdjustments as unknown as ImageAdjustments | undefined}
       xrayId={xrayId}
       patientSeries={patientSeries}
+      aiUsage={{ used: aiUsage.xrayIds.size, limit: aiUsage.limit }}
     />
   );
 }

@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import type { ViewMode } from "@/types/annotation";
 import type { CursorStore } from "@/lib/cursor-store";
 import type { SaveStatus } from "@/lib/annotation-saver";
+import type { AiUsageToday } from "@/types/pelvis";
 
 interface StatusBarProps {
   cursorStore: CursorStore;
@@ -21,6 +22,15 @@ interface StatusBarProps {
   canRedo?: boolean;
   onUndo?: () => void;
   onRedo?: () => void;
+  /** AI analyses used today and the daily limit. */
+  aiUsage?: AiUsageToday | null;
+}
+
+/** "AI analyses today: 3 of 10" (or that the limit is reached). */
+export function aiUsageLabel({ used, limit }: AiUsageToday): string {
+  return used >= limit
+    ? `AI analyses today: ${used} of ${limit}. Daily limit reached; re-running an X-ray already analysed today still works. Resets at midnight.`
+    : `AI analyses today: ${used} of ${limit} X-rays.`;
 }
 
 function CursorReadout({ store }: { store: CursorStore }) {
@@ -47,6 +57,7 @@ export function StatusBar({
   canRedo = false,
   onUndo,
   onRedo,
+  aiUsage = null,
 }: StatusBarProps) {
   const renderSaveStatus = () => {
     switch (saveStatus) {
@@ -131,6 +142,15 @@ export function StatusBar({
       </div>
 
       <div className="flex items-center gap-4">
+        {aiUsage && (
+          <span
+            title={aiUsageLabel(aiUsage)}
+            className="tabular-nums"
+            style={aiUsage.used >= aiUsage.limit ? { color: "#DF1B41" } : undefined}
+          >
+            AI analyses today: {aiUsage.used} / {aiUsage.limit}
+          </span>
+        )}
         <span>{shapeCount} annotation{shapeCount !== 1 ? "s" : ""}</span>
         <span className="capitalize">{activeTool.replace("_", " ")} tool</span>
         {renderSaveStatus()}

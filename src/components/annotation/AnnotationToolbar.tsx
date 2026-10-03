@@ -17,6 +17,8 @@ import {
   Loader2,
 } from "lucide-react";
 import type { ToolId } from "@/types/annotation";
+import type { AiUsageToday } from "@/types/pelvis";
+import { aiUsageLabel } from "./StatusBar";
 
 interface ToolItem {
   id: ToolId;
@@ -52,6 +54,8 @@ interface AnnotationToolbarProps {
   detectingLandmarks?: boolean;
   /** Disabled when no image is active or in multi-view mode. */
   detectLandmarksDisabled?: boolean;
+  /** AI analyses used today and the daily limit, shown under the AI button. */
+  aiUsage?: AiUsageToday | null;
 }
 
 function ToolTooltip({
@@ -97,6 +101,7 @@ export function AnnotationToolbar({
   onDetectLandmarks,
   detectingLandmarks = false,
   detectLandmarksDisabled = false,
+  aiUsage = null,
 }: AnnotationToolbarProps) {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
@@ -192,11 +197,14 @@ export function AnnotationToolbar({
             onClick={onDetectLandmarks}
             disabled={detectingLandmarks || detectLandmarksDisabled}
             aria-label="Detect anatomical landmarks (AI)"
-            title={
+            title={[
               detectLandmarksDisabled
                 ? "Available in single-view mode with an active X-ray"
-                : "AI pelvis analysis: checks the film is an AP pelvis, then places the 16 landmarks of Moon et al. (2024). Image pixels only are sent to Anthropic — no patient details. Check every landmark."
-            }
+                : "AI pelvis analysis: checks the film is an AP pelvis, then places the 16 landmarks of Moon et al. (2024). Image pixels only are sent to Anthropic — no patient details. Check every landmark.",
+              aiUsage ? aiUsageLabel(aiUsage) : null,
+            ]
+              .filter(Boolean)
+              .join("\n")}
             className="flex items-center justify-center transition-colors"
             style={{
               width: 36,
@@ -225,6 +233,16 @@ export function AnnotationToolbar({
               <Sparkles size={18} strokeWidth={1.5} />
             )}
           </button>
+          {aiUsage && (
+            <span
+              aria-label={aiUsageLabel(aiUsage)}
+              title={aiUsageLabel(aiUsage)}
+              className="mt-1 text-[10px] font-medium tabular-nums leading-none"
+              style={{ color: aiUsage.used >= aiUsage.limit ? "#ff6b81" : "#8a8a8a" }}
+            >
+              {aiUsage.used}/{aiUsage.limit}
+            </span>
+          )}
         </>
       )}
     </div>

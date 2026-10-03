@@ -211,6 +211,7 @@ export function SlotPickerDialog({
             <div className="pt-3">
               <XrayUpload
                 patientId={patientId}
+                multiple={false}
                 onUploadComplete={async (uploadedId) => {
                   // XrayUpload only hands back the new X-ray's ID. Look up
                   // its row so we can populate the slot with the fileUrl

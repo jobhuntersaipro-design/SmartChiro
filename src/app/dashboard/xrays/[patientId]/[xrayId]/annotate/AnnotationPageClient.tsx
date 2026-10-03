@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { AnnotationCanvas } from "@/components/annotation/AnnotationCanvas";
 import type { AnnotationCanvasState, ImageAdjustments } from "@/types/annotation";
 import type { SeriesXray } from "@/components/annotation/SeriesStrip";
+import type { AiUsageToday } from "@/types/pelvis";
 
 interface AnnotationPageClientProps {
   imageUrl: string;
@@ -19,6 +20,7 @@ interface AnnotationPageClientProps {
   initialAdjustments?: ImageAdjustments;
   xrayId: string;
   patientSeries?: SeriesXray[];
+  aiUsage?: AiUsageToday;
 }
 
 export function AnnotationPageClient({
@@ -35,6 +37,7 @@ export function AnnotationPageClient({
   initialAdjustments,
   xrayId,
   patientSeries,
+  aiUsage,
 }: AnnotationPageClientProps) {
   const router = useRouter();
 
@@ -56,6 +59,7 @@ export function AnnotationPageClient({
       // new tab, where router.back() had no history and went to about:blank.
       onClose={() => router.push(`/dashboard/patients/${patientId}/details?tab=xrays`)}
       patientSeries={patientSeries}
+      initialAiUsage={aiUsage}
     />
   );
 }

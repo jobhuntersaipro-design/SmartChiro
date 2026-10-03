@@ -65,7 +65,7 @@ import { EmptyCanvasHint } from "./EmptyCanvasHint";
 import { PelvisOverlay, mergeDetectedLandmarks, pelvicLandmarkShapes, plainLandmarkCopy } from "./PelvisOverlay";
 import { PelvisRejectedDialog } from "./PelvisRejectedDialog";
 import { analysisView } from "@/lib/pelvic-analysis";
-import type { DetectLandmarksRejection, DetectLandmarksResponse } from "@/types/pelvis";
+import type { AiUsageToday, DetectLandmarksRejection, DetectLandmarksResponse } from "@/types/pelvis";
 import { useViewerInputs } from "@/hooks/useViewerInputs";
 import { useStableCallbacks } from "@/hooks/useStableCallbacks";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
@@ -94,6 +94,8 @@ interface AnnotationCanvasProps {
   xrayId: string;
   onClose: () => void;
   patientSeries?: SeriesXray[];
+  /** AI pelvis analyses used today and the daily limit (refreshed after each analysis). */
+  initialAiUsage?: AiUsageToday;
 }
 
 export function AnnotationCanvas({
@@ -111,6 +113,7 @@ export function AnnotationCanvas({
   xrayId,
   onClose,
   patientSeries = [],
+  initialAiUsage,
 }: AnnotationCanvasProps) {
   // ─── State ───
   const [shapes, setShapes] = useState<BaseShape[]>(
@@ -156,6 +159,7 @@ export function AnnotationCanvas({
   // AI pelvis analysis: request state, the gate's rejection, the right
   // panel's tab (switched to Measurements after a run) and the overlay.
   const [detectingLandmarks, setDetectingLandmarks] = useState(false);
+  const [aiUsage, setAiUsage] = useState<AiUsageToday | null>(initialAiUsage ?? null);
   const [analysisProgress, setAnalysisProgress] = useState<{ label: string; percent: number; ceiling: number } | null>(null);
   const [pelvisRejection, setPelvisRejection] = useState<DetectLandmarksRejection | null>(null);
   const [pelvisRejectionOpen, setPelvisRejectionOpen] = useState(false);
@@ -492,6 +496,9 @@ export function AnnotationCanvas({
           setPelvisRejectionOpen(true);
           return;
         }
+        if (answer.status === 429 && body && "error" in body && body.error === "DAILY_LIMIT") {
+          setAiUsage((u) => (u ? { ...u, used: Math.max(u.used, u.limit) } : u));
+        }
         const message = body && "message" in body ? body.message : undefined;
         toast.error(message ?? `Landmark detection failed (${answer.status})`);
         return;
@@ -502,6 +509,7 @@ export function AnnotationCanvas({
         return;
       }
 
+      if (data.usage) setAiUsage(data.usage);
       const { modified, added, removed } = mergeDetectedLandmarks(shapesRef.current, data, Date.now());
       const removedIds = new Set(removed.map((s) => s.id));
       const movedById = new Map(modified.map((m) => [m.after.id, m.after]));
@@ -1826,6 +1834,7 @@ export function AnnotationCanvas({
             onDetectLandmarks={handleDetectLandmarks}
             detectingLandmarks={detectingLandmarks}
             detectLandmarksDisabled={viewMode !== "single" || !imageLoaded}
+            aiUsage={aiUsage}
           />
           <div style={{ flex: 1 }} />
           <div className="pb-2 flex flex-col items-center">
@@ -2501,6 +2510,7 @@ export function AnnotationCanvas({
         canRedo={undoRedo.canRedo}
         onUndo={undoRedo.undo}
         onRedo={undoRedo.redo}
+        aiUsage={aiUsage}
       />
     </div>
   );

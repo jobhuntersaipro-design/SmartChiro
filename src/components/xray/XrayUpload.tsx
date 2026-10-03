@@ -1,14 +1,9 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  validateXrayFile,
-  generateThumbnail,
-  type ImageDimensions,
-} from '@/lib/xray-validation'
+import { Upload, X, CheckCircle, AlertCircle, Loader2, Image as ImageIcon, RotateCcw } from 'lucide-react'
+import { validateXrayFile, generateThumbnail } from '@/lib/xray-validation'
 import {
   uploadXray,
   BODY_REGION_OPTIONS,
@@ -17,152 +12,171 @@ import {
   type ViewType,
 } from '@/lib/xray-upload-client'
 
-type UploadStage =
-  | 'idle'
-  | 'validating'
-  | 'generating-thumbnail'
-  | 'uploading'
-  | 'done'
-  | 'error'
+type UploadStage = 'queued' | 'validating' | 'generating-thumbnail' | 'uploading' | 'done' | 'error'
+
+interface UploadItem {
+  id: string
+  file: File
+  preview: string
+  /** Body region and view chosen when the file was added. */
+  bodyRegion: BodyRegion | null
+  viewType: ViewType | null
+  stage: UploadStage
+  progress: number
+  error: string | null
+  xrayId: string | null
+}
 
 interface XrayUploadProps {
   patientId: string
   onUploadComplete?: (xrayId: string) => void
+  /** Accept several files at once (default). The viewer's slot picker takes one. */
+  multiple?: boolean
 }
 
-export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
-  const [stage, setStage] = useState<UploadStage>('idle')
-  const [error, setError] = useState<string | null>(null)
-  const [progress, setProgress] = useState(0)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [fileSize, setFileSize] = useState<number>(0)
+const STAGE_LABEL: Record<UploadStage, string> = {
+  queued: 'Waiting…',
+  validating: 'Checking file…',
+  'generating-thumbnail': 'Preparing preview…',
+  uploading: 'Uploading…',
+  done: 'Uploaded',
+  error: 'Upload failed',
+}
+
+const SELECT_CLASS =
+  'mt-1 block h-9 w-full rounded-control border border-border bg-surface-muted px-2 text-[15px] text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand'
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+/**
+ * Drop or pick X-ray images (several at once) for a patient. Files upload one
+ * after another, each with its own progress; body region and view apply to
+ * the files added while they are set (the title defaults to the file name).
+ */
+export function XrayUpload({ patientId, onUploadComplete, multiple = true }: XrayUploadProps) {
+  const [items, setItems] = useState<UploadItem[]>([])
   const [bodyRegion, setBodyRegion] = useState<BodyRegion | ''>('')
   const [viewType, setViewType] = useState<ViewType | ''>('')
-  const [uploadedId, setUploadedId] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const queueRef = useRef<UploadItem[]>([])
+  const runningRef = useRef(false)
+  const itemsRef = useRef(items)
+  useEffect(() => {
+    itemsRef.current = items
+  })
+  // Free the object-URL previews when the uploader goes away.
+  useEffect(() => () => itemsRef.current.forEach((i) => URL.revokeObjectURL(i.preview)), [])
 
-  const reset = useCallback(() => {
-    setStage('idle')
-    setError(null)
-    setProgress(0)
-    setFileName(null)
-    setFileSize(0)
-    setUploadedId(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-    if (preview) {
-      URL.revokeObjectURL(preview)
-      setPreview(null)
-    }
-  }, [preview])
+  const update = useCallback((id: string, patch: Partial<UploadItem>) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)))
+  }, [])
 
-  const handleUpload = useCallback(
-    async (file: File) => {
-      setError(null)
-      setFileName(file.name)
-      setFileSize(file.size)
-      const previewUrl = URL.createObjectURL(file)
-      setPreview(previewUrl)
-
-      let dimensions: ImageDimensions
-
-      // Step 1: Validate
+  const uploadOne = useCallback(
+    async (item: UploadItem) => {
       try {
-        setStage('validating')
-        dimensions = await validateXrayFile(file)
-      } catch (err) {
-        setStage('error')
-        setError(err instanceof Error ? err.message : 'Validation failed.')
-        return
-      }
-
-      // Step 2: Generate thumbnail
-      let thumbnail: Blob
-      try {
-        setStage('generating-thumbnail')
-        thumbnail = await generateThumbnail(file)
-      } catch (err) {
-        setStage('error')
-        setError(err instanceof Error ? err.message : 'Thumbnail generation failed.')
-        return
-      }
-
-
-      // Step 3: Upload straight to storage (see uploadXray), then confirm.
-      try {
-        setStage('uploading')
-        setProgress(0)
+        update(item.id, { stage: 'validating', error: null, progress: 0 })
+        const dimensions = await validateXrayFile(item.file)
+        update(item.id, { stage: 'generating-thumbnail' })
+        const thumbnail = await generateThumbnail(item.file)
+        update(item.id, { stage: 'uploading' })
         const { xrayId } = await uploadXray({
-          file,
+          file: item.file,
           thumbnail,
           width: dimensions.width,
           height: dimensions.height,
           patientId,
-          bodyRegion: bodyRegion || null,
-          viewType: viewType || null,
-          onProgress: setProgress,
+          bodyRegion: item.bodyRegion,
+          viewType: item.viewType,
+          onProgress: (progress) => update(item.id, { progress }),
         })
-        setStage('done')
-        setProgress(100)
-        setUploadedId(xrayId)
+        update(item.id, { stage: 'done', progress: 100, xrayId })
         onUploadComplete?.(xrayId)
       } catch (err) {
-        setStage('error')
-        setError(err instanceof Error ? err.message : 'Upload failed.')
+        update(item.id, { stage: 'error', error: err instanceof Error ? err.message : 'Upload failed.' })
       }
     },
-    [patientId, onUploadComplete, bodyRegion, viewType]
+    [patientId, onUploadComplete, update]
   )
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) handleUpload(file)
+  // One upload at a time, in the order files were added.
+  const pump = useCallback(async () => {
+    if (runningRef.current) return
+    runningRef.current = true
+    try {
+      for (let next = queueRef.current.shift(); next; next = queueRef.current.shift()) {
+        await uploadOne(next)
+      }
+    } finally {
+      runningRef.current = false
+    }
+  }, [uploadOne])
+
+  const addFiles = useCallback(
+    (files: FileList | null) => {
+      const picked = Array.from(files ?? []).slice(0, multiple ? undefined : 1)
+      if (picked.length === 0) return
+      const added: UploadItem[] = picked.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        preview: URL.createObjectURL(file),
+        bodyRegion: bodyRegion || null,
+        viewType: viewType || null,
+        stage: 'queued',
+        progress: 0,
+        error: null,
+        xrayId: null,
+      }))
+      setItems((prev) => [...prev, ...added])
+      queueRef.current.push(...added)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      void pump()
     },
-    [handleUpload]
+    [multiple, bodyRegion, viewType, pump]
   )
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      const file = e.dataTransfer.files?.[0]
-      if (file) handleUpload(file)
-    },
-    [handleUpload]
-  )
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
+  const remove = useCallback((item: UploadItem) => {
+    queueRef.current = queueRef.current.filter((q) => q.id !== item.id)
+    URL.revokeObjectURL(item.preview)
+    setItems((prev) => prev.filter((i) => i.id !== item.id))
   }, [])
 
-  const isUploading = stage === 'uploading'
+  const retry = useCallback(
+    (item: UploadItem) => {
+      update(item.id, { stage: 'queued', error: null, progress: 0 })
+      queueRef.current.push(item)
+      void pump()
+    },
+    [update, pump]
+  )
 
-  const stageLabel: Record<UploadStage, string> = {
-    idle: '',
-    validating: 'Validating file...',
-    'generating-thumbnail': 'Generating thumbnail...',
-    uploading: 'Uploading X-ray...',
-    done: 'Upload complete!',
-    error: 'Upload failed',
-  }
+  const clearFinished = useCallback(() => {
+    setItems((prev) => {
+      prev.filter((i) => i.stage === 'done').forEach((i) => URL.revokeObjectURL(i.preview))
+      return prev.filter((i) => i.stage !== 'done')
+    })
+  }, [])
 
-  function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
+  const doneCount = items.filter((i) => i.stage === 'done').length
+  const failedCount = items.filter((i) => i.stage === 'error').length
+  const activeCount = items.length - doneCount - failedCount
+  // Single mode (slot picker): the drop zone gives way to the one upload.
+  const showDropZone = multiple || items.length === 0
 
   return (
-    <div className="w-full max-w-130">
-      {/* Optional details, saved with the X-ray (the title defaults to the file name) */}
-      {stage === 'idle' && (
-        <div className="mb-3 grid grid-cols-2 gap-3">
+    <div className="w-full">
+      {showDropZone && (
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] md:items-end">
           <label className="text-[14px] text-fg-secondary">
             Body region
             <select
               value={bodyRegion}
               onChange={(e) => setBodyRegion(e.target.value as BodyRegion | '')}
-              className="mt-1 block h-9 w-full rounded-control border border-border bg-surface-muted px-2 text-[15px] text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className={SELECT_CLASS}
             >
               <option value="">Not set</option>
               {BODY_REGION_OPTIONS.map((o) => (
@@ -175,7 +189,7 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
             <select
               value={viewType}
               onChange={(e) => setViewType(e.target.value as ViewType | '')}
-              className="mt-1 block h-9 w-full rounded-control border border-border bg-surface-muted px-2 text-[15px] text-foreground focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className={SELECT_CLASS}
             >
               <option value="">Not set</option>
               {VIEW_TYPE_OPTIONS.map((o) => (
@@ -183,135 +197,146 @@ export function XrayUpload({ patientId, onUploadComplete }: XrayUploadProps) {
               ))}
             </select>
           </label>
+          <label
+            onDrop={(e) => {
+              e.preventDefault()
+              setDragOver(false)
+              addFiles(e.dataTransfer.files)
+            }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setDragOver(true)
+            }}
+            onDragLeave={() => setDragOver(false)}
+            className={`flex cursor-pointer items-center gap-3 rounded-panel border-2 border-dashed px-4 py-3 transition-colors hover:border-border-strong ${
+              dragOver ? 'border-brand bg-brand-subtle' : 'border-border bg-surface-muted'
+            }`}
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-subtle">
+              <Upload className="size-4.5 text-brand" strokeWidth={1.5} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[15px] font-medium text-foreground">
+                {multiple ? 'Drop X-ray images here, or click to choose' : 'Drop an X-ray image here, or click to choose'}
+              </span>
+              <span className="block text-[13px] text-fg-secondary">
+                JPEG or PNG, up to 300 MB{multiple ? ' each. Select several at once.' : '.'}
+              </span>
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple={multiple}
+              accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+              onChange={(e) => addFiles(e.target.files)}
+              className="sr-only"
+              aria-label={multiple ? 'Choose X-ray images' : 'Choose an X-ray image'}
+            />
+          </label>
         </div>
       )}
 
-      {/* Drop zone */}
-      {stage === 'idle' && (
-        <label
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-panel border-2 border-dashed border-border bg-surface-muted px-6 py-10 transition-colors hover:border-border-strong hover:bg-surface-muted"
-        >
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-brand-subtle">
-            <Upload className="h-5 w-5 text-brand" strokeWidth={1.5} />
-          </div>
-          <p className="text-[16px] font-medium text-foreground">
-            Drop an X-ray image here
-          </p>
-          <p className="mt-1 text-[15px] text-fg-secondary">
-            or click to browse — JPEG, PNG up to 300 MB
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-            onChange={handleFileChange}
-            className="sr-only"
-          />
-        </label>
-      )}
-
-      {/* Upload progress */}
-      {stage !== 'idle' && (
-        <div className="rounded-panel border border-border bg-white p-4" style={{ boxShadow: 'var(--shadow-card)' }}>
-          <div className="flex items-start gap-3">
-            {/* Preview */}
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-muted">
-              {preview ? (
-                <img
-                  src={preview}
-                  alt="X-ray preview"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <ImageIcon className="h-6 w-6 text-fg-secondary" strokeWidth={1.5} />
+      {items.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {items.length > 1 && (
+            <div className="flex items-center justify-between text-[13px] text-fg-secondary">
+              <span aria-live="polite">
+                {activeCount > 0
+                  ? `Uploading ${doneCount + failedCount + 1} of ${items.length}…`
+                  : `${doneCount} of ${items.length} uploaded${failedCount ? `, ${failedCount} failed` : ''}`}
+              </span>
+              {doneCount > 0 && activeCount === 0 && (
+                <button type="button" onClick={clearFinished} className="text-brand hover:underline">
+                  Clear uploaded
+                </button>
               )}
             </div>
-
-            {/* Info */}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <p className="truncate text-[15px] font-medium text-foreground">
-                  {fileName}
-                </p>
-                {(stage === 'done' || stage === 'error') && (
-                  <button
-                    onClick={reset}
-                    className="ml-2 flex-shrink-0 rounded-md p-1 text-fg-secondary transition-colors hover:bg-surface-muted hover:text-foreground"
-                  >
-                    <X className="h-4 w-4" strokeWidth={1.5} />
-                  </button>
-                )}
-              </div>
-              <p className="mt-0.5 text-[14px] text-fg-secondary">
-                {formatFileSize(fileSize)}
-              </p>
-
-              {/* Progress bar */}
-              {isUploading && (
-                <div className="mt-2">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                    <div
-                      className="h-full rounded-full bg-brand transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Stage label */}
-              <div className="mt-2 flex items-center gap-1.5">
-                {(isUploading || stage === 'validating' || stage === 'generating-thumbnail') && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" strokeWidth={2} />
-                )}
-                {stage === 'done' && (
-                  <CheckCircle className="h-3.5 w-3.5 text-success" strokeWidth={2} />
-                )}
-                {stage === 'error' && (
-                  <AlertCircle className="h-3.5 w-3.5 text-danger" strokeWidth={2} />
-                )}
-                <span
-                  className={`text-[14px] ${
-                    stage === 'done'
-                      ? 'text-success'
-                      : stage === 'error'
-                        ? 'text-danger'
-                        : 'text-fg-secondary'
-                  }`}
-                >
-                  {stageLabel[stage]}
-                </span>
-              </div>
-
-              {stage === 'done' && uploadedId && (
-                <Link
-                  href={`/dashboard/xrays/${patientId}/${uploadedId}/annotate`}
-                  target="_blank"
-                  className="mt-2 inline-block text-[14px] font-medium text-brand hover:underline"
-                >
-                  Annotate now →
-                </Link>
-              )}
-
-              {/* Error message + retry */}
-              {stage === 'error' && error && (
-                <div className="mt-2">
-                  <p className="text-[14px] text-danger">{error}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={reset}
-                  >
-                    Try again
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
+          <ul className="grid gap-2 md:grid-cols-2">
+            {items.map((item) => (
+              <UploadRow key={item.id} item={item} patientId={patientId} onRemove={remove} onRetry={retry} />
+            ))}
+          </ul>
         </div>
       )}
     </div>
+  )
+}
+
+function UploadRow({
+  item,
+  patientId,
+  onRemove,
+  onRetry,
+}: {
+  item: UploadItem
+  patientId: string
+  onRemove: (item: UploadItem) => void
+  onRetry: (item: UploadItem) => void
+}) {
+  const busy = item.stage === 'validating' || item.stage === 'generating-thumbnail' || item.stage === 'uploading'
+  return (
+    <li className="flex items-start gap-3 rounded-panel border border-border bg-surface p-3 shadow-(--shadow-card)">
+      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-muted">
+        {item.preview ? (
+          // eslint-disable-next-line @next/next/no-img-element -- local object-URL preview
+          <img src={item.preview} alt="" className="size-full object-cover" />
+        ) : (
+          <ImageIcon className="size-5 text-fg-secondary" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-[14px] font-medium text-foreground" title={item.file.name}>
+            {item.file.name}
+          </p>
+          {!busy && (
+            <button
+              type="button"
+              onClick={() => onRemove(item)}
+              aria-label={`Remove ${item.file.name}`}
+              className="shrink-0 rounded-md p-1 text-fg-secondary transition-colors hover:bg-surface-muted hover:text-foreground"
+            >
+              <X className="size-4" strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
+        <p className="text-[12px] text-fg-muted">{formatFileSize(item.file.size)}</p>
+
+        {item.stage === 'uploading' && (
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-border">
+            <div className="h-full rounded-full bg-brand transition-all duration-300" style={{ width: `${item.progress}%` }} />
+          </div>
+        )}
+
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+          <span
+            className={`flex items-center gap-1.5 ${
+              item.stage === 'done' ? 'text-success' : item.stage === 'error' ? 'text-danger' : 'text-fg-secondary'
+            }`}
+          >
+            {busy && <Loader2 className="size-3.5 animate-spin text-brand" strokeWidth={2} />}
+            {item.stage === 'done' && <CheckCircle className="size-3.5" strokeWidth={2} />}
+            {item.stage === 'error' && <AlertCircle className="size-3.5" strokeWidth={2} />}
+            {STAGE_LABEL[item.stage]}
+          </span>
+          {item.stage === 'done' && item.xrayId && (
+            <Link
+              href={`/dashboard/xrays/${patientId}/${item.xrayId}/annotate`}
+              target="_blank"
+              className="font-medium text-brand hover:underline"
+            >
+              Annotate now →
+            </Link>
+          )}
+          {item.stage === 'error' && (
+            <button type="button" onClick={() => onRetry(item)} className="flex items-center gap-1 font-medium text-brand hover:underline">
+              <RotateCcw className="size-3.5" /> Try again
+            </button>
+          )}
+        </div>
+        {item.stage === 'error' && item.error && <p className="mt-1 text-[13px] text-danger">{item.error}</p>}
+      </div>
+    </li>
   )
 }

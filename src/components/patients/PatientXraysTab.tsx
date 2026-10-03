@@ -1,9 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { XrayUpload } from '@/components/xray/XrayUpload'
 import { XrayCard, type XrayCardData } from '@/components/xray/XrayCard'
 import { XrayFilterBar, type FilterState } from '@/components/xray/XrayFilterBar'
@@ -22,7 +20,6 @@ const DEFAULT_FILTERS: FilterState = {
 }
 
 export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTabProps) {
-  const [showUpload, setShowUpload] = useState(false)
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [notesXrayId, setNotesXrayId] = useState<string | null>(null)
@@ -112,22 +109,14 @@ export function PatientXraysTab({ patientId, xrays, onRefresh }: PatientXraysTab
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <XrayFilterBar state={filters} onChange={handleFiltersChange} count={filtered.length} />
-        <Button
-          onClick={() => setShowUpload((v) => !v)}
-          className="ml-3 h-8 rounded-control bg-primary text-white text-[13px] font-medium hover:bg-primary/90 px-3"
-        >
-          <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload X-Ray
-        </Button>
+      {/* Always open: drop or choose several films; each keeps its "Annotate now" link. */}
+      <div className="mb-4 rounded-panel border border-border bg-white p-4">
+        <XrayUpload patientId={patientId} onUploadComplete={() => onRefresh()} />
       </div>
 
-      {showUpload && (
-        <div className="mb-4 rounded-panel border border-border bg-white p-4">
-          {/* Stays open after upload so "Annotate now" is one click away. */}
-          <XrayUpload patientId={patientId} onUploadComplete={() => onRefresh()} />
-        </div>
-      )}
+      <div className="mb-3">
+        <XrayFilterBar state={filters} onChange={handleFiltersChange} count={filtered.length} />
+      </div>
 
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
