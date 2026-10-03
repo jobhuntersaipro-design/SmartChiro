@@ -5,7 +5,8 @@ import type { AiUsageToday } from "@/types/pelvis";
 /**
  * Daily AI limit: each user may run AI pelvis analysis on `User.aiDailyLimit`
  * different X-rays per clinic day (default 10; super admins change it).
- * Re-running an X-ray already analysed today doesn't count again.
+ * Re-running an X-ray already analysed today doesn't count again; analyses
+ * that don't place landmarks (rejected film, error) don't count.
  */
 
 export interface DailyUsage {
@@ -31,10 +32,28 @@ export function dailyLimitReached(usage: DailyUsage, xrayId: string): boolean {
   return !usage.xrayIds.has(xrayId) && usage.xrayIds.size >= usage.limit;
 }
 
-/** Record a finished analysis; returns today's count with it. */
-export async function recordAiUsage(userId: string, xrayId: string, usage: DailyUsage): Promise<AiUsageToday> {
-  await prisma.aiUsage.create({ data: { userId, xrayId } });
-  return { used: usage.xrayIds.size + (usage.xrayIds.has(xrayId) ? 0 : 1), limit: usage.limit };
+/**
+ * Claim this X-ray's place in today's limit before the analysis runs (it takes
+ * 25-45 s), then count again, so parallel requests can't slip past the limit.
+ * Null when that pushed the user over: the claim is withdrawn. Release the
+ * claim if the analysis doesn't place landmarks.
+ */
+export async function reserveAiUsage(
+  userId: string,
+  xrayId: string,
+  now: Date = new Date(),
+): Promise<{ id: string; usage: AiUsageToday } | null> {
+  const claim = await prisma.aiUsage.create({ data: { userId, xrayId } });
+  const usage = await aiUsageToday(userId, now);
+  if (usage.xrayIds.size > usage.limit) {
+    await releaseAiUsage(claim.id);
+    return null;
+  }
+  return { id: claim.id, usage: { used: usage.xrayIds.size, limit: usage.limit } };
+}
+
+export async function releaseAiUsage(claimId: string): Promise<void> {
+  await prisma.aiUsage.deleteMany({ where: { id: claimId } });
 }
 
 /** Distinct X-rays analysed today, per user: for the super admin list. */

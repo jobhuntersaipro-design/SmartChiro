@@ -67,7 +67,7 @@ describe("PATCH /api/admin/users/[userId]", () => {
   it("a super admin's clinic covers its staff even after the super admin's own trial ends", async () => {
     const { accountAccess } = await import("@/lib/subscription");
     const past = new Date(Date.now() - 86_400_000);
-    const branch = await prisma.branch.create({ data: { name: `${PREFIX} clinic` } });
+    const branch = await prisma.branch.create({ data: { name: `${PREFIX} clinic`, billingUserId: adminId } });
     try {
       await prisma.branchMember.createMany({
         data: [

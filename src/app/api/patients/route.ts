@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
     // If user has no branch at all, create a default one
     if (!branchId) {
       const branch = await prisma.branch.create({
-        data: { name: 'My Branch' },
+        data: { name: 'My Branch', billingUserId: session.user.id },
       })
       await prisma.branchMember.create({
         data: { userId: session.user.id, branchId: branch.id, role: 'OWNER' },

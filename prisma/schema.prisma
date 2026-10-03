@@ -60,6 +60,7 @@ model User {
   paymentsReceived    Payment[]              @relation("PaymentReceivedBy")
   einvoiceSubmissions EInvoiceSubmission[]   @relation("EInvoiceSubmittedBy")
   aiUsage             AiUsage[]
+  billingBranches     Branch[]               @relation("BranchBillingUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -279,6 +280,11 @@ model Branch {
   einvoiceEnabled  Boolean          @default(false)
 
   members      BranchMember[]
+
+  /// The account whose SmartChiro plan pays for this branch: whoever created it.
+  /// Ownership transfers don't move it, so nobody can hand their bill to someone else.
+  billingUserId String?
+  billingUser   User?   @relation("BranchBillingUser", fields: [billingUserId], references: [id], onDelete: SetNull)
   patients     Patient[]
   appointments Appointment[]
   invoices     Invoice[]

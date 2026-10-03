@@ -450,7 +450,27 @@ describe("POST /api/viewer/detect-landmarks", () => {
     }
   });
 
-  it("returns 402 once the free trial has ended, unless a branch owner's plan covers the user", async () => {
+  it("doesn't count analyses that place no landmarks, and parallel requests can't pass the limit", async () => {
+    mockAuth.mockResolvedValue({ user: { id: memberId } });
+    const { POST } = await import("../route");
+    await prisma.aiUsage.deleteMany({ where: { userId: memberId } });
+    mockAnalysePelvis.mockResolvedValueOnce({ kind: "rejected", assessment: ASSESSMENT, reasons: ["Lateral view"] });
+    expect((await POST(req({ xrayId }))).status).toBe(422);
+    expect(await prisma.aiUsage.count({ where: { userId: memberId } })).toBe(0);
+
+    await prisma.user.update({ where: { id: memberId }, data: { aiDailyLimit: 1 } });
+    try {
+      mockAnalysePelvis.mockResolvedValue({ kind: "accepted", ...ACCEPTED });
+      const statuses = (await Promise.all([POST(req({ xrayId })), POST(req({ xrayId: noSizeXrayId }))])).map((r) => r.status);
+      expect(statuses.filter((s) => s === 200).length).toBeLessThanOrEqual(1);
+      const counted = await prisma.aiUsage.findMany({ where: { userId: memberId }, distinct: ["xrayId"] });
+      expect(counted.length).toBeLessThanOrEqual(1);
+    } finally {
+      await prisma.user.update({ where: { id: memberId }, data: { aiDailyLimit: 10 } });
+    }
+  });
+
+  it("returns 402 once the free trial has ended, unless the branch's billing account covers the user", async () => {
     mockAuth.mockResolvedValue({ user: { id: memberId } });
     mockAnalysePelvis.mockResolvedValue({ kind: "accepted", ...ACCEPTED });
     const { POST } = await import("../route");
@@ -465,7 +485,11 @@ describe("POST /api/viewer/detect-landmarks", () => {
         data: { email: `${TEST_PREFIX}-owner@t.com`, subscriptionStatus: "active" },
       });
       await prisma.branchMember.create({ data: { userId: owner.id, branchId, role: "OWNER" } });
+      // An OWNER alone doesn't pay for the branch; its billing account does.
+      expect((await POST(req({ xrayId }))).status).toBe(402);
+      await prisma.branch.update({ where: { id: branchId }, data: { billingUserId: owner.id } });
       expect((await POST(req({ xrayId }))).status).toBe(200);
+      await prisma.branch.update({ where: { id: branchId }, data: { billingUserId: null } });
       await prisma.branchMember.deleteMany({ where: { userId: owner.id } });
     } finally {
       await prisma.user.update({

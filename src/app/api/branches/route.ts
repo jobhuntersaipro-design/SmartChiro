@@ -222,6 +222,8 @@ export async function POST(req: NextRequest) {
         billingContactName: billingContactName?.trim() || null,
         billingContactEmail: billingContactEmail?.trim() || null,
         billingContactPhone: billingContactPhone?.trim() || null,
+        // The creator's plan pays for the branch (see src/lib/subscription.ts).
+        billingUserId: userId,
         members: {
           create: {
             userId,

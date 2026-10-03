@@ -291,7 +291,7 @@ function ManageUserDialog({ row, onClose }: { row: AdminUserRow; onClose: () => 
               />
               <span>
                 <span className="text-[14px] font-medium text-foreground">Disable account</span>
-                <span className="block text-[12px] text-fg-secondary">Blocks sign-in and shows a disabled notice inside the app.</span>
+                <span className="block text-[12px] text-fg-secondary">Signs them out straight away and blocks sign-in.</span>
               </span>
             </label>
           )}

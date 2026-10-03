@@ -13,19 +13,21 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
   if (!session?.user) {
-    redirect("/login");
+    // The middleware let a session cookie through, but its account was
+    // disabled or deleted: clear it (redirecting to /login would loop).
+    redirect(`/api/session/end${session?.error === "account_disabled" ? "?reason=account_disabled" : ""}`);
   }
   const [{ branches, activeBranchId, allBranches, canUseAllBranches }, access] = await Promise.all([
     loadBranchContext(session.user.id),
     accountAccess(session.user.id),
   ]);
-  if (!access) redirect("/login");
-  // Staff whose clinic owner pays don't see a trial countdown of their own.
-  const staffOnly = branches.length > 0 && branches.every((b) => b.role !== "OWNER");
-  const showTrial = access.state === "trial" && !staffOnly && !access.superAdmin;
+  if (!access || access.disabled) redirect(`/api/session/end${access ? "?reason=account_disabled" : ""}`);
+  // Staff work on their clinic's plan: no countdown of their own.
+  const showTrial = access.state === "trial" && !access.superAdmin;
 
   return (
     <DashboardShell
+      blocked={!access.allowed}
       user={{
         id: session.user.id,
         name: session.user.name ?? null,
@@ -42,11 +44,6 @@ export default async function DashboardLayout({
     >
       {access.allowed ? (
         children
-      ) : access.disabled ? (
-        <div className="mx-auto max-w-xl rounded-panel border border-border bg-surface p-6 text-center shadow-(--shadow-card)">
-          <h1 className="font-heading text-[19px] font-medium text-foreground">This account has been disabled</h1>
-          <p className="mt-2 text-[14px] text-fg-secondary">Contact SmartChiro support to have it turned back on.</p>
-        </div>
       ) : (
         // Trial over and no plan: every dashboard page shows the plans instead.
         <PlanView {...planViewProps(access)} />

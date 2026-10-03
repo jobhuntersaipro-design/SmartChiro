@@ -4,7 +4,7 @@ import { getXrayCapability } from "@/lib/auth/xray";
 import { prisma } from "@/lib/prisma";
 import { analysePelvis, progressEvent, VisionApiError, type AnalysisProgress } from "@/lib/anthropic-vision";
 import { retryAfterSeconds, takeToken, type BucketConfig } from "@/lib/booking/rate-limit";
-import { aiUsageToday, dailyLimitReached, recordAiUsage } from "@/lib/ai-usage";
+import { aiUsageToday, dailyLimitReached, releaseAiUsage, reserveAiUsage } from "@/lib/ai-usage";
 import { accountAccess } from "@/lib/subscription";
 import type {
   DetectLandmarksDone,
@@ -36,7 +36,8 @@ import type {
  * DetectLandmarksDone carrying the status and body the JSON answer would have.
  *
  * Daily limit: `User.aiDailyLimit` different X-rays per clinic day
- * (`src/lib/ai-usage.ts`), counted when an analysis places landmarks.
+ * (`src/lib/ai-usage.ts`): claimed before the analysis, kept only when it
+ * places landmarks.
  */
 
 export const runtime = "nodejs";
@@ -115,13 +116,13 @@ export async function POST(request: NextRequest) {
   }
 
   const usage = await aiUsageToday(userId);
-  if (dailyLimitReached(usage, xrayId)) {
-    return fail(
+  const overLimit = () =>
+    fail(
       429,
       "DAILY_LIMIT",
       `You've used today's AI analysis limit (${usage.limit} X-ray${usage.limit === 1 ? "" : "s"}). It resets at midnight.`,
     );
-  }
+  if (dailyLimitReached(usage, xrayId)) return overLimit();
 
   if (!takeToken(`pelvis-ai:${userId}`, ANALYSIS_LIMIT)) {
     const retryAfter = retryAfterSeconds(ANALYSIS_LIMIT);
@@ -130,7 +131,10 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const job = { ...xray, xrayId, userId, view, usage, signal: request.signal };
+  const claim = await reserveAiUsage(userId, xrayId);
+  if (!claim) return overLimit();
+
+  const job = { ...xray, view, claim, signal: request.signal };
   if (!request.headers.get("accept")?.includes("application/x-ndjson")) {
     const outcome = await analyse(job, () => {});
     // The client disconnected: the response goes nowhere.
@@ -168,12 +172,20 @@ async function analyse(
     fileUrl: string;
     width: number | null;
     height: number | null;
-    xrayId: string;
-    userId: string;
     view: PelvisAnalysisView;
-    usage: Awaited<ReturnType<typeof aiUsageToday>>;
+    claim: NonNullable<Awaited<ReturnType<typeof reserveAiUsage>>>;
     signal: AbortSignal;
   },
+  onProgress: (p: AnalysisProgress) => void,
+): Promise<Outcome | null> {
+  const outcome = await runAnalysis(job, onProgress);
+  // Only analyses that place landmarks count toward the daily limit.
+  if (outcome?.status !== 200) await releaseAiUsage(job.claim.id);
+  return outcome;
+}
+
+async function runAnalysis(
+  job: Parameters<typeof analyse>[0],
   onProgress: (p: AnalysisProgress) => void,
 ): Promise<Outcome | null> {
   const deadlineMs = Date.now() + ANALYSIS_BUDGET_MS;
@@ -207,10 +219,17 @@ async function analyse(
       };
     }
     const { landmarks, assessment, patientRightOn, sideSource, warnings, model } = result;
-    const usage = await recordAiUsage(job.userId, job.xrayId, job.usage);
     return {
       status: 200,
-      body: { landmarks, assessment, patientRightOn, sideSource, warnings, model, usage } satisfies DetectLandmarksResponse,
+      body: {
+        landmarks,
+        assessment,
+        patientRightOn,
+        sideSource,
+        warnings,
+        model,
+        usage: job.claim.usage,
+      } satisfies DetectLandmarksResponse,
     };
   } catch (err) {
     if (job.signal.aborted) return null;

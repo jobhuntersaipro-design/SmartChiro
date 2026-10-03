@@ -6,6 +6,11 @@ import type { BranchRole } from '@prisma/client'
 import authConfig from './auth.config'
 import { sendVerificationEmail } from './email'
 import { loadBranchContext } from './branch-context'
+import { cache } from 'react'
+
+const accountStatus = cache((userId: string) =>
+  prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true } }),
+)
 
 class EmailNotVerifiedError extends CredentialsSignin {
   code = 'email_not_verified'
@@ -111,6 +116,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        // A super admin can disable an account that is signed in, and accounts
+        // can be deleted: drop the user so every auth() check fails.
+        const account = await accountStatus(session.user.id)
+        if (!account || account.disabledAt) {
+          return {
+            ...session,
+            user: undefined,
+            error: account ? 'account_disabled' : 'account_missing',
+          } as unknown as typeof session
+        }
         // Role and active branch come from the database, not the token
         // (see loadBranchContext) — so they're current after creating or
         // switching a branch, and set for Google sign-ins too.

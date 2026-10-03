@@ -11,5 +11,7 @@ declare module 'next-auth' {
       branchRole: BranchRole | null
       activeBranchId: string | null
     }
+    /** Set (and `user` dropped) when the account was disabled or deleted after sign-in. */
+    error?: 'account_disabled' | 'account_missing'
   }
 }

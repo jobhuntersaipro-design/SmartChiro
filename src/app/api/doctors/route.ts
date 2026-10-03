@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isSuperAdminEmail } from "@/lib/subscription";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
@@ -243,6 +244,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ doctor, existed: true }, { status: 200 });
     }
 
+    // Accounts made here skip email verification, so never for a platform
+    // admin address: that would hand whoever typed it the Super admin page.
+    if (isSuperAdminEmail(body.email)) {
+      return NextResponse.json({ error: "This email can't be used for a staff account." }, { status: 400 });
+    }
+
     // Create new user + membership + optional profile in transaction
     const passwordHash = await hash(body.password, 12);
 
@@ -254,6 +261,8 @@ export async function POST(req: NextRequest) {
           password: passwordHash,
           phoneNumber: body.phone ?? null,
           emailVerified: new Date(), // owner-created accounts skip verification
+          // Staff work on their clinic's plan; no trial of their own to stack up.
+          trialEndsAt: null,
         },
       });
 

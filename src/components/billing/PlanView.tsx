@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,9 @@ export interface PlanViewProps {
   subscriptionStatus: string | null;
   hasStripeCustomer: boolean;
   coveredBy: { name: string | null; email: string } | null;
+  /** Only works in clinics billed to other accounts. */
+  staffOnly: boolean;
   billingConfigured: boolean;
-  /** Just back from a successful Stripe checkout. */
-  justSubscribed?: boolean;
 }
 
 /** "RM 6,000": whole ringgit, Malaysian style. */
@@ -37,9 +38,23 @@ const FEATURES = [
 ];
 
 export function PlanView(props: PlanViewProps) {
-  const { state, coveredBy, billingConfigured } = props;
+  const { state, billingConfigured } = props;
   const [interval, setInterval] = useState<PlanInterval>("year");
   const [busy, setBusy] = useState<"checkout" | "portal" | null>(null);
+  const router = useRouter();
+  // Back from Checkout before Stripe confirmed it (/api/billing/confirm adds ?pending=1).
+  const pending = useSearchParams().get("pending") === "1" && state !== "subscribed";
+
+  useEffect(() => {
+    if (!pending) return;
+    // Re-read the plan while the webhook catches up (about a minute at most).
+    let polls = 0;
+    const id = window.setInterval(() => {
+      if (++polls > 12) window.clearInterval(id);
+      else router.refresh();
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [pending, router]);
 
   const go = async (kind: "checkout" | "portal") => {
     setBusy(kind);
@@ -67,7 +82,7 @@ export function PlanView(props: PlanViewProps) {
         </p>
       </div>
 
-      <StatusBanner {...props} />
+      <StatusBanner {...props} pending={pending} />
 
       {state !== "subscribed" && (
         <section aria-labelledby="choose-plan" className="rounded-panel border border-border bg-surface p-5 shadow-(--shadow-card)">
@@ -140,7 +155,7 @@ export function PlanView(props: PlanViewProps) {
           </ul>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button onClick={() => go("checkout")} disabled={!billingConfigured || busy !== null}>
+            <Button onClick={() => go("checkout")} disabled={!billingConfigured || busy !== null || pending}>
               {busy === "checkout" && <Loader2 className="size-4 animate-spin" />}
               Subscribe {PLANS[interval].label.toLowerCase()} · {rm(PLANS[interval].amount)}
             </Button>
@@ -152,11 +167,6 @@ export function PlanView(props: PlanViewProps) {
                   : "Secure payment by Stripe. Prices in MYR."}
             </p>
           </div>
-          {coveredBy && (
-            <p className="mt-3 text-[12px] text-fg-secondary">
-              You don&apos;t need your own plan: your clinic&apos;s plan ({coveredBy.name ?? coveredBy.email}) covers you.
-            </p>
-          )}
         </section>
       )}
 
@@ -173,7 +183,17 @@ export function PlanView(props: PlanViewProps) {
   );
 }
 
-function StatusBanner({ state, daysLeft, trialEndsLabel, periodEndLabel, interval, subscriptionStatus, coveredBy, justSubscribed }: PlanViewProps) {
+function StatusBanner({
+  state,
+  daysLeft,
+  trialEndsLabel,
+  periodEndLabel,
+  interval,
+  subscriptionStatus,
+  coveredBy,
+  staffOnly,
+  pending,
+}: PlanViewProps & { pending: boolean }) {
   if (state === "subscribed") {
     const plan = interval === "year" ? PLANS.year : PLANS.month;
     return (
@@ -194,7 +214,7 @@ function StatusBanner({ state, daysLeft, trialEndsLabel, periodEndLabel, interva
       </div>
     );
   }
-  if (justSubscribed) {
+  if (pending) {
     return (
       <div className="rounded-panel border border-border bg-info-subtle p-4 text-[13px] text-foreground">
         Thanks! Stripe is confirming your payment; this page updates once it&apos;s done.
@@ -213,14 +233,24 @@ function StatusBanner({ state, daysLeft, trialEndsLabel, periodEndLabel, interva
       </div>
     );
   }
+  if (coveredBy) {
+    return (
+      <div className="rounded-panel border border-border bg-success-subtle p-4">
+        <p className="text-[14px] font-medium text-foreground">Covered by your clinic&apos;s plan</p>
+        <p className="mt-0.5 text-[13px] text-fg-secondary">
+          {coveredBy.name ?? coveredBy.email}&apos;s SmartChiro plan gives you every feature. Nothing to pay.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="rounded-panel border border-border bg-warning-subtle p-4">
       <p className="text-[14px] font-medium text-foreground">
-        {coveredBy ? "Your own trial has ended" : "Your free trial has ended"}
+        {staffOnly ? "Your clinic's SmartChiro plan has ended" : "Your free trial has ended"}
       </p>
       <p className="mt-0.5 text-[13px] text-fg-secondary">
-        {coveredBy
-          ? "You still have full access through your clinic's plan."
+        {staffOnly
+          ? "Ask your clinic owner to subscribe, or subscribe yourself. Your patients, X-rays and records are kept safe in the meantime."
           : "Subscribe to SmartChiro Pro to open your account again. Your patients, X-rays and records are kept safe in the meantime."}
       </p>
     </div>

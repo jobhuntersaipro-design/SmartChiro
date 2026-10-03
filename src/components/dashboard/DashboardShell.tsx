@@ -28,9 +28,12 @@ interface SidebarUser {
 export function DashboardShell({
   children,
   user,
+  blocked = false,
 }: {
   children: React.ReactNode;
   user: SidebarUser;
+  /** Access lapsed: `children` is the plan page, shown with the full shell even on X-ray pages. */
+  blocked?: boolean;
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Phones/small tablets: the sidebar is a drawer instead of a fixed column
@@ -55,7 +58,7 @@ export function DashboardShell({
 
   // Full-screen mode for annotation pages — skip sidebar and topbar
   const isAnnotatePage = pathname.includes("/annotate");
-  if (isAnnotatePage) {
+  if (isAnnotatePage && !blocked) {
     return <>{children}</>;
   }
 

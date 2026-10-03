@@ -3,9 +3,14 @@ import { planState, trialDaysLeft, type PlanState } from "@/lib/plans";
 import { clinicDateLabel } from "@/lib/clinic-time";
 
 /**
- * Who may use SmartChiro (plans and prices: `plans.ts`). Staff accounts
- * (doctors, admins, front desk) are covered by the plan of an OWNER of a
- * branch they work in.
+ * Who may use SmartChiro (plans and prices: `plans.ts`).
+ *
+ * Every branch is billed to the account that created it (Branch.billingUserId;
+ * ownership transfers don't move it). Account holders (they bill a branch, or
+ * haven't joined one yet) use their own trial or subscription. Staff accounts
+ * (only in branches billed to someone else) are covered by those billing
+ * accounts; their own trial doesn't count, or a clinic could stay free by
+ * adding fresh accounts every month.
  */
 
 /** Emails in SUPER_ADMIN_EMAILS (comma separated, any case) run the platform. */
@@ -21,14 +26,16 @@ export function isSuperAdminEmail(email: string | null | undefined): boolean {
 export interface AccountAccess {
   /** May use the app. */
   allowed: boolean;
-  /** The user's own plan. */
+  /** The user's own plan (a staff account's own trial reads as expired). */
   state: PlanState;
   trialEndsAt: Date | null;
   subscriptionStatus: string | null;
   subscriptionInterval: string | null;
   subscriptionPeriodEnd: Date | null;
   hasStripeCustomer: boolean;
-  /** A branch owner whose plan covers this user when their own doesn't. */
+  /** Only works in branches billed to other accounts. */
+  staffOnly: boolean;
+  /** The billing account of one of the user's branches whose plan covers them, when their own doesn't. */
   coveredBy: { name: string | null; email: string } | null;
   superAdmin: boolean;
   disabled: boolean;
@@ -45,21 +52,33 @@ export async function accountAccess(userId: string, now: Date = new Date()): Pro
       subscriptionPeriodEnd: true,
       stripeCustomerId: true,
       disabledAt: true,
+      branchMemberships: {
+        select: {
+          branch: {
+            select: {
+              billingUser: {
+                select: { id: true, name: true, email: true, trialEndsAt: true, subscriptionStatus: true },
+              },
+            },
+          },
+        },
+      },
     },
   });
   if (!user) return null;
-  const state = planState(user, now);
   const superAdmin = isSuperAdminEmail(user.email);
+  const payers = user.branchMemberships.flatMap((m) => (m.branch.billingUser ? [m.branch.billingUser] : []));
+  const staffOnly = payers.length > 0 && payers.every((p) => p.id !== userId);
+  const own = planState(user, now);
+  const state: PlanState = own === "trial" && staffOnly ? "expired" : own;
 
   let coveredBy: AccountAccess["coveredBy"] = null;
   if (state === "expired" && !superAdmin) {
-    const owners = await prisma.branchMember.findMany({
-      where: { role: "OWNER", userId: { not: userId }, branch: { members: { some: { userId } } } },
-      select: { user: { select: { name: true, email: true, trialEndsAt: true, subscriptionStatus: true } } },
-    });
-    // A super admin's own clinic never lapses, so neither does its staff's access.
-    const owner = owners.find((o) => planState(o.user, now) !== "expired" || isSuperAdminEmail(o.user.email));
-    if (owner) coveredBy = { name: owner.user.name, email: owner.user.email };
+    // A super admin's own clinics never lapse, so neither does their staff's access.
+    const payer = payers.find(
+      (p) => p.id !== userId && (planState(p, now) !== "expired" || isSuperAdminEmail(p.email)),
+    );
+    if (payer) coveredBy = { name: payer.name, email: payer.email };
   }
 
   const disabled = user.disabledAt != null;
@@ -71,6 +90,7 @@ export async function accountAccess(userId: string, now: Date = new Date()): Pro
     subscriptionInterval: user.subscriptionInterval,
     subscriptionPeriodEnd: user.subscriptionPeriodEnd,
     hasStripeCustomer: user.stripeCustomerId != null,
+    staffOnly,
     coveredBy,
     superAdmin,
     disabled,
@@ -88,6 +108,7 @@ export function planViewProps(access: AccountAccess, now: Date = new Date()) {
     subscriptionStatus: access.subscriptionStatus,
     hasStripeCustomer: access.hasStripeCustomer,
     coveredBy: access.coveredBy,
+    staffOnly: access.staffOnly,
     billingConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
   };
 }

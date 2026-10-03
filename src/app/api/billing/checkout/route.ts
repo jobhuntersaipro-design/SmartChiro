@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { priceIdFor, stripeClient } from "@/lib/stripe";
+import { hasOpenSubscription, priceIdFor, stripeClient } from "@/lib/stripe";
 import { isPaidStatus } from "@/lib/plans";
 
 /**
@@ -48,6 +48,9 @@ export async function POST(request: NextRequest) {
       });
       customerId = customer.id;
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
+    } else if (await hasOpenSubscription(stripe, customerId)) {
+      // Our copy can lag Stripe (a second tab, a slow webhook): never start a second subscription.
+      return NextResponse.json({ error: "You already have a subscription. Use Manage billing to change it." }, { status: 409 });
     }
 
     const origin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
