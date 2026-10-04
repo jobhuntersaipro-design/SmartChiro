@@ -138,8 +138,18 @@ export function AppointmentsListView({
     () => memberBranches.some((b) => can(b.role, "appointment.delete")),
     [memberBranches]
   );
-  const canCreateVisit = useMemo(
-    () => memberBranches.some((b) => can(b.role, "clinical.write")),
+  // Buttons follow the caller's role in the appointment's own branch (the API
+  // checks that one), not the best role they hold anywhere.
+  const accessFor = useCallback(
+    (a: CalendarAppointment) => {
+      const role = memberBranches.find((b) => b.id === a.branch.id)?.role ?? null;
+      return {
+        isAdmin: can(role, "appointment.manageAll"),
+        canDelete: can(role, "appointment.delete"),
+        // Creating the visit record needs clinical write and reading the whole patient.
+        canCreateVisit: can(role, "clinical.write") && can(role, "patient.readAll"),
+      };
+    },
     [memberBranches]
   );
 
@@ -320,6 +330,7 @@ export function AppointmentsListView({
             selectedId={selectedAppointmentId}
             isAdmin={isAdmin}
             canDelete={canDelete}
+            accessFor={accessFor}
             currentUserId={currentUserId}
             activeTab={activeTab}
             emptyAction={
@@ -345,9 +356,7 @@ export function AppointmentsListView({
       {selectedAppointment && (
         <AppointmentDetailPanel
           appointment={selectedAppointment}
-          isAdmin={isAdmin}
-          canDelete={canDelete}
-          canCreateVisit={canCreateVisit}
+          {...accessFor(selectedAppointment)}
           currentUserId={currentUserId}
           onClose={() => onSelectedAppointmentIdChange(null)}
           onEdit={() => setEditId(selectedAppointment.id)}
@@ -359,7 +368,10 @@ export function AppointmentsListView({
 
       <EditAppointmentDialog
         appointmentId={editId}
-        isAdmin={isAdmin}
+        isAdmin={(() => {
+          const target = appointments.find((x) => x.id === editId);
+          return target ? accessFor(target).isAdmin : isAdmin;
+        })()}
         onClose={() => setEditId(null)}
         onUpdated={() => {
           setEditId(null);

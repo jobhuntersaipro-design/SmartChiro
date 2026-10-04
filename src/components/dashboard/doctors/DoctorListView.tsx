@@ -18,6 +18,8 @@ interface DoctorListViewProps {
   userId: string;
   userName: string | null;
   branchRole: string | null;
+  /** Branches where the caller manages staff ("Add staff" targets). */
+  staffBranches: { id: string; name: string }[];
 }
 
 interface BranchOption {
@@ -29,6 +31,7 @@ export function DoctorListView({
   userId,
   userName,
   branchRole,
+  staffBranches,
 }: DoctorListViewProps) {
   const [doctors, setDoctors] = useState<DoctorListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +55,7 @@ export function DoctorListView({
   } | null>(null);
 
   const isAdmin = branchRole === "OWNER" || branchRole === "ADMIN";
+  const canAddStaff = staffBranches.length > 0;
 
   const fetchDoctors = useCallback(async () => {
     try {
@@ -216,7 +220,7 @@ export function DoctorListView({
           </h1>
           <p className="text-[14px] text-fg-secondary mt-0.5">{pageSubtitle}</p>
         </div>
-        {isAdmin && (
+        {canAddStaff && (
           <Button
             onClick={() => setCreateOpen(true)}
             className="h-9 rounded-control bg-primary hover:bg-primary/90 text-white text-[14px] font-medium px-4"
@@ -321,7 +325,7 @@ export function DoctorListView({
       <CreateDoctorDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        branches={branchOptions}
+        branches={staffBranches}
         onCreated={() => {
           fetchDoctors();
           setToast({ type: "success", message: "Doctor created" });

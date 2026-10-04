@@ -223,7 +223,7 @@ function VisitCell({
   if (row.visit) {
     return (
       <Link
-        href={`/dashboard/patients/${patientId}/details?tab=history&sub=visits&visitId=${row.visit.id}`}
+        href={`/dashboard/patients/${patientId}/details?tab=history&sub=visits&visit=${row.visit.id}`}
         className="text-[12px] font-medium text-brand hover:text-brand-strong cursor-pointer transition-colors duration-200"
       >
         View
@@ -322,7 +322,7 @@ function RowActions({
           <DropdownMenuItem
             render={
               <Link
-                href={`/dashboard/patients/${patientId}/details?tab=history&sub=visits&visitId=${row.visit.id}`}
+                href={`/dashboard/patients/${patientId}/details?tab=history&sub=visits&visit=${row.visit.id}`}
               />
             }
           >

@@ -8,6 +8,7 @@ import { parseOperatingHours, hasAnyHours, formatDayHours } from "@/lib/operatin
 import { formatClinicType } from "@/lib/branch-fields";
 import { ScheduleTable } from "../shared/ScheduleTable";
 import type { ScheduleAppointment as DashScheduleAppointment } from "../shared/ScheduleTable";
+import { clinicCalendar } from "@/lib/clinic-time";
 
 interface BranchOverviewTabProps {
   branch: BranchDetail;
@@ -29,9 +30,8 @@ export function BranchOverviewTab({ branch, stats, onSetHours }: BranchOverviewT
   useEffect(() => {
     async function fetchSchedule() {
       try {
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const todayEnd = new Date(todayStart.getTime() + 86400000);
+        // Today in clinic time, whatever the device's zone.
+        const { dayStart: todayStart, dayEnd: todayEnd } = clinicCalendar();
         const res = await fetch(
           `/api/branches/${branch.id}/schedule?start=${todayStart.toISOString()}&end=${todayEnd.toISOString()}`
         );

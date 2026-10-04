@@ -222,15 +222,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
     handleClose();
   }
 
-  function daysFromToday(dateStr: string): number | undefined {
+  /** Days from the visit's date to the next visit (as the visit card and Edit read it). */
+  function daysFromVisit(dateStr: string): number | undefined {
     if (!dateStr) return undefined;
-    const target = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    target.setHours(0, 0, 0, 0);
-    const diffMs = target.getTime() - today.getTime();
-    const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
-    return days;
+    const day = (key: string) => Date.parse(`${key}T00:00:00Z`) / 86_400_000;
+    return Math.round(day(dateStr) - day(form.visitDate || todayLocalISODate()));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -242,7 +238,7 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
       if (!questionnaireEnabled) {
         delete payload.questionnaire;
       }
-      const computedDays = daysFromToday(nextVisitDate);
+      const computedDays = daysFromVisit(nextVisitDate);
       if (computedDays !== undefined) {
         payload.nextVisitDays = computedDays;
       }
@@ -706,12 +702,11 @@ export function CreateVisitDialog({ open, onOpenChange, patientId, onCreated }: 
                 {nextVisitDate && (
                   <p className="mt-1 text-[12px] text-fg-secondary">
                     {(() => {
-                      const d = daysFromToday(nextVisitDate);
+                      const d = daysFromVisit(nextVisitDate);
                       if (d === undefined) return null;
-                      if (d === 0) return "Today";
-                      if (d === 1) return "Tomorrow (in 1 day)";
-                      if (d > 0) return `In ${d} days`;
-                      return `${Math.abs(d)} days ago`;
+                      if (d === 0) return "Same day as this visit";
+                      if (d > 0) return `${d} day${d === 1 ? "" : "s"} after this visit`;
+                      return `${Math.abs(d)} day${d === -1 ? "" : "s"} before this visit`;
                     })()}
                   </p>
                 )}

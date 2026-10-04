@@ -20,6 +20,7 @@ export default async function DashboardPage() {
         userId={session.user.id}
         userName={session.user.name ?? null}
         branchRole={scopeRole(ctx)}
+        roles={ctx.roles}
         activeBranchId={ctx.activeBranchId}
         allBranches={ctx.allBranches}
       />

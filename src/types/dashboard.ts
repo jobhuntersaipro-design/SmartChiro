@@ -36,6 +36,8 @@ export interface OwnerSignals {
   noShowsToday: number;
   /** Past appointments still SCHEDULED — never checked in, completed or marked no-show. */
   staleAppointments: number;
+  /** Clinic day of the oldest stale booking, where the "Tidy up" link opens. */
+  oldestStaleDate: string | null;
   /** Active patients whose last visit was 30+ days ago and who have nothing booked. */
   recallDue: number;
   recallSample: { id: string; name: string; lastVisit: string; marketingConsent?: boolean }[];

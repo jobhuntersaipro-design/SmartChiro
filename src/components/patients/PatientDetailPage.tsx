@@ -44,6 +44,7 @@ import { billingAccess } from "@/lib/billing-access";
 import { isMalaysianPatient } from "@/lib/invoices";
 import { PatientInvoicesPanel } from "@/components/invoices/PatientInvoicesPanel";
 import { PatientBalanceChip } from "@/components/invoices/PatientBalanceChip";
+import { toast } from "sonner";
 
 interface PatientDetailPageProps {
   patientId: string;
@@ -188,7 +189,8 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
 
   async function handleToggleStatus() {
     if (!patient) return;
-    const newStatus = patient.status.toLowerCase() === "active" ? "INACTIVE" : "ACTIVE";
+    // The API takes lower case (active / inactive / discharged).
+    const newStatus = patient.status.toLowerCase() === "active" ? "inactive" : "active";
     const res = await fetch(`/api/patients/${patientId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -196,6 +198,8 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
     });
     if (res.ok) {
       await fetchPatient();
+    } else {
+      toast.error((await res.json().catch(() => null))?.error ?? "Couldn't change the patient's status.");
     }
   }
 
@@ -264,7 +268,8 @@ export function PatientDetailPage({ patientId, branchRole, currentUserId }: Pati
     },
     {
       label: "Recovery Trend",
-      value: patient.recoveryTrend != null ? `${patient.recoveryTrend > 0 ? "+" : ""}${patient.recoveryTrend}%` : "N/A",
+      // Average "overall improvement" of the last questionnaires, a 0–10 score.
+      value: patient.recoveryTrend != null ? `${patient.recoveryTrend} / 10` : "N/A",
       icon: TrendingUp,
       color: "#F5A623",
     },

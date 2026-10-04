@@ -12,6 +12,8 @@ interface Props {
   isAdmin: boolean;
   /** Hard delete — defaults to isAdmin; front desk books for anyone but can't delete. */
   canDelete?: boolean;
+  /** Per-appointment rights (the caller's role in that appointment's branch). */
+  accessFor?: (a: CalendarAppointment) => { isAdmin: boolean; canDelete: boolean };
   currentUserId: string;
   activeTab: AppointmentTabId;
   emptyAction?: React.ReactNode;
@@ -34,6 +36,7 @@ export function AppointmentCardList({
   selectedId,
   isAdmin,
   canDelete = isAdmin,
+  accessFor,
   currentUserId,
   activeTab,
   emptyAction,
@@ -68,8 +71,8 @@ export function AppointmentCardList({
             key={a.id}
             appointment={a}
             selected={a.id === selectedId}
-            isAdmin={isAdmin}
-            canDelete={canDelete}
+            isAdmin={accessFor ? accessFor(a).isAdmin : isAdmin}
+            canDelete={accessFor ? accessFor(a).canDelete : canDelete}
             currentUserId={currentUserId}
             onSelect={() => onSelect(a.id)}
             onEdit={() => onEdit(a)}
@@ -113,8 +116,8 @@ export function AppointmentCardList({
               key={a.id}
               appointment={a}
               selected={a.id === selectedId}
-              isAdmin={isAdmin}
-              canDelete={canDelete}
+              isAdmin={accessFor ? accessFor(a).isAdmin : isAdmin}
+              canDelete={accessFor ? accessFor(a).canDelete : canDelete}
               currentUserId={currentUserId}
               onSelect={() => onSelect(a.id)}
               onEdit={() => onEdit(a)}

@@ -136,6 +136,8 @@ export function EditPatientDialog({ patient, open, onOpenChange, onSave, branchD
         const val = form[key];
         payload[key] = val === "" || val === undefined ? null : Number(val);
       }
+      // Only a changed doctor is a reassignment (doctors can't reassign).
+      if (payload.doctorId === patient!.doctorId) delete payload.doctorId;
       // Only send consent when it changed here, so a consent change made on
       // the profile isn't overwritten by a stale form.
       delete payload.marketingConsent;

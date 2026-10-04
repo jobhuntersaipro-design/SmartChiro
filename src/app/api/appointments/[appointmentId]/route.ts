@@ -40,6 +40,7 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       seriesIndex: true,
       patient: { select: { id: true, firstName: true, lastName: true } },
       doctor: { select: { id: true, name: true } },
+      visit: { select: { id: true, visitDate: true } },
     },
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -63,6 +64,11 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
       seriesId: appt.seriesId,
       seriesIndex: appt.seriesIndex,
       redemption: await activeRedemptionFor(appt.id),
+      // The visit written for it (clinical: not for front desk).
+      visit:
+        appt.visit && can(role, "clinical.read")
+          ? { id: appt.visit.id, visitDate: appt.visit.visitDate.toISOString() }
+          : null,
     },
   });
 }

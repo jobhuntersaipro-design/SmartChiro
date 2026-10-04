@@ -110,6 +110,12 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
   if (body.visitDate) updateData.visitDate = new Date(body.visitDate);
 
+  // null removes the questionnaire (unticked in the edit dialog)
+  if (body.questionnaire === null) {
+    const existing = await prisma.visitQuestionnaire.findUnique({ where: { visitId }, select: { id: true } });
+    if (existing) updateData.questionnaire = { delete: true };
+  }
+
   // Handle questionnaire upsert
   if (body.questionnaire) {
     const q = body.questionnaire;

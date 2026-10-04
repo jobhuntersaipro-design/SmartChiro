@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getPatientAccess } from "@/lib/auth/patient-access";
 import { paywall } from "@/lib/paywall";
+import { isClinician } from "@/lib/clinician";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
@@ -167,19 +168,22 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   // visits) keep working without code changes.
   const callerMembership = await prisma.branchMember.findUnique({
     where: { userId_branchId: { userId: session.user.id, branchId: patient.branchId } },
-    select: { role: true },
+    select: { role: true, user: { select: { doctorProfile: { select: { id: true } } } } },
   });
   const isOwnerOrAdmin =
     callerMembership?.role === "OWNER" || callerMembership?.role === "ADMIN";
-  let attributedDoctorId = session.user.id;
+  // Office staff (an admin without a doctor profile) record visits for the
+  // patient's doctor, not themselves.
+  const callerTreats = !!callerMembership && isClinician(callerMembership.role, !!callerMembership.user.doctorProfile);
+  let attributedDoctorId = callerTreats ? session.user.id : patient.doctorId ?? session.user.id;
   if (body.doctorId && isOwnerOrAdmin) {
     const targetMembership = await prisma.branchMember.findUnique({
       where: { userId_branchId: { userId: body.doctorId, branchId: patient.branchId } },
-      select: { userId: true },
+      select: { role: true, user: { select: { doctorProfile: { select: { id: true } } } } },
     });
-    if (!targetMembership) {
+    if (!targetMembership || !isClinician(targetMembership.role, !!targetMembership.user.doctorProfile)) {
       return NextResponse.json(
-        { error: "doctorId must be a member of the patient's branch" },
+        { error: "doctorId must be a doctor in the patient's branch" },
         { status: 400 }
       );
     }

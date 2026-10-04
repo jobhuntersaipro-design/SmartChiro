@@ -46,6 +46,8 @@ interface ScheduleTableProps {
   onStatusChanged?: () => void;
   /** All of today's appointments (only the first 10 are listed). */
   total?: number;
+  /** The dashboard's branch ("all" or an id), kept by "View all". */
+  branchParam?: string;
 }
 
 export function ScheduleTable({
@@ -54,6 +56,7 @@ export function ScheduleTable({
   showBranch = false,
   onStatusChanged,
   total,
+  branchParam,
 }: ScheduleTableProps) {
   const router = useRouter();
 
@@ -187,7 +190,7 @@ export function ScheduleTable({
     </div>
     {total !== undefined && total > rows.length && (
       <div className="border-t border-border px-4 py-2.5 text-right">
-        <Link href="/dashboard/appointments?view=list&tab=today" className="text-[13px] font-medium text-brand hover:underline">
+        <Link href={`/dashboard/appointments?view=list&tab=today${branchParam ? `&branch=${branchParam}` : ""}`} className="text-[13px] font-medium text-brand hover:underline">
           View all {total} appointments today
         </Link>
       </div>

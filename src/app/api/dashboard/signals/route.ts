@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { clinicCalendar } from "@/lib/clinic-time";
+import { clinicCalendar, clinicDateKey } from "@/lib/clinic-time";
 import { ACTIVE_PATIENT_STATUS } from "@/lib/stats-scope";
 import type { OwnerSignals } from "@/types/dashboard";
 
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     appointments: { none: { dateTime: { gte: now }, status: { in: [...OPEN_STATUSES] } } },
   };
 
-  const [paid, noShowsToday, staleAppointments, recallDue, recallVisits] = await Promise.all([
+  const [paid, noShowsToday, staleAppointments, oldestStale, recallDue, recallVisits] = await Promise.all([
     // Money actually received today (deposits and part payments included,
     // refunds netted off), not invoices that happened to reach PAID today.
     prisma.payment.aggregate({
@@ -62,6 +62,12 @@ export async function GET(req: NextRequest) {
     }),
     prisma.appointment.count({
       where: { ...scope, status: "SCHEDULED", dateTime: { lt: now } },
+    }),
+    // The list opens on the oldest one (it shows a week before to a month after a date).
+    prisma.appointment.findFirst({
+      where: { ...scope, status: "SCHEDULED", dateTime: { lt: now } },
+      orderBy: { dateTime: "asc" },
+      select: { dateTime: true },
     }),
     prisma.patient.count({ where: recallWhere }),
     // Most recently lapsed first — the likeliest to come back when called.
@@ -82,6 +88,7 @@ export async function GET(req: NextRequest) {
     paymentsToday: paid._count._all,
     noShowsToday,
     staleAppointments,
+    oldestStaleDate: oldestStale ? clinicDateKey(oldestStale.dateTime) : null,
     recallDue,
     recallSample: recallVisits.map((v) => ({
       id: v.patient.id,

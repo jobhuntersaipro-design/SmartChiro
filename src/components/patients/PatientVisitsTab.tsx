@@ -493,11 +493,15 @@ const FILTER_OPTIONS = [
   { value: "discharge", label: "Discharge" },
 ];
 
+const VISITS_PAGE = 20;
+
 // ─── Main Component ───
 
 export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
   const linkedVisitId = useSearchParams().get("visit");
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState("all");
@@ -506,26 +510,57 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
   const [editVisit, setEditVisit] = useState<Visit | null>(null);
   const [deleteVisit, setDeleteVisit] = useState<Visit | null>(null);
 
+  const pageUrl = useCallback(
+    (offset: number) => {
+      const params = new URLSearchParams();
+      if (filterType !== "all") params.set("type", filterType);
+      params.set("sort", sortNewest ? "newest" : "oldest");
+      params.set("limit", String(VISITS_PAGE));
+      params.set("offset", String(offset));
+      return `/api/patients/${patientId}/visits?${params.toString()}`;
+    },
+    [patientId, filterType, sortNewest],
+  );
+
   const fetchVisits = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (filterType !== "all") params.set("type", filterType);
-      params.set("sort", sortNewest ? "newest" : "oldest");
-
-      const res = await fetch(`/api/patients/${patientId}/visits?${params.toString()}`);
+      const res = await fetch(pageUrl(0));
       if (!res.ok) {
         throw new Error("Failed to load visits");
       }
       const data = await res.json();
       setVisits(data.visits || data);
+      setTotal(data.total ?? (data.visits || data).length);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load visits");
     } finally {
       setLoading(false);
     }
-  }, [patientId, filterType, sortNewest]);
+  }, [pageUrl]);
+
+  /** The next page, after the visits already shown. */
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const res = await fetch(pageUrl(visits.length));
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setVisits((prev) => [...prev, ...(data.visits as Visit[]).filter((v) => !prev.some((p) => p.id === v.id))]);
+      setTotal(data.total ?? total);
+    } catch {
+      setError("Failed to load more visits");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [pageUrl, visits.length, total]);
+
+  // A link to an older visit (e.g. from Past Appointments) keeps loading until it's shown.
+  useEffect(() => {
+    if (!linkedVisitId || loading || loadingMore || visits.length >= total) return;
+    if (!visits.some((v) => v.id === linkedVisitId)) void loadMore();
+  }, [linkedVisitId, loading, loadingMore, visits, total, loadMore]);
 
   useEffect(() => {
     fetchVisits();
@@ -609,6 +644,16 @@ export function PatientVisitsTab({ patientId }: PatientVisitsTabProps) {
               initiallyExpanded={visit.id === linkedVisitId}
             />
           ))}
+          {visits.length < total && (
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <span className="text-[13px] text-fg-secondary">
+                Showing {visits.length} of {total} visits
+              </span>
+              <Button variant="outline" size="sm" className="h-8 text-[13px]" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? "Loading…" : "Show more"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

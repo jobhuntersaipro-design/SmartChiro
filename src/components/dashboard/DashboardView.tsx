@@ -35,6 +35,8 @@ interface DashboardViewProps {
   userId: string;
   userName: string | null;
   branchRole: BranchRole | null;
+  /** The caller's role in each of their branches. */
+  roles: Record<string, BranchRole>;
   activeBranchId: string | null;
   /** "All branches" is on in the sidebar switcher. */
   allBranches?: boolean;
@@ -43,19 +45,11 @@ interface DashboardViewProps {
 export function DashboardView({
   userId,
   userName,
-  branchRole,
+  branchRole: scopeBranchRole,
+  roles,
   activeBranchId,
   allBranches = false,
 }: DashboardViewProps) {
-  const isDoctor = branchRole === "DOCTOR";
-  const isOwner = branchRole === "OWNER";
-  // Front desk gets the owner layout (today's schedule with check-in actions,
-  // patient / appointment counts) minus clinical stats.
-  const showClinicalStats = can(branchRole, "dashboard.clinicalStats");
-  // Revenue signals, quick actions: OWNER/ADMIN. Booking: anyone who manages
-  // appointments (front desk included).
-  const canManage = isOwner || branchRole === "ADMIN";
-  const canBook = can(branchRole, "appointment.manageAll");
   const [createOpen, setCreateOpen] = useState(false);
   const [signalsKey, setSignalsKey] = useState(0);
 
@@ -67,6 +61,19 @@ export function DashboardView({
   const branchUrlParam = searchParams.get("branch");
   const selectedBranchId =
     branchUrlParam === "all" ? null : branchUrlParam || (allBranches ? null : activeBranchId);
+
+  // The view follows the role in the branch picked here (the stats API
+  // answers with the doctor view for a branch where the user is a doctor).
+  const branchRole = (selectedBranchId && roles[selectedBranchId]) || scopeBranchRole;
+  const isDoctor = branchRole === "DOCTOR";
+  const isOwner = branchRole === "OWNER";
+  // Front desk gets the owner layout (today's schedule with check-in actions,
+  // patient / appointment counts) minus clinical stats.
+  const showClinicalStats = can(branchRole, "dashboard.clinicalStats");
+  // Revenue signals, quick actions: OWNER/ADMIN. Booking: anyone who manages
+  // appointments (front desk included).
+  const canManage = isOwner || branchRole === "ADMIN";
+  const canBook = can(branchRole, "appointment.manageAll");
 
   const setSelectedBranchId = useCallback((branchId: string | null) => {
     router.push(`/dashboard?branch=${branchId ?? "all"}`, { scroll: false });
@@ -282,6 +289,7 @@ export function DashboardView({
               showBranch={!isDoctor && !selectedBranchId}
               onStatusChanged={refreshSchedule}
               total={scheduleTotal}
+              branchParam={branchParam}
             />
           )}
         </div>

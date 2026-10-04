@@ -81,7 +81,7 @@ export function OwnerSignalsCard({ branchParam, refreshKey = 0 }: OwnerSignalsCa
             label="Stale appointments"
             value={signals ? String(signals.staleAppointments) : null}
             hint={signals ? (signals.staleAppointments === 0 ? "All past bookings closed" : "Past, still scheduled") : null}
-            href={`/dashboard/appointments?view=list&tab=all${branchQuery}`}
+            href={`/dashboard/appointments?view=list&tab=all${branchQuery}${signals?.oldestStaleDate ? `&date=${signals.oldestStaleDate}` : ""}`}
             linkLabel="Tidy up"
           />
           <Signal

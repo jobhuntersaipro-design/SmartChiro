@@ -161,6 +161,9 @@ test files. No migration.
 
 ## Phase 9 — Clinical records and screens
 
+**Done 4 Oct 2026** (U1–U18; API regression tests in `src/app/api/__tests__/clinical-phase9.test.ts`,
+screens checked in the browser, including a UTC-zone laptop). No migration.
+
 ### U1 🟠 Doctors can't save edits to their own patients
 - Edit Patient always sends `doctorId`; the server treats it as a reassignment (403).
 - **Fix:** send `doctorId` only when it changed; the server ignores an unchanged one.

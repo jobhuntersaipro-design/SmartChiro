@@ -332,7 +332,9 @@ export async function PATCH(
   // Validate doctorId if changing — reassignment requires OWNER/ADMIN/FRONT_DESK
   // in the patient's branch. A DOCTOR who happens to be the patient's currently
   // assigned doctor should not be able to hand them off to anyone else.
-  if (doctorId !== undefined) {
+  // An unchanged doctor isn't a reassignment (edit forms send the whole record).
+  const reassigning = doctorId !== undefined && doctorId !== patientRef.doctorId;
+  if (reassigning) {
     if (!can(callerRole, "patient.assignDoctor")) {
       return NextResponse.json(
         { error: "Only OWNER, ADMIN or front desk can reassign the patient's doctor" },
@@ -364,7 +366,7 @@ export async function PATCH(
   // Clinical fields are ignored for roles that can't see them (front desk).
   if (clinical && medicalHistory !== undefined) updateData.medicalHistory = medicalHistory || null;
   if (clinical && notes !== undefined) updateData.notes = notes || null;
-  if (doctorId !== undefined) updateData.doctorId = doctorId;
+  if (reassigning) updateData.doctorId = doctorId;
   // New fields
   if (icNumber !== undefined) updateData.icNumber = normalizeIc(icNumber);
   if (passportNumber !== undefined) updateData.passportNumber = passportNumber?.trim().toUpperCase() || null;

@@ -5,6 +5,7 @@ import { canAccessCarePlans, loadPatientAccess } from "@/lib/package-access";
 import { CARE_PLAN_INCLUDE, UpdateCarePlanSchema, serializeCarePlans } from "@/lib/care-plan-service";
 import { logAppointmentEvent } from "@/lib/appointment-audit";
 import { paywall } from "@/lib/paywall";
+import { can } from "@/lib/permissions";
 
 type RouteCtx = { params: Promise<{ carePlanId: string }> };
 
@@ -43,7 +44,12 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   await prisma.carePlan.update({ where: { id: carePlanId }, data: d });
   const cancelled = cancelRemaining && (d.status === "CANCELLED" || d.status === "COMPLETED")
-    ? await cancelFutureAppointments(carePlanId, { id: user.id, email: user.email ?? "unknown", name: user.name ?? null })
+    ? await cancelFutureAppointments(
+        carePlanId,
+        { id: user.id, email: user.email ?? "unknown", name: user.name ?? null },
+        // A doctor cancels only their own bookings (like "this and following").
+        can(access.role, "appointment.manageAll") ? null : user.id,
+      )
     : 0;
 
   const [json] = await serializeCarePlans(await prisma.carePlan.findMany({ where: { id: carePlanId }, include: CARE_PLAN_INCLUDE }));
@@ -59,9 +65,13 @@ async function validateLinks(
   if (doctorId) {
     const member = await prisma.branchMember.findUnique({
       where: { userId_branchId: { userId: doctorId, branchId } },
-      select: { userId: true },
+      select: { role: true },
     });
     if (!member) return { status: 422, body: { error: "doctor_not_in_branch", message: "The doctor is not a member of this branch." } };
+    // Front desk don't treat patients, so a plan can't be theirs.
+    if (!can(member.role, "clinical.read")) {
+      return { status: 422, body: { error: "not_a_clinician", message: "Pick a doctor who treats patients." } };
+    }
   }
   if (patientPackageId) {
     const pkg = await prisma.patientPackage.findUnique({ where: { id: patientPackageId }, select: { patientId: true } });
@@ -74,9 +84,15 @@ async function validateLinks(
 async function cancelFutureAppointments(
   carePlanId: string,
   actor: { id: string; email: string; name: string | null },
+  onlyDoctorId: string | null,
 ): Promise<number> {
   const targets = await prisma.appointment.findMany({
-    where: { series: { carePlanId }, status: { in: ["SCHEDULED", "CHECKED_IN"] }, dateTime: { gt: new Date() } },
+    where: {
+      series: { carePlanId },
+      status: { in: ["SCHEDULED", "CHECKED_IN"] },
+      dateTime: { gt: new Date() },
+      ...(onlyDoctorId ? { doctorId: onlyDoctorId } : {}),
+    },
     select: { id: true, dateTime: true, status: true, patient: { select: { firstName: true, lastName: true } } },
   });
   if (targets.length === 0) return 0;

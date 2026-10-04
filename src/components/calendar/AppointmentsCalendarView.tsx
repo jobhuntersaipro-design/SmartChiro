@@ -159,17 +159,6 @@ export function AppointmentsCalendarView({
 }: Props) {
   const searchParams = useSearchParams();
 
-  // OWNER / ADMIN / FRONT_DESK book and move appointments for any doctor;
-  // only OWNER / ADMIN hard-delete.
-  const isAdmin = useMemo(
-    () => branches.some((b) => can(b.role, "appointment.manageAll")),
-    [branches]
-  );
-  const canDelete = useMemo(
-    () => branches.some((b) => can(b.role, "appointment.delete")),
-    [branches]
-  );
-
   // ─── URL state ───
   const isBranch = (id: string | null | undefined): id is string =>
     !!id && branches.some((b) => b.id === id);
@@ -231,6 +220,24 @@ export function AppointmentsCalendarView({
   const branch = useMemo(
     () => branches.find((b) => b.id === branchId),
     [branchId, branches]
+  );
+
+  // OWNER / ADMIN / FRONT_DESK book and move appointments for any doctor;
+  // only OWNER / ADMIN hard-delete. The role in the branch on screen decides
+  // (the API checks that one); "All branches" falls back to any branch.
+  const isAdmin = useMemo(
+    () =>
+      branchId === "all"
+        ? branches.some((b) => can(b.role, "appointment.manageAll"))
+        : can(branch?.role, "appointment.manageAll"),
+    [branch, branchId, branches]
+  );
+  const canDelete = useMemo(
+    () =>
+      branchId === "all"
+        ? branches.some((b) => can(b.role, "appointment.delete"))
+        : can(branch?.role, "appointment.delete"),
+    [branch, branchId, branches]
   );
 
   // react-big-calendar lays out in the device zone, so it renders only in the

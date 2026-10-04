@@ -5,21 +5,19 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ScheduleAppointment, ScheduleDoctor } from "@/types/branch";
 import { WeekCalendar } from "./WeekCalendar";
-import { CLINIC_TIME_ZONE } from "@/lib/clinic-time";
+import { CLINIC_TIME_ZONE, clinicCalendar, clinicParts } from "@/lib/clinic-time";
 
 interface BranchScheduleTabProps {
   branchId: string;
   operatingHours: string | null;
 }
 
-function getWeekRange(date: Date): { start: Date; end: Date; label: string } {
-  const d = new Date(date);
-  const day = d.getDay();
-  const start = new Date(d);
-  start.setDate(d.getDate() - day); // Sunday
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 7);
+/** Sunday–Saturday clinic week `weekOffset` weeks from this one. */
+function getWeekRange(weekOffset: number): { start: Date; end: Date; label: string } {
+  const cal = clinicCalendar();
+  const sunday = -clinicParts(new Date()).weekday + 7 * weekOffset;
+  const start = cal.addDays(sunday);
+  const end = cal.addDays(sunday + 7);
 
   const startMonth = start.toLocaleDateString("en-US", { timeZone: CLINIC_TIME_ZONE, month: "short", day: "numeric" });
   const endDate = new Date(end.getTime() - 86400000); // Saturday
@@ -30,12 +28,12 @@ function getWeekRange(date: Date): { start: Date; end: Date; label: string } {
 }
 
 export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTabProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [weekOffset, setWeekOffset] = useState(0);
   const [appointments, setAppointments] = useState<ScheduleAppointment[]>([]);
   const [doctors, setDoctors] = useState<ScheduleDoctor[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const week = getWeekRange(currentDate);
+  const week = getWeekRange(weekOffset);
 
   const fetchSchedule = useCallback(async () => {
     setLoading(true);
@@ -58,19 +56,15 @@ export function BranchScheduleTab({ branchId, operatingHours }: BranchScheduleTa
   }, [fetchSchedule]);
 
   function goToday() {
-    setCurrentDate(new Date());
+    setWeekOffset(0);
   }
 
   function goPrev() {
-    const d = new Date(currentDate);
-    d.setDate(d.getDate() - 7);
-    setCurrentDate(d);
+    setWeekOffset((w) => w - 1);
   }
 
   function goNext() {
-    const d = new Date(currentDate);
-    d.setDate(d.getDate() + 7);
-    setCurrentDate(d);
+    setWeekOffset((w) => w + 1);
   }
 
   return (

@@ -5,7 +5,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DoctorCombobox } from "@/components/patients/DoctorCombobox";
 import { formatAppointmentDateTime } from "@/lib/format";
-import { clinicDateKey, clinicInstantFromInputs, clinicTimeInput } from "@/lib/clinic-time";
+import { clinicDateKey, clinicInstantFromInputs, clinicTimeInput, clinicUtcOffsetLabel } from "@/lib/clinic-time";
 import { DateInput } from "@/components/ui/date-input";
 import { toast } from "sonner";
 import { SeriesScopeDialog, type SeriesScope } from "@/components/packages/SeriesScope";
@@ -136,14 +136,19 @@ export function EditAppointmentDialog({
   if (!appointmentId) return null;
 
   const iso = inputsToIso(date, time);
-  const isPast = iso ? new Date(iso).getTime() < Date.now() : false;
+  // Only a new time has to be in the future: notes, status, duration or room
+  // on a past appointment can still be saved (the API allows that).
+  // Minute precision: the stored time can carry seconds the inputs can't show.
+  const minuteOf = (t: string) => Math.floor(new Date(t).getTime() / 60_000);
+  const timeChanged = !!appt && !!iso && minuteOf(iso) !== minuteOf(appt.dateTime);
+  const isPast = timeChanged && new Date(iso).getTime() < Date.now();
   const canSave = !!iso && !isPast && conflicts.length === 0 && !submitting;
 
   async function submit(scope?: SeriesScope) {
     if (!appointmentId || !iso) return;
     setError(null);
     const body: Record<string, unknown> = {};
-    if (appt && iso !== appt.dateTime) body.dateTime = iso;
+    if (timeChanged) body.dateTime = iso;
     if (appt && duration !== appt.duration) body.duration = duration;
     if (isAdmin && doctor && appt && doctor.id !== appt.doctor.id) body.doctorId = doctor.id;
     if (isAdmin && appt && status !== appt.status) body.status = status;
@@ -238,7 +243,6 @@ export function EditAppointmentDialog({
     }
   }
 
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
     <div
@@ -389,7 +393,7 @@ export function EditAppointmentDialog({
               </div>
             )}
 
-            <p className="text-[11px] text-fg-muted mb-3">Your local time · {tz}</p>
+            <p className="text-[11px] text-fg-muted mb-3">Clinic time (GMT{clinicUtcOffsetLabel()})</p>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={onClose} disabled={submitting} className="h-8 rounded-control text-[14px]">

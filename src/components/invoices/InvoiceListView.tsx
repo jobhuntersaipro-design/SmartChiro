@@ -205,7 +205,8 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
               <th className="px-3 py-2.5">Patient</th>
               <th className="hidden md:table-cell px-3 py-2.5">Issued</th>
               <th className="hidden md:table-cell px-3 py-2.5 text-right">Total</th>
-              <th className="hidden md:table-cell px-3 py-2.5 text-right">Paid</th>
+              {/* Paid = Total − Balance; shown on wide screens so the actions fit on laptops. */}
+              <th className="hidden 2xl:table-cell px-3 py-2.5 text-right">Paid</th>
               <th className="px-3 py-2.5 text-right">Balance</th>
               <th className="hidden md:table-cell px-3 py-2.5">Status</th>
               <th className="hidden md:table-cell px-3 py-2.5"><span className="sr-only">Actions</span></th>
@@ -273,7 +274,7 @@ export function InvoiceListView({ branchId, branchName, branches }: InvoiceListV
                       </span>
                     </td>
                     <td className="hidden md:table-cell px-3 py-3 text-right text-[15px] tabular-nums text-foreground whitespace-nowrap">{formatMYR(row.amount)}</td>
-                    <td className="hidden md:table-cell px-3 py-3 text-right text-[15px] tabular-nums text-fg-secondary whitespace-nowrap">
+                    <td className="hidden 2xl:table-cell px-3 py-3 text-right text-[15px] tabular-nums text-fg-secondary whitespace-nowrap">
                       {row.amountPaid ? formatMYR(row.amountPaid) : "—"}
                     </td>
                     <td

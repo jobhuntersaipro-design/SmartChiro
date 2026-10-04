@@ -271,10 +271,14 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const payload: CreateVisitData = { ...form };
-      if (!questionnaireEnabled) {
-        delete payload.questionnaire;
+      // Cleared fields go as null so the server clears them (undefined
+      // would be dropped from the JSON and the old value kept).
+      const payload: Record<string, unknown> = { ...form };
+      for (const key of ["bloodPressureSys", "bloodPressureDia", "heartRate", "weight", "temperature"] as const) {
+        if (form[key] === undefined) payload[key] = null;
       }
+      // Unticked: the questionnaire is removed (it feeds the recovery trend).
+      if (!questionnaireEnabled) payload.questionnaire = null;
       const visitDateStr = form.visitDate || clinicDateKey();
       if (nextVisitDate) {
         // Calculate days between visitDate and nextVisitDate
@@ -284,7 +288,7 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
         target.setHours(0, 0, 0, 0);
         payload.nextVisitDays = Math.round((target.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
       } else {
-        payload.nextVisitDays = undefined;
+        payload.nextVisitDays = null;
       }
       const res = await fetch(`/api/patients/${patientId}/visits/${visit.id}`, {
         method: "PUT",

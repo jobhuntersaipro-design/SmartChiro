@@ -2,6 +2,7 @@
 
 import type { ScheduleAppointment, ScheduleDoctor, OperatingHoursMap } from "@/types/branch";
 import { parseOperatingHours, hasAnyHours } from "@/lib/operating-hours";
+import { CLINIC_TIME_ZONE, clinicDateKey, clinicParts } from "@/lib/clinic-time";
 
 interface WeekCalendarProps {
   weekStart: Date;
@@ -39,29 +40,23 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
 
   const hours: OperatingHoursMap = parseOperatingHours(operatingHours);
 
-  // Build 7 day columns
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
-    return d;
-  });
+  // 7 day columns in clinic time, whatever the device's zone (noon of each
+  // clinic day, so the date never slips across midnight).
+  const days = Array.from({ length: 7 }, (_, i) => new Date(weekStart.getTime() + i * 86_400_000 + 12 * 3_600_000));
+  const dayKey = (d: Date) => clinicDateKey(d);
 
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const todayStr = clinicDateKey();
 
-  // Group appointments by day
+  // Group appointments by clinic day
   const apptsByDay = new Map<string, ScheduleAppointment[]>();
   for (const appt of appointments) {
-    const d = new Date(appt.dateTime);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const key = clinicDateKey(new Date(appt.dateTime));
     if (!apptsByDay.has(key)) apptsByDay.set(key, []);
     apptsByDay.get(key)!.push(appt);
   }
 
   function getSlotIndex(dateStr: string): number {
-    const d = new Date(dateStr);
-    const h = d.getHours();
-    const m = d.getMinutes();
+    const { hour: h, minute: m } = clinicParts(new Date(dateStr));
     return (h - HOURS_START) * 2 + (m >= 30 ? 1 : 0);
   }
 
@@ -81,10 +76,10 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
         <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border sticky top-0 bg-white z-10">
           <div className="px-2 py-2" />
           {days.map((day, i) => {
-            const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+            const dateStr = dayKey(day);
             const isToday = dateStr === todayStr;
-            const dayName = day.toLocaleDateString("en-US", { weekday: "short" });
-            const dayNum = day.getDate();
+            const dayName = day.toLocaleDateString("en-US", { weekday: "short", timeZone: CLINIC_TIME_ZONE });
+            const dayNum = clinicParts(day).day;
 
             return (
               <div
@@ -121,7 +116,7 @@ export function WeekCalendar({ weekStart, appointments, doctors, operatingHours 
 
                 {/* Day columns */}
                 {days.map((day, dayIdx) => {
-                  const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+                  const dateStr = dayKey(day);
                   const isToday = dateStr === todayStr;
                   const dayAppts = apptsByDay.get(dateStr) ?? [];
                   const slotAppts = dayAppts.filter((a) => getSlotIndex(a.dateTime) === slotIdx);
