@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Building2, CalendarDays, Loader2, Receipt, ScanLine, Sparkles, Users, type LucideIcon } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PLANS, TRIAL_DAYS, YEARLY_SAVING, YEARLY_SAVING_PERCENT, type PlanInterval, type PlanState } from "@/lib/plans";
+import { PLAN_FEATURES, formatRM } from "./plan-features";
 
 export interface PlanViewProps {
   state: PlanState;
@@ -22,20 +23,6 @@ export interface PlanViewProps {
   staffOnly: boolean;
   billingConfigured: boolean;
 }
-
-/** "RM 6,000": whole ringgit, Malaysian style. */
-function rm(amount: number): string {
-  return `RM ${Math.round(amount).toLocaleString("en-MY")}`;
-}
-
-const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: Users, title: "Patients & records", body: "Unlimited patients, visits, SOAP notes and documents." },
-  { icon: ScanLine, title: "X-ray annotation", body: "Draw, measure and compare on every film." },
-  { icon: Sparkles, title: "AI pelvis analysis", body: "10 X-rays per account per day." },
-  { icon: CalendarDays, title: "Appointments", body: "Calendar, online booking, WhatsApp and email reminders." },
-  { icon: Receipt, title: "Billing", body: "Invoices, receipts, packages and LHDN e-invoicing." },
-  { icon: Building2, title: "Your whole clinic", body: "Reports, multiple branches and unlimited staff accounts." },
-];
 
 export function PlanView(props: PlanViewProps) {
   const { state, billingConfigured } = props;
@@ -126,7 +113,7 @@ export function PlanView(props: PlanViewProps) {
                   <span className="text-[14px] font-medium text-foreground">{PLANS[i].label}</span>
                   {i === "year" && (
                     <span className="rounded-full bg-success-subtle px-2 py-0.5 text-[11px] font-medium text-success">
-                      Save {rm(YEARLY_SAVING)}
+                      Save {formatRM(YEARLY_SAVING)}
                     </span>
                   )}
                 </div>
@@ -134,19 +121,19 @@ export function PlanView(props: PlanViewProps) {
                   {i === "year" && (
                     <s className="text-[16px] text-fg-muted">
                       <span className="sr-only">Was </span>
-                      {rm(PLANS.month.amount * 12)}
+                      {formatRM(PLANS.month.amount * 12)}
                     </s>
                   )}
                   <span>
                     <span className="font-heading text-[28px] font-medium tracking-tight text-foreground">
-                      {rm(PLANS[i].amount)}
+                      {formatRM(PLANS[i].amount)}
                     </span>
                     <span className="text-[14px] text-fg-secondary"> / {PLANS[i].per}</span>
                   </span>
                 </p>
                 <p className="mt-1 text-[12px] text-fg-secondary">
                   {i === "year"
-                    ? `${rm(PLANS.year.amount / 12)} a month, billed yearly. ${YEARLY_SAVING_PERCENT}% off 12 monthly payments.`
+                    ? `${formatRM(PLANS.year.amount / 12)} a month, billed yearly. ${YEARLY_SAVING_PERCENT}% off 12 monthly payments.`
                     : "Billed every month. Cancel any time."}
                 </p>
               </button>
@@ -156,7 +143,7 @@ export function PlanView(props: PlanViewProps) {
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Button onClick={() => go("checkout")} disabled={!billingConfigured || busy !== null || pending}>
               {busy === "checkout" && <Loader2 className="size-4 animate-spin" />}
-              Subscribe {PLANS[interval].label.toLowerCase()} · {rm(PLANS[interval].amount)}
+              Subscribe {PLANS[interval].label.toLowerCase()} · {formatRM(PLANS[interval].amount)}
             </Button>
             <p className="text-[12px] text-fg-muted">
               {!billingConfigured
@@ -181,7 +168,7 @@ export function PlanView(props: PlanViewProps) {
           of it too, so nothing is locked while you try it.
         </p>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-          {FEATURES.map(({ icon: Icon, title, body }) => (
+          {PLAN_FEATURES.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-3 rounded-panel bg-surface-subtle p-3.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface text-brand shadow-(--shadow-resting)">
                 <Icon className="size-4" strokeWidth={1.75} aria-hidden />
@@ -226,7 +213,7 @@ function StatusBanner({
         <Sparkles className="mt-0.5 size-5 shrink-0 text-success" strokeWidth={1.75} aria-hidden />
         <div>
           <p className="text-[14px] font-medium text-foreground">
-            SmartChiro Pro · {plan.label} ({rm(plan.amount)} / {plan.per})
+            SmartChiro Pro · {plan.label} ({formatRM(plan.amount)} / {plan.per})
           </p>
           <p className="mt-0.5 text-[13px] text-fg-secondary">
             {subscriptionStatus === "past_due"
