@@ -157,6 +157,11 @@ export async function PATCH(
         where: { id: callerMembership.id },
         data: { role: "ADMIN" },
       }),
+      // The new owner pays for the branch from now on, so their plan covers its staff.
+      prisma.branch.update({
+        where: { id: branchId },
+        data: { billingUserId: targetMember.userId },
+      }),
     ]);
 
     return NextResponse.json({ member: updated });

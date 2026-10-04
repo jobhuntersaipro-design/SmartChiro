@@ -148,6 +148,9 @@ function InvoiceCell({
 }) {
   const canManage = can(branchRole, "invoice.manage");
   if (row.invoices.length === 0) {
+    if (row.packageCovered) {
+      return <span className="text-[13px] text-fg-secondary">Package</span>;
+    }
     if (row.status === "COMPLETED" && canManage) {
       return (
         <button
@@ -290,9 +293,9 @@ function RowActions({
 }) {
   const canManage = can(branchRole, "appointment.manageAll");
   if (!canManage) return null;
-  // Pick the first non-PAID invoice as the regenerate target — paid invoices
-  // are immutable for revenue accuracy (spec §5.5).
-  const regenTarget = row.invoices.find((i) => i.status !== "PAID");
+  // Pick the first open invoice as the regenerate target — paid invoices
+  // are immutable for revenue accuracy (spec §5.5), cancelled ones are done.
+  const regenTarget = row.invoices.find((i) => i.status !== "PAID" && i.status !== "CANCELLED");
 
   return (
     <DropdownMenu>

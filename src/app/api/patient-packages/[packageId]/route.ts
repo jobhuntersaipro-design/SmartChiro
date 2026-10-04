@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { isManagerRole } from "@/lib/package-access";
 import { PATIENT_PACKAGE_INCLUDE, serializePatientPackage, userNamesFor } from "@/lib/package-service";
-import { cancelInvoiceData, type AnyInvoiceStatus } from "@/lib/invoices";
+import { cancelInvoiceLocked, InvoiceError, toSen } from "@/lib/invoices";
 import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ packageId: string }> };
@@ -32,7 +32,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const pkg = await prisma.patientPackage.findUnique({
     where: { id: packageId },
-    select: { id: true, branchId: true, status: true, invoiceId: true, invoice: { select: { status: true } } },
+    select: { id: true, branchId: true, status: true, invoiceId: true, invoice: { select: { status: true, amountPaid: true } } },
   });
   const role = pkg ? await getUserBranchRole(user.id, pkg.branchId) : null;
   if (!pkg || !role) return NextResponse.json({ error: "not_found", message: "Package not found." }, { status: 404 });
@@ -51,26 +51,39 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   if (d.status === "CANCELLED" && pkg.status === "CANCELLED") {
     return NextResponse.json({ error: "already_cancelled", message: "This package is already cancelled." }, { status: 409 });
   }
-  if (d.cancelInvoice && pkg.invoice?.status === "PAID") {
+  const hasPayments = !!pkg.invoice && toSen(Number(pkg.invoice.amountPaid)) !== 0;
+  if (d.cancelInvoice && (pkg.invoice?.status === "PAID" || hasPayments)) {
     return NextResponse.json(
-      { error: "invoice_already_paid", message: "The sale invoice is paid — refund it instead of cancelling." },
+      { error: "invoice_has_payments", message: "Money was paid on the sale invoice — refund it first, then cancel." },
       { status: 422 },
     );
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    if (d.status === "CANCELLED" && d.cancelInvoice && pkg.invoiceId && pkg.invoice && pkg.invoice.status !== "CANCELLED") {
-      await tx.invoice.update({ where: { id: pkg.invoiceId }, data: cancelInvoiceData(pkg.invoice.status as AnyInvoiceStatus) });
-    }
-    return tx.patientPackage.update({
-      where: { id: packageId },
-      data: {
-        ...(d.notes !== undefined ? { notes: d.notes } : {}),
-        ...(d.status === "CANCELLED" ? { status: "CANCELLED" as const, cancelledAt: new Date(), cancelReason: d.reason } : {}),
-      },
-      include: PATIENT_PACKAGE_INCLUDE,
+  let updated;
+  try {
+    updated = await prisma.$transaction(async (tx) => {
+      if (d.status === "CANCELLED" && d.cancelInvoice && pkg.invoiceId && pkg.invoice && pkg.invoice.status !== "CANCELLED") {
+        // Locked and re-checked: refuses if a payment landed in the meantime.
+        await cancelInvoiceLocked(tx, pkg.invoiceId);
+      }
+      return tx.patientPackage.update({
+        where: { id: packageId },
+        data: {
+          ...(d.notes !== undefined ? { notes: d.notes } : {}),
+          ...(d.status === "CANCELLED" ? { status: "CANCELLED" as const, cancelledAt: new Date(), cancelReason: d.reason } : {}),
+        },
+        include: PATIENT_PACKAGE_INCLUDE,
+      });
     });
-  });
+  } catch (err) {
+    if (err instanceof InvoiceError) {
+      return NextResponse.json(
+        { error: err.code, message: "Money was paid on the sale invoice — refund it first, then cancel." },
+        { status: err.status },
+      );
+    }
+    throw err;
+  }
   const names = await userNamesFor([updated]);
   return NextResponse.json({ package: serializePatientPackage(updated, names) });
 }

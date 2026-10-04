@@ -76,6 +76,13 @@ export function pickSubscription(subscriptions: Stripe.Subscription[]): Stripe.S
 export async function syncCustomer(stripe: Stripe, customerId: string, userId?: string | null): Promise<void> {
   const { data } = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 20 });
   const subscription = pickSubscription(data);
+  // Two checkouts that both completed (opened before the expiry above existed,
+  // or racing it) leave a second open subscription: cancel the extras. A
+  // charge already taken on one needs a refund in the Stripe dashboard.
+  for (const extra of data.filter((sub) => sub.id !== subscription?.id && OPEN_STATUSES.has(sub.status))) {
+    console.warn(`[billing] customer ${customerId} had a second subscription ${extra.id}; cancelling it (refund any charge in Stripe)`);
+    await stripe.subscriptions.cancel(extra.id).catch((err) => console.error("[billing] cancelling extra subscription failed:", err));
+  }
   const item = subscription?.items.data[0];
   const fields = {
     stripeCustomerId: customerId,

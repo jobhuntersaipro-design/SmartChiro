@@ -311,12 +311,18 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   }
 
   // Packages: completing a visit uses a session of a matching package (unless
-  // it is invoiced or already redeemed); cancelling gives the session back.
+  // it is invoiced or already redeemed); cancelling, or undoing "Completed",
+  // gives the session back.
   let redemption: RedemptionSummaryJson | null = null;
-  if (parsed.data.status === "COMPLETED" && appt.status !== "COMPLETED") {
+  const next = parsed.data.status;
+  if (next === "COMPLETED" && appt.status !== "COMPLETED") {
     const result = await redeemAppointment({ appointmentId, actor });
     redemption = result.ok ? result.redemption : await activeRedemptionFor(appointmentId);
-  } else if (parsed.data.status === "CANCELLED" && appt.status !== "CANCELLED") {
+  } else if (
+    next !== undefined &&
+    next !== "COMPLETED" &&
+    (appt.status === "COMPLETED" || (next === "CANCELLED" && appt.status !== "CANCELLED"))
+  ) {
     await reverseRedemption({ appointmentId, actor });
   }
 

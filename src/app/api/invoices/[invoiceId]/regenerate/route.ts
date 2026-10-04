@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { billingAccess } from "@/lib/billing-access";
-import { cancelInvoiceData, createInvoice, parseLineItems, toSen, type AnyInvoiceStatus } from "@/lib/invoices";
+import { cancelInvoiceLocked, createInvoice, parseLineItems, toSen } from "@/lib/invoices";
 import { invoiceErrorResponse } from "@/lib/invoice-detail";
 import { paywall } from "@/lib/paywall";
 
@@ -60,6 +60,9 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
+  if (original.status === "CANCELLED") {
+    return NextResponse.json({ error: "invoice_cancelled" }, { status: 422 });
+  }
   if (original.status === "PAID") {
     return NextResponse.json({ error: "invoice_already_paid" }, { status: 422 });
   }
@@ -80,10 +83,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   let newInvoice;
   try {
     newInvoice = await prisma.$transaction(async (tx) => {
-      await tx.invoice.update({
-        where: { id: invoiceId },
-        data: cancelInvoiceData(original.status as AnyInvoiceStatus),
-      });
+      // Locked and re-checked: a payment may have landed since the read above.
+      await cancelInvoiceLocked(tx, invoiceId);
       return createInvoice(tx, {
         branchId: original.branchId,
         patientId: original.patientId,

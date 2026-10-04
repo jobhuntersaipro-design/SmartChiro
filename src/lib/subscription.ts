@@ -112,6 +112,7 @@ export function planViewProps(access: AccountAccess, now: Date = new Date()) {
     hasStripeCustomer: access.hasStripeCustomer,
     coveredBy: access.coveredBy,
     staffOnly: access.staffOnly,
+    superAdmin: access.superAdmin,
     billingConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
   };
 }

@@ -21,6 +21,8 @@ export interface PlanViewProps {
   coveredBy: { name: string | null; email: string } | null;
   /** Only works in clinics billed to other accounts. */
   staffOnly: boolean;
+  /** Super admins never pay. */
+  superAdmin: boolean;
   billingConfigured: boolean;
 }
 
@@ -71,7 +73,8 @@ export function PlanView(props: PlanViewProps) {
 
       <StatusBanner {...props} pending={pending} />
 
-      {state !== "subscribed" && (
+      {/* Covered by their clinic's plan (or a super admin): nothing to buy. */}
+      {state !== "subscribed" && !props.coveredBy && !props.superAdmin && (
         <section aria-labelledby="choose-plan" className="rounded-panel border border-border bg-surface p-5 shadow-(--shadow-card)">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="choose-plan" className="font-heading text-[17px] font-medium text-foreground">

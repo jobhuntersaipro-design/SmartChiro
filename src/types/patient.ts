@@ -115,6 +115,8 @@ export interface PastAppointment {
   doctor: { id: string; name: string };
   branch: { id: string; name: string };
   visit: { id: string; visitDate: string } | null;
+  /** A package session paid for this visit — nothing to invoice. */
+  packageCovered: boolean;
   invoices: PastAppointmentInvoice[];
 }
 

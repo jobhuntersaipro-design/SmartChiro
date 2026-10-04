@@ -13,8 +13,8 @@ const fake = vi.hoisted(() => ({
   customers: { create: vi.fn() },
   prices: { list: vi.fn(), create: vi.fn() },
   products: { retrieve: vi.fn(), create: vi.fn() },
-  checkout: { sessions: { create: vi.fn(), retrieve: vi.fn() } },
-  subscriptions: { list: vi.fn() },
+  checkout: { sessions: { create: vi.fn(), retrieve: vi.fn(), list: vi.fn(), expire: vi.fn() } },
+  subscriptions: { list: vi.fn(), cancel: vi.fn() },
   billingPortal: { sessions: { create: vi.fn() } },
 }));
 vi.mock("stripe", async (importOriginal) => {
@@ -69,7 +69,11 @@ describe("billing routes", () => {
     for (const fn of [
       fake.customers.create, fake.prices.list, fake.prices.create, fake.products.retrieve, fake.products.create,
       fake.checkout.sessions.create, fake.checkout.sessions.retrieve, fake.subscriptions.list, fake.billingPortal.sessions.create,
+      fake.checkout.sessions.expire, fake.subscriptions.cancel,
     ]) fn.mockReset();
+    fake.checkout.sessions.list.mockReset().mockResolvedValue({ data: [] });
+    fake.subscriptions.cancel.mockResolvedValue({});
+    fake.checkout.sessions.expire.mockResolvedValue({});
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_dummy");
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", WEBHOOK_SECRET);
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://smartchiro.test");
@@ -110,6 +114,44 @@ describe("billing routes", () => {
       success_url: "https://smartchiro.test/api/billing/confirm?session_id={CHECKOUT_SESSION_ID}",
       subscription_data: { trial_end: Math.floor(user.trialEndsAt!.getTime() / 1000) },
     });
+  });
+
+  it("checkout: creates the customer idempotently and expires other open checkouts first", async () => {
+    await prisma.user.update({ where: { id: userId }, data: { stripeCustomerId: null } });
+    fake.customers.create.mockResolvedValue({ id: CUSTOMER });
+    fake.prices.list.mockResolvedValue({
+      data: [{ id: "price_month", unit_amount: 100000, currency: "myr", recurring: { interval: "month" } }],
+    });
+    fake.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_old_tab" }] });
+    fake.checkout.sessions.create.mockResolvedValue({ url: "https://checkout.stripe.test/s3" });
+    const { POST } = await import("../checkout/route");
+    expect((await POST(post("/api/billing/checkout", { interval: "month" }))).status).toBe(200);
+    expect(fake.customers.create.mock.calls[0][1]).toEqual({ idempotencyKey: `customer-${userId}` });
+    expect(fake.checkout.sessions.list).toHaveBeenCalledWith(expect.objectContaining({ customer: CUSTOMER, status: "open" }));
+    expect(fake.checkout.sessions.expire).toHaveBeenCalledWith("cs_old_tab");
+  });
+
+  it("webhook: a second open subscription (two checkouts completed) is cancelled", async () => {
+    fake.subscriptions.list.mockResolvedValue({
+      data: [subscription({ id: "sub_second", created: 1_900_000_000 }), subscription()],
+    });
+    expect((await sendWebhook("customer.subscription.created", subscription({ id: "sub_second" }))).status).toBe(200);
+    expect(fake.subscriptions.cancel).toHaveBeenCalledTimes(1);
+    expect((await userRow()).stripeSubscriptionId).not.toBe(fake.subscriptions.cancel.mock.calls[0][0]);
+    await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: null, stripeSubscriptionId: null, isPro: false } });
+  });
+
+  it("checkout: staff covered by their clinic's plan can't buy one", async () => {
+    const staff = await prisma.user.create({ data: { email: `${PREFIX}-staff@t.com`, trialEndsAt: null } });
+    const branch = await prisma.branch.create({ data: { name: `${PREFIX} clinic`, billingUserId: userId } });
+    await prisma.branchMember.create({ data: { userId: staff.id, branchId: branch.id, role: "DOCTOR" } });
+    mockAuth.mockResolvedValue({ user: { id: staff.id, email: staff.email } });
+    const { POST } = await import("../checkout/route");
+    const res = await POST(post("/api/billing/checkout", { interval: "month" }));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/clinic's plan already covers you/);
+    expect(fake.checkout.sessions.create).not.toHaveBeenCalled();
+    await prisma.branch.delete({ where: { id: branch.id } });
   });
 
   it("checkout: refuses a second subscription Stripe already has, even if ours lags", async () => {

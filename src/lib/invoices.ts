@@ -279,6 +279,13 @@ async function bumpSequence(tx: Tx, branchId: string, kind: DocumentKind): Promi
  */
 export async function nextNumber(tx: Tx, branchId: string, kind: DocumentKind, now: Date = new Date()): Promise<string> {
   const year = clinicParts(now).year;
+  // Branches with the same initials share a number space: hold a lock on it
+  // until this transaction ends, so the "already taken" check below sees the
+  // other branch's committed number instead of both inserting it (P2002).
+  const branch = await tx.branch.findUnique({ where: { id: branchId }, select: { invoicePrefix: true, name: true } });
+  if (!branch) throw new InvoiceError("branch_not_found", 404);
+  const space = `doc-number:${kind}:${documentPrefix(branch)}:${year}`;
+  await tx.$queryRaw`SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext(${space}))) AS l`;
   for (let attempt = 0; attempt < 50; attempt++) {
     const row = await bumpSequence(tx, branchId, kind);
     const number = formatDocumentNumber(kind, documentPrefix({ invoicePrefix: row.prefix, name: row.name }), year, Number(row.seq));
@@ -360,6 +367,35 @@ export async function createInvoice(tx: Tx, input: CreateInvoiceInput) {
   });
 }
 
+/**
+ * A draft becomes a real invoice when it is first sent or paid: its issue
+ * date moves to that day (the books and e-invoicing select by issue date and
+ * skip drafts) and, if the year changed, it gets a number for the new year.
+ */
+export async function issueDraftData(
+  tx: Tx,
+  invoice: { branchId: string; issuedAt: Date },
+  now: Date = new Date(),
+): Promise<{ issuedAt: Date; invoiceNumber?: string }> {
+  if (clinicParts(invoice.issuedAt).year === clinicParts(now).year) return { issuedAt: now };
+  return { issuedAt: now, invoiceNumber: await nextNumber(tx, invoice.branchId, "invoice", now) };
+}
+
+/**
+ * Cancel an invoice with its row locked, re-checking inside the transaction
+ * that it is still open and has no money against it (a payment can land
+ * between the route's first read and this write).
+ */
+export async function cancelInvoiceLocked(tx: Tx, invoiceId: string, now: Date = new Date()) {
+  await tx.$queryRaw`SELECT 1 FROM "Invoice" WHERE "id" = ${invoiceId} FOR UPDATE`;
+  const invoice = await tx.invoice.findUnique({ where: { id: invoiceId }, select: { status: true, amountPaid: true } });
+  if (!invoice) throw new InvoiceError("not_found", 404);
+  if (invoice.status === "CANCELLED") throw new InvoiceError("invoice_cancelled");
+  if (invoice.status === "PAID") throw new InvoiceError("invoice_already_paid");
+  if (toSen(Number(invoice.amountPaid)) !== 0) throw new InvoiceError("invoice_has_payments");
+  return tx.invoice.update({ where: { id: invoiceId }, data: cancelInvoiceData(invoice.status as AnyInvoiceStatus, now) });
+}
+
 export interface RecordPaymentInput {
   invoiceId: string;
   /** Ringgit; negative for a refund. */
@@ -382,10 +418,12 @@ export async function recordPayment(tx: Tx, input: RecordPaymentInput) {
   await tx.$queryRaw`SELECT 1 FROM "Invoice" WHERE "id" = ${input.invoiceId} FOR UPDATE`;
   const invoice = await tx.invoice.findUnique({
     where: { id: input.invoiceId },
-    select: { id: true, branchId: true, amount: true, amountPaid: true, status: true, paidAt: true },
+    select: { id: true, branchId: true, amount: true, amountPaid: true, status: true, paidAt: true, issuedAt: true },
   });
   if (!invoice) throw new InvoiceError("not_found", 404);
   if (invoice.status === "CANCELLED") throw new InvoiceError("invoice_cancelled");
+  // Paying a draft issues it.
+  const issued = invoice.status === "DRAFT" ? await issueDraftData(tx, invoice) : {};
 
   const amountSen = toSen(input.amount);
   const totalSen = toSen(Number(invoice.amount));
@@ -422,7 +460,7 @@ export async function recordPayment(tx: Tx, input: RecordPaymentInput) {
   const paidAt = status === "PAID" ? (current === "PAID" ? invoice.paidAt : receivedAt) : null;
   const updated = await tx.invoice.update({
     where: { id: invoice.id },
-    data: { amountPaid: fromSen(newPaidSen), status, paidAt },
+    data: { amountPaid: fromSen(newPaidSen), status, paidAt, ...issued },
   });
   return { payment, invoice: updated };
 }

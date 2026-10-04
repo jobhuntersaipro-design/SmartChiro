@@ -23,6 +23,7 @@ interface PastAppointmentDto {
   doctor: { id: string; name: string };
   branch: { id: string; name: string };
   visit: { id: string; visitDate: string } | null;
+  packageCovered: boolean;
   invoices: PastAppointmentInvoiceDto[];
 }
 
@@ -159,6 +160,7 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
       invoices: {
         select: { id: true, invoiceNumber: true, amount: true, status: true },
       },
+      redemptions: { where: { reversedAt: null }, select: { id: true }, take: 1 },
     },
   });
 
@@ -172,6 +174,7 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
     doctor: { id: a.doctor.id, name: a.doctor.name ?? "Unknown" },
     branch: { id: a.branch.id, name: a.branch.name },
     visit: a.visit ? { id: a.visit.id, visitDate: a.visit.visitDate.toISOString() } : null,
+    packageCovered: a.redemptions.length > 0,
     invoices: a.invoices.map((i) => ({
       id: i.id,
       invoiceNumber: i.invoiceNumber,
@@ -181,6 +184,9 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   }));
 
   // Stats — patient-scoped, NOT filter-scoped (per spec §3.3 / §8.8)
+  // Paid counts paid invoices in full (older ones may have no payment rows)
+  // plus what was paid on partly paid ones; outstanding is what's still owed
+  // on issued, unpaid invoices.
   const [statusGroups, paidAgg, outstandingAgg] = await Promise.all([
     prisma.appointment.groupBy({
       by: ["status"],
@@ -192,8 +198,8 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
       _sum: { amount: true },
     }),
     prisma.invoice.aggregate({
-      where: { patientId, status: { in: ["SENT", "OVERDUE"] } },
-      _sum: { amount: true },
+      where: { patientId, status: { in: ["SENT", "OVERDUE", "PARTIALLY_PAID"] } },
+      _sum: { amount: true, amountPaid: true },
     }),
   ]);
 
@@ -205,8 +211,8 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
     cancelled: counts["CANCELLED"] ?? 0,
     noShow: counts["NO_SHOW"] ?? 0,
     stale: (counts["SCHEDULED"] ?? 0) + (counts["IN_PROGRESS"] ?? 0),
-    paid: Number(paidAgg._sum.amount ?? 0),
-    outstanding: Number(outstandingAgg._sum.amount ?? 0),
+    paid: Number(paidAgg._sum.amount ?? 0) + Number(outstandingAgg._sum.amountPaid ?? 0),
+    outstanding: Number(outstandingAgg._sum.amount ?? 0) - Number(outstandingAgg._sum.amountPaid ?? 0),
     currency: "MYR",
   };
 

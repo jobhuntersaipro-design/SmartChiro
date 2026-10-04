@@ -8,7 +8,9 @@ import {
   canTransitionInvoice,
   effectiveInvoiceStatus,
   fromSen,
-  cancelInvoiceData,
+  cancelInvoiceLocked,
+  issueDraftData,
+  InvoiceError,
   recordPayment,
   toSen,
   type AnyInvoiceStatus,
@@ -87,13 +89,19 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
         }),
       );
       paymentId = result.payment.id;
+    } else if (next === "CANCELLED") {
+      await prisma.$transaction((tx) => cancelInvoiceLocked(tx, invoiceId));
     } else {
-      await prisma.invoice.update({
-        where: { id: invoiceId },
-        data:
-          next === "CANCELLED"
-            ? cancelInvoiceData(invoice.status as AnyInvoiceStatus)
-            : { status: next, ...(next === "PAID" ? { paidAt: new Date() } : {}) },
+      await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT 1 FROM "Invoice" WHERE "id" = ${invoiceId} FOR UPDATE`;
+        const row = await tx.invoice.findUniqueOrThrow({ where: { id: invoiceId }, select: { status: true, branchId: true, issuedAt: true } });
+        if (row.status === "CANCELLED") throw new InvoiceError("invoice_cancelled");
+        // Sending a draft issues it (issue date, and a new number across a year end).
+        const issued = row.status === "DRAFT" ? await issueDraftData(tx, row) : {};
+        await tx.invoice.update({
+          where: { id: invoiceId },
+          data: { status: next, ...(next === "PAID" ? { paidAt: new Date() } : {}), ...issued },
+        });
       });
     }
   } catch (err) {

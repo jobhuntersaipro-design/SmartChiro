@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasOpenSubscription, priceIdFor, stripeClient } from "@/lib/stripe";
 import { isPaidStatus } from "@/lib/plans";
+import { accountAccess } from "@/lib/subscription";
 
 /**
  * POST /api/billing/checkout { interval: "month" | "year" } → { url }
@@ -37,21 +38,30 @@ export async function POST(request: NextRequest) {
   if (isPaidStatus(user.subscriptionStatus)) {
     return NextResponse.json({ error: "You already have a subscription. Use Manage billing to change it." }, { status: 409 });
   }
+  const access = await accountAccess(user.id);
+  if (access?.superAdmin || access?.coveredBy) {
+    return NextResponse.json({ error: "Your clinic's plan already covers you. There's nothing to pay." }, { status: 409 });
+  }
 
   try {
     let customerId = user.stripeCustomerId;
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name ?? undefined,
-        metadata: { userId: user.id },
-      });
+      // Idempotent: two checkouts started together get the same customer.
+      const customer = await stripe.customers.create(
+        { email: user.email, name: user.name ?? undefined, metadata: { userId: user.id } },
+        { idempotencyKey: `customer-${user.id}` },
+      );
       customerId = customer.id;
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     } else if (await hasOpenSubscription(stripe, customerId)) {
       // Our copy can lag Stripe (a second tab, a slow webhook): never start a second subscription.
       return NextResponse.json({ error: "You already have a subscription. Use Manage billing to change it." }, { status: 409 });
     }
+
+    // Only one checkout can be open (a session lives 24 hours): expire older
+    // ones so two tabs can't both complete and start two subscriptions.
+    const open = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 20 });
+    await Promise.all(open.data.map((s) => stripe.checkout.sessions.expire(s.id).catch(() => null)));
 
     const origin = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
     const trialLeft = user.trialEndsAt ? user.trialEndsAt.getTime() - Date.now() : 0;

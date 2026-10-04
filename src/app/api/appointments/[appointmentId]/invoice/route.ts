@@ -52,6 +52,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
       patientId: true,
       status: true,
       dateTime: true,
+      // A package session already paid for this visit.
+      redemptions: { where: { reversedAt: null }, select: { id: true }, take: 1 },
     },
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -66,6 +68,13 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
     return NextResponse.json(
       { error: "appointment_not_completed" },
       { status: 422 }
+    );
+  }
+
+  if (appt.redemptions.length > 0) {
+    return NextResponse.json(
+      { error: "package_covered", message: "This visit used a package session, so it's already paid for." },
+      { status: 409 }
     );
   }
 

@@ -199,10 +199,16 @@ export async function POST(req: Request): Promise<Response> {
   if (body.appointmentId) {
     const appt = await prisma.appointment.findUnique({
       where: { id: body.appointmentId },
-      select: { patientId: true, branchId: true },
+      select: { patientId: true, branchId: true, redemptions: { where: { reversedAt: null }, select: { id: true }, take: 1 } },
     });
     if (!appt || appt.patientId !== patient.id || appt.branchId !== branchId) {
       return NextResponse.json({ error: "appointment_mismatch" }, { status: 422 });
+    }
+    if (appt.redemptions.length > 0) {
+      return NextResponse.json(
+        { error: "package_covered", message: "This visit used a package session, so it's already paid for." },
+        { status: 409 },
+      );
     }
   }
 

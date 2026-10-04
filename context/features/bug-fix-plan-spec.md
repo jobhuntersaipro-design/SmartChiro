@@ -4,7 +4,7 @@ Every bug below was traced end to end in the code by a read-only audit (six area
 access control, appointments and reminders, money, patients/booking/portal, X-ray and
 AI, shell/settings/admin) plus a read-only pass over smartchiro.org with the test
 logins. Several were found independently by two or three reviewers; they appear once.
-Phase 1 is fixed (4 Oct 2026); phases 2–5 are not yet.
+Phases 1–2 are fixed (4 Oct 2026); phases 3–5 are not yet.
 
 Fix one phase per branch, in order. Each fix gets a test that fails before it. Ship
 when build, lint and tests pass, then prove it on production (CLAUDE.md).
@@ -79,6 +79,10 @@ Patient data leaking between clinics or to strangers. Fix first.
 ---
 
 ## Phase 2 — Money
+
+**Done 4 Oct 2026** (M1–M11; regression tests in
+`src/app/api/__tests__/money-phase2.test.ts` and `billing.test.ts`). Drafts sent or
+paid in a later month *before* this fix keep their old issue date.
 
 Wrong charges, missing revenue in the books, subscriptions.
 
