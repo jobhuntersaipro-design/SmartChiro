@@ -38,6 +38,12 @@ from `noreply@smartchiro.org`) once its email is verified.
 - [x] In Vercel (Production), add `AUTH_GOOGLE_ID` (the client ID) and
   `AUTH_GOOGLE_SECRET` (the client secret), then redeploy. Done 2026-10-03.
 
+## 1b. Vercel Web Analytics
+
+- [ ] Vercel → project **smart-chiro** → **Analytics** tab → **Enable** (Web Analytics).
+  The `<Analytics />` script is in the root layout since 4 Oct 2026; page views only
+  start counting once it's enabled there (Hobby includes a monthly event allowance).
+
 ## 2. Email (Resend)
 
 - [x] `RESEND_API_KEY` is set in Vercel (all environments). It sends the
