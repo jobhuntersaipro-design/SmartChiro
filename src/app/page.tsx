@@ -171,7 +171,7 @@ function IconBadge({ icon: Icon }: { icon: LucideIcon }) {
 
 function TrialButton({ className }: { className?: string }) {
   return (
-    <Link href="/register" className={buttonVariants({ size: "lg", className })}>
+    <Link href="/register" className={cn(buttonVariants({ size: "lg" }), className)}>
       Start {TRIAL_DAYS}-day free trial
       <ArrowRight data-icon="inline-end" />
     </Link>
@@ -448,12 +448,10 @@ export default function Home() {
               <TrialButton className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 [a]:hover:bg-primary-foreground/90" />
               <Link
                 href="/login"
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "lg",
-                  className:
-                    "border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground",
-                })}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "border-primary-foreground/20 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground",
+                )}
               >
                 Sign in
               </Link>
