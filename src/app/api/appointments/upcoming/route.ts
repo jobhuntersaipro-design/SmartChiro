@@ -35,12 +35,14 @@ export async function GET(request: NextRequest) {
 
     const { gte, lt } = rangeBounds(range)
 
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        status: { in: ['SCHEDULED', 'CHECKED_IN'] },
-        dateTime: { gte, lt },
-        ...access,
-      },
+    const where = {
+      status: { in: ['SCHEDULED' as const, 'CHECKED_IN' as const] },
+      dateTime: { gte, lt },
+      ...access,
+    }
+    // The first 100 are listed; `total` is the real number.
+    const [appointments, total] = await Promise.all([prisma.appointment.findMany({
+      where,
       orderBy: { dateTime: 'asc' },
       take: 100,
       select: {
@@ -55,11 +57,11 @@ export async function GET(request: NextRequest) {
         doctor: { select: { id: true, name: true } },
         branch: { select: { id: true, name: true } },
       },
-    })
+    }), prisma.appointment.count({ where })])
 
     return NextResponse.json({
       range,
-      total: appointments.length,
+      total,
       appointments: appointments.map((a) => ({
         id: a.id,
         dateTime: a.dateTime.toISOString(),

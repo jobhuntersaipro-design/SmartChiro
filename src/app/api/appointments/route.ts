@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { branchIdsForParam } from "@/lib/branch-context";
 import { can } from "@/lib/permissions";
-import { findConflictingAppointments } from "@/lib/appointments";
+import { findConflictingAppointments, findLeaveOverlap, leaveLabel } from "@/lib/appointments";
 import { findOverlappingBreak } from "@/lib/availability";
 import { outsideHoursSummary } from "@/lib/operating-hours";
 import { logAppointmentEvent } from "@/lib/appointment-audit";
@@ -181,6 +181,8 @@ const Body = z.object({
   forceBookOnBreak: z.boolean().optional(),
   /** Bypass the outside-opening-hours confirmation. Set on retry after the user clicks "Book anyway". */
   forceOutsideHours: z.boolean().optional(),
+  /** Bypass the doctor-on-leave confirmation. */
+  forceOnLeave: z.boolean().optional(),
 });
 
 export async function POST(req: Request): Promise<Response> {
@@ -207,6 +209,7 @@ export async function POST(req: Request): Promise<Response> {
     branchId: requestedBranchId,
     forceBookOnBreak,
     forceOutsideHours,
+    forceOnLeave,
   } = parsed.data;
 
   // Past-time guard
@@ -275,8 +278,9 @@ export async function POST(req: Request): Promise<Response> {
 
   // Break-time confirmation gate. If the chosen slot overlaps the doctor's break,
   // require the client to retry with `forceBookOnBreak: true` after showing a confirm dialog.
-  // Only OWNER/ADMIN/FRONT_DESK can use the bypass — a DOCTOR sending the flag is treated as if absent.
-  const canBypassBreak = forceBookOnBreak === true && can(role, "appointment.manageAll");
+  // OWNER/ADMIN/FRONT_DESK may book over anyone's break, a doctor over their own.
+  const canOverride = can(role, "appointment.manageAll") || doctorId === user.id;
+  const canBypassBreak = forceBookOnBreak === true && canOverride;
   if (!canBypassBreak) {
     const docBreaks = await prisma.doctorBreakTime.findMany({
       where: { userId: doctorId, branchId: patient.branchId },
@@ -288,6 +292,14 @@ export async function POST(req: Request): Promise<Response> {
         { error: "break_time_confirm_required", breakLabel: onBreak.label ?? "Break time" },
         { status: 409 }
       );
+    }
+  }
+
+  // Leave confirmation gate, same rule as breaks.
+  if (!(forceOnLeave === true && canOverride)) {
+    const leave = await findLeaveOverlap(doctorId, patient.branchId, newStart, newEnd);
+    if (leave) {
+      return NextResponse.json({ error: "time_off_confirm_required", leave: leaveLabel(leave.type) }, { status: 409 });
     }
   }
 

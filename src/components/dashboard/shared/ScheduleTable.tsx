@@ -44,6 +44,8 @@ interface ScheduleTableProps {
   showBranch?: boolean;
   /** Shows one-click Check in / Start / Complete / No-show; called after a change. */
   onStatusChanged?: () => void;
+  /** All of today's appointments (only the first 10 are listed). */
+  total?: number;
 }
 
 export function ScheduleTable({
@@ -51,6 +53,7 @@ export function ScheduleTable({
   showDoctor = false,
   showBranch = false,
   onStatusChanged,
+  total,
 }: ScheduleTableProps) {
   const router = useRouter();
 
@@ -182,6 +185,13 @@ export function ScheduleTable({
         </tbody>
       </table>
     </div>
+    {total !== undefined && total > rows.length && (
+      <div className="border-t border-border px-4 py-2.5 text-right">
+        <Link href="/dashboard/appointments?view=list&tab=today" className="text-[13px] font-medium text-brand hover:underline">
+          View all {total} appointments today
+        </Link>
+      </div>
+    )}
     </>
   );
 }

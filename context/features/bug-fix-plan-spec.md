@@ -4,7 +4,7 @@ Every bug below was traced end to end in the code by a read-only audit (six area
 access control, appointments and reminders, money, patients/booking/portal, X-ray and
 AI, shell/settings/admin) plus a read-only pass over smartchiro.org with the test
 logins. Several were found independently by two or three reviewers; they appear once.
-Phases 1–2 are fixed (4 Oct 2026); phases 3–5 are not yet.
+Phases 1–3 are fixed (4 Oct 2026); phases 4–5 are not yet.
 
 Fix one phase per branch, in order. Each fix gets a test that fails before it. Ship
 when build, lint and tests pass, then prove it on production (CLAUDE.md).
@@ -136,6 +136,9 @@ Wrong charges, missing revenue in the books, subscriptions.
 ---
 
 ## Phase 3 — Appointments, calendar and reminders
+
+**Done 4 Oct 2026** (A1–A13; regression tests in
+`src/app/api/__tests__/appointments-phase3.test.ts`).
 
 ### A1 🟠 A rescheduled appointment loses reminders that already went out
 - **Where:** `src/app/api/appointments/[appointmentId]/route.ts:296-308` (deletes only PENDING), `src/lib/reminders/dispatcher.ts:54-72` (upsert `update: {}`); same in `src/lib/series-following.ts:181-184`, `src/lib/portal/data.ts:269`.

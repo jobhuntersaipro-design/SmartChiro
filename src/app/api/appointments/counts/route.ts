@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { branchIdsForParam } from "@/lib/branch-context";
-import { clinicCalendar } from "@/lib/clinic-time";
+import { clinicCalendar, clinicDayBounds } from "@/lib/clinic-time";
+import { OFF_THE_DAY_STATUSES } from "@/lib/appointment-tabs";
 
 export async function GET(req: Request): Promise<Response> {
   const user = await getCurrentUser();
@@ -51,7 +52,12 @@ export async function GET(req: Request): Promise<Response> {
   };
 
   const now = new Date();
-  const { dayStart, dayEnd } = clinicCalendar(now);
+  // "Today" is the day picked in the list (`day=YYYY-MM-DD`), as the tab shows it.
+  const dayParam = url.searchParams.get("day");
+  const { dayStart, dayEnd } =
+    dayParam && /^\d{4}-\d{2}-\d{2}$/.test(dayParam)
+      ? (({ start, end }) => ({ dayStart: start, dayEnd: end }))(clinicDayBounds(dayParam))
+      : clinicCalendar(now);
 
   const [
     grouped,
@@ -68,7 +74,7 @@ export async function GET(req: Request): Promise<Response> {
       where: {
         ...baseWhere,
         dateTime: { gte: dayStart, lt: dayEnd },
-        status: { in: ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS"] },
+        status: { notIn: [...OFF_THE_DAY_STATUSES] },
       },
     }),
     prisma.appointment.count({

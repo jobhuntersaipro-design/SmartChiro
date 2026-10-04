@@ -130,7 +130,8 @@ describe("deriveStats", () => {
     expect(stats.todayCount).toBe(2);
     expect(stats.weekCount).toBe(3);
     expect(stats.completionCount).toBe(1);
-    expect(stats.totalForCompletionRate).toBe(3);
+    // Bookings still to come (10:00 today, tomorrow) can't be completed yet.
+    expect(stats.totalForCompletionRate).toBe(1);
   });
 
   it("todayRemaining counts SCHEDULED+CHECKED_IN with future time only", () => {

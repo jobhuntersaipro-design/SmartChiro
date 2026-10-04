@@ -162,7 +162,7 @@ export async function editFollowing(args: {
 
   const patientName = `${appt.patient.firstName} ${appt.patient.lastName}`;
   const updated = await applyPlanned(planned, d.status === "CANCELLED");
-  await afterApply(planned, updated, d.status === "CANCELLED" || delta !== 0, args.actor, patientName);
+  await afterApply(planned, updated, d.status === "CANCELLED" ? "pending" : delta !== 0 ? "all" : "none", args.actor, patientName);
   const anchor = updated.find((u) => u.id === appt.id) ?? null;
   return {
     status: 200,
@@ -186,10 +186,19 @@ async function applyPlanned(planned: Planned[], cancel: boolean) {
 type Updated = Awaited<ReturnType<typeof applyPlanned>>;
 
 /** Reminders re-materialise at the new times, redemptions on cancelled visits are given back, audit rows. */
-async function afterApply(planned: Planned[], updated: Updated, clearReminders: boolean, actor: ActorContext, patientName: string) {
+/** Reminders: a move drops every row (sent ones too) so the new times get reminders; a cancel drops pending ones. */
+async function afterApply(
+  planned: Planned[],
+  updated: Updated,
+  clearReminders: "none" | "pending" | "all",
+  actor: ActorContext,
+  patientName: string,
+) {
   const ids = planned.map((p) => p.id);
-  if (clearReminders) {
-    await prisma.appointmentReminder.deleteMany({ where: { appointmentId: { in: ids }, status: "PENDING" } });
+  if (clearReminders !== "none") {
+    await prisma.appointmentReminder.deleteMany({
+      where: { appointmentId: { in: ids }, ...(clearReminders === "pending" ? { status: "PENDING" as const } : {}) },
+    });
   }
   const cancelled = updated.filter((u) => u.status === "CANCELLED").map((u) => u.id);
   if (cancelled.length > 0) {

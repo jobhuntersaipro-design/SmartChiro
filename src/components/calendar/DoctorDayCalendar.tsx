@@ -148,6 +148,17 @@ export function DoctorDayCalendar({
     return m - startHour * 60;
   }
 
+  // A break or leave block on this day, clamped to the visible window. Leave
+  // spanning several days covers the whole of each day it runs through.
+  function slotRange(start: Date, end: Date): [number, number] | null {
+    const startKey = clinicDateKey(start);
+    const endKey = clinicDateKey(end);
+    if (startKey > dayKey || endKey < dayKey) return null;
+    const top = startKey < dayKey ? 0 : minutesFromTop(start)!;
+    const bottom = endKey > dayKey ? totalMinutes : minutesFromTop(end)!;
+    return bottom > top ? [top, bottom] : null;
+  }
+
   function pxFromMinutes(m: number): number {
     return (m / 60) * hourHeightPx;
   }
@@ -286,9 +297,9 @@ export function DoctorDayCalendar({
 
               {/* Availability slots (BREAK_TIME / TIME_OFF) */}
               {(slotsByDoctor.get(d.id) ?? []).map((slot, idx) => {
-                const start = minutesFromTop(new Date(slot.start));
-                const end = minutesFromTop(new Date(slot.end));
-                if (start === null || end === null) return null;
+                const range = slotRange(new Date(slot.start), new Date(slot.end));
+                if (!range) return null;
+                const [start, end] = range;
                 const top = pxFromMinutes(start);
                 const height = pxFromMinutes(end - start);
                 if (slot.kind === "BREAK_TIME") {

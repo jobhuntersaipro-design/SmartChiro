@@ -10,6 +10,7 @@ import {
 import type { CreateVisitData, Visit } from "@/types/visit";
 import { DISCARD_CHANGES_PROMPT } from "@/lib/format";
 import { DateInput } from "@/components/ui/date-input";
+import { clinicDateKey } from "@/lib/clinic-time";
 
 interface EditVisitDialogProps {
   open: boolean;
@@ -133,7 +134,8 @@ function SliderField({
 
 function visitToFormData(visit: Visit): CreateVisitData {
   return {
-    visitDate: visit.visitDate.slice(0, 10),
+    // The clinic's calendar day (a 7 AM visit is the previous UTC day).
+    visitDate: clinicDateKey(new Date(visit.visitDate)),
     visitType: visit.visitType ?? "follow_up",
     chiefComplaint: visit.chiefComplaint ?? "",
     subjective: visit.subjective ?? "",
@@ -190,7 +192,7 @@ function daysToDateStr(days: number | null | undefined, fromDate: string): strin
 
 export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved }: EditVisitDialogProps) {
   const [form, setForm] = useState<CreateVisitData>({
-    visitDate: new Date().toISOString().slice(0, 10),
+    visitDate: clinicDateKey(),
     visitType: "follow_up",
   });
   const [nextVisitDate, setNextVisitDate] = useState<string>("");
@@ -212,7 +214,7 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
       setForm(visitToFormData(visit));
       setQuestionnaireEnabled(visit.questionnaire !== null);
       // Derive next visit date from visitDate + nextVisitDays
-      setNextVisitDate(daysToDateStr(visit.nextVisitDays, visit.visitDate.slice(0, 10)));
+      setNextVisitDate(daysToDateStr(visit.nextVisitDays, clinicDateKey(new Date(visit.visitDate))));
     }
   }, [visit]);
 
@@ -273,7 +275,7 @@ export function EditVisitDialog({ open, onOpenChange, patientId, visit, onSaved 
       if (!questionnaireEnabled) {
         delete payload.questionnaire;
       }
-      const visitDateStr = form.visitDate || new Date().toISOString().slice(0, 10);
+      const visitDateStr = form.visitDate || clinicDateKey();
       if (nextVisitDate) {
         // Calculate days between visitDate and nextVisitDate
         const base = new Date(visitDateStr);

@@ -77,6 +77,7 @@ export function DashboardView({
   const [ownerStats, setOwnerStats] = useState<OwnerStats | null>(null);
   const [doctorStats, setDoctorStats] = useState<DoctorStats | null>(null);
   const [appointments, setAppointments] = useState<ScheduleAppointment[]>([]);
+  const [scheduleTotal, setScheduleTotal] = useState(0);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
   const [recentXrays, setRecentXrays] = useState<RecentXray[]>([]);
@@ -128,6 +129,7 @@ export function DashboardView({
       if (res.ok) {
         const data = await res.json();
         setAppointments(data.appointments);
+        setScheduleTotal(data.total ?? data.appointments.length);
       }
     } finally {
       setScheduleLoading(false);
@@ -138,7 +140,11 @@ export function DashboardView({
   const refreshSchedule = useCallback(async () => {
     setSignalsKey((k) => k + 1);
     const res = await fetch(`/api/dashboard/schedule?branchId=${branchParam}`);
-    if (res.ok) setAppointments((await res.json()).appointments);
+    if (res.ok) {
+      const data = await res.json();
+      setAppointments(data.appointments);
+      setScheduleTotal(data.total ?? data.appointments.length);
+    }
   }, [branchParam]);
 
   // Fetch activity
@@ -275,6 +281,7 @@ export function DashboardView({
               showDoctor={!isDoctor}
               showBranch={!isDoctor && !selectedBranchId}
               onStatusChanged={refreshSchedule}
+              total={scheduleTotal}
             />
           )}
         </div>

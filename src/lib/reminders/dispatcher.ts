@@ -76,6 +76,37 @@ export async function materializePending(now: Date): Promise<number> {
   return inserted;
 }
 
+/**
+ * Rows are queued up to 8 days ahead, so re-check at send time: the visit
+ * must still be booked and in the future, the branch must still send this
+ * reminder, and the patient must still want it on this channel.
+ */
+export function reasonToSkip(
+  r: {
+    channel: string;
+    offsetMin: number;
+    isFallback: boolean;
+    appointment: {
+      status: string;
+      dateTime: Date;
+      patient: { reminderChannel: Parameters<typeof resolveChannels>[0]["pref"]; phone: string | null; email: string | null };
+    };
+  },
+  settings: { enabled: boolean; offsetsMin: number[] } | null,
+  now: Date,
+): string | null {
+  const { appointment: a } = r;
+  if (a.status !== "SCHEDULED") return `appointment status: ${a.status}`;
+  if (a.dateTime.getTime() <= now.getTime()) return "appointment already started";
+  if (!settings?.enabled) return "reminders turned off for the branch";
+  if (!settings.offsetsMin.includes(r.offsetMin)) return "reminder time no longer used by the branch";
+  if (a.patient.reminderChannel === "NONE") return "patient opted out of reminders";
+  // A fallback row exists because the preferred channel failed; it only needs a contact.
+  const channels = resolveChannels({ pref: a.patient.reminderChannel, hasPhone: Boolean(a.patient.phone), hasEmail: Boolean(a.patient.email) });
+  if (!r.isFallback && !channels.includes(r.channel as (typeof channels)[number])) return "patient no longer wants this channel";
+  return null;
+}
+
 // How long a claimed row is invisible to other dispatchers. processOne should
 // always finish well under this window; if the runner crashes, the row
 // becomes visible again on the next cron tick after this many minutes.
@@ -130,15 +161,16 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
   });
   if (!r) return;
 
-  if (r.appointment.status !== "SCHEDULED") {
+  const settings = r.appointment.branch.reminderSettings;
+  const skipReason = reasonToSkip(r, settings, now);
+  if (skipReason) {
     await prisma.appointmentReminder.update({
       where: { id: r.id },
-      data: { status: "SKIPPED", failureReason: `appointment status: ${r.appointment.status}` },
+      data: { status: "SKIPPED", failureReason: skipReason },
     });
     return;
   }
 
-  const settings = r.appointment.branch.reminderSettings;
   const templates = (settings?.templates ?? {}) as Partial<Templates>;
   const lang = toTemplateLang(r.appointment.patient.preferredLanguage);
 

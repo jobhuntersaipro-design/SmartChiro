@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { clinicCalendar } from "@/lib/clinic-time";
 import { dashboardScope } from "@/lib/branch-context";
 import { scopedWhere } from "@/lib/branch-scope";
+import { OFF_THE_DAY_STATUSES } from "@/lib/appointment-tabs";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -20,9 +21,15 @@ export async function GET(req: NextRequest) {
   const { dayStart: todayStart, dayEnd: todayEnd } = clinicCalendar(new Date());
   // Doctors see their own appointments in the branches where they're a
   // doctor, everyone else the whole branch — by the role in each branch.
-  const where = { ...scopedWhere(scope, userId), dateTime: { gte: todayStart, lt: todayEnd } };
+  // The day's appointments, as everywhere else: cancelled and no-show left out.
+  const where = {
+    ...scopedWhere(scope, userId),
+    dateTime: { gte: todayStart, lt: todayEnd },
+    status: { notIn: [...OFF_THE_DAY_STATUSES] },
+  };
 
-  const appointments = await prisma.appointment.findMany({
+  // The dashboard shows the next 10; `total` is the whole day for "View all".
+  const [appointments, total] = await Promise.all([prisma.appointment.findMany({
     where,
     include: {
       patient: { select: { id: true, firstName: true, lastName: true } },
@@ -31,9 +38,10 @@ export async function GET(req: NextRequest) {
     },
     orderBy: { dateTime: "asc" },
     take: 10,
-  });
+  }), prisma.appointment.count({ where })]);
 
   return NextResponse.json({
+    total,
     appointments: appointments.map((appt) => ({
       id: appt.id,
       dateTime: appt.dateTime.toISOString(),

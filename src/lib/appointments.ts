@@ -1,5 +1,23 @@
 import { prisma } from "@/lib/prisma";
 
+/** Statuses that hold the doctor's time (a started visit too). */
+export const ACTIVE_APPOINTMENT_STATUSES = ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS"] as const;
+/** Longest bookable visit; the conflict pre-filter relies on it. */
+export const MAX_APPOINTMENT_MINUTES = 480;
+
+/** The doctor's leave (for this branch or all branches) overlapping [start, end), or null. */
+export async function findLeaveOverlap(doctorId: string, branchId: string, start: Date, end: Date) {
+  return prisma.doctorTimeOff.findFirst({
+    where: { userId: doctorId, OR: [{ branchId: null }, { branchId }], startDate: { lt: end }, endDate: { gt: start } },
+    select: { type: true, startDate: true, endDate: true },
+  });
+}
+
+/** "annual leave" from ANNUAL_LEAVE. */
+export function leaveLabel(type: string): string {
+  return type.toLowerCase().replace(/_/g, " ");
+}
+
 export type AppointmentConflict = {
   id: string;
   dateTime: Date;
@@ -14,8 +32,8 @@ export type AppointmentConflict = {
  * existingEnd = existingStart + duration*60_000 ms. Adjacent (touching)
  * times do NOT count as conflicts.
  *
- * Excludes CANCELLED, COMPLETED, NO_SHOW status — only SCHEDULED and
- * CHECKED_IN occupy the doctor's time. Same-doctor only.
+ * Excludes CANCELLED, COMPLETED, NO_SHOW status — only SCHEDULED,
+ * CHECKED_IN and IN_PROGRESS occupy the doctor's time. Same-doctor only.
  */
 export async function findConflictingAppointments(args: {
   doctorId: string;
@@ -30,11 +48,11 @@ export async function findConflictingAppointments(args: {
   // AND must start no earlier than `start - 8h` (a duration cap — clinic
   // appointments shouldn't last longer than 8h, so anything starting before
   // that window can't be ongoing at `start`).
-  const candidateStart = new Date(start.getTime() - 8 * 60 * 60 * 1000);
+  const candidateStart = new Date(start.getTime() - MAX_APPOINTMENT_MINUTES * 60_000);
   const candidates = await prisma.appointment.findMany({
     where: {
       doctorId,
-      status: { in: ["SCHEDULED", "CHECKED_IN"] },
+      status: { in: [...ACTIVE_APPOINTMENT_STATUSES] },
       dateTime: { gte: candidateStart, lt: end },
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
@@ -73,8 +91,8 @@ export async function findConflictsForWindows(args: {
   const candidates = await prisma.appointment.findMany({
     where: {
       doctorId,
-      status: { in: ["SCHEDULED", "CHECKED_IN"] },
-      dateTime: { gte: new Date(minStart - 8 * 60 * 60 * 1000), lt: new Date(maxEnd) },
+      status: { in: [...ACTIVE_APPOINTMENT_STATUSES] },
+      dateTime: { gte: new Date(minStart - MAX_APPOINTMENT_MINUTES * 60_000), lt: new Date(maxEnd) },
       ...(excludeIds && excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
     },
     select: {

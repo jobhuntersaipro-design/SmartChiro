@@ -17,7 +17,8 @@ interface Props {
 
 export function AppointmentEventCard({ event }: Props) {
   const a = event.appointment;
-  const time = clinicTimeLabel(event.start);
+  // event.start is shifted for the calendar grid; label from the real time.
+  const time = clinicTimeLabel(new Date(event.appointment.dateTime));
   const isCancelled = a.status === "CANCELLED" || a.status === "NO_SHOW";
 
   return (

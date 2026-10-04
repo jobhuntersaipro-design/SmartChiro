@@ -54,6 +54,19 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+/**
+ * react-big-calendar lays dates out in the device's time zone. Hand it dates
+ * whose wall clock is the clinic's (Kuala Lumpur), and convert what it gives
+ * back, so a laptop set to another zone shows and saves the right hours.
+ */
+function toCalendarDate(instant: Date): Date {
+  const p = clinicParts(instant);
+  return new Date(p.year, p.month - 1, p.day, p.hour, p.minute);
+}
+function fromCalendarDate(local: Date): Date {
+  return clinicInstant(local.getFullYear(), local.getMonth() + 1, local.getDate(), local.getHours(), local.getMinutes());
+}
+
 /** Week view opens at the start of the working day, not midnight. */
 const SCROLL_TO_TIME = new Date(1970, 0, 1, 7);
 
@@ -296,8 +309,8 @@ export function AppointmentsCalendarView({
       appointments.map((a) => ({
         id: a.id,
         title: `${a.patient.firstName} ${a.patient.lastName}`,
-        start: new Date(a.dateTime),
-        end: addMinutes(new Date(a.dateTime), a.duration),
+        start: toCalendarDate(new Date(a.dateTime)),
+        end: toCalendarDate(addMinutes(new Date(a.dateTime), a.duration)),
         resourceId: a.doctor.id,
         appointment: a,
       })),
@@ -341,7 +354,7 @@ export function AppointmentsCalendarView({
   // ─── Slot click — open Create dialog ───
   const handleSelectSlot = useCallback(
     (slot: SlotInfo) => {
-      const slotStart = slot.start as Date;
+      const slotStart = fromCalendarDate(slot.start as Date);
       if (slotStart.getTime() < Date.now()) {
         toast.error("Can't create an appointment in the past");
         return;
@@ -389,8 +402,8 @@ export function AppointmentsCalendarView({
       end: Date | string;
       resourceId?: string | number;
     }) => {
-      const newStart = start instanceof Date ? start : new Date(start);
-      const newEnd = end instanceof Date ? end : new Date(end);
+      const newStart = fromCalendarDate(start instanceof Date ? start : new Date(start));
+      const newEnd = fromCalendarDate(end instanceof Date ? end : new Date(end));
       const newDoctorId =
         (typeof resourceId === "string" ? resourceId : null) ?? event.appointment.doctor.id;
 
@@ -446,6 +459,8 @@ export function AppointmentsCalendarView({
       conflictUrl.searchParams.set("excludeId", event.id);
 
       const conflictRes = await fetch(conflictUrl);
+      // Flags re-sent on the PATCH once the user confirms each warning.
+      const flags: Record<string, boolean> = {};
       if (conflictRes.ok) {
         const conflictBody = await conflictRes.json();
         if (conflictBody.conflicts && conflictBody.conflicts.length > 0) {
@@ -475,11 +490,13 @@ export function AppointmentsCalendarView({
             await fetchAppointments();
             return;
           }
+          flags.forceConflict = true;
         }
       }
 
-      // 5. PATCH (re-sent with forceOutsideHours once the user confirms)
-      const patch = (forceOutsideHours = false) =>
+      // 5. PATCH, re-sent with a flag for each warning the user confirms
+      // (outside opening hours, doctor on leave).
+      const patch = () =>
         fetch(`/api/appointments/${event.id}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
@@ -487,24 +504,32 @@ export function AppointmentsCalendarView({
             dateTime: newStart.toISOString(),
             duration: newDuration,
             ...(doctorChanged ? { doctorId: newDoctorId } : {}),
-            ...(forceOutsideHours ? { forceOutsideHours: true } : {}),
+            ...flags,
           }),
         });
       let res = await patch();
-      if (res.status === 409) {
+      for (let i = 0; i < 2 && res.status === 409; i++) {
         const body = await res.clone().json().catch(() => ({}));
+        let question: string;
         if (body.error === "outside_hours_confirm_required") {
           const hours = body.hours ? ` (${body.hours})` : "";
-          if (!window.confirm(`This time is outside the branch's opening hours${hours}. Move it anyway?`)) {
-            await fetchAppointments(); // snap back
-            return;
-          }
-          res = await patch(true);
+          question = `This time is outside the branch's opening hours${hours}. Move it anyway?`;
+          flags.forceOutsideHours = true;
+        } else if (body.error === "time_off_confirm_required") {
+          question = `The doctor is on ${body.leave ?? "leave"} at that time. Move it anyway?`;
+          flags.forceOnLeave = true;
+        } else {
+          break;
         }
+        if (!window.confirm(question)) {
+          await fetchAppointments(); // snap back
+          return;
+        }
+        res = await patch();
       }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toast.error(body.error ?? `Save failed (${res.status})`);
+        toast.error(body.message ?? body.error ?? `Save failed (${res.status})`);
         await fetchAppointments();
         return;
       }
@@ -632,8 +657,8 @@ export function AppointmentsCalendarView({
           events={events}
           view={view}
           onView={setView}
-          date={date}
-          onNavigate={setDate}
+          date={toCalendarDate(date)}
+          onNavigate={(d: Date) => setDate(fromCalendarDate(d))}
           views={[Views.DAY, Views.WEEK, Views.MONTH]}
           resources={resources}
           resourceIdAccessor="resourceId"

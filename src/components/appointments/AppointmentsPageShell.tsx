@@ -118,6 +118,37 @@ export function AppointmentsPageShell({
   // to mutate `selectedDate` (which would also trigger an unrelated URL push).
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // A link to one appointment (booking emails: `?appointment=<id>` only):
+  // open the list on that appointment's day and branch with its panel open.
+  useEffect(() => {
+    const id = searchParams.get("appointment");
+    if (!id || searchParams.get("date")) return;
+    let cancelled = false;
+    fetch(`/api/appointments/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { appointment?: { dateTime: string; branchId?: string } } | null) => {
+        if (cancelled || !data?.appointment) return;
+        setViewMode("list");
+        setActiveTab("all");
+        setSelectedDate(new Date(data.appointment.dateTime));
+        const b = data.appointment.branchId;
+        if (b && branches.some((x) => x.id === b)) setBranchId(b);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // only on arrival
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The sidebar's "New Appointment" while already here only changes the URL
+  // (`?create=1`): open the dialog whenever it appears.
+  const createParam = searchParams.get("create");
+  useEffect(() => {
+    if (createParam === "1") setCreateOpen(true);
+  }, [createParam]);
+
   // Persist view mode choice (skip the very first render before localStorage is read)
   useEffect(() => {
     if (hydrated && typeof window !== "undefined") {

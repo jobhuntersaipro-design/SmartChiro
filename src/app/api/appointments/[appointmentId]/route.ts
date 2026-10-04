@@ -3,7 +3,13 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { can } from "@/lib/permissions";
-import { findConflictingAppointments } from "@/lib/appointments";
+import {
+  ACTIVE_APPOINTMENT_STATUSES,
+  MAX_APPOINTMENT_MINUTES,
+  findConflictingAppointments,
+  findLeaveOverlap,
+  leaveLabel,
+} from "@/lib/appointments";
 import { logAppointmentEvent, diffSnapshots, snapshotOf, classifyUpdate } from "@/lib/appointment-audit";
 import { outsideHoursSummary } from "@/lib/operating-hours";
 import { activeRedemptionFor, redeemAppointment, reverseRedemption } from "@/lib/package-service";
@@ -67,7 +73,7 @@ const Body = z
     status: z
       .enum(["SCHEDULED", "CHECKED_IN", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"])
       .optional(),
-    duration: z.number().int().positive().optional(),
+    duration: z.number().int().positive().max(MAX_APPOINTMENT_MINUTES).optional(),
     notes: z.string().nullable().optional(),
     doctorId: z.string().optional(),
     treatmentType: z
@@ -95,6 +101,10 @@ const Body = z
     room: z.string().trim().max(60).nullable().optional(),
     /** Bypass the outside-opening-hours confirmation on a reschedule. */
     forceOutsideHours: z.boolean().optional(),
+    /** Book over another appointment anyway (front desk / managers only). */
+    forceConflict: z.boolean().optional(),
+    /** Book while the doctor is on leave (front desk / managers, or the doctor). */
+    forceOnLeave: z.boolean().optional(),
   })
   .refine((d) => Object.keys(d).length > 0, "at least one field required");
 
@@ -200,7 +210,11 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     }
   }
 
-  if (dateTimeWillChange || durationWillChange || doctorWillChange) {
+  // Moving a cancelled / no-show booking back into the diary needs its slot free too.
+  const isActive = (s: string) => (ACTIVE_APPOINTMENT_STATUSES as readonly string[]).includes(s);
+  const reactivating = parsed.data.status !== undefined && isActive(parsed.data.status) && !isActive(appt.status);
+
+  if (dateTimeWillChange || durationWillChange || doctorWillChange || reactivating) {
     const newStart = parsed.data.dateTime ? new Date(parsed.data.dateTime) : appt.dateTime;
     const newDuration = parsed.data.duration ?? appt.duration;
     const newEnd = new Date(newStart.getTime() + newDuration * 60_000);
@@ -211,7 +225,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
       end: newEnd,
       excludeId: appointmentId,
     });
-    if (conflicts.length > 0) {
+    // The calendar's "override and double-book" sends forceConflict.
+    if (conflicts.length > 0 && !(parsed.data.forceConflict === true && managesAll)) {
       return NextResponse.json(
         {
           error: "conflict",
@@ -224,6 +239,21 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
         },
         { status: 409 }
       );
+    }
+
+    if (dateTimeWillChange || durationWillChange || doctorWillChange) {
+      const overrideLeave = parsed.data.forceOnLeave === true && (managesAll || newDoctorId === user.id);
+      const leave = overrideLeave ? null : await findLeaveOverlap(newDoctorId, appt.branchId, newStart, newEnd);
+      if (leave) {
+        return NextResponse.json(
+          {
+            error: "time_off_confirm_required",
+            leave: leaveLabel(leave.type),
+            message: `The doctor is on ${leaveLabel(leave.type)} at that time.`,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     // Opening-hours confirmation gate on a reschedule / duration change —
@@ -296,15 +326,18 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     });
   }
 
-  // Reschedule / cancel hook: clear PENDING reminders so they re-materialize at the new time
-  // (or simply stay cleared if status moved away from SCHEDULED).
+  // Reschedule: drop every reminder row, sent ones too, so the new time gets
+  // its own reminders (the rows are unique per channel and offset).
+  // Cancel / other status: drop the pending ones.
   const dateTimeChanged =
     parsed.data.dateTime !== undefined &&
     new Date(parsed.data.dateTime).getTime() !== appt.dateTime.getTime();
   const movedAwayFromScheduled =
     parsed.data.status !== undefined && parsed.data.status !== "SCHEDULED";
 
-  if (dateTimeChanged || movedAwayFromScheduled) {
+  if (dateTimeChanged) {
+    await prisma.appointmentReminder.deleteMany({ where: { appointmentId } });
+  } else if (movedAwayFromScheduled) {
     await prisma.appointmentReminder.deleteMany({
       where: { appointmentId, status: "PENDING" },
     });

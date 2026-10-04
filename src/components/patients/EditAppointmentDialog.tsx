@@ -170,14 +170,22 @@ export function EditAppointmentDialog({
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ ...body, ...extra }),
         });
+      // Re-sent with a flag for each warning confirmed (opening hours, leave).
+      const confirmed: Record<string, boolean> = {};
       let res = await patch();
-      if (res.status === 409) {
+      for (let i = 0; i < 2 && res.status === 409; i++) {
         const data = await res.clone().json().catch(() => ({}));
         if (data?.error === "outside_hours_confirm_required") {
           const hours = data.hours ? ` (${data.hours})` : "";
           if (!window.confirm(`This time is outside the branch's opening hours${hours}. Save anyway?`)) return;
-          res = await patch({ forceOutsideHours: true });
+          confirmed.forceOutsideHours = true;
+        } else if (data?.error === "time_off_confirm_required") {
+          if (!window.confirm(`The doctor is on ${data.leave ?? "leave"} at that time. Save anyway?`)) return;
+          confirmed.forceOnLeave = true;
+        } else {
+          break;
         }
+        res = await patch(confirmed);
       }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

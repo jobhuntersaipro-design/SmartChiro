@@ -21,6 +21,7 @@ import {
   type AppointmentCounts,
 } from "@/lib/appointment-tabs";
 import type { CalendarAppointment } from "@/types/appointment";
+import { clinicDateKey } from "@/lib/clinic-time";
 
 interface BranchOption {
   id: string;
@@ -161,7 +162,7 @@ export function AppointmentsListView({
       ([k, v]) => listUrl.searchParams.set(k, v)
     );
     const countsUrl = new URL("/api/appointments/counts", window.location.origin);
-    Object.entries(baseParams).forEach(([k, v]) => countsUrl.searchParams.set(k, v));
+    Object.entries({ ...baseParams, day: clinicDateKey(selectedDate) }).forEach(([k, v]) => countsUrl.searchParams.set(k, v));
     const markersUrl = new URL("/api/appointments/calendar-markers", window.location.origin);
     Object.entries({ ...baseParams, start: mStart.toISOString(), end: mEnd.toISOString() }).forEach(
       ([k, v]) => markersUrl.searchParams.set(k, v)

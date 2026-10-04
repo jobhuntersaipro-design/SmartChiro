@@ -9,6 +9,12 @@ export type AppointmentTabId =
   | "cancelled"
   | "noshow";
 
+/**
+ * A day's appointments everywhere (Today tab, its badge, stat cards, the
+ * dashboard): every booking that day except cancelled and no-show ones.
+ */
+export const OFF_THE_DAY_STATUSES: readonly AppointmentStatus[] = ["CANCELLED", "NO_SHOW"];
+
 export interface AppointmentCounts {
   all: number;
   today: number;
@@ -37,7 +43,10 @@ export function appointmentMatchesTab(
   const dt = new Date(appt.dateTime);
 
   if (tab === "today") {
-    return isSameLocalDay(dt, selectedDate);
+    if (!isSameLocalDay(dt, selectedDate)) return false;
+    if (appt.status === "CANCELLED") return !!options.showCancelled;
+    if (appt.status === "NO_SHOW") return !!options.showNoShow;
+    return true;
   }
   if (tab === "upcoming") {
     return (
@@ -150,7 +159,7 @@ export function deriveStats(
     const dt = new Date(a.dateTime);
     const isToday = dt >= dayStart && dt < dayEnd;
     const isThisWeek = dt >= weekStart && dt < weekEnd;
-    if (isToday && a.status !== "CANCELLED") {
+    if (isToday && !OFF_THE_DAY_STATUSES.includes(a.status)) {
       todayCount++;
       // A checked-in or in-progress patient is still on the day's list even
       // once their slot has started; a SCHEDULED one only until its start.
@@ -159,8 +168,11 @@ export function deriveStats(
         todayRemaining++;
       }
     }
-    if (isThisWeek && a.status !== "CANCELLED") weekCount++;
-    if (a.status !== "CANCELLED") {
+    if (isThisWeek && !OFF_THE_DAY_STATUSES.includes(a.status)) weekCount++;
+    // Completion rate: visits whose time has come (future bookings can't be
+    // completed yet), cancelled ones left out.
+    const finished = a.status === "COMPLETED" || a.status === "NO_SHOW";
+    if (a.status !== "CANCELLED" && (finished || dt.getTime() <= now.getTime())) {
       nonCancelledCount++;
       if (a.status === "COMPLETED") completionCount++;
     }

@@ -83,6 +83,7 @@ const FIELD_CLASS =
 interface SubmitOpts {
   forceBookOnBreak?: boolean;
   forceOutsideHours?: boolean;
+  forceOnLeave?: boolean;
 }
 
 /** Date + time inputs are clinic wall-clock time, not the device's zone. */
@@ -121,7 +122,8 @@ export function CreateAppointmentDialog({
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
   // Each confirm keeps the gates already confirmed in this attempt so the retry re-sends them
   const [breakConfirm, setBreakConfirm] = useState<{ label: string; confirmed: SubmitOpts } | null>(null);
-  const [hoursConfirm, setHoursConfirm] = useState<{ hours: string; confirmed: SubmitOpts } | null>(null);
+  // Outside opening hours, or the doctor on leave (same dialog).
+  const [hoursConfirm, setHoursConfirm] = useState<{ kind: "hours" | "leave"; hours: string; confirmed: SubmitOpts } | null>(null);
   // Repeat (recurring series)
   const [repeat, setRepeat] = useState<RepeatFormState>(() => defaultRepeatState(defaultStart(prefilledDateTime).date));
   const [skipProblemDates, setSkipProblemDates] = useState(false);
@@ -292,6 +294,7 @@ export function CreateAppointmentDialog({
           branchId: branchId || undefined,
           forceBookOnBreak: opts.forceBookOnBreak,
           forceOutsideHours: opts.forceOutsideHours,
+          forceOnLeave: opts.forceOnLeave,
         }),
       });
       if (!res.ok) {
@@ -301,7 +304,11 @@ export function CreateAppointmentDialog({
           return;
         }
         if (res.status === 409 && data?.error === "outside_hours_confirm_required") {
-          setHoursConfirm({ hours: data.hours ?? "", confirmed: opts });
+          setHoursConfirm({ kind: "hours", hours: data.hours ?? "", confirmed: opts });
+          return;
+        }
+        if (res.status === 409 && data?.error === "time_off_confirm_required") {
+          setHoursConfirm({ kind: "leave", hours: data.leave ?? "leave", confirmed: opts });
           return;
         }
         if (res.status === 409 && data?.conflicts) {
@@ -606,18 +613,24 @@ export function CreateAppointmentDialog({
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-5 w-5 text-warning" strokeWidth={1.75} />
               <h3 id="outside-hours-title" className="text-[16px] font-semibold text-foreground">
-                Outside opening hours
+                {hoursConfirm.kind === "leave" ? "Doctor on leave" : "Outside opening hours"}
               </h3>
             </div>
-            <p className="text-[13px] text-fg-secondary mb-4">
-              This time is outside the branch&apos;s opening hours
-              {hoursConfirm.hours ? (
-                <>
-                  {" "}(<strong>{hoursConfirm.hours}</strong>)
-                </>
-              ) : null}
-              . Book it anyway?
-            </p>
+            {hoursConfirm.kind === "leave" ? (
+              <p className="text-[13px] text-fg-secondary mb-4">
+                {doctor?.name ?? "The doctor"} is on <strong>{hoursConfirm.hours}</strong> at this time. Book it anyway?
+              </p>
+            ) : (
+              <p className="text-[13px] text-fg-secondary mb-4">
+                This time is outside the branch&apos;s opening hours
+                {hoursConfirm.hours ? (
+                  <>
+                    {" "}(<strong>{hoursConfirm.hours}</strong>)
+                  </>
+                ) : null}
+                . Book it anyway?
+              </p>
+            )}
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
@@ -629,9 +642,9 @@ export function CreateAppointmentDialog({
               </Button>
               <Button
                 onClick={() => {
-                  const confirmed = hoursConfirm.confirmed;
+                  const { confirmed, kind } = hoursConfirm;
                   setHoursConfirm(null);
-                  submit({ ...confirmed, forceOutsideHours: true });
+                  submit({ ...confirmed, ...(kind === "leave" ? { forceOnLeave: true } : { forceOutsideHours: true }) });
                 }}
                 disabled={submitting}
                 className="h-8 rounded-control text-[13px] bg-warning hover:bg-warning text-white gap-1.5"

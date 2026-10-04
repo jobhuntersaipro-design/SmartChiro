@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { countClinicians } from "@/lib/stats-scope";
 import { clinicCalendar } from "@/lib/clinic-time";
 import { can } from "@/lib/permissions";
+import { OFF_THE_DAY_STATUSES } from "@/lib/appointment-tabs";
 import { dashboardScope } from "@/lib/branch-context";
 import { scopedWhere, scopeRole } from "@/lib/branch-scope";
 
@@ -45,6 +46,7 @@ export async function GET(req: NextRequest) {
             doctorId: userId,
             branchId: { in: doctorBranchIds },
             dateTime: { gte: todayStart, lt: todayEnd },
+            status: { notIn: [...OFF_THE_DAY_STATUSES] },
           },
           select: { status: true },
         }),
@@ -99,6 +101,7 @@ export async function GET(req: NextRequest) {
         where: {
           ...scopedBranchFilter,
           dateTime: { gte: todayStart, lt: todayEnd },
+          status: { notIn: [...OFF_THE_DAY_STATUSES] },
         },
         select: { status: true },
       }),
