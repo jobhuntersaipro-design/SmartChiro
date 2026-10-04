@@ -93,6 +93,43 @@
   }
 }
 
+/* Landing-page demos: landmarks pop in with a one-off ping; rows and screens fade in. */
+@keyframes landing-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes landing-ping {
+  from { transform: scale(1); opacity: .9; }
+  to   { transform: scale(3.2); opacity: 0; }
+}
+@keyframes landing-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.landing-pop,
+.landing-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.landing-pop  { animation: landing-pop 380ms cubic-bezier(.16, 1, .3, 1) both; }
+.landing-ping { animation: landing-ping 900ms ease-out both; }
+.landing-fade { animation: landing-fade 300ms ease-out both; }
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.landing) {
+    scroll-behavior: smooth;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-pop,
+  .landing-fade {
+    animation: none;
+  }
+  .landing-ping {
+    display: none;
+  }
+}
+
 @theme inline {
   --font-heading: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
