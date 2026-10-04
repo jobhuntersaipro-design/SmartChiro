@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createHmac } from "crypto";
 
-const updateMany = vi.fn();
+const update = vi.fn();
+const upsert = vi.fn();
+const findMany = vi.fn();
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    appointmentReminder: { updateMany: (a: unknown) => updateMany(a) },
+    appointmentReminder: {
+      findMany: (a: unknown) => findMany(a),
+      update: (a: unknown) => update(a),
+      upsert: (a: unknown) => upsert(a),
+    },
     whatsAppAccount: { findMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
-    patientOutreach: { updateMany: vi.fn() },
+    patientOutreach: { findMany: vi.fn(async () => []), update: vi.fn(), updateMany: vi.fn() },
   },
 }));
 
@@ -18,7 +24,17 @@ describe("/api/whatsapp/webhook", () => {
   beforeEach(() => {
     process.env.META_APP_SECRET = SECRET;
     process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN = "verify-me";
-    updateMany.mockReset();
+    update.mockReset();
+    upsert.mockReset();
+    findMany.mockReset().mockResolvedValue([
+      {
+        id: "r1",
+        appointmentId: "a1",
+        offsetMin: 1440,
+        isFallback: false,
+        appointment: { status: "SCHEDULED", dateTime: new Date(Date.now() + 86_400_000), patient: { email: null, reminderChannel: "WHATSAPP" } },
+      },
+    ]);
   });
 
   it("answers Meta's verification handshake only with the right token", async () => {
@@ -44,9 +60,11 @@ describe("/api/whatsapp/webhook", () => {
       new Request("https://x/api/whatsapp/webhook", { method: "POST", body, headers: { "x-hub-signature-256": sig } }),
     );
     expect(res.status).toBe(200);
-    expect(updateMany).toHaveBeenCalledWith({
-      where: { externalId: "wamid.7", channel: "WHATSAPP" },
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { externalId: "wamid.7", channel: "WHATSAPP" } }));
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "r1" },
       data: { status: "FAILED", failureReason: "wa_failed: Undeliverable (131026)" },
     });
+    expect(upsert).not.toHaveBeenCalled(); // no email to fall back to
   });
 });

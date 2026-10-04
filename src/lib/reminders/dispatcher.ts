@@ -219,7 +219,7 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
       ? { ok: true, externalId: wa.msgId }
       : { ok: false, code: wa.code, message: wa.message };
   } else {
-    const subject = subjectFromBody(body);
+    const subject = reminderSubject(lang, ctx);
     const em = await sendReminderEmail({
       to: r.appointment.patient.email ?? "",
       from: process.env.RESEND_REMINDERS_FROM ?? "reminders@smartchiro.org",
@@ -349,6 +349,13 @@ function buildContext(
   };
 }
 
-function subjectFromBody(body: string): string {
-  return body.split("\n")[0].slice(0, 80) || "Appointment reminder";
+const REMINDER_SUBJECT: Record<TemplateLang, (c: TemplateContext) => string> = {
+  en: (c) => `Appointment reminder: ${c.branchName}, ${c.date} at ${c.time}`,
+  ms: (c) => `Peringatan temu janji: ${c.branchName}, ${c.date} pada ${c.time}`,
+  zh: (c) => `预约提醒：${c.branchName}，${c.date} ${c.time}`,
+};
+
+/** The email subject says what it is, where and when (not the "Hi Siti," greeting). */
+export function reminderSubject(lang: TemplateLang, ctx: TemplateContext): string {
+  return REMINDER_SUBJECT[lang](ctx).slice(0, 120);
 }

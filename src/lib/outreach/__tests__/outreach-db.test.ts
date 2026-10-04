@@ -272,7 +272,8 @@ describe("dispatchOutreach", () => {
     const email = sendEmailMock.mock.calls[0][0];
     expect(email.to).toBe(`${PREFIX}-fb@t.test`);
     expect(email.text).toContain("https://g.page/r/test/review");
-    expect(email.text).toContain("BERHENTI");
+    expect(email.text).toContain("/unsubscribe?p=");
+    expect(email.headers["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
   });
 
   it("skips when WhatsApp isn't connected and there is no email, and when consent was withdrawn", async () => {
@@ -346,6 +347,31 @@ describe("dispatchOutreach", () => {
     expect(after.status).toBe("PENDING");
     expect(after.attemptCount).toBe(1);
     expect(after.scheduledFor.getTime()).toBeGreaterThan(now.getTime());
+  });
+});
+
+// W2: Meta accepts the message, then reports it failed (not on WhatsApp).
+describe("failed-status webhook", () => {
+  it("moves a recall to email, and queues the email fallback for a WhatsApp-only reminder", async () => {
+    const p = await patient({ email: `${PREFIX}-late@t.test` });
+    await prisma.patient.update({ where: { id: p.id }, data: { reminderChannel: "WHATSAPP" } });
+    const recall = await prisma.patientOutreach.create({
+      data: { patientId: p.id, branchId, type: "RECALL", channel: "WHATSAPP", status: "SENT", externalId: "wamid.LATE1", scheduledFor: new Date() },
+    });
+    const appt = await prisma.appointment.create({
+      data: { patientId: p.id, branchId, doctorId, dateTime: new Date(Date.now() + 2 * DAY) },
+    });
+    await prisma.appointmentReminder.create({
+      data: { appointmentId: appt.id, channel: "WHATSAPP", offsetMin: 1440, scheduledFor: new Date(), status: "SENT", externalId: "wamid.LATE2" },
+    });
+
+    await applyWebhookEvent({ kind: "message_failed", msgId: "wamid.LATE1", reason: "wa_failed: not on WhatsApp (131026)" });
+    await applyWebhookEvent({ kind: "message_failed", msgId: "wamid.LATE2", reason: "wa_failed: not on WhatsApp (131026)" });
+
+    expect(await prisma.patientOutreach.findUniqueOrThrow({ where: { id: recall.id } })).toMatchObject({ status: "PENDING", channel: "EMAIL" });
+    const rows = await prisma.appointmentReminder.findMany({ where: { appointmentId: appt.id } });
+    expect(rows.find((r) => r.channel === "WHATSAPP")?.status).toBe("FAILED");
+    expect(rows.find((r) => r.isFallback)).toMatchObject({ channel: "EMAIL", status: "PENDING", offsetMin: 1440 });
   });
 });
 
@@ -457,5 +483,26 @@ describe("POST /api/patients/[id]/outreach (manual recall)", () => {
     } finally {
       process.env.RESEND_API_KEY = saved;
     }
+  });
+});
+
+// W4: the email's unsubscribe link really stops the messages.
+describe("unsubscribe link", () => {
+  it("withdraws consent and skips queued messages; a forged link does nothing", async () => {
+    process.env.AUTH_SECRET ||= "test-secret";
+    const { POST } = await import("@/app/api/public/unsubscribe/route");
+    const { unsubscribeToken } = await import("../unsubscribe");
+    const p = await patient({ email: `${PREFIX}-unsub@t.test` });
+    const queued = await prisma.patientOutreach.create({
+      data: { patientId: p.id, branchId, type: "RECALL", channel: "EMAIL", scheduledFor: new Date(Date.now() + HOUR) },
+    });
+    const forged = await POST(new Request(`http://x/api/public/unsubscribe?p=${p.id}&t=nope&oneclick=1`, { method: "POST" }));
+    expect(forged.status).toBe(400);
+    expect((await prisma.patient.findUniqueOrThrow({ where: { id: p.id } })).marketingConsent).toBe(true);
+
+    const res = await POST(new Request(`http://x/api/public/unsubscribe?p=${p.id}&t=${unsubscribeToken(p.id)}&oneclick=1`, { method: "POST" }));
+    expect(res.status).toBe(200);
+    expect((await prisma.patient.findUniqueOrThrow({ where: { id: p.id } })).marketingConsent).toBe(false);
+    expect((await prisma.patientOutreach.findUniqueOrThrow({ where: { id: queued.id } })).status).toBe("SKIPPED");
   });
 });

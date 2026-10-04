@@ -8,6 +8,7 @@ import { RECALL_TEMPLATE_NAME, REVIEW_TEMPLATE_NAME, toTemplateLang } from "@/li
 import { backoffMs, MAX_ATTEMPTS } from "@/lib/reminders/backoff";
 import { renderOutreachEmail } from "./email-templates";
 import { billingActive } from "@/lib/subscription";
+import { unsubscribeUrl } from "./unsubscribe";
 import {
   REVIEW_MAX_AGE_DAYS,
   latestDate,
@@ -258,6 +259,7 @@ async function loadRow(id: string) {
         select: {
           name: true,
           phone: true,
+          email: true,
           billingUserId: true,
           reminderSettings: { select: { googleReviewUrl: true, recallEnabled: true, reviewEnabled: true } },
         },
@@ -287,15 +289,21 @@ async function sendEmail(row: OutreachRow, reviewUrl: string): Promise<SendResul
     return { ok: false, code: "email_not_configured", message: "Email is not configured (RESEND_API_KEY)" };
   }
   const p = row.patient;
+  const unsubscribe = unsubscribeUrl(row.patientId);
   const msg = renderOutreachEmail(row.type, toTemplateLang(p.preferredLanguage), {
     firstName: p.firstName,
     branchName: row.branch.name,
     branchPhone: row.branch.phone ?? "the clinic",
     reviewUrl,
+    unsubscribeUrl: unsubscribe,
   });
+  const oneClick = `${unsubscribe.replace("/unsubscribe?", "/api/public/unsubscribe?")}&oneclick=1`;
   const em = await sendReminderEmail({
     to: p.email ?? "",
     from: process.env.RESEND_REMINDERS_FROM ?? "reminders@smartchiro.org",
+    replyTo: row.branch.email,
+    // Mail apps show their own "Unsubscribe" button (RFC 8058 one-click).
+    headers: { "List-Unsubscribe": `<${oneClick}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
     subject: msg.subject,
     text: msg.text,
     html: msg.html,

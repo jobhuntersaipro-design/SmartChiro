@@ -138,6 +138,9 @@ and the booking tests). No migration.
 
 ## Phase 8 — Messages
 
+**Done 4 Oct 2026** (W1–W5; W3 shipped with Phase 6). Tests in the reminders and outreach
+test files. No migration.
+
 ### W1 🟡 Patients on "Both" get every reminder email twice when WhatsApp fails
 - **Fix:** no email fallback when an email reminder is already queued.
 

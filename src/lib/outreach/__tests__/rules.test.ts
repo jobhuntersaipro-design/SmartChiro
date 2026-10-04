@@ -148,12 +148,21 @@ describe("consent + languages", () => {
 });
 
 describe("renderOutreachEmail", () => {
-  const ctx = { firstName: "Mei <b>", branchName: "SmartChiro KLCC", branchPhone: "03-2181 1234", reviewUrl: "https://g.page/r/x/review" };
+  const ctx = {
+    firstName: "Mei <b>",
+    branchName: "SmartChiro KLCC",
+    branchPhone: "03-2181 1234",
+    reviewUrl: "https://g.page/r/x/review",
+    unsubscribeUrl: "https://smartchiro.org/unsubscribe?p=pat1&t=tok",
+  };
 
   it.each(["en", "ms", "zh"] as const)("renders recall and review in %s with an opt-out line", (lang) => {
     const recall = renderOutreachEmail("RECALL", lang, ctx);
     expect(recall.text).toContain("03-2181 1234");
-    expect(recall.text).toMatch(/STOP|BERHENTI|停止/);
+    // W4: replies aren't read, so the email links to an unsubscribe page instead of "reply STOP".
+    expect(recall.text).not.toMatch(/STOP|BERHENTI|停止/);
+    expect(recall.text).toContain("https://smartchiro.org/unsubscribe?p=pat1&t=tok");
+    expect(recall.html).toContain('href="https://smartchiro.org/unsubscribe?p=pat1&amp;t=tok"');
     const review = renderOutreachEmail("REVIEW", lang, ctx);
     expect(review.text).toContain("https://g.page/r/x/review");
     expect(review.html).toContain('href="https://g.page/r/x/review"');

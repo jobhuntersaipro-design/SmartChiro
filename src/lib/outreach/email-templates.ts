@@ -12,6 +12,8 @@ export interface OutreachMessageContext {
   branchPhone: string;
   /** REVIEW only. */
   reviewUrl?: string;
+  /** One-click unsubscribe link (W4). */
+  unsubscribeUrl?: string;
 }
 
 interface EmailCopy {
@@ -24,10 +26,12 @@ interface EmailCopy {
   optOut: string;
 }
 
+// Email replies aren't read by SmartChiro, so the email says how to stop
+// with a link (the WhatsApp templates keep "reply STOP").
 const OPT_OUT: Record<TemplateLang, string> = {
-  en: "Don't want these messages? Reply STOP or call {branchPhone} and we'll stop.",
-  ms: "Tidak mahu menerima mesej ini? Balas BERHENTI atau hubungi {branchPhone} dan kami akan berhenti.",
-  zh: "不想再收到此类消息？请回复“停止”或致电 {branchPhone}，我们将不再发送。",
+  en: "Don't want these messages? Unsubscribe here: {unsubscribeUrl} — or call {branchPhone}.",
+  ms: "Tidak mahu menerima mesej ini? Berhenti langgan di sini: {unsubscribeUrl} — atau hubungi {branchPhone}.",
+  zh: "不想再收到此类消息？点此退订：{unsubscribeUrl} ——或致电 {branchPhone}。",
 };
 
 export const OUTREACH_EMAIL: Record<OutreachType, Record<TemplateLang, EmailCopy>> = {
@@ -37,7 +41,7 @@ export const OUTREACH_EMAIL: Record<OutreachType, Record<TemplateLang, EmailCopy
       paragraphs: [
         "Hi {firstName},",
         "It has been a while since your last visit to {branchName}. Regular check-ups help keep your spine healthy.",
-        "Reply to this email or call {branchPhone} to book your next session.",
+        "Call {branchPhone} or reply to this email to book your next session.",
       ],
       signOff: "See you soon,",
       optOut: OPT_OUT.en,
@@ -117,6 +121,9 @@ function fill(text: string, ctx: OutreachMessageContext, escape: boolean): strin
   });
 }
 
+// Stands in for the unsubscribe URL while the HTML is escaped; replaced by a link.
+const UNSUB_MARK = "%%UNSUBSCRIBE%%";
+
 export interface RenderedEmail {
   subject: string;
   text: string;
@@ -145,9 +152,11 @@ export function renderOutreachEmail(
     );
   }
   htmlParts.push(p(`${escapeHtml(copy.signOff)}<br/>${escapeHtml(ctx.branchName)}`, "margin-top:24px;"));
-  htmlParts.push(
-    `<p style="font-size:14px;line-height:1.5;color:#7d7d7d;margin:24px 0 0;">${fill(copy.optOut, ctx, true)}</p>`,
+  const optOutHtml = fill(copy.optOut, { ...ctx, unsubscribeUrl: UNSUB_MARK }, true).replace(
+    UNSUB_MARK,
+    ctx.unsubscribeUrl ? `<a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:#7d7d7d;">${escapeHtml(ctx.unsubscribeUrl)}</a>` : "",
   );
+  htmlParts.push(`<p style="font-size:14px;line-height:1.5;color:#7d7d7d;margin:24px 0 0;">${optOutHtml}</p>`);
 
   return {
     subject: fill(copy.subject, ctx, false),

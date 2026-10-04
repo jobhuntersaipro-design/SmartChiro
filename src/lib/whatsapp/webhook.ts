@@ -151,17 +151,61 @@ export async function applyOptOut(phoneNumberId: string, from: string): Promise<
   return ids.length;
 }
 
+/**
+ * Meta accepted a message, then reported it failed (e.g. the number isn't on
+ * WhatsApp). Like a failure at send time, it falls back to email: a reminder
+ * gets its email fallback row (patients who chose WhatsApp only — "Both"
+ * already had an email), a recall/review goes out by email instead.
+ */
+async function failWhatsAppMessage(msgId: string, reason: string): Promise<void> {
+  const now = new Date();
+  const reminders = await prisma.appointmentReminder.findMany({
+    where: { externalId: msgId, channel: "WHATSAPP" },
+    select: {
+      id: true,
+      appointmentId: true,
+      offsetMin: true,
+      isFallback: true,
+      appointment: { select: { status: true, dateTime: true, patient: { select: { email: true, reminderChannel: true } } } },
+    },
+  });
+  for (const r of reminders) {
+    await prisma.appointmentReminder.update({ where: { id: r.id }, data: { status: "FAILED", failureReason: reason } });
+    const { appointment: appt } = r;
+    const fallback =
+      !r.isFallback &&
+      appt.status === "SCHEDULED" &&
+      appt.dateTime > now &&
+      appt.patient.reminderChannel === "WHATSAPP" &&
+      Boolean(appt.patient.email?.trim());
+    if (!fallback) continue;
+    await prisma.appointmentReminder.upsert({
+      where: {
+        appointmentId_channel_offsetMin_isFallback: { appointmentId: r.appointmentId, channel: "EMAIL", offsetMin: r.offsetMin, isFallback: true },
+      },
+      create: { appointmentId: r.appointmentId, channel: "EMAIL", offsetMin: r.offsetMin, scheduledFor: now, isFallback: true },
+      update: {},
+    });
+  }
+
+  const outreach = await prisma.patientOutreach.findMany({
+    where: { externalId: msgId, channel: "WHATSAPP" },
+    select: { id: true, patient: { select: { email: true } } },
+  });
+  for (const o of outreach) {
+    await prisma.patientOutreach.update({
+      where: { id: o.id },
+      data: o.patient.email?.trim()
+        ? { status: "PENDING", channel: "EMAIL", scheduledFor: now, externalId: null, failureReason: `WhatsApp: ${reason}` }
+        : { status: "FAILED", failureReason: reason },
+    });
+  }
+}
+
 export async function applyWebhookEvent(e: WebhookEvent): Promise<void> {
   switch (e.kind) {
     case "message_failed":
-      await prisma.appointmentReminder.updateMany({
-        where: { externalId: e.msgId, channel: "WHATSAPP" },
-        data: { status: "FAILED", failureReason: e.reason },
-      });
-      await prisma.patientOutreach.updateMany({
-        where: { externalId: e.msgId, channel: "WHATSAPP" },
-        data: { status: "FAILED", failureReason: e.reason },
-      });
+      await failWhatsAppMessage(e.msgId, e.reason);
       return;
     case "template_status": {
       if (!templateByName(e.name)) return;

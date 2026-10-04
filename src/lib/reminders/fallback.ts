@@ -21,6 +21,9 @@ export function shouldFallback(args: {
 }): boolean {
   if (args.isFallback) return false;
   if (args.pref === "NONE") return false;
+  // "Both" already queues the other channel for this reminder: a fallback
+  // would send that email (or WhatsApp) twice.
+  if (args.pref === "BOTH") return false;
   if (args.attemptCount !== 1) return false;
   if (!args.hasOtherChannelContact) return false;
   const set = args.channel === "WHATSAPP" ? TERMINAL_WA : TERMINAL_EMAIL;

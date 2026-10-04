@@ -165,6 +165,8 @@ Nothing has been sent to LHDN yet. Details are in the "8.4 owner actions" sectio
 - [ ] **Accounting codes:** set Billing & tax → Accounting codes to match your
   chart of accounts before the first export.
 - [ ] **Commission rules:** add them under Branch → Settings → Commission rules.
+- [ ] **Branch email:** fill in each branch's email (Branch → Settings). Patients'
+  replies to recall and review emails go there.
 - [ ] **Online booking and portal:** switch on the booking link and set the portal
   cancel cutoff in Branch → Settings for each branch. The portal link is `/portal`.
 - [ ] **Staff logins:** create Doctor, Admin and Front desk logins, then check what

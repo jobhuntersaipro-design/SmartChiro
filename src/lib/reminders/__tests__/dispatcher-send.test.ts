@@ -101,6 +101,8 @@ describe("dispatchDue", () => {
     const { reminder } = await makeFixture("EMAIL");
     sendEmailMock.mockResolvedValueOnce({ ok: true, id: "re_123" });
     await dispatchDue(new Date());
+    // W5: the subject says it's an appointment reminder, not "Hi <name>,".
+    expect(sendEmailMock.mock.calls.at(-1)?.[0].subject).toMatch(/^Appointment reminder: .+, .+ at .+/);
     const row = await prisma.appointmentReminder.findUniqueOrThrow({
       where: { id: reminder.id },
     });
@@ -108,8 +110,17 @@ describe("dispatchDue", () => {
     expect(row.externalId).toBe("re_123");
   });
 
+  // W1: "Both" already has its own email row for this reminder.
+  it("a patient on Both gets no extra fallback email when WhatsApp fails", async () => {
+    const { appt } = await makeFixture("WHATSAPP", { pref: "BOTH" });
+    sendMock.mockResolvedValueOnce({ ok: false, code: "not_on_whatsapp", message: "no WA" });
+    await dispatchDue(new Date());
+    const all = await prisma.appointmentReminder.findMany({ where: { appointmentId: appt.id } });
+    expect(all.some((r) => r.isFallback)).toBe(false);
+  });
+
   it("on terminal WhatsApp failure with email available, marks original FAILED and inserts a fallback EMAIL row", async () => {
-    const { reminder, appt } = await makeFixture("WHATSAPP", { pref: "BOTH" });
+    const { reminder, appt } = await makeFixture("WHATSAPP", { pref: "WHATSAPP" });
     sendMock.mockResolvedValueOnce({
       ok: false,
       code: "not_on_whatsapp",

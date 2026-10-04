@@ -370,6 +370,9 @@ export async function sendReminderEmail(args: {
   html: string
   text: string
   from: string
+  /** Where patient replies go (the branch's email). */
+  replyTo?: string | null
+  headers?: Record<string, string>
 }): Promise<ReminderEmailResult> {
   try {
     const r = await resend().emails.send({
@@ -378,6 +381,8 @@ export async function sendReminderEmail(args: {
       subject: args.subject,
       html: args.html,
       text: args.text,
+      ...(args.replyTo ? { replyTo: args.replyTo } : {}),
+      ...(args.headers ? { headers: args.headers } : {}),
     })
     if (r.error) {
       const m = r.error.message ?? ''
