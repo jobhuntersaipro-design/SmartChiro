@@ -40,12 +40,17 @@ from `noreply@smartchiro.org`) once its email is verified.
 
 ## 2. Email (Resend)
 
-- [ ] Set `RESEND_API_KEY` and `RESEND_REMINDERS_FROM` (a verified sender domain).
-  Without them, none of these emails go out:
-  - patient-portal sign-in codes (the portal can't be used without this);
-  - email reminders;
-  - booking notifications to doctors;
-  - practising-certificate alerts.
+- [x] `RESEND_API_KEY` is set in Vercel (all environments). It sends the
+  patient-portal sign-in codes, email reminders, booking notifications to doctors
+  and practising-certificate alerts.
+- [ ] Optional: `RESEND_REMINDERS_FROM`, the sender of email reminders and
+  recall/review emails. Unset, they come from `reminders@smartchiro.org`. To show a
+  name, set it to e.g. `SmartChiro Reminders <reminders@smartchiro.org>`; the address
+  must be on the domain verified in Resend (smartchiro.org), no mailbox needed.
+- [ ] `CRON_SECRET` in Vercel Production (any long random string, e.g.
+  `openssl rand -hex 32`), then redeploy. Without it every scheduled run of
+  `/api/reminders/dispatch` is refused (401), so no reminder, recall, review or
+  alert is sent, by email or WhatsApp. Not set as of 4 Oct 2026.
 
 ## 3. WhatsApp (Meta Cloud API)
 
