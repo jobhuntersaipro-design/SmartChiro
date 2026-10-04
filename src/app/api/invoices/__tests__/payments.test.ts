@@ -6,6 +6,7 @@ vi.mock("@/lib/auth-utils", () => ({
   getUserBranchRole: vi.fn(),
 }));
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { clinicDateKey } from "@/lib/clinic-time";
 
 const STAMP = Date.now().toString(36).toUpperCase();
 const PREFIX = `test-payments-${STAMP}`;
@@ -114,7 +115,7 @@ describe("payments, manual invoices and SST", () => {
     expect(a.invoice).toMatchObject({ status: "PARTIALLY_PAID", amountPaid: 50, balance: 56, paidAt: null });
     expect(a.payment.receiptNumber).toMatch(new RegExp(`^RCP-${INV_PREFIX}-\\d{4}-\\d{5}$`));
 
-    const second = await pay(inv.id, { amount: 56, method: "DUITNOW_QR", reference: "DN123456", receivedAt: "2026-09-28" });
+    const second = await pay(inv.id, { amount: 56, method: "DUITNOW_QR", reference: "DN123456", receivedAt: clinicDateKey(new Date()) });
     expect(second.status).toBe(201);
     const b = await second.json();
     expect(b.invoice).toMatchObject({ status: "PAID", amountPaid: 106, balance: 0 });

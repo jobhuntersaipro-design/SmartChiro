@@ -269,9 +269,9 @@ describe("Phase 8.1–8.3 ops", () => {
       const row = (id: string) => body.rows.find((r: { userId: string }) => r.userId === id);
       // Doctor: 150 − 20 refund on their appointment; manual invoice counts for nobody.
       expect(row(doctorId)).toMatchObject({ collected: 130, collectedCommission: 13, visits: 2, visitCommission: 0, total: 13 });
-      // Package sale → the seller (front desk).
-      expect(row(deskId)).toMatchObject({ packageSales: 636, packageCommission: 31.8, total: 31.8 });
-      expect(body.totals.total).toBe(44.8);
+      // Package sale → the seller (front desk), net of the RM36 SST.
+      expect(row(deskId)).toMatchObject({ packageSales: 600, packageCommission: 30, total: 30 });
+      expect(body.totals.total).toBe(43);
       expect(body.ruleCount).toBe(2);
 
       // Doctor + treatment fixed rule beats the all-doctors %: RM 40 for the ADJUSTMENT visit only.

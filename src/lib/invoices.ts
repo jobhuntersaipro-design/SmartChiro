@@ -1,5 +1,5 @@
 import type { PaymentMethod, Prisma } from "@prisma/client";
-import { clinicParts } from "@/lib/clinic-time";
+import { clinicDateKey, clinicParts } from "@/lib/clinic-time";
 
 /** Statuses the invoice list screen knows how to show and move between. */
 export type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
@@ -272,6 +272,21 @@ async function bumpSequence(tx: Tx, branchId: string, kind: DocumentKind): Promi
   return rows[0];
 }
 
+/** Moves the branch's counter to the highest number already issued under `stem` ("INV-SK-2026-"). */
+async function skipPastHighest(tx: Tx, branchId: string, kind: DocumentKind, stem: string): Promise<void> {
+  const highest =
+    kind === "invoice"
+      ? (await tx.invoice.findFirst({ where: { invoiceNumber: { startsWith: stem } }, orderBy: { invoiceNumber: "desc" }, select: { invoiceNumber: true } }))?.invoiceNumber
+      : (await tx.payment.findFirst({ where: { receiptNumber: { startsWith: stem } }, orderBy: { receiptNumber: "desc" }, select: { receiptNumber: true } }))?.receiptNumber;
+  const seq = Number(highest?.slice(stem.length));
+  if (!Number.isInteger(seq)) return;
+  if (kind === "invoice") {
+    await tx.$executeRaw`UPDATE "Branch" SET "invoiceSeq" = GREATEST("invoiceSeq", ${seq}) WHERE "id" = ${branchId}`;
+  } else {
+    await tx.$executeRaw`UPDATE "Branch" SET "receiptSeq" = GREATEST("receiptSeq", ${seq}) WHERE "id" = ${branchId}`;
+  }
+}
+
 /**
  * Next invoice/receipt number for a branch. The UPDATE ... RETURNING row lock
  * serialises concurrent callers until their transaction ends. Two branches
@@ -286,14 +301,18 @@ export async function nextNumber(tx: Tx, branchId: string, kind: DocumentKind, n
   if (!branch) throw new InvoiceError("branch_not_found", 404);
   const space = `doc-number:${kind}:${documentPrefix(branch)}:${year}`;
   await tx.$queryRaw`SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext(${space}))) AS l`;
-  for (let attempt = 0; attempt < 50; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const row = await bumpSequence(tx, branchId, kind);
-    const number = formatDocumentNumber(kind, documentPrefix({ invoicePrefix: row.prefix, name: row.name }), year, Number(row.seq));
+    const prefix = documentPrefix({ invoicePrefix: row.prefix, name: row.name });
+    const number = formatDocumentNumber(kind, prefix, year, Number(row.seq));
     const taken =
       kind === "invoice"
         ? await tx.invoice.findUnique({ where: { invoiceNumber: number }, select: { id: true } })
         : await tx.payment.findUnique({ where: { receiptNumber: number }, select: { id: true } });
     if (!taken) return number;
+    // Another branch with these initials got there first: carry on after the
+    // highest number used for this prefix and year, instead of one at a time.
+    await skipPastHighest(tx, branchId, kind, formatDocumentNumber(kind, prefix, year, 0).slice(0, -5));
   }
   throw new InvoiceError("number_sequence_exhausted", 409);
 }
@@ -386,13 +405,34 @@ export async function issueDraftData(
  * that it is still open and has no money against it (a payment can land
  * between the route's first read and this write).
  */
-export async function cancelInvoiceLocked(tx: Tx, invoiceId: string, now: Date = new Date()) {
+export async function cancelInvoiceLocked(
+  tx: Tx,
+  invoiceId: string,
+  now: Date = new Date(),
+  opts: { cancellingPackage?: boolean } = {},
+) {
   await tx.$queryRaw`SELECT 1 FROM "Invoice" WHERE "id" = ${invoiceId} FOR UPDATE`;
-  const invoice = await tx.invoice.findUnique({ where: { id: invoiceId }, select: { status: true, amountPaid: true } });
+  const invoice = await tx.invoice.findUnique({
+    where: { id: invoiceId },
+    select: { status: true, amountPaid: true, einvoiceStatus: true, packageSale: { select: { status: true } } },
+  });
   if (!invoice) throw new InvoiceError("not_found", 404);
   if (invoice.status === "CANCELLED") throw new InvoiceError("invoice_cancelled");
   if (invoice.status === "PAID") throw new InvoiceError("invoice_already_paid");
   if (toSen(Number(invoice.amountPaid)) !== 0) throw new InvoiceError("invoice_has_payments");
+  // LHDN holds this sale (its own e-invoice or the month's consolidated one):
+  // cancelling here alone would report it twice once it's re-issued.
+  if (invoice.einvoiceStatus === "SUBMITTED" || invoice.einvoiceStatus === "VALID") {
+    throw new InvoiceError("einvoice_active", 422, {
+      message: "This invoice is on an LHDN e-invoice. Cancel the e-invoice first (within 72 hours), then the invoice.",
+    });
+  }
+  // The package it sold would stay usable for free.
+  if (invoice.packageSale && invoice.packageSale.status !== "CANCELLED" && !opts.cancellingPackage) {
+    throw new InvoiceError("package_sale", 422, {
+      message: "This invoice sold a package. Cancel the package instead (it cancels this invoice too).",
+    });
+  }
   return tx.invoice.update({ where: { id: invoiceId }, data: cancelInvoiceData(invoice.status as AnyInvoiceStatus, now) });
 }
 
@@ -422,8 +462,16 @@ export async function recordPayment(tx: Tx, input: RecordPaymentInput) {
   });
   if (!invoice) throw new InvoiceError("not_found", 404);
   if (invoice.status === "CANCELLED") throw new InvoiceError("invoice_cancelled");
-  // Paying a draft issues it.
-  const issued = invoice.status === "DRAFT" ? await issueDraftData(tx, invoice) : {};
+  const now = new Date();
+  const receivedAt = input.receivedAt ?? now;
+  // Paying a draft issues it — on the day the money came in when that was
+  // earlier, so the payment never predates its invoice.
+  const issued = invoice.status === "DRAFT" ? await issueDraftData(tx, invoice, receivedAt < now ? receivedAt : now) : {};
+  if (invoice.status !== "DRAFT" && clinicDateKey(receivedAt) < clinicDateKey(invoice.issuedAt)) {
+    throw new InvoiceError("received_before_issue", 422, {
+      message: "The payment date is before the invoice was issued.",
+    });
+  }
 
   const amountSen = toSen(input.amount);
   const totalSen = toSen(Number(invoice.amount));
@@ -437,7 +485,6 @@ export async function recordPayment(tx: Tx, input: RecordPaymentInput) {
     if (-amountSen > paidSen) throw new InvoiceError("refund_exceeds_paid", 422, { amountPaid: fromSen(paidSen) });
   }
 
-  const receivedAt = input.receivedAt ?? new Date();
   const receiptNumber = await nextNumber(tx, invoice.branchId, "receipt", receivedAt);
   const payment = await tx.payment.create({
     data: {

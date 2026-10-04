@@ -64,7 +64,7 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     updated = await prisma.$transaction(async (tx) => {
       if (d.status === "CANCELLED" && d.cancelInvoice && pkg.invoiceId && pkg.invoice && pkg.invoice.status !== "CANCELLED") {
         // Locked and re-checked: refuses if a payment landed in the meantime.
-        await cancelInvoiceLocked(tx, pkg.invoiceId);
+        await cancelInvoiceLocked(tx, pkg.invoiceId, new Date(), { cancellingPackage: true });
       }
       return tx.patientPackage.update({
         where: { id: packageId },

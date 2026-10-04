@@ -25,8 +25,9 @@ interface VisitRow {
  * Commissions per doctor for the range, using the revenue report's
  * attribution: payments on an appointment's invoice count for that
  * appointment's doctor and treatment; payments on a package-sale invoice
- * count for the seller; manual invoices count for nobody. Completed visits
- * (a visit record, or a COMPLETED appointment without one) drive the fixed
+ * count for the seller; manual invoices count for nobody. Payments count net
+ * of SST. Completed visits (a visit record, or a COMPLETED appointment with
+ * no visit for it or for that patient, doctor and day) drive the fixed
  * per-visit rules. OWNER / ADMIN (`commissions.manage`).
  */
 export async function GET(req: Request) {
@@ -43,7 +44,9 @@ export async function GET(req: Request) {
              a."treatmentType"::text AS "treatmentType",
              pp."soldById" AS "sellerId",
              (pp."id" IS NOT NULL) AS "isPackageSale",
-             (p."amount" * 100)::bigint AS "sen"
+             -- Net of SST: commission is on the clinic's money, not the tax.
+             ROUND(p."amount" * 100 * CASE WHEN i."amount" > 0 AND COALESCE(i."taxAmount", 0) > 0
+               THEN (i."amount" - i."taxAmount") / i."amount" ELSE 1 END)::bigint AS "sen"
       FROM "Payment" p
       JOIN "Invoice" i ON i."id" = p."invoiceId"
       LEFT JOIN "Appointment" a ON a."id" = i."appointmentId"
@@ -67,7 +70,15 @@ export async function GET(req: Request) {
       WHERE a."branchId" IN (${branches})
         AND a."status" = 'COMPLETED'
         AND a."dateTime" >= ${range.start} AND a."dateTime" < ${range.end}
-        AND NOT EXISTS (SELECT 1 FROM "Visit" v WHERE v."appointmentId" = a."id")`,
+        AND NOT EXISTS (SELECT 1 FROM "Visit" v WHERE v."appointmentId" = a."id")
+        -- A visit written from the patient page (not linked) for the same
+        -- patient, doctor and clinic day is the same visit: count it once.
+        AND NOT EXISTS (
+          SELECT 1 FROM "Visit" v
+          WHERE v."appointmentId" IS NULL AND v."patientId" = a."patientId" AND v."doctorId" = a."doctorId"
+            AND (v."visitDate" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kuala_Lumpur')::date
+              = (a."dateTime" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kuala_Lumpur')::date
+        )`,
     prisma.commissionRule.findMany({ where: { branchId: { in: branchIds }, active: true } }),
   ]);
 

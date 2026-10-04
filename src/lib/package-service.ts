@@ -308,9 +308,21 @@ async function lockAppointment(tx: Tx, appointmentId: string) {
   });
 }
 
-async function lockActivePackages(tx: Tx, patientId: string) {
-  await tx.$queryRaw`SELECT id FROM "PatientPackage" WHERE "patientId" = ${patientId} AND status = 'ACTIVE' ORDER BY id FOR UPDATE`;
-  return tx.patientPackage.findMany({ where: { patientId, status: "ACTIVE" }, orderBy: { purchasedAt: "asc" } });
+/**
+ * Packages that can pay for a visit at `at`, locked: active ones, and ones
+ * the nightly job marked expired after that visit (completing yesterday's
+ * visit this morning still uses yesterday's package). Those read as active.
+ */
+async function lockActivePackages(tx: Tx, patientId: string, at: Date) {
+  await tx.$queryRaw`
+    SELECT id FROM "PatientPackage"
+    WHERE "patientId" = ${patientId} AND (status = 'ACTIVE' OR (status = 'EXPIRED' AND "expiresAt" > ${at}))
+    ORDER BY id FOR UPDATE`;
+  const rows = await tx.patientPackage.findMany({
+    where: { patientId, OR: [{ status: "ACTIVE" }, { status: "EXPIRED", expiresAt: { gt: at } }] },
+    orderBy: { purchasedAt: "asc" },
+  });
+  return rows.map((p) => (p.status === "EXPIRED" ? { ...p, status: "ACTIVE" as const } : p));
 }
 
 function toSummary(
@@ -346,7 +358,7 @@ export async function redeemAppointment(args: {
       if (appt.status === "CANCELLED") throw new RedeemAbort({ ok: false, error: "appointment_cancelled" });
       if (appt.redemptions.length > 0) throw new RedeemAbort({ ok: false, error: "already_redeemed" });
       if (appt.invoices.length > 0) throw new RedeemAbort({ ok: false, error: "appointment_invoiced" });
-      const packages = await lockActivePackages(tx, appt.patientId);
+      const packages = await lockActivePackages(tx, appt.patientId, appt.dateTime);
       const pkg = choosePackage(packages, appt, args.patientPackageId);
       const updated = await tx.patientPackage.update({
         where: { id: pkg.id },

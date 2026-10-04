@@ -141,9 +141,16 @@ export async function createOnlineBooking(
           if (recent >= MAX_ONLINE_BOOKINGS_PER_PHONE_PER_DAY) throw new BookingFailure("daily_limit");
         }
 
-        // Email and IC are unique across all patients — only store ones nobody else has.
+        // Email and IC are unique per branch — only store ones nobody else has.
+        // Locked so two bookings giving the same new email/IC can't both
+        // insert it (the second would fail on the unique index).
+        for (const key of [input.email && `email:${input.email.toLowerCase()}`, icNumber && `ic:${icNumber}`]) {
+          if (key) await tx.$queryRaw`SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext(${`patient-${branch.id}-${key}`}))) AS l`;
+        }
         const [emailOwner, icOwner] = await Promise.all([
-          input.email ? tx.patient.findFirst({ where: { branchId: branch.id, email: input.email }, select: { id: true } }) : null,
+          input.email
+            ? tx.patient.findFirst({ where: { branchId: branch.id, email: { equals: input.email, mode: "insensitive" } }, select: { id: true } })
+            : null,
           icNumber ? tx.patient.findFirst({ where: { branchId: branch.id, icNumber }, select: { id: true } }) : null,
         ]);
         const extraNotes: string[] = [];

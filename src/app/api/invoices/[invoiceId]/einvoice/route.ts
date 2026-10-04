@@ -97,7 +97,13 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   if (!auth.access.manage) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const text = await req.text();
-  const parsed = Body.safeParse(text ? JSON.parse(text) : {});
+  let raw: unknown = {};
+  try {
+    raw = text ? JSON.parse(text) : {};
+  } catch {
+    return NextResponse.json({ error: "validation" }, { status: 422 });
+  }
+  const parsed = Body.safeParse(raw);
   if (!parsed.success) return NextResponse.json({ error: "validation", details: parsed.error.flatten() }, { status: 422 });
 
   try {

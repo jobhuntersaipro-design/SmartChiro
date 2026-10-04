@@ -657,7 +657,8 @@ async function consolidationCandidates(branchId: string, start: Date, end: Date)
       issuedAt: { gte: start, lt: end },
       status: { notIn: ["DRAFT", "CANCELLED"] },
       consolidatedIntoId: null,
-      einvoiceStatus: { in: ["NOT_SUBMITTED", "INVALID"] },
+      // A cancelled own e-invoice (e.g. wrong buyer) leaves the sale to the consolidated one.
+      einvoiceStatus: { in: ["NOT_SUBMITTED", "INVALID", "CANCELLED"] },
     },
     orderBy: [{ issuedAt: "asc" }, { invoiceNumber: "asc" }],
     select: {

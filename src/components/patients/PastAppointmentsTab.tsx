@@ -252,9 +252,9 @@ export function PastAppointmentsTab({
       if (!res.ok) {
         // Surface a minimal alert in v1 — repo has no toast lib yet.
         const data = (await res.json().catch(() => null)) as
-          | { error?: string }
+          | { error?: string; message?: string }
           | null;
-        alert(humanizeError(data?.error ?? "unknown"));
+        alert(data?.message ?? humanizeError(data?.error ?? "unknown"));
         return;
       }
       await fetchPage();
@@ -275,9 +275,9 @@ export function PastAppointmentsTab({
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as
-          | { error?: string }
+          | { error?: string; message?: string }
           | null;
-        alert(humanizeError(data?.error ?? "unknown"));
+        alert(data?.message ?? humanizeError(data?.error ?? "unknown"));
         return;
       }
       await fetchPage();

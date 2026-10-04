@@ -94,8 +94,16 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
     } else {
       await prisma.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT 1 FROM "Invoice" WHERE "id" = ${invoiceId} FOR UPDATE`;
-        const row = await tx.invoice.findUniqueOrThrow({ where: { id: invoiceId }, select: { status: true, branchId: true, issuedAt: true } });
+        const row = await tx.invoice.findUniqueOrThrow({
+          where: { id: invoiceId },
+          select: { status: true, branchId: true, issuedAt: true, dueDate: true },
+        });
         if (row.status === "CANCELLED") throw new InvoiceError("invoice_cancelled");
+        // A payment may have landed since the check above (e.g. Part paid → Sent).
+        const locked = effectiveInvoiceStatus(row.status as AnyInvoiceStatus, row.dueDate);
+        if (!canTransitionInvoice(locked, next)) {
+          throw new InvoiceError("invalid_transition", 422, { from: locked, to: next });
+        }
         // Sending a draft issues it (issue date, and a new number across a year end).
         const issued = row.status === "DRAFT" ? await issueDraftData(tx, row) : {};
         await tx.invoice.update({

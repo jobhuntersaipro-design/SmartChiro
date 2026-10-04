@@ -262,6 +262,17 @@ describe("public booking API", () => {
     expect(notifyOnlineBooking).toHaveBeenLastCalledWith(expect.objectContaining({ isNewPatient: true }));
   });
 
+  // N10: same address in another case is the same email.
+  it("an existing email typed in another case isn't stored on a second patient", async () => {
+    const { slug, docA, branch } = await fixture();
+    const email = `${PREFIX}Case-${Date.now()}@Example.com`;
+    const first = await prisma.patient.create({ data: { firstName: "First", lastName: "One", phone: "013-111 2222", email, branchId: branch.id, doctorId: docA.id } });
+    const res = await book(slug, { doctorId: docA.id, dateTime: at("11:00"), name: "Other Person", phone: "019-888 7777", email: email.toLowerCase() });
+    expect(res.status).toBe(201);
+    const created = await prisma.patient.findFirstOrThrow({ where: { branchId: branch.id, NOT: { id: first.id } } });
+    expect(created.email).toBeNull();
+  });
+
   it("an email already on another patient isn't stored — it goes in the appointment notes", async () => {
     const { slug, docA, branch } = await fixture();
     const email = `${PREFIX}taken-${Date.now()}@example.com`;

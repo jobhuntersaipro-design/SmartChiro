@@ -84,6 +84,9 @@ and the auth, outreach, booking and subscription test files). Migration
 
 ## Phase 7 — Money
 
+**Done 4 Oct 2026** (N1–N10; regression tests in `src/app/api/__tests__/money-phase7.test.ts`
+and the booking tests). No migration.
+
 ### N1 🔴 A second branch with the same initials can't invoice or take payments
 - Numbers are unique across the database, counters are per branch. Once branch A has
   issued 50 numbers, branch B's first invoice exhausts the retry loop (409) every time;

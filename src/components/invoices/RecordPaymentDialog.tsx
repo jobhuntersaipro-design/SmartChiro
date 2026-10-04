@@ -42,6 +42,8 @@ function errorMessage(code: string | undefined, data: Record<string, unknown> | 
       return "Give a reason for the refund.";
     case "received_in_future":
       return "The received date and time can't be in the future.";
+    case "received_before_issue":
+      return "The received date is before the invoice was issued.";
     case "invoice_cancelled":
       return "This invoice was cancelled, so it can't take payments.";
     case "forbidden":

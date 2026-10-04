@@ -76,7 +76,7 @@ export function InvoiceDrawer({ invoiceId, onClose, roleFor, onChanged }: Invoic
         toast.error(
           data?.error === "invoice_has_payments"
             ? "Money has been taken on this invoice — refund the payments before cancelling it."
-            : "Couldn't update the invoice.",
+            : (data?.message ?? "Couldn't update the invoice."),
         );
         return;
       }
