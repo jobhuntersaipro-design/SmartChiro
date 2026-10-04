@@ -166,7 +166,7 @@ export function XrayAiDemo() {
                 <stop offset="1" stopColor={VIOLET} stopOpacity="0.35" />
               </linearGradient>
             </defs>
-            <image href={FILM.src} width={FILM.w} height={FILM.h} opacity={clamp01(t / SCAN_AT)} />
+            <image href={FILM.src} width={FILM.w} height={FILM.h} />
             {t >= SCAN_AT && t < ZOOM_AT && <ScanLine y={((t - SCAN_AT) / (ZOOM_AT - SCAN_AT)) * FILM.h} />}
             {t >= CHECKED_AT && t < DETECT_AT && (
               <rect
