@@ -62,7 +62,8 @@ export async function PUT(request: Request) {
   const hashed = await hash(parsed.data.newPassword, 12);
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { password: hashed },
+    // Ends every session, this one too: the browser signs in again.
+    data: { password: hashed, passwordChangedAt: new Date(), passwordSetByOther: false },
   });
 
   return NextResponse.json({ success: true });

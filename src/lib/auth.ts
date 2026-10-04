@@ -9,9 +9,10 @@ import { loadBranchContext } from './branch-context'
 import { cache } from 'react'
 import { recordSignIn } from './login-activity'
 import { takeToken } from './booking/rate-limit'
+import { endedByPasswordChange } from './auth/session-guard'
 
 const accountStatus = cache((userId: string) =>
-  prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true, name: true, image: true } }),
+  prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true, passwordChangedAt: true, name: true, image: true } }),
 )
 
 class EmailNotVerifiedError extends CredentialsSignin {
@@ -109,6 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string
+        token.signedInAt = Date.now()
         const u = user as unknown as {
           branchRole: BranchRole | null
           activeBranchId: string | null
@@ -130,6 +132,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user: undefined,
             error: account ? 'account_disabled' : 'account_missing',
           } as unknown as typeof session
+        }
+        if (endedByPasswordChange(account.passwordChangedAt, token.signedInAt)) {
+          return { ...session, user: undefined, error: 'password_changed' } as unknown as typeof session
         }
         // Role and active branch come from the database, not the token
         // (see loadBranchContext) — so they're current after creating or

@@ -131,8 +131,8 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
   async function handleDeleteBranch() {
     const res = await fetch(`/api/branches/${branch.id}`, { method: "DELETE" });
     if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error);
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message ?? data.error ?? "Couldn't delete the branch.");
     }
     router.push("/dashboard/branches");
     router.refresh();

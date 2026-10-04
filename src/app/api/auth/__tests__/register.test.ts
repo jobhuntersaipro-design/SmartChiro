@@ -4,12 +4,14 @@ import { NextRequest } from 'next/server'
 // Mock Prisma
 const mockFindUnique = vi.fn()
 const mockCreate = vi.fn()
+const mockUpdate = vi.fn()
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
       findUnique: (...args: unknown[]) => mockFindUnique(...args),
       create: (...args: unknown[]) => mockCreate(...args),
+      update: (...args: unknown[]) => mockUpdate(...args),
     },
   },
 }))
@@ -95,15 +97,31 @@ describe('POST /api/auth/register', () => {
 
   // Existing and new emails get the same response so the endpoint can't be
   // used to discover which emails have accounts.
-  it('answers an existing email exactly like a new one, without creating a user', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'existing', email: 'test@example.com' })
+  it('answers a verified email exactly like a new one, without touching the account', async () => {
+    mockFindUnique.mockResolvedValue({ id: 'existing', emailVerified: new Date() })
 
     const res = await POST(createRequest(validBody))
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.message).toContain('verification email')
     expect(mockCreate).not.toHaveBeenCalled()
+    expect(mockUpdate).not.toHaveBeenCalled()
     expect(mockSendVerificationEmail).not.toHaveBeenCalled()
+  })
+
+  // G1: someone registered the address first; the inbox owner registering now
+  // must not verify into the first person's password.
+  it('an unverified email takes the new password and name, and gets a fresh link', async () => {
+    mockFindUnique.mockResolvedValue({ id: 'squatter', emailVerified: null })
+
+    const res = await POST(createRequest(validBody))
+    expect(res.status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: 'squatter' },
+      data: { name: 'Dr. Test', password: 'hashed_password_123' },
+    })
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(mockSendVerificationEmail).toHaveBeenCalledWith('test@example.com', 'Dr. Test')
   })
 
   it('creates user with lowercased email and hashed password', async () => {

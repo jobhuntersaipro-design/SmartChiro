@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
         where: { id: user.id },
         data: {
           password: newHash,
+          passwordChangedAt: new Date(),
+          passwordSetByOther: false,
           // A successful password reset via emailed link proves email ownership.
           // Promotes Google-only users into dual sign-in. Don't overwrite if already set.
           ...(user.emailVerified ? {} : { emailVerified: new Date() }),

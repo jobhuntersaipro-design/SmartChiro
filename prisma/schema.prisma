@@ -32,6 +32,11 @@ model User {
   aiDailyLimit          Int       @default(10)
   /// Set by a super admin to block sign-in.
   disabledAt            DateTime?
+  /// Last password change or reset; sessions signed in before it end.
+  passwordChangedAt     DateTime?
+  /// The password was typed by someone else (an owner creating the account);
+  /// cleared when the user sets their own, dropped on their first Google sign-in.
+  passwordSetByOther    Boolean   @default(false)
   /// Login activity for the super admin page (src/lib/login-activity.ts).
   lastLoginAt           DateTime?
   loginCount            Int       @default(0)

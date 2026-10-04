@@ -7,6 +7,7 @@ import { defaultDurationFor } from "@/lib/treatment-colors";
 import { displayDoctorName } from "@/lib/format";
 import { addDaysToKey } from "@/lib/reports/range";
 import { bookingWindowKeys, type BookingDoctor, type SlotRules } from "@/lib/booking/slots";
+import { billingActive } from "@/lib/subscription";
 
 /** Statuses that keep a doctor busy. */
 export const BUSY_STATUSES = ["SCHEDULED", "CHECKED_IN", "IN_PROGRESS", "COMPLETED"] as const;
@@ -36,9 +37,15 @@ export const BOOKING_BRANCH_SELECT = {
 export type BookingBranch = Prisma.BranchGetPayload<{ select: typeof BOOKING_BRANCH_SELECT }>;
 
 /** Enabled branch for a public slug, or null (unknown or switched off). */
+/** The branch behind a booking link, while booking is on and its plan is in good standing (D5). */
 export async function findBookableBranch(slug: string, db: Db = prisma): Promise<BookingBranch | null> {
-  const branch = await db.branch.findUnique({ where: { bookingSlug: slug }, select: BOOKING_BRANCH_SELECT });
-  return branch && branch.bookingEnabled ? branch : null;
+  const branch = await db.branch.findUnique({
+    where: { bookingSlug: slug },
+    select: { ...BOOKING_BRANCH_SELECT, billingUserId: true },
+  });
+  if (!branch?.bookingEnabled) return null;
+  const { billingUserId, ...bookable } = branch;
+  return (await billingActive(billingUserId)) ? bookable : null;
 }
 
 export interface BookableDoctor {

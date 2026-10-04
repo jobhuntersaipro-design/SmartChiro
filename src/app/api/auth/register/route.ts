@@ -43,26 +43,34 @@ export async function POST(req: NextRequest) {
     }
 
     // Uniform response for new vs existing email to prevent account
-    // enumeration. The actual create + email send is skipped on collision
-    // but the response shape and status are identical.
+    // enumeration. A verified account is left alone. An unverified one takes
+    // the new password and name: whoever proves the inbox (the link goes
+    // there) must not inherit a password someone else registered first.
     const normalizedEmail = email.toLowerCase()
     const existingUser = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      select: { id: true },
+      select: { id: true, emailVerified: true },
     })
 
-    if (!existingUser) {
+    if (!existingUser?.emailVerified) {
       const hashedPassword = await hash(password, 12)
 
-      await prisma.user.create({
-        data: {
-          name,
-          email: normalizedEmail,
-          password: hashedPassword,
-        },
-      })
+      if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: { name, password: hashedPassword },
+        })
+      } else {
+        await prisma.user.create({
+          data: {
+            name,
+            email: normalizedEmail,
+            password: hashedPassword,
+          },
+        })
+      }
 
-      // Send verification email (don't block registration if email fails)
+      // A fresh link (older ones are dropped); don't block registration if email fails
       try {
         await sendVerificationEmail(normalizedEmail, name)
       } catch (emailError) {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { UserPlus, Users, ImageIcon, Trash2 } from "lucide-react";
+import { UserPlus, Users, ImageIcon, Trash2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { BranchMemberDetail } from "@/types/branch";
@@ -21,9 +21,35 @@ interface BranchDoctorsTabProps {
   onRefresh: () => Promise<void>;
 }
 
+interface PendingInvite {
+  id: string;
+  role: BranchRole;
+  name: string | null;
+  email: string;
+  sentAt: string;
+}
+
 export function BranchDoctorsTab({ branchId, branchName, members, userRole, onRefresh }: BranchDoctorsTabProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [invites, setInvites] = useState<PendingInvite[]>([]);
   const canManage = userRole === "OWNER" || userRole === "ADMIN";
+
+  const loadInvites = useCallback(async () => {
+    if (!canManage) return;
+    const res = await fetch(`/api/branches/${branchId}/invites`).catch(() => null);
+    if (res?.ok) setInvites((await res.json()).invites);
+  }, [branchId, canManage]);
+
+  useEffect(() => {
+    void loadInvites();
+  }, [loadInvites]);
+
+  async function withdraw(invite: PendingInvite) {
+    const res = await fetch(`/api/branches/${branchId}/invites/${invite.id}`, { method: "DELETE" });
+    if (!res.ok) toast.error((await res.json().catch(() => null))?.error ?? "Couldn't withdraw the invite.");
+    else toast.success(`Invite to ${invite.email} withdrawn.`);
+    await loadInvites();
+  }
 
   // ManageDoctorsSheet needs members in a specific format
   const sheetMembers = members.map((m) => ({
@@ -51,6 +77,7 @@ export function BranchDoctorsTab({ branchId, branchName, members, userRole, onRe
     }
     if (res.status === 202) {
       toast.success(`Invitation sent to ${email}. They join once they accept.`);
+      await loadInvites();
       return { success: true };
     }
     await onRefresh();
@@ -185,6 +212,31 @@ export function BranchDoctorsTab({ branchId, branchName, members, userRole, onRe
               </div>
             );
           })}
+        </div>
+      )}
+
+      {canManage && invites.length > 0 && (
+        <div className="rounded-panel border border-border bg-white p-4">
+          <h4 className="text-[14px] font-medium text-foreground mb-2">
+            Waiting to accept ({invites.length})
+          </h4>
+          <ul className="divide-y divide-border">
+            {invites.map((invite) => (
+              <li key={invite.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                <Mail className="h-4 w-4 text-fg-muted" strokeWidth={1.5} />
+                <span className="min-w-0 flex-1 text-[14px] text-foreground">
+                  {invite.name ?? invite.email}
+                  <span className="text-fg-secondary"> · {roleLabel(invite.role)} · sent{" "}
+                    {new Date(invite.sentAt).toLocaleDateString("en-GB", { timeZone: CLINIC_TIME_ZONE, day: "numeric", month: "short" })}
+                  </span>
+                </span>
+                <Button variant="outline" size="sm" className="h-7 text-[13px]" onClick={() => withdraw(invite)}>
+                  Withdraw
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[12px] text-fg-muted">Invites lapse after 14 days.</p>
         </div>
       )}
 

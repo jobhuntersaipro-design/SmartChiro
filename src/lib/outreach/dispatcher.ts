@@ -7,6 +7,7 @@ import { recallTemplateParams, reviewTemplateParams } from "@/lib/whatsapp/templ
 import { RECALL_TEMPLATE_NAME, REVIEW_TEMPLATE_NAME, toTemplateLang } from "@/lib/whatsapp/template-text";
 import { backoffMs, MAX_ATTEMPTS } from "@/lib/reminders/backoff";
 import { renderOutreachEmail } from "./email-templates";
+import { billingActive } from "@/lib/subscription";
 import {
   REVIEW_MAX_AGE_DAYS,
   latestDate,
@@ -16,6 +17,7 @@ import {
   reviewBlocker,
   SKIP_REASON_TEXT,
   type OutreachSettings,
+  type SkipReason,
 } from "./rules";
 
 const DAY_MS = 86_400_000;
@@ -191,6 +193,8 @@ export async function materializeOutreach(now: Date): Promise<{ recalls: number;
   let reviews = 0;
   for (const s of branches) {
     try {
+      const branch = await prisma.branch.findUnique({ where: { id: s.branchId }, select: { billingUserId: true } });
+      if (!(await billingActive(branch?.billingUserId ?? null, now))) continue;
       if (s.recallEnabled) recalls += await materializeRecalls(s.branchId, s, now);
       if (s.reviewEnabled) reviews += await materializeReviews(s.branchId, s, now);
     } catch (e) {
@@ -247,9 +251,17 @@ async function loadRow(id: string) {
           email: true,
           marketingConsent: true,
           preferredLanguage: true,
+          status: true,
         },
       },
-      branch: { select: { name: true, phone: true, reminderSettings: { select: { googleReviewUrl: true } } } },
+      branch: {
+        select: {
+          name: true,
+          phone: true,
+          billingUserId: true,
+          reminderSettings: { select: { googleReviewUrl: true, recallEnabled: true, reviewEnabled: true } },
+        },
+      },
     },
   });
 }
@@ -295,14 +307,34 @@ async function finish(id: string, data: Prisma.PatientOutreachUpdateInput): Prom
   await prisma.patientOutreach.update({ where: { id }, data });
 }
 
+/**
+ * Why a queued row must not go out now: consent withdrawn, patient set
+ * inactive, the clinic switched the message type off (cron rows only; staff
+ * can still send one by hand), its plan lapsed, or a recall patient booked.
+ */
+async function skipReasonAtSend(row: OutreachRow, now: Date): Promise<SkipReason | null> {
+  const settings = row.branch.reminderSettings;
+  if (!row.patient.marketingConsent) return "no_consent";
+  if (row.patient.status !== "active") return "inactive";
+  if (row.createdById == null && !(row.type === "RECALL" ? settings?.recallEnabled : settings?.reviewEnabled)) {
+    return "switched_off";
+  }
+  if (!(await billingActive(row.branch.billingUserId, now))) return "plan_ended";
+  if (row.type === "RECALL" && (await recallFactsFor([row.patientId], now)).get(row.patientId)?.hasUpcoming) {
+    return "has_booking";
+  }
+  return null;
+}
+
 export async function processOutreach(id: string, now: Date): Promise<void> {
   const row = await loadRow(id);
   if (!row || row.status !== "PENDING") return;
   const p = row.patient;
   const reviewUrl = row.branch.reminderSettings?.googleReviewUrl?.trim() ?? "";
 
-  // Consent can be withdrawn between queueing and sending.
-  if (!p.marketingConsent) return finish(id, { status: "SKIPPED", failureReason: SKIP_REASON_TEXT.no_consent });
+  // Rows wait until the next morning: re-check everything that can change overnight.
+  const skip = await skipReasonAtSend(row, now);
+  if (skip) return finish(id, { status: "SKIPPED", failureReason: SKIP_REASON_TEXT[skip] });
   if (row.type === "REVIEW" && !reviewUrl) {
     return finish(id, { status: "SKIPPED", failureReason: SKIP_REASON_TEXT.no_review_url });
   }

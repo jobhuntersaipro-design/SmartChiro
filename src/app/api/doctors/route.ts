@@ -262,6 +262,7 @@ export async function POST(req: NextRequest) {
           password: passwordHash,
           phoneNumber: body.phone ?? null,
           emailVerified: new Date(), // owner-created accounts skip verification
+          passwordSetByOther: true, // dropped on their first Google sign-in (G3)
           // Staff work on their clinic's plan; no trial of their own to stack up.
           trialEndsAt: null,
         },

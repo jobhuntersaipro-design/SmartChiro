@@ -16,6 +16,15 @@ const ctx: TemplateContext = {
 };
 
 describe("renderTemplate", () => {
+  // G2: names come from the public booking form; the HTML email must not run them.
+  it("escapes values for the HTML body only", () => {
+    const evil = { ...ctx, firstName: '<a href="https://evil.example">Pay</a> & co' };
+    expect(renderTemplate("<strong>{firstName}</strong>", evil, { html: true })).toBe(
+      "<strong>&lt;a href=&quot;https://evil.example&quot;&gt;Pay&lt;/a&gt; &amp; co</strong>",
+    );
+    expect(renderTemplate("Hi {firstName}", evil)).toBe('Hi <a href="https://evil.example">Pay</a> & co');
+  });
+
   it("substitutes all placeholders", () => {
     const out = renderTemplate("Hi {firstName}, see {doctorName} on {date}", ctx);
     expect(out).toBe("Hi Ahmad, see Dr Lee on 29 April 2026");

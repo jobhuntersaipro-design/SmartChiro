@@ -130,6 +130,17 @@ describe("public booking API", () => {
     expect((await getConfig(get(`/api/public/booking/nope-nope`), ctx("nope-nope"))).status).toBe(404);
   });
 
+  // G6 / D5: a lapsed clinic is read-only, so its booking page is closed.
+  it("a branch whose billing account has lapsed takes no bookings", async () => {
+    const { slug, branch, owner } = await fixture();
+    await prisma.user.update({ where: { id: owner.id }, data: { trialEndsAt: new Date(Date.now() - 86_400_000) } });
+    await prisma.branch.update({ where: { id: branch.id }, data: { billingUserId: owner.id } });
+    expect((await getConfig(get(`/api/public/booking/${slug}`), ctx(slug))).status).toBe(404);
+    expect((await book(slug, { doctorId: "any", dateTime: at("10:00") })).status).toBe(404);
+    await prisma.user.update({ where: { id: owner.id }, data: { subscriptionStatus: "active" } });
+    expect((await getConfig(get(`/api/public/booking/${slug}`), ctx(slug))).status).toBe(200);
+  });
+
   it("GET slots steps through the day and skips existing appointments", async () => {
     const { slug, docA, branch } = await fixture();
     const q = `treatment=ADJUSTMENT&doctorId=${docA.id}&date=${target()}`;

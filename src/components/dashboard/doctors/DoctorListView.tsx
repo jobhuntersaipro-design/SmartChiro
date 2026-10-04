@@ -140,6 +140,9 @@ export function DoctorListView({
             doctor.isActive ? "deactivated" : "activated"
           }`,
         });
+      } else {
+        const json = await res.json().catch(() => ({}));
+        setToast({ type: "error", message: json.error ?? "Failed to update status" });
       }
     } catch {
       setToast({ type: "error", message: "Failed to update status" });

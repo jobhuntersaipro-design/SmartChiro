@@ -55,6 +55,19 @@ describe('resolveGoogleUser', () => {
     expect(mockSendWelcome).toHaveBeenCalledTimes(1)
   })
 
+  // G3: an owner created the account and typed its password; the real person
+  // signing in with Google must not share the account with that password.
+  it('drops a password someone else set when its owner first signs in with Google', async () => {
+    const staff = await prisma.user.create({
+      data: { email: `${PREFIX}-staff@gmail.com`, password: 'owner-typed', emailVerified: new Date(), passwordSetByOther: true },
+    })
+    const user = await resolveGoogleUser({ email: `${PREFIX}-staff@gmail.com` }, account('staff'))
+    expect(user.id).toBe(staff.id)
+    expect(user.password).toBeNull()
+    expect(user.passwordSetByOther).toBe(false)
+    expect(user.passwordChangedAt).not.toBeNull() // ends the owner's sessions on it
+  })
+
   it('links Google to a verified password account and keeps its password', async () => {
     const verified = await prisma.user.create({
       data: { email: `${PREFIX}-both@gmail.com`, password: 'real-hash', emailVerified: new Date() },

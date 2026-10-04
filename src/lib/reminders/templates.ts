@@ -21,13 +21,19 @@ export function validateTemplate(tpl: string): ValidateResult {
   return { ok: true };
 }
 
-/** Substitutes placeholders. Throws if validation fails. */
-export function renderTemplate(tpl: string, ctx: TemplateContext): string {
+const HTML_ENTITIES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+
+/**
+ * Substitutes placeholders. Throws if validation fails. `html` escapes the
+ * values (patient names come from the public booking form).
+ */
+export function renderTemplate(tpl: string, ctx: TemplateContext, opts: { html?: boolean } = {}): string {
   const v = validateTemplate(tpl);
   if (!v.ok) throw new Error(v.message);
   // Single-pass replace — values inserted here are NOT re-scanned for `{x}`
   // placeholders, so a name like "Hi {date}" stays literal in the output.
   return tpl.replace(/\{(\w+)\}/g, (_, name: string) => {
-    return ctx[name as keyof TemplateContext];
+    const value = String(ctx[name as keyof TemplateContext] ?? "");
+    return opts.html ? value.replace(/[&<>"']/g, (c) => HTML_ENTITIES[c]) : value;
   });
 }

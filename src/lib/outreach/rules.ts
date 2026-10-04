@@ -44,7 +44,9 @@ export type SkipReason =
   | "has_booking"
   | "cooldown"
   | "no_review_url"
-  | "outside_window";
+  | "outside_window"
+  | "switched_off"
+  | "plan_ended";
 
 export const SKIP_REASON_TEXT: Record<SkipReason, string> = {
   no_consent: "Patient has not agreed to marketing messages",
@@ -56,6 +58,8 @@ export const SKIP_REASON_TEXT: Record<SkipReason, string> = {
   cooldown: "Already contacted within the cooldown period",
   no_review_url: "Branch has no Google review link",
   outside_window: "Visit is outside the review window",
+  switched_off: "The clinic switched these messages off",
+  plan_ended: "The clinic's SmartChiro plan has ended",
 };
 
 export interface RecallFacts {

@@ -44,15 +44,27 @@ export async function managedDoctorBranches(callerId: string, doctorId: string):
 }
 
 /**
- * Edits that aren't tied to one branch (name, photo, profile, account status,
- * leave for every branch): the doctor themself, or someone who manages every
- * branch the doctor works in — so one clinic can't change a doctor's details
- * at another.
+ * Edits that aren't tied to one branch (name, photo, profile, account status):
+ * the doctor themself, or someone who manages every branch the doctor works
+ * in — so one clinic can't change a doctor's details at another. Where the
+ * doctor is the OWNER, only an OWNER may (an admin can't edit or deactivate
+ * the branch owner).
  */
 export async function canManageDoctorEverywhere(callerId: string, doctorId: string): Promise<boolean> {
   if (callerId === doctorId) return true;
-  const { doctor, managed } = await managedDoctorBranches(callerId, doctorId);
-  return doctor.length > 0 && managed.length === doctor.length;
+  const memberships = await prisma.branchMember.findMany({
+    where: { userId: { in: [callerId, doctorId] } },
+    select: { userId: true, branchId: true, role: true },
+  });
+  const target = memberships.filter((m) => m.userId === doctorId);
+  const callerRole = new Map(memberships.filter((m) => m.userId === callerId).map((m) => [m.branchId, m.role]));
+  return (
+    target.length > 0 &&
+    target.every((t) => {
+      const role = callerRole.get(t.branchId);
+      return role != null && can(role, "schedule.manageAll") && (t.role !== "OWNER" || can(role, "branch.manage"));
+    })
+  );
 }
 
 /**

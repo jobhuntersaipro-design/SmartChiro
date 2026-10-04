@@ -26,7 +26,9 @@ export interface GoogleAccount {
  * default 30-day trial. An existing account that never verified its email is
  * marked verified and loses its password: whoever set that password never
  * proved they own the address, so it can't be allowed to sign in alongside
- * the real owner. A verified account just gets Google linked. Accounts
+ * the real owner. A verified account just gets Google linked; one whose
+ * password an owner typed when creating it loses that password too (the owner
+ * knows it). Accounts
  * that become verified here get the welcome email.
  */
 export async function resolveGoogleUser(profile: GoogleProfile, account: GoogleAccount): Promise<User> {
@@ -43,6 +45,11 @@ export async function resolveGoogleUser(profile: GoogleProfile, account: GoogleA
     user = await prisma.user.update({
       where: { id: user.id },
       data: { emailVerified: new Date(), password: null, image: user.image ?? profile.picture ?? null },
+    })
+  } else if (user.passwordSetByOther) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { password: null, passwordSetByOther: false, passwordChangedAt: new Date() },
     })
   }
 

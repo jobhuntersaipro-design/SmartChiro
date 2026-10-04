@@ -75,7 +75,9 @@ export async function accountAccess(userId: string, now: Date = new Date()): Pro
   const state: PlanState = own === "trial" && staffOnly ? "expired" : own;
 
   let coveredBy: AccountAccess["coveredBy"] = null;
-  if (state === "expired" && !superAdmin) {
+  // Only staff-only accounts: someone who bills a branch pays for it themselves,
+  // even while working at another clinic that pays (G5).
+  if (state === "expired" && !superAdmin && staffOnly) {
     // A super admin's own clinics never lapse, so neither does their staff's access.
     const payer = payers.find(
       (p) => p.id !== userId && (planState(p, now) !== "expired" || isSuperAdminEmail(p.email)),
@@ -98,6 +100,16 @@ export async function accountAccess(userId: string, now: Date = new Date()): Pro
     disabled,
     lastActiveAt: user.lastActiveAt,
   };
+}
+
+/**
+ * Whether a branch's billing account is in good standing (trial, plan or super
+ * admin). A lapsed clinic is read-only, so it takes no online bookings and
+ * sends no marketing (D5). Branches with no billing account count as active.
+ */
+export async function billingActive(billingUserId: string | null, now: Date = new Date()): Promise<boolean> {
+  if (!billingUserId) return true;
+  return (await accountAccess(billingUserId, now))?.allowed ?? false;
 }
 
 /** Props for the plan page / paywall (`PlanView`), dates labelled in clinic time. */

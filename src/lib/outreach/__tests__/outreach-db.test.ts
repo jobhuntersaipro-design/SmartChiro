@@ -211,7 +211,7 @@ describe("dispatchOutreach", () => {
   beforeEach(async () => {
     fetchMock.mockReset();
     vi.stubGlobal("fetch", fetchMock);
-    await setSettings({ googleReviewUrl: "https://g.page/r/test/review" });
+    await setSettings({ googleReviewUrl: "https://g.page/r/test/review", recallEnabled: true, reviewEnabled: true });
   });
   afterEach(() => vi.unstubAllGlobals());
 
@@ -293,6 +293,44 @@ describe("dispatchOutreach", () => {
     expect(rb.status).toBe("SKIPPED");
     expect(rb.failureReason).toMatch(/marketing/);
     expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  // W3 / G6: rows wait overnight; whatever changed since must stop them.
+  it("re-checks at send time: switched off, inactive, booked since, lapsed plan; staff-sent rows ignore the switch", async () => {
+    const off = await patient({ email: `${PREFIX}-off@t.test` });
+    const inactive = await patient({ email: `${PREFIX}-in@t.test` });
+    const booked = await patient({ email: `${PREFIX}-bk@t.test` });
+    const manual = await patient({ email: `${PREFIX}-mn@t.test` });
+    const rOff = await queue(off.id);
+    const rIn = await queue(inactive.id);
+    const rBk = await queue(booked.id);
+    const rMn = await prisma.patientOutreach.create({
+      data: { patientId: manual.id, branchId, type: "RECALL", channel: "EMAIL", scheduledFor: new Date(Date.now() - 60_000), createdById: users.OWNER },
+    });
+    await setSettings({ recallEnabled: false });
+    await prisma.patient.update({ where: { id: inactive.id }, data: { status: "inactive" } });
+    await prisma.appointment.create({
+      data: { patientId: booked.id, branchId, doctorId, dateTime: new Date(Date.now() + 3 * DAY) },
+    });
+    sendEmailMock.mockResolvedValue({ ok: true, id: "email-m" });
+
+    await dispatchOutreach(new Date());
+
+    const get = (id: string) => prisma.patientOutreach.findUniqueOrThrow({ where: { id } });
+    expect(await get(rOff.id)).toMatchObject({ status: "SKIPPED", failureReason: "The clinic switched these messages off" });
+    expect((await get(rIn.id)).status).toBe("SKIPPED");
+    expect((await get(rBk.id)).status).toBe("SKIPPED");
+    expect((await get(rMn.id)).status).toBe("SENT");
+
+    // The clinic's plan lapses: nothing more goes out, even sent by hand.
+    const payer = await prisma.user.create({ data: { email: `${PREFIX}-payer@t.test`, trialEndsAt: new Date(Date.now() - DAY) } });
+    await prisma.branch.update({ where: { id: branchId }, data: { billingUserId: payer.id } });
+    const late = await prisma.patientOutreach.create({
+      data: { patientId: manual.id, branchId, type: "RECALL", channel: "EMAIL", scheduledFor: new Date(Date.now() - 60_000), createdById: users.OWNER },
+    });
+    await dispatchOutreach(new Date());
+    expect(await get(late.id)).toMatchObject({ status: "SKIPPED", failureReason: "The clinic's SmartChiro plan has ended" });
+    await prisma.branch.update({ where: { id: branchId }, data: { billingUserId: null } });
   });
 
   it("retries a transient WhatsApp error with backoff", async () => {

@@ -54,8 +54,10 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     );
   }
 
-  // Caller must share at least one branch with target (or be the target)
+  // Caller must share at least one branch with target (or be the target).
+  // Others only see the branches they share, and totals from those (G10).
   let showClinicalStats = true;
+  let visibleBranchIds = user.branchMemberships.map((m) => m.branchId);
   if (session.user.id !== userId) {
     const callerBranches = await prisma.branchMember.findMany({
       where: { userId: session.user.id },
@@ -72,7 +74,9 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     }
     // Visit / X-ray counts are clinical stats — front desk gets zeros.
     showClinicalStats = sharedRoles.some((role) => can(role, "dashboard.clinicalStats"));
+    visibleBranchIds = callerBranches.filter((m) => targetBranchIds.has(m.branchId)).map((m) => m.branchId);
   }
+  const inVisible = { branchId: { in: visibleBranchIds } };
 
   // Get stats
   const now = new Date();
@@ -80,16 +84,16 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
   const zero = Promise.resolve(0);
 
   const statQueries: Promise<number>[] = [
-    prisma.patient.count({ where: { doctorId: userId } }),
-    showClinicalStats ? prisma.visit.count({ where: { doctorId: userId } }) : zero,
-    showClinicalStats ? prisma.xray.count({ where: { uploadedById: userId } }) : zero,
+    prisma.patient.count({ where: { doctorId: userId, ...inVisible } }),
+    showClinicalStats ? prisma.visit.count({ where: { doctorId: userId, patient: inVisible } }) : zero,
+    showClinicalStats ? prisma.xray.count({ where: { uploadedById: userId, patient: inVisible } }) : zero,
   ];
 
   if (includeDetail) {
     statQueries.push(
       showClinicalStats
         ? prisma.visit.count({
-            where: { doctorId: userId, visitDate: { gte: monthStart } },
+            where: { doctorId: userId, visitDate: { gte: monthStart }, patient: inVisible },
           })
         : zero
     );
@@ -130,7 +134,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     phone: user.phoneNumber,
     image: user.image,
     profile,
-    branches: user.branchMemberships.map((m) => ({
+    branches: user.branchMemberships.filter((m) => visibleBranchIds.includes(m.branchId)).map((m) => ({
       id: m.branch.id,
       name: m.branch.name,
       role: m.role,
@@ -345,7 +349,8 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         { status: 400 }
       );
     }
-    if (!isOwnerOrAdmin) {
+    // Managers set it; anyone may switch themselves back on.
+    if (!isOwnerOrAdmin && !(isSelf && body.isActive)) {
       return NextResponse.json(
         { error: "Only branch owner or admin can change active status" },
         { status: 403 }

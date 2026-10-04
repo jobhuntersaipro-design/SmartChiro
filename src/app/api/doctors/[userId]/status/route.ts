@@ -16,11 +16,19 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   if (blocked) return blocked;
 
   const { userId } = await params;
-
-  // Cannot toggle own status
-  if (session.user.id === userId) {
+  const body = await req.json().catch(() => null);
+  if (typeof body?.isActive !== "boolean") {
     return NextResponse.json(
-      { error: "Cannot toggle your own status" },
+      { error: "isActive must be a boolean" },
+      { status: 400 }
+    );
+  }
+
+  // Nobody deactivates themselves, but anyone may switch themselves back on.
+  const isSelf = session.user.id === userId;
+  if (isSelf && !body.isActive) {
+    return NextResponse.json(
+      { error: "Cannot deactivate yourself" },
       { status: 403 }
     );
   }
@@ -28,7 +36,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   // Target must exist
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true },
+    select: { id: true, doctorProfile: { select: { id: true } }, branchMemberships: { select: { role: true } } },
   });
 
   if (!targetUser) {
@@ -36,16 +44,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 
   // Caller must manage every branch the doctor works in
-  if (!(await canManageDoctorEverywhere(session.user.id, userId))) {
+  if (!isSelf && !(await canManageDoctorEverywhere(session.user.id, userId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  if (typeof body.isActive !== "boolean") {
-    return NextResponse.json(
-      { error: "isActive must be a boolean" },
-      { status: 400 }
-    );
+  // Office staff (admins and front desk without a doctor profile) have no
+  // active status; making one would turn them into a bookable clinician.
+  const clinicianRole = targetUser.branchMemberships.some((m) => m.role === "DOCTOR" || m.role === "OWNER");
+  if (!targetUser.doctorProfile && !clinicianRole) {
+    return NextResponse.json({ error: "Only clinicians have an active status" }, { status: 409 });
   }
 
   try {

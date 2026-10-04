@@ -78,6 +78,15 @@ describe("accountAccess", () => {
     expect(await accountAccess(solo.id)).toMatchObject({ allowed: true, staffOnly: false, state: "trial" });
   });
 
+  // G5: a lapsed owner working at a paying clinic still has to pay for their own.
+  it("an account that bills a branch isn't covered by another clinic it works at", async () => {
+    const bob = await user("bob", { trialEndsAt: PAST });
+    const alice = await user("alice", { subscriptionStatus: "active" });
+    await branch("bob clinic", bob.id, [[bob.id, "OWNER"]]);
+    await branch("alice clinic", alice.id, [[alice.id, "OWNER"], [bob.id, "DOCTOR"]]);
+    expect(await accountAccess(bob.id)).toMatchObject({ allowed: false, staffOnly: false, state: "expired", coveredBy: null });
+  });
+
   it("is never allowed when disabled", async () => {
     const off = await user("off", { subscriptionStatus: "active" });
     await prisma.user.update({ where: { id: off.id }, data: { disabledAt: new Date() } });

@@ -8,6 +8,7 @@ import { can } from "@/lib/permissions";
 import { snapshotOf, diffSnapshots } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
 import { paywall } from "@/lib/paywall";
+import { deleteR2Prefix, patientR2Prefixes } from "@/lib/r2";
 
 type RouteContext = { params: Promise<{ branchId: string }> };
 
@@ -325,12 +326,42 @@ export async function DELETE(
     select: { email: true, name: true },
   });
 
+  // Issued invoices and their payments are financial records that must be
+  // kept; deleting the branch would cascade them away (D6).
+  const issued = await prisma.invoice.count({ where: { branchId, status: { not: "DRAFT" } } });
+  if (issued > 0) {
+    return NextResponse.json(
+      {
+        error: "branch_has_invoices",
+        message: `This branch has ${issued} issued invoice${issued === 1 ? "" : "s"}, which must be kept for your records, so it can't be deleted.`,
+      },
+      { status: 409 },
+    );
+  }
+
   // Capture snapshot BEFORE delete so we can audit even if the branch is gone.
   const snapshot = snapshotOf(branch);
   const branchName = branch.name;
+  const xrays = await prisma.xray.findMany({ where: { patient: { branchId } }, select: { patientId: true, fileUrl: true } });
 
-  await prisma.branch.delete({ where: { id: branchId } });
+  // Leave for this branch goes with it (its FK would set null = every branch).
+  await prisma.$transaction([
+    prisma.doctorTimeOff.deleteMany({ where: { branchId } }),
+    prisma.branch.delete({ where: { id: branchId } }),
+  ]);
   await clearActiveBranch([branchId]);
+
+  // The patients' X-ray files are public URLs: remove them like a patient delete does.
+  if (process.env.R2_PUBLIC_URL && xrays.length > 0) {
+    const byPatient = new Map<string, string[]>();
+    for (const x of xrays) byPatient.set(x.patientId, [...(byPatient.get(x.patientId) ?? []), x.fileUrl]);
+    try {
+      const prefixes = [...byPatient].flatMap(([patientId, urls]) => patientR2Prefixes(patientId, urls));
+      await Promise.all([...new Set(prefixes)].map(deleteR2Prefix));
+    } catch (err) {
+      console.error(`[branches] R2 files of deleted branch ${branchId} not removed:`, err);
+    }
+  }
 
   // Audit (fail-soft — must not block the user action). Note: the audit row
   // intentionally has no FK to Branch, so it survives the delete above.

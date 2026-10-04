@@ -445,6 +445,8 @@ describe('PATCH /api/doctors/[userId]/status', () => {
 
   it('21. the owner of every branch the person works in toggles their status', async () => {
     mockAuth.mockResolvedValue({ user: { id: ownerId } })
+    // An admin who treats patients (has a doctor profile); office staff have no status (G7).
+    await prisma.doctorProfile.upsert({ where: { userId: adminId }, create: { userId: adminId }, update: {} })
     for (const isActive of [false, true]) {
       const res = await PATCH(
         createRequest('PATCH', `/api/doctors/${adminId}/status`, { isActive }),
@@ -455,21 +457,24 @@ describe('PATCH /api/doctors/[userId]/status', () => {
     }
   })
 
-  it('22. creates profile if none exists with isActive set', async () => {
-    // Use owner who has no profile
+  it('22. an admin can\'t deactivate the owner; a clinician without a profile gets one', async () => {
     mockAuth.mockResolvedValue({ user: { id: adminId } })
-    const res = await PATCH(
+    const refused = await PATCH(
       createRequest('PATCH', `/api/doctors/${ownerId}/status`, { isActive: false }),
       { params: Promise.resolve({ userId: ownerId }) }
     )
-    expect(res.status).toBe(200)
-    const json = await res.json()
-    expect(json.isActive).toBe(false)
+    expect(refused.status).toBe(403)
 
-    // Verify profile was created
+    // The owner (no profile yet) switching themselves on creates one
+    mockAuth.mockResolvedValue({ user: { id: ownerId } })
+    const res = await PATCH(
+      createRequest('PATCH', `/api/doctors/${ownerId}/status`, { isActive: true }),
+      { params: Promise.resolve({ userId: ownerId }) }
+    )
+    expect(res.status).toBe(200)
+    expect((await res.json()).isActive).toBe(true)
     const profile = await prisma.doctorProfile.findUnique({ where: { userId: ownerId } })
-    expect(profile).not.toBeNull()
-    expect(profile!.isActive).toBe(false)
+    expect(profile!.isActive).toBe(true)
 
     // Cleanup
     await prisma.doctorProfile.delete({ where: { userId: ownerId } })

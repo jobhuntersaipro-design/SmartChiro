@@ -189,7 +189,7 @@ async function processOne(reminderId: string, now: Date): Promise<void> {
   try {
     if (r.channel === "EMAIL") {
       body = renderTemplate(reminderEmailText(templates, lang), ctx);
-      html = renderTemplate(reminderEmailHtml(templates, lang), ctx);
+      html = renderTemplate(reminderEmailHtml(templates, lang), ctx, { html: true });
     }
   } catch (e) {
     await prisma.appointmentReminder.update({

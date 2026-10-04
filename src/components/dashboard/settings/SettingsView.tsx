@@ -189,11 +189,9 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
           message: json.error ?? "Failed to change password",
         });
       } else {
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setUser((prev) => ({ ...prev, hasPassword: true }));
-        setToast({ type: "success", message: "Password updated" });
+        // A new password signs out every session, this one included.
+        window.location.assign("/api/session/end?reason=password_changed");
+        return;
       }
     } catch {
       setToast({ type: "error", message: "Network error" });
@@ -391,6 +389,9 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
                 email and password.
               </p>
             )}
+            <p className="text-[13px] text-fg-secondary mb-4 px-0.5">
+              Saving signs you out on every device; sign in again with the new password.
+            </p>
 
             <div className="space-y-3 max-w-90">
               {user.hasPassword && (

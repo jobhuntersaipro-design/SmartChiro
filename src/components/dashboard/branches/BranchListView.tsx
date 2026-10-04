@@ -76,8 +76,8 @@ export function BranchListView({ userName }: BranchListViewProps) {
       body: JSON.stringify(data),
     });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error);
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message ?? err.error ?? "Couldn't delete the branch.");
     }
     await fetchBranches();
     // Re-render server components so the sidebar and role pick up the new

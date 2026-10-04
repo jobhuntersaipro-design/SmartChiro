@@ -22,8 +22,9 @@ async function checkVisitAccess(userId: string, patientId: string, visitId: stri
   });
   const role = membership?.role ?? null;
 
-  // Visits are clinical — front desk never gets them.
-  if (role && !can(role, "clinical.read")) return { visit, allowed: false };
+  // Visits are clinical — front desk never gets them, and nor does anyone no
+  // longer in the branch (a removed doctor loses their old visits too).
+  if (!role || !can(role, "clinical.read")) return { visit, allowed: false };
 
   // Visit's doctor always has access
   if (visit.doctorId === userId) return { visit, allowed: true };
