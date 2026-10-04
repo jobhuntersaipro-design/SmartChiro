@@ -1,22 +1,20 @@
-# Current Feature: Trial, Stripe billing, AI limits & super admin (+ viewer polish)
+# Current Feature: Bug Fix Plan (site-wide audit)
 
 ## Status
 
-Done — merged to `main` 2026-10-03 (branch `claude/blissful-knuth-9c1br4`). Owner actions: Stripe keys + webhook, `SUPER_ADMIN_EMAILS` (see owner-actions.md §4b).
+Spec written 2026-10-04; nothing fixed yet. Fix one phase per branch, in order. Decisions D1–D4 at the end of the spec need the owner first.
 
 ## Spec
 
-`context/features/trial-billing-admin-spec.md`
+`context/features/bug-fix-plan-spec.md`
 
 ## Goals
 
-1. No warning when uploading an X-ray
-2. Loading state while an annotated X-ray loads
-3. Progress bar while the AI analyses an X-ray (real stages streamed from the server)
-4. Measurement summary with suggestions for doctors, always shown with the pelvic analysis
-5. AI limit of 10 X-rays per doctor per day, adjustable by super admins
-6. Super admin page for sign-ups, trials, limits and disabling accounts
-7. 30-day free trial, then SmartChiro Pro RM550/month or RM6000/year (save RM600, 9%) via Stripe; same features throughout
+1. Phase 1 — Security and privacy (S1–S12)
+2. Phase 2 — Money (M1–M11)
+3. Phase 3 — Appointments, calendar and reminders (A1–A13)
+4. Phase 4 — X-ray and AI (X1–X9)
+5. Phase 5 — Patients, onboarding, settings and polish (P1–P14)
 
 ## Notes
 
