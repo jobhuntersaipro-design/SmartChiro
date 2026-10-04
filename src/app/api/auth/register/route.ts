@@ -5,7 +5,10 @@ import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
+    }
     const { name, email, password, confirmPassword } = body as {
       name: string
       email: string
@@ -13,7 +16,12 @@ export async function POST(req: NextRequest) {
       confirmPassword: string
     }
 
-    if (!name || !email || !password || !confirmPassword) {
+    // Strings only: anything else would crash below (500) instead of a 400.
+    if (
+      typeof name !== 'string' || typeof email !== 'string' ||
+      typeof password !== 'string' || typeof confirmPassword !== 'string' ||
+      !name || !email || !password || !confirmPassword
+    ) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }

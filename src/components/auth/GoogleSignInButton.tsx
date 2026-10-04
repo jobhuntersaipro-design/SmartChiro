@@ -2,11 +2,18 @@
 
 import { signIn } from 'next-auth/react'
 
-export function GoogleSignInButton({ label = 'Sign in with Google' }: { label?: string }) {
+export function GoogleSignInButton({
+  label = 'Sign in with Google',
+  callbackUrl = '/dashboard',
+}: {
+  label?: string
+  /** Where to land after signing in (a same-site path). */
+  callbackUrl?: string
+}) {
   return (
     <button
       type="button"
-      onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+      onClick={() => signIn('google', { callbackUrl })}
       className="flex w-full items-center justify-center gap-3 rounded-control border border-border bg-white px-4 py-2 text-[15px] font-medium text-foreground transition-colors hover:bg-surface-muted cursor-pointer h-10"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

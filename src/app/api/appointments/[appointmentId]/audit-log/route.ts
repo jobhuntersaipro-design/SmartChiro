@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { can } from "@/lib/permissions";
+import { intParam } from "@/lib/clinic-time";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -27,8 +28,7 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   if (!allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const url = new URL(req.url);
-  const requestedLimit = Number(url.searchParams.get("limit") ?? 50);
-  const limit = Math.min(Math.max(1, requestedLimit), MAX_LIMIT);
+  const limit = intParam(url.searchParams.get("limit"), 50, 1, MAX_LIMIT);
   const cursor = url.searchParams.get("cursor");
 
   const rows = await prisma.appointmentAuditLog.findMany({

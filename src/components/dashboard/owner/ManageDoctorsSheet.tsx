@@ -33,6 +33,8 @@ interface ManageDoctorsSheetProps {
   onAddDoctor: (branchId: string, email: string, role: BranchRole) => Promise<{ success: boolean; error?: string }>;
   onRemoveDoctor: (branchId: string, memberId: string) => Promise<void>;
   onChangeRole: (branchId: string, memberId: string, role: BranchRole) => Promise<void>;
+  /** Only the owner can change roles; others see the role as a label. */
+  canChangeRole?: boolean;
 }
 
 export function ManageDoctorsSheet({
@@ -44,6 +46,7 @@ export function ManageDoctorsSheet({
   onAddDoctor,
   onRemoveDoctor,
   onChangeRole,
+  canChangeRole = false,
 }: ManageDoctorsSheetProps) {
   const [searchEmail, setSearchEmail] = useState("");
   const [addRole, setAddRole] = useState<BranchRole>("DOCTOR");
@@ -159,7 +162,7 @@ export function ManageDoctorsSheet({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={`/dashboard/settings/${member.userId}`}
+                        href={`/dashboard/doctors/${member.userId}`}
                         className="text-[14px] font-medium text-foreground truncate hover:text-brand transition-colors"
                       >
                         {member.name ?? member.email}
@@ -168,7 +171,7 @@ export function ManageDoctorsSheet({
                         {member.email}
                       </div>
                     </div>
-                    {member.role !== "OWNER" ? (
+                    {member.role !== "OWNER" && canChangeRole ? (
                       <select
                         value={member.role}
                         onChange={(e) =>
@@ -182,7 +185,7 @@ export function ManageDoctorsSheet({
                       </select>
                     ) : (
                       <span className="inline-flex items-center rounded-full bg-brand-subtle px-2 py-0.5 text-[12px] font-medium text-brand">
-                        Owner
+                        {ROLE_LABELS[member.role]}
                       </span>
                     )}
                     {member.role !== "OWNER" && (

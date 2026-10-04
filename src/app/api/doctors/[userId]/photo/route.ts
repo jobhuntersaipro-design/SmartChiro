@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageDoctorEverywhere } from "@/lib/auth/doctor-access";
-import { uploadToR2, getR2PublicUrl, deleteR2Object } from "@/lib/r2";
+import { uploadToR2, getR2PublicUrl, deleteR2Object, r2KeyFromUrl } from "@/lib/r2";
 import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ userId: string }> };
@@ -63,24 +63,8 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     // Determine extension
     const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-    const key = `doctors/${userId}/photo.${ext}`;
-
-    // Delete previous custom photo from R2 (skip Google OAuth URLs)
-    if (
-      targetUser.image &&
-      !targetUser.image.includes("googleusercontent.com") &&
-      !targetUser.image.includes("google.com")
-    ) {
-      try {
-        const publicUrl = process.env.R2_PUBLIC_URL!;
-        if (targetUser.image.startsWith(publicUrl)) {
-          const oldKey = targetUser.image.replace(`${publicUrl}/`, "");
-          await deleteR2Object(oldKey);
-        }
-      } catch {
-        // Non-critical: old photo cleanup failure
-      }
-    }
+    // A new key each time: the same URL would keep showing the cached old photo.
+    const key = `doctors/${userId}/photo-${Date.now()}.${ext}`;
 
     // Upload new photo
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -92,6 +76,15 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       where: { id: userId },
       data: { image: imageUrl },
     });
+
+    // Then remove the previous custom photo (not a Google one); only after the
+    // new one is in place, so a failed upload never leaves no photo.
+    const oldKey = targetUser.image ? r2KeyFromUrl(targetUser.image) : null;
+    if (oldKey && oldKey !== key) {
+      await deleteR2Object(oldKey).catch(() => {
+        // Non-critical: old photo cleanup failure
+      });
+    }
 
     return NextResponse.json({ imageUrl }, { status: 200 });
   } catch (error) {

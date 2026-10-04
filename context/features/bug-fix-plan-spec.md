@@ -4,7 +4,7 @@ Every bug below was traced end to end in the code by a read-only audit (six area
 access control, appointments and reminders, money, patients/booking/portal, X-ray and
 AI, shell/settings/admin) plus a read-only pass over smartchiro.org with the test
 logins. Several were found independently by two or three reviewers; they appear once.
-Phases 1–4 are fixed (4 Oct 2026); phase 5 is not yet.
+All five phases are fixed (4 Oct 2026).
 
 Fix one phase per branch, in order. Each fix gets a test that fails before it. Ship
 when build, lint and tests pass, then prove it on production (CLAUDE.md).
@@ -243,6 +243,10 @@ swapped size.
 ---
 
 ## Phase 5 — Patients, onboarding, settings and polish
+
+**Done 4 Oct 2026** (P1–P14; tests in `patients-phase5.test.ts` and
+`phase5-helpers.test.ts`). IC numbers are now unique per branch as well as email
+(same reasoning as D4). P13's reload-once is defensive: it wasn't reproduced.
 
 ### P1 🟡 The same IC can be registered twice (with and without dashes)
 - **Where:** `src/app/api/patients/route.ts:14,385-404,420`, `[patientId]/route.ts:13,353`, online booking.

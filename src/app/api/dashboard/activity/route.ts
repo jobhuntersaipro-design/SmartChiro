@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
 import { dashboardScope } from "@/lib/branch-context";
 import { scopedWhere } from "@/lib/branch-scope";
+import { intParam } from "@/lib/clinic-time";
 import type { ActivityItem } from "@/components/dashboard/shared/ActivityFeed";
 
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const branchId = searchParams.get("branchId");
-  const limit = Math.min(parseInt(searchParams.get("limit") ?? "8"), 20);
+  const limit = intParam(searchParams.get("limit"), 8, 1, 20);
   const scope = await dashboardScope(session.user.id, branchId);
   if (!scope) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
   if (scope.branchIds.length === 0) {

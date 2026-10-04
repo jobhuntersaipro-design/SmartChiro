@@ -11,11 +11,14 @@ export function LoginForm({
   googleEnabled = false,
   resetSuccess = false,
   accountDisabled = false,
+  callbackUrl = '/dashboard',
 }: {
   googleEnabled?: boolean
   resetSuccess?: boolean
   /** A Google sign-in was refused because a super admin disabled the account. */
   accountDisabled?: boolean
+  /** Same-site path to open after signing in (already checked by the page). */
+  callbackUrl?: string
 }) {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -34,11 +37,30 @@ export function LoginForm({
     setEmailNotVerified(false)
     setLoading(true)
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    })
+    const unreachable = () => {
+      setLoading(false)
+      setError("Couldn't reach SmartChiro. Check your connection and try again.")
+    }
+    // next-auth's signIn leaves the page for its error screen when it can't
+    // load the provider list (a dropped connection): check that first.
+    try {
+      const providers = await fetch('/api/auth/providers', { cache: 'no-store' })
+      if (!providers.ok) return unreachable()
+    } catch {
+      return unreachable()
+    }
+
+    let result: Awaited<ReturnType<typeof signIn>>
+    try {
+      result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+    } catch {
+      // Network drop or the server unreachable: don't leave the button spinning.
+      return unreachable()
+    }
 
     setLoading(false)
 
@@ -59,7 +81,11 @@ export function LoginForm({
       return
     }
 
-    router.push('/dashboard')
+    if (!result?.ok) {
+      setError("Couldn't reach SmartChiro. Check your connection and try again.")
+      return
+    }
+    router.push(callbackUrl)
     router.refresh()
   }
 
@@ -208,7 +234,7 @@ export function LoginForm({
               <span className="text-[13px] text-fg-secondary">or continue with</span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <GoogleSignInButton />
+            <GoogleSignInButton callbackUrl={callbackUrl} />
           </>
         )}
       </div>

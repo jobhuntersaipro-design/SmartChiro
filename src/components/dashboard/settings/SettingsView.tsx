@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Camera,
   Loader2,
@@ -53,6 +54,8 @@ function formatDate(iso: string): string {
 
 export function SettingsView({ user: initialUser }: SettingsViewProps) {
   const [user, setUser] = useState(initialUser);
+  // The sidebar shows the name and photo from the session: refresh it after a change.
+  const router = useRouter();
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
@@ -113,9 +116,11 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
         setUser((prev) => ({
           ...prev,
           name: json.doctor?.name ?? prev.name,
-          phone: json.doctor?.phone ?? prev.phone,
+          // The saved value as returned — a cleared phone comes back null.
+          phone: json.doctor ? (json.doctor.phone ?? null) : prev.phone,
         }));
         setToast({ type: "success", message: "Account updated" });
+        router.refresh();
       }
     } catch {
       setToast({ type: "error", message: "Network error" });
@@ -143,6 +148,7 @@ export function SettingsView({ user: initialUser }: SettingsViewProps) {
       } else {
         setUser((prev) => ({ ...prev, image: json.imageUrl }));
         setToast({ type: "success", message: "Photo updated" });
+        router.refresh();
       }
     } catch {
       setToast({ type: "error", message: "Network error" });

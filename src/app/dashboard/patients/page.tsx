@@ -17,6 +17,7 @@ export default async function PatientsPage() {
       userName={session.user.name ?? null}
       branchRole={scopeRole(scope) ?? "DOCTOR"}
       scopeKey={scopeKey(scope)}
+      activeBranchId={scope.activeBranchId}
       multiBranch={scope.branchIds.length > 1}
     />
   );

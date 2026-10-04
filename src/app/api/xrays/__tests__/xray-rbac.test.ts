@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma'
 
 const mockAuth = vi.fn()
 vi.mock('@/lib/auth', () => ({ auth: (...args: unknown[]) => mockAuth(...args) }))
+// Presigning needs no network, but does need bucket credentials the test
+// environment doesn't have: stub it so the RBAC matrix is all that's tested.
+vi.mock('@/lib/r2', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/r2')>()),
+  getPresignedUploadUrl: vi.fn().mockResolvedValue('https://storage.test/presigned'),
+}))
 
 const TEST_PREFIX = `test-xray-rbac-${Date.now()}`
 

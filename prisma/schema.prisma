@@ -532,7 +532,7 @@ model Patient {
   id               String    @id @default(cuid())
   firstName        String
   lastName         String
-  email            String?   @unique
+  email            String?
   phone            String?
   dateOfBirth      DateTime?
   gender           String?
@@ -542,7 +542,7 @@ model Patient {
   notes            String?
 
   // New fields
-  icNumber       String? @unique
+  icNumber       String?
   occupation     String?
   race           String?
   maritalStatus  String?
@@ -605,6 +605,10 @@ model Patient {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Unique per branch, not across clinics: another clinic may treat the same
+  // person (owner decision D4, 4 Oct 2026).
+  @@unique([branchId, email])
+  @@unique([branchId, icNumber])
   @@index([branchId])
   @@index([doctorId])
   @@index([lastName, firstName])

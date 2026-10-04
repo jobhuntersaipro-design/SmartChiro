@@ -11,7 +11,7 @@ import { recordSignIn } from './login-activity'
 import { takeToken } from './booking/rate-limit'
 
 const accountStatus = cache((userId: string) =>
-  prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true } }),
+  prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true, name: true, image: true } }),
 )
 
 class EmailNotVerifiedError extends CredentialsSignin {
@@ -77,18 +77,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new EmailNotVerifiedError()
           }
 
-          // Find branch membership — pick first available
-          let branchRole: string | null = null
-          let activeBranchId: string | null = null
-
-          const firstMembership = user.branchMemberships[0]
-          if (firstMembership) {
-            branchRole = firstMembership.role
-            activeBranchId = firstMembership.branchId
-          }
-
-          // Set active branch if user has a membership
-          if (activeBranchId) {
+          // Keep the branch they were working in; pick the first membership
+          // only when none is set or it's no longer theirs.
+          const current = user.branchMemberships.find((m) => m.branchId === user.activeBranchId)
+          const membership = current ?? user.branchMemberships[0]
+          const branchRole: string | null = membership?.role ?? null
+          const activeBranchId: string | null = membership?.branchId ?? null
+          if (activeBranchId && activeBranchId !== user.activeBranchId) {
             await prisma.user.update({
               where: { id: user.id },
               data: { activeBranchId },
@@ -139,6 +134,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Role and active branch come from the database, not the token
         // (see loadBranchContext) — so they're current after creating or
         // switching a branch, and set for Google sign-ins too.
+        // Name and photo too, so a profile edit shows without signing in again.
+        session.user.name = account.name
+        session.user.image = account.image
         const context = await loadBranchContext(session.user.id)
         session.user.branchRole = context.branchRole
         session.user.activeBranchId = context.activeBranchId
@@ -172,15 +170,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return '/login?error=account_disabled'
         }
 
-        // Set active branch
-        const membership = await prisma.branchMember.findFirst({
-          where: { userId: dbUser.id },
-        })
-        if (membership) {
-          await prisma.user.update({
-            where: { id: dbUser.id },
-            data: { activeBranchId: membership.branchId },
+        // Keep a still-valid active branch; otherwise the first membership.
+        const stillMember = dbUser.activeBranchId
+          ? await prisma.branchMember.findUnique({
+              where: { userId_branchId: { userId: dbUser.id, branchId: dbUser.activeBranchId } },
+              select: { branchId: true },
+            })
+          : null
+        if (!stillMember) {
+          const membership = await prisma.branchMember.findFirst({
+            where: { userId: dbUser.id },
+            orderBy: { createdAt: 'asc' },
           })
+          if (membership) {
+            await prisma.user.update({
+              where: { id: dbUser.id },
+              data: { activeBranchId: membership.branchId },
+            })
+          }
         }
 
         // Attach DB user id so JWT callback can use it

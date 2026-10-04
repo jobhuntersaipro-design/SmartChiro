@@ -58,16 +58,18 @@ export function BranchDoctorsTab({ branchId, branchName, members, userRole, onRe
   }
 
   async function handleRemoveDoctor(bId: string, memberId: string) {
-    await fetch(`/api/branches/${bId}/members/${memberId}`, { method: "DELETE" });
+    const res = await fetch(`/api/branches/${bId}/members/${memberId}`, { method: "DELETE" });
+    if (!res.ok) toast.error((await res.json().catch(() => null))?.error ?? "Couldn't remove them from the branch.");
     await onRefresh();
   }
 
   async function handleChangeRole(bId: string, memberId: string, role: BranchRole) {
-    await fetch(`/api/branches/${bId}/members/${memberId}`, {
+    const res = await fetch(`/api/branches/${bId}/members/${memberId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
     });
+    if (!res.ok) toast.error((await res.json().catch(() => null))?.error ?? "Couldn't change the role.");
     await onRefresh();
   }
 
@@ -196,6 +198,7 @@ export function BranchDoctorsTab({ branchId, branchName, members, userRole, onRe
         onAddDoctor={handleAddDoctor}
         onRemoveDoctor={handleRemoveDoctor}
         onChangeRole={handleChangeRole}
+        canChangeRole={userRole === "OWNER"}
       />
     </div>
   );

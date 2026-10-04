@@ -36,8 +36,10 @@ export async function materializePending(now: Date): Promise<number> {
 
   let inserted = 0;
   for (const a of appts) {
-    const settings = a.branch.reminderSettings;
-    if (!settings) continue;
+    // A row removed while we work (deleted branch/appointment) is skipped,
+    // never allowed to stop the batch for every other clinic.
+    const settings = a.branch?.reminderSettings;
+    if (!settings || !a.patient) continue;
     const channels = resolveChannels({
       pref: a.patient.reminderChannel,
       hasPhone: Boolean(a.patient.phone),
@@ -51,7 +53,8 @@ export async function materializePending(now: Date): Promise<number> {
     });
 
     for (const p of planned) {
-      const r = await prisma.appointmentReminder.upsert({
+      const r = await prisma.appointmentReminder
+        .upsert({
         where: {
           appointmentId_channel_offsetMin_isFallback: {
             appointmentId: a.id,
@@ -69,8 +72,12 @@ export async function materializePending(now: Date): Promise<number> {
         },
         update: {},
         select: { createdAt: true, updatedAt: true },
-      });
-      if (r.createdAt.getTime() === r.updatedAt.getTime()) inserted++;
+      })
+        .catch((e: unknown) => {
+          console.error("reminder materialize failed", { appointmentId: a.id, error: e });
+          return null;
+        });
+      if (r && r.createdAt.getTime() === r.updatedAt.getTime()) inserted++;
     }
   }
   return inserted;

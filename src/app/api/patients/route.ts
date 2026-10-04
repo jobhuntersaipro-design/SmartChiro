@@ -9,23 +9,11 @@ import { PATIENT_LANGUAGE_VALUES, consentFields } from '@/lib/outreach/consent'
 import { can, redactClinicalFields } from '@/lib/permissions'
 import { isMalaysianPatient, isValidMyKad, parseNationality } from '@/lib/invoices'
 import { paywall } from '@/lib/paywall'
+import { MYKAD_REGEX, dobFromIc, normalizeIc } from '@/lib/ic'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
-const IC_REGEX = /^\d{6}-?\d{2}-?\d{4}$/
-
-function extractDobFromIc(ic: string): Date | null {
-  const digits = ic.replace(/-/g, '')
-  if (digits.length !== 12) return null
-  const yy = parseInt(digits.substring(0, 2), 10)
-  const mm = parseInt(digits.substring(2, 4), 10)
-  const dd = parseInt(digits.substring(4, 6), 10)
-  // Assume 00-29 = 2000s, 30-99 = 1900s
-  const year = yy <= 29 ? 2000 + yy : 1900 + yy
-  const date = new Date(Date.UTC(year, mm - 1, dd))
-  if (isNaN(date.getTime()) || date.getUTCMonth() !== mm - 1 || date.getUTCDate() !== dd) return null
-  return date
-}
+const IC_REGEX = MYKAD_REGEX
 
 function mapPatientToResponse(p: {
   id: string; firstName: string; lastName: string; email: string | null;
@@ -368,23 +356,21 @@ export async function POST(request: NextRequest) {
       assignedDoctorId = doctorId
     }
 
-    // IC numbers are unique across the system. A repeat is usually a double
-    // submit or a re-entered patient; only name the match inside this branch.
-    const ic = typeof icNumber === 'string' ? icNumber.trim() : ''
+    // IC numbers are unique per branch (another clinic may have the same
+    // person), in one stored form so dashes don't make a second record. A
+    // repeat is usually a double submit or a re-entered patient.
+    const ic = normalizeIc(typeof icNumber === 'string' ? icNumber : null)
     if (ic) {
-      const existing = await prisma.patient.findUnique({
-        where: { icNumber: ic },
-        select: { id: true, firstName: true, lastName: true, branchId: true },
+      const existing = await prisma.patient.findFirst({
+        where: { branchId, icNumber: ic },
+        select: { id: true, firstName: true, lastName: true },
       })
       if (existing) {
-        const sameBranch = existing.branchId === branchId
         return NextResponse.json(
           {
-            error: sameBranch
-              ? `A patient with this IC number already exists (${existing.firstName} ${existing.lastName}).`
-              : 'This IC number is already registered to a patient in another branch.',
+            error: `A patient with this IC number already exists (${existing.firstName} ${existing.lastName}).`,
             code: 'duplicate_patient',
-            ...(sameBranch ? { patientId: existing.id } : {}),
+            patientId: existing.id,
           },
           { status: 409 }
         )
@@ -393,8 +379,8 @@ export async function POST(request: NextRequest) {
 
     // Auto-extract DOB from IC if dateOfBirth is empty
     let resolvedDob: Date | null = dateOfBirth ? new Date(dateOfBirth) : null
-    if (!resolvedDob && icNumber && IC_REGEX.test(icNumber)) {
-      resolvedDob = extractDobFromIc(icNumber)
+    if (!resolvedDob && ic && IC_REGEX.test(ic)) {
+      resolvedDob = dobFromIc(ic)
     }
 
     const patient = await prisma.patient.create({
@@ -405,7 +391,7 @@ export async function POST(request: NextRequest) {
         phone: phone?.trim() || null,
         dateOfBirth: resolvedDob,
         gender: gender || null,
-        icNumber: icNumber?.trim() || null,
+        icNumber: ic,
         occupation: occupation?.trim() || null,
         race: race || null,
         maritalStatus: maritalStatus || null,

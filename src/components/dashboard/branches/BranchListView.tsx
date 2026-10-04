@@ -113,6 +113,8 @@ export function BranchListView({ userName }: BranchListViewProps) {
       throw new Error(err.error ?? "Failed to save changes");
     }
     await fetchBranches();
+    // A rename shows in the sidebar's branch switcher too.
+    router.refresh();
   }
 
   function handleDelete(branchId: string) {

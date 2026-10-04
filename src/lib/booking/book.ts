@@ -10,6 +10,7 @@ import { slotsFor } from "@/lib/booking/slots";
 import { splitName, type BookingRequest } from "@/lib/booking/schema";
 import { loadBookableDoctors, loadBookingAvailability, type BookingBranch } from "@/lib/booking/availability";
 import { notifyOnlineBooking } from "@/lib/booking/notify";
+import { normalizeIc } from "@/lib/ic";
 
 /** Online bookings one phone number may make per clinic day, per branch. */
 export const MAX_ONLINE_BOOKINGS_PER_PHONE_PER_DAY = 2;
@@ -102,6 +103,7 @@ export async function createOnlineBooking(
   const dateKey = clinicDateKey(start);
   const phoneDigits = normalizePhoneDigits(input.phone);
   const { firstName, lastName } = splitName(input.name);
+  const icNumber = normalizeIc(input.icNumber);
 
   try {
     const result = await prisma.$transaction(
@@ -141,8 +143,8 @@ export async function createOnlineBooking(
 
         // Email and IC are unique across all patients — only store ones nobody else has.
         const [emailOwner, icOwner] = await Promise.all([
-          input.email ? tx.patient.findUnique({ where: { email: input.email }, select: { id: true } }) : null,
-          input.icNumber ? tx.patient.findUnique({ where: { icNumber: input.icNumber }, select: { id: true } }) : null,
+          input.email ? tx.patient.findFirst({ where: { branchId: branch.id, email: input.email }, select: { id: true } }) : null,
+          icNumber ? tx.patient.findFirst({ where: { branchId: branch.id, icNumber }, select: { id: true } }) : null,
         ]);
         const extraNotes: string[] = [];
 
@@ -153,7 +155,7 @@ export async function createOnlineBooking(
           // page: the email is their portal sign-in. Staff see it in the notes.
           const fill: Prisma.PatientUpdateInput = {};
           if (input.email && input.email.toLowerCase() !== patient.email?.toLowerCase()) extraNotes.push(`Email given: ${input.email}`);
-          if (input.icNumber && input.icNumber !== patient.icNumber) extraNotes.push(`IC given: ${input.icNumber}`);
+          if (icNumber && icNumber !== patient.icNumber) extraNotes.push(`IC given: ${icNumber}`);
           // Opting in online grants consent; leaving the box unticked never
           // withdraws consent given at the clinic.
           if (input.consentMarketing === true && !patient.marketingConsent) {
@@ -163,9 +165,9 @@ export async function createOnlineBooking(
           if (Object.keys(fill).length > 0) await tx.patient.update({ where: { id: patient.id }, data: fill });
         } else {
           const email = input.email && !emailOwner ? input.email : null;
-          const icNumber = input.icNumber && !icOwner ? input.icNumber : null;
+          const storedIc = icNumber && !icOwner ? icNumber : null;
           if (input.email && !email) extraNotes.push(`Email given: ${input.email}`);
-          if (input.icNumber && !icNumber) extraNotes.push(`IC given: ${input.icNumber}`);
+          if (icNumber && !storedIc) extraNotes.push(`IC given: ${icNumber}`);
           const consent = input.consentMarketing === true;
           patient = await tx.patient.create({
             data: {
@@ -173,7 +175,7 @@ export async function createOnlineBooking(
               lastName,
               phone: input.phone,
               email,
-              icNumber,
+              icNumber: storedIc,
               // "active" like any registered patient — the rest of the app
               // (filters, counts, recall) only knows active/inactive/discharged.
               status: "active",

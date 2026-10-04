@@ -219,11 +219,17 @@ describe('Patient Overhaul', () => {
     it('10. validates IC number format (valid 12-digit)', async () => {
       mockAuth.mockResolvedValue({ user: { id: doctorId } })
       const res = await POST(createRequest('POST', '/api/patients', {
-        firstName: 'Valid', lastName: 'IC', icNumber: '850315085234',
+        firstName: 'Valid', lastName: 'IC', icNumber: '860415085234',
       }))
       expect(res.status).toBe(201)
       const data = await res.json()
       createdIds.push(data.id)
+      // Stored in one form, so the same IC typed with dashes is a duplicate.
+      expect(data.icNumber).toBe('860415-08-5234')
+      const dup = await POST(createRequest('POST', '/api/patients', {
+        firstName: 'Ahmad', lastName: 'Again', icNumber: '850315085234',
+      }))
+      expect(dup.status).toBe(409)
     })
 
     it('11. validates IC number format (invalid)', async () => {

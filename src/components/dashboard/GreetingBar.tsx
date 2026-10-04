@@ -35,6 +35,9 @@ export function GreetingBar({
 
   // Determine branch name to display
   const selectedBranch = branches.find((b) => b.id === selectedBranchId);
+  // A doctor's dashboard is about the branch they're working in (the
+  // sidebar's active branch), not the first one in the list.
+  const doctorBranchName = selectedBranch?.name ?? (branches.length === 1 ? branches[0].name : null);
   let branchDisplayName: string | null = null;
   if (selectedBranch) {
     branchDisplayName = selectedBranch.name;
@@ -58,12 +61,12 @@ export function GreetingBar({
 
       <div className="flex min-w-0 items-center gap-2">
         {isDoctor ? (
-          branches.length > 0 && (
+          doctorBranchName && (
             <span
               className="inline-flex max-w-full items-center truncate rounded-full bg-brand-subtle px-3 py-1 text-[14px] font-medium text-brand"
-              title={branches[0]?.name}
+              title={doctorBranchName}
             >
-              {branches[0]?.name}
+              {doctorBranchName}
             </span>
           )
         ) : (

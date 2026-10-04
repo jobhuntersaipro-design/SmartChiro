@@ -8,12 +8,13 @@ import { getPatientAccess } from "@/lib/auth/patient-access";
 import { can } from "@/lib/permissions";
 import { isValidMyKad, parseNationality } from "@/lib/invoices";
 import { paywall } from "@/lib/paywall";
+import { MYKAD_REGEX, normalizeIc } from "@/lib/ic";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
 const VALID_BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 const VALID_MARITAL_STATUSES = ["Single", "Married", "Divorced", "Widowed"];
-const IC_REGEX = /^\d{6}-?\d{2}-?\d{4}$/;
+const IC_REGEX = MYKAD_REGEX;
 
 export async function GET(
   req: NextRequest,
@@ -365,7 +366,7 @@ export async function PATCH(
   if (clinical && notes !== undefined) updateData.notes = notes || null;
   if (doctorId !== undefined) updateData.doctorId = doctorId;
   // New fields
-  if (icNumber !== undefined) updateData.icNumber = icNumber?.trim() || null;
+  if (icNumber !== undefined) updateData.icNumber = normalizeIc(icNumber);
   if (passportNumber !== undefined) updateData.passportNumber = passportNumber?.trim().toUpperCase() || null;
   if (parsedNationality !== undefined) {
     updateData.nationality = parsedNationality;

@@ -22,6 +22,8 @@ interface PatientListViewProps {
   branchRole: string;
   /** Changes when the sidebar branch switcher changes scope; lists refetch. */
   scopeKey: string;
+  /** New patients are created here, so their doctor comes from this branch. */
+  activeBranchId?: string | null;
   /** The scope spans several branches ("All branches"). */
   multiBranch: boolean;
 }
@@ -96,7 +98,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   );
 }
 
-export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: PatientListViewProps) {
+export function PatientListView({ userId, branchRole, scopeKey, multiBranch, activeBranchId }: PatientListViewProps) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +126,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [deletePatient, setDeletePatient] = useState<Patient | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [branchDoctors, setBranchDoctors] = useState<{ id: string; name: string }[]>([]);
+  const [branchDoctors, setBranchDoctors] = useState<{ id: string; name: string; branchIds: string[] }[]>([]);
 
   // OWNER / ADMIN / FRONT_DESK work across every patient and pick doctors.
   const isAdmin = can(branchRole, "patient.assignDoctor");
@@ -183,12 +185,24 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
     try {
       const res = await fetch("/api/doctors?clinical=1");
       if (!res.ok) return;
-      const data = (await res.json()) as { doctors?: Array<{ id: string; name: string | null }> };
-      setBranchDoctors((data.doctors ?? []).map((d) => ({ id: d.id, name: d.name || "Unknown" })));
+      const data = (await res.json()) as {
+        doctors?: Array<{ id: string; name: string | null; branches?: { id: string }[] }>;
+      };
+      setBranchDoctors(
+        (data.doctors ?? []).map((d) => ({ id: d.id, name: d.name || "Unknown", branchIds: (d.branches ?? []).map((b) => b.id) })),
+      );
     } catch {
       // Non-critical
     }
   }, [isAdmin]);
+
+  // A patient's doctor must work in the patient's branch: new patients go
+  // into the active branch, an edited one stays in its own.
+  const doctorsIn = useCallback(
+    (branchId: string | null | undefined) =>
+      branchDoctors.filter((d) => !branchId || d.branchIds.includes(branchId)).map(({ id, name }) => ({ id, name })),
+    [branchDoctors],
+  );
 
   // The server scopes both lists to the sidebar branch; refetch when it changes.
   useEffect(() => {
@@ -419,7 +433,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         open={addOpen}
         onOpenChange={setAddOpen}
         onAdd={handleAddPatient}
-        branchDoctors={branchDoctors}
+        branchDoctors={doctorsIn(activeBranchId)}
         isAdmin={isAdmin}
         showClinical={can(branchRole, "clinical.write")}
       />
@@ -430,7 +444,7 @@ export function PatientListView({ userId, branchRole, scopeKey, multiBranch }: P
         open={!!editPatient}
         onOpenChange={(open) => { if (!open) setEditPatient(null); }}
         onSave={handleEditPatient}
-        branchDoctors={branchDoctors}
+        branchDoctors={doctorsIn(editPatient?.branchId)}
         isAdmin={isAdmin}
         showClinical={can(branchRole, "clinical.write")}
       />

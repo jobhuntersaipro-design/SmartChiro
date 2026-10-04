@@ -182,7 +182,12 @@ Nothing has been sent to LHDN yet. Details are in the "8.4 owner actions" sectio
   existing account sends an invite; lapsed accounts are read-only; an ownership
   transfer moves billing to the new owner; patient email unique per branch.
   Staff who already had an account and were added to your branch before this
-  change stay members; new ones get an invite on their dashboard.
+  change stay members; new ones get an invite on their dashboard. IC numbers are
+  unique per branch too (otherwise clinic B couldn't register clinic A's patient).
+- [ ] **Patients entered twice with and without IC dashes.** The 4 Oct migration
+  converted every MyKad to the dashed form, except where a branch already had the
+  same IC both ways; those pairs are left for you to merge (search the IC on the
+  Patients page).
 
 - [x] **Admins who treat patients count as clinicians** (decided 2026-09-29). An
   ADMIN with a doctor profile (filled in on the doctor page) now gets a calendar

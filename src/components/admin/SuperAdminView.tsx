@@ -23,6 +23,10 @@ export interface AdminUserRow {
   newThisWeek: boolean;
   verified: boolean;
   state: PlanState;
+  /** Only works in clinics billed to other accounts: their own trial doesn't apply. */
+  staffOnly: boolean;
+  /** Name of the account whose plan covers them, when lapsed but covered. */
+  coveredBy: string | null;
   trialDaysLeft: number;
   trialEndsAt: string | null;
   trialEndsLabel: string | null;
@@ -51,6 +55,11 @@ const PLAN_PILL: Record<PlanState, { label: string; className: string }> = {
   expired: { label: "Expired", className: "bg-warning-subtle text-warning" },
 };
 
+/** Staff covered by their clinic read as covered, not as an ended trial. */
+function planPill(r: Pick<AdminUserRow, "state" | "coveredBy">) {
+  return r.coveredBy ? { label: "Covered", className: "bg-success-subtle text-success" } : PLAN_PILL[r.state];
+}
+
 export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -63,14 +72,15 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
       active: rows.filter((r) => r.activeThisWeek).length,
       trial: rows.filter((r) => r.state === "trial").length,
       subscribed: rows.filter((r) => r.state === "subscribed").length,
-      expired: rows.filter((r) => r.state === "expired").length,
+      // Staff covered by their clinic aren't "ended".
+      expired: rows.filter((r) => r.state === "expired" && !r.coveredBy).length,
     };
   }, [rows]);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
-      if (filter === "disabled" ? !r.disabled : filter !== "all" && r.state !== filter) return false;
+      if (filter === "disabled" ? !r.disabled : filter !== "all" && (r.state !== filter || (filter === "expired" && r.coveredBy))) return false;
       if (!q) return true;
       return [r.name ?? "", r.email, ...r.clinics.map((c) => c.name)].some((t) => t.toLowerCase().includes(q));
     });
@@ -191,12 +201,16 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
                     <p className="text-[12px] text-fg-muted">{signInsLabel(r)}</p>
                   </td>
                   <td className="px-3 py-2.5">
-                    <span className={cn("rounded-full px-2 py-0.5 text-[12px] font-medium", PLAN_PILL[r.state].className)}>
-                      {PLAN_PILL[r.state].label}
+                    <span className={cn("rounded-full px-2 py-0.5 text-[12px] font-medium", planPill(r).className)}>
+                      {planPill(r).label}
                       {r.state === "subscribed" && r.subscriptionInterval ? ` · ${r.subscriptionInterval}ly` : ""}
                     </span>
                     <p className="mt-0.5 text-[12px] text-fg-muted">
-                      {r.state === "trial"
+                      {r.coveredBy
+                        ? `Covered by ${r.coveredBy}'s plan`
+                        : r.staffOnly && r.state === "expired"
+                          ? "Clinic's plan has lapsed"
+                          : r.state === "trial"
                         ? `${r.trialDaysLeft} day${r.trialDaysLeft === 1 ? "" : "s"} left · ends ${r.trialEndsLabel}`
                         : r.state === "subscribed"
                           ? `${r.subscriptionStatus}${r.renewsLabel ? ` · renews ${r.renewsLabel}` : ""}`
@@ -285,7 +299,12 @@ function ManageUserDialog({ row, onClose }: { row: AdminUserRow; onClose: () => 
               ["Signed up", row.signedUp],
               ["Last active", row.lastActiveLabel ?? "—"],
               ["Sign-ins", signInsLabel(row)],
-              ["Plan", PLAN_PILL[row.state].label + (row.state === "trial" ? ` · ends ${row.trialEndsLabel}` : "")],
+              [
+                "Plan",
+                row.coveredBy
+                  ? `Staff · covered by ${row.coveredBy}`
+                  : planPill(row).label + (row.state === "trial" ? ` · ends ${row.trialEndsLabel}` : ""),
+              ],
               ["X-rays uploaded", String(row.xraysUploaded)],
               ["AI analyses", `${row.aiToday} today · ${row.ai30Days} in 30 days`],
             ] as const
@@ -319,7 +338,9 @@ function ManageUserDialog({ row, onClose }: { row: AdminUserRow; onClose: () => 
           <div>
             <span className="text-[14px] font-medium text-foreground">Free trial ends</span>
             <span className="block text-[12px] text-fg-secondary">
-              Pick a later date to extend the trial. Doesn&apos;t affect a paid subscription.
+              {row.staffOnly
+                ? "Staff work on their clinic's plan, so this date doesn't change their access. Extend the clinic owner's trial instead."
+                : "Pick a later date to extend the trial. Doesn't affect a paid subscription."}
             </span>
             <DateInput value={trialEnd} onChange={setTrialEnd} className="mt-1.5 w-44" aria-label="Free trial ends" />
           </div>

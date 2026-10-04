@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isSuperAdminEmail } from "@/lib/subscription";
+import { accountAccess, isSuperAdminEmail } from "@/lib/subscription";
 import { planState, trialDaysLeft } from "@/lib/plans";
 import { aiUsageCountsToday } from "@/lib/ai-usage";
 import { clinicDateLabel, clinicTimeLabel } from "@/lib/clinic-time";
@@ -38,7 +38,7 @@ export default async function SuperAdminPage() {
   });
   const ids = users.map((u) => u.id);
   const now = new Date();
-  const [usage, ai30, uploads] = await Promise.all([
+  const [usage, ai30, uploads, access] = await Promise.all([
     aiUsageCountsToday(ids),
     prisma.aiUsage.groupBy({
       by: ["userId"],
@@ -46,7 +46,10 @@ export default async function SuperAdminPage() {
       _count: { _all: true },
     }),
     prisma.xray.groupBy({ by: ["uploadedById"], where: { uploadedById: { in: ids } }, _count: { _all: true } }),
+    // What each account can actually do: staff are covered by their clinic's plan.
+    Promise.all(ids.map((id) => accountAccess(id, now))),
   ]);
+  const accessByUser = new Map(ids.map((id, i) => [id, access[i]]));
   const ai30ByUser = new Map(ai30.map((r) => [r.userId, r._count._all]));
   const uploadsByUser = new Map(uploads.map((r) => [r.uploadedById, r._count._all]));
 
@@ -57,7 +60,9 @@ export default async function SuperAdminPage() {
     signedUp: clinicDateLabel(u.createdAt),
     newThisWeek: now.getTime() - u.createdAt.getTime() < 7 * 86_400_000,
     verified: u.emailVerified != null,
-    state: planState(u, now),
+    state: accessByUser.get(u.id)?.state ?? planState(u, now),
+    staffOnly: accessByUser.get(u.id)?.staffOnly ?? false,
+    coveredBy: accessByUser.get(u.id)?.coveredBy?.name ?? accessByUser.get(u.id)?.coveredBy?.email ?? null,
     trialDaysLeft: trialDaysLeft(u.trialEndsAt, now),
     trialEndsAt: u.trialEndsAt?.toISOString() ?? null,
     trialEndsLabel: u.trialEndsAt ? clinicDateLabel(u.trialEndsAt) : null,

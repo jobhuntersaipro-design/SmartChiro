@@ -120,6 +120,8 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
 
       setSuccess(true);
       await onSave();
+      // The sidebar's branch switcher shows the name too.
+      router.refresh();
       setTimeout(() => setSuccess(false), 3000);
     } finally {
       setSaving(false);
@@ -133,6 +135,7 @@ export function BranchSettingsTab({ branch, isOwner, onSave }: BranchSettingsTab
       throw new Error(data.error);
     }
     router.push("/dashboard/branches");
+    router.refresh();
   }
 
   return (

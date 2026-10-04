@@ -16,7 +16,10 @@ export default auth((req) => {
 
   // Protect dashboard routes
   if (pathname.startsWith('/dashboard') && !isLoggedIn) {
-    return Response.redirect(new URL('/login', req.url))
+    // Come back to the page being opened after signing in.
+    const login = new URL('/login', req.url)
+    login.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
+    return Response.redirect(login)
   }
 
   // Redirect logged-in users away from auth pages

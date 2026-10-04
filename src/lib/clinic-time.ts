@@ -170,3 +170,17 @@ export function clinicDateLabel(
       return `${p.day} ${mon.slice(0, 3)} ${p.year}`;
   }
 }
+
+/** A real calendar date in YYYY-MM-DD ("2026-02-30" isn't). */
+export function isDateKey(value: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return false;
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+}
+
+/** A whole-number query parameter within [min, max], or the fallback when missing or not a number. */
+export function intParam(value: string | null, fallback: number, min: number, max: number): number {
+  const n = value === null ? NaN : Number.parseInt(value, 10);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+}

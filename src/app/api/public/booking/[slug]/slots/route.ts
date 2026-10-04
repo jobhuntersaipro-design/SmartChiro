@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { guardPublic, parseSlotQuery } from "@/lib/booking/public";
 import { clampToWindow, loadBookingAvailability, windowFor } from "@/lib/booking/availability";
 import { slotsFor } from "@/lib/booking/slots";
-import { clinicTimeLabel } from "@/lib/clinic-time";
+import { clinicTimeLabel, isDateKey } from "@/lib/clinic-time";
 import type { PublicSlot } from "@/types/booking";
 
 type RouteCtx = { params: Promise<{ slug: string }> };
@@ -24,7 +24,7 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   if ("response" in query) return query.response;
 
   const date = url.searchParams.get("date") ?? "";
-  if (!DATE_RE.test(date)) return NextResponse.json({ error: "invalid_date" }, { status: 400 });
+  if (!DATE_RE.test(date) || !isDateKey(date)) return NextResponse.json({ error: "invalid_date" }, { status: 400 });
 
   const now = new Date();
   if (!clampToWindow(date, date, windowFor(branch, now))) return NextResponse.json({ slots: [] });
