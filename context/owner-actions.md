@@ -40,9 +40,9 @@ from `noreply@smartchiro.org`) once its email is verified.
 
 ## 1b. Vercel Web Analytics
 
-- [ ] Vercel → project **smart-chiro** → **Analytics** tab → **Enable** (Web Analytics).
-  The `<Analytics />` script is in the root layout since 4 Oct 2026; page views only
-  start counting once it's enabled there (Hobby includes a monthly event allowance).
+- [x] Web Analytics is on for the Vercel project **smart-chiro**, and `<Analytics />` is in
+  the root layout (4 Oct 2026). Production loads the script from Vercel's project path.
+  Page views show under the project's **Analytics** tab.
 
 ## 2. Email (Resend)
 
