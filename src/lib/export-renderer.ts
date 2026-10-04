@@ -232,7 +232,8 @@ export async function renderAnnotatedPng(
   includeAdjustments: boolean,
   adjustments: ImageAdjustments | null
 ): Promise<Buffer> {
-  let pipeline = sharp(imageBuffer).resize(imageWidth, imageHeight, { fit: "inside" });
+  // .rotate() applies the EXIF orientation first, so a phone photo isn't exported sideways.
+  let pipeline = sharp(imageBuffer).rotate().resize(imageWidth, imageHeight, { fit: "inside" });
 
   if (includeAdjustments && adjustments) {
     pipeline = applyAdjustments(pipeline, adjustments);

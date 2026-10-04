@@ -4,7 +4,7 @@ Every bug below was traced end to end in the code by a read-only audit (six area
 access control, appointments and reminders, money, patients/booking/portal, X-ray and
 AI, shell/settings/admin) plus a read-only pass over smartchiro.org with the test
 logins. Several were found independently by two or three reviewers; they appear once.
-Phases 1–3 are fixed (4 Oct 2026); phases 4–5 are not yet.
+Phases 1–4 are fixed (4 Oct 2026); phase 5 is not yet.
 
 Fix one phase per branch, in order. Each fix gets a test that fails before it. Ship
 when build, lint and tests pass, then prove it on production (CLAUDE.md).
@@ -199,6 +199,10 @@ Wrong charges, missing revenue in the books, subscriptions.
 ---
 
 ## Phase 4 — X-ray and AI
+
+**Done 4 Oct 2026** (X1–X9; tests in `image-sniff.test.ts` and
+`annotation-saver.test.ts`). Films uploaded from phones *before* this fix keep their
+swapped size.
 
 ### X1 🟠 Phone photos with EXIF rotation are stored with width and height swapped
 - **Where:** `src/app/api/xrays/[xrayId]/confirm/route.ts:184-193`, `src/app/api/xrays/upload/route.ts:69-76` (raw JPEG size), viewer `src/components/annotation/AnnotationCanvas.tsx:1898-1915`, export `src/lib/export-renderer.ts:235`.

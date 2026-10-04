@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireXrayAccess } from '@/lib/auth/xray-guard'
 import { buildXrayKey, headR2Object, readR2ObjectPrefix } from '@/lib/r2'
 import { checkUploadedImage, SNIFF_BYTES } from '@/lib/image-sniff'
+import { MAX_FILE_SIZE } from '@/lib/xray-validation'
 import { paywallCurrentUser } from '@/lib/paywall'
 
 const confirmSchema = z.object({
@@ -58,6 +59,8 @@ export async function POST(
     const ext = xray.mimeType === 'image/png' ? 'png' : 'jpg'
     const key = buildXrayKey(xray.patient.branchId, xray.patientId, xray.id, `original.${ext}`)
     let header: Uint8Array | null = null
+    let realSize: number | null = null
+    let hasThumbnail = true
     try {
       const object = await headR2Object(key)
       if (!object) {
@@ -66,7 +69,14 @@ export async function POST(
           { status: 409 }
         )
       }
+      // The size limit the browser checked, now on the stored object.
+      if (object.size > MAX_FILE_SIZE) {
+        return NextResponse.json({ error: 'File too large. Maximum size is 300 MB.' }, { status: 413 })
+      }
+      realSize = object.size
       header = await readR2ObjectPrefix(key, SNIFF_BYTES)
+      // The thumbnail is optional; without it the gallery uses the film.
+      hasThumbnail = (await headR2Object(buildXrayKey(xray.patient.branchId, xray.patientId, xray.id, 'thumbnail.jpg'))) !== null
     } catch (error) {
       console.error('Could not verify uploaded X-ray (continuing):', error)
     }
@@ -90,6 +100,8 @@ export async function POST(
         status: 'READY',
         width: realWidth,
         height: realHeight,
+        ...(realSize !== null ? { fileSize: realSize } : {}),
+        ...(hasThumbnail ? {} : { thumbnailUrl: null }),
         ...(title ? { title } : {}),
         ...(bodyRegion ? { bodyRegion } : {}),
         ...(viewType ? { viewType } : {}),

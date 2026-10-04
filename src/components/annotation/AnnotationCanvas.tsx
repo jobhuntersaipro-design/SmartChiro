@@ -292,6 +292,8 @@ export function AnnotationCanvas({
   const flipped = !!imageAdj.adjustments.flipH;
   const flippedV = !!imageAdj.adjustments.flipV;
   const rotation = imageAdj.adjustments.rotation ?? 0;
+  // Fit reads this when it runs (a ref, so Fit itself doesn't change identity).
+  viewport.quarterTurnRef.current = rotation % 180 !== 0;
   const orientation = useMemo<Orientation | undefined>(
     () =>
       !flipped && !flippedV && rotation === 0
@@ -678,8 +680,9 @@ export function AnnotationCanvas({
               : s
           )
         );
-        autoSave.markDirty();
       }
+      // The ratio lives in the saved image adjustments: save it either way.
+      autoSave.markDirty();
       setCalibrationEdit(null);
     },
     [calibrationEdit, imageAdj, autoSave]
@@ -748,8 +751,9 @@ export function AnnotationCanvas({
     transform: pointerTransform,
     shapes,
     currentStyle,
-    imageWidth,
-    imageHeight,
+    // The film being drawn on (the active cell in multi-view).
+    imageWidth: activeImageWidth,
+    imageHeight: activeImageHeight,
     onAddShape: handleAddShape,
     onDeleteShapes: handleDeleteShapes,
   });
@@ -1234,18 +1238,26 @@ export function AnnotationCanvas({
     const handleDuplicateShapes = (e: Event) => {
       const { shapeIds } = (e as CustomEvent).detail;
       setShapes((prev) => {
-        const duplicated = prev
-          .filter((s) => shapeIds.includes(s.id))
-          .map((s) => ({
-            ...s,
+        // Same as paste: offset points (drawn shapes live in `points`), a plain
+        // copy of an AI landmark, and a fresh measurement id.
+        const duplicated: BaseShape[] = [];
+        let pool = prev;
+        for (const s of prev.filter((x) => shapeIds.includes(x.id))) {
+          const copy: BaseShape = {
+            ...plainLandmarkCopy(s),
             id: crypto.randomUUID(),
             x: s.x + 20,
             y: s.y + 20,
+            points: s.points.map((pt) => ({ x: pt.x + 20, y: pt.y + 20 })),
             label: s.label ? `${s.label} copy` : null,
-            zIndex: Math.max(...prev.map((p) => p.zIndex), 0) + 1,
-          }));
-        for (const shape of duplicated) {
-          undoRedo.pushCommand("ADD_SHAPE", shape.id, null, shape);
+            zIndex: Math.max(...pool.map((p) => p.zIndex), 0) + 1,
+            measurementId: undefined,
+          };
+          const measurementId = nextMeasurementId(copy.type, pool);
+          const next = measurementId ? { ...copy, measurementId } : copy;
+          duplicated.push(next);
+          pool = [...pool, next];
+          undoRedo.pushCommand("ADD_SHAPE", next.id, null, next);
         }
         return [...prev, ...duplicated];
       });
@@ -1579,8 +1591,8 @@ export function AnnotationCanvas({
       const outsideImage =
         imagePos.x < 0 ||
         imagePos.y < 0 ||
-        imagePos.x > imageWidth ||
-        imagePos.y > imageHeight;
+        imagePos.x > activeImageWidth ||
+        imagePos.y > activeImageHeight;
       const additive = e.shiftKey || e.metaKey || e.ctrlKey;
       if (outsideImage && !additive && interaction.selectedShapeIds.length > 0) {
         interaction.setSelectedShapeIds([]);
@@ -1590,7 +1602,7 @@ export function AnnotationCanvas({
       // Fall through to interaction (select, pan)
       interaction.handlePointerDown(e);
     },
-    [drawing, interaction, pointerTransform, imageWidth, imageHeight, gestures]
+    [drawing, interaction, pointerTransform, activeImageWidth, activeImageHeight, gestures]
   );
 
   const handlePointerMove = useCallback(
@@ -2199,13 +2211,10 @@ export function AnnotationCanvas({
                             className="absolute inset-0"
                             style={{ overflow: "visible" }}
                           >
-                            {displayShapes.slice(0, landmarkSplit).map((shape) => (
-                              <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} />
-                            ))}
+                            {/* Same renderer as single view: calibrated mm, vertex labels, selection. */}
+                            {displayShapes.slice(0, landmarkSplit).map(renderShape)}
                             {pelvisOverlay}
-                            {displayShapes.slice(landmarkSplit).map((shape) => (
-                              <ShapeRenderer key={shape.id} shape={shape} zoom={viewport.transform.zoom} compactLabel={pelvisOverlayOn} />
-                            ))}
+                            {displayShapes.slice(landmarkSplit).map(renderShape)}
                           </svg>
                         </div>
                         <SelectionOverlay shapes={shapes} selectedShapeIds={interaction.selectedShapeIds} transform={pointerTransform} />

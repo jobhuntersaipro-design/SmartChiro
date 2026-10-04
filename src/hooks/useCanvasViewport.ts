@@ -30,6 +30,8 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  /** The film is turned 90° or 270° (set by the canvas): Fit uses its turned size. */
+  const quarterTurnRef = useRef(false);
   // Set once the user zooms or pans; cleared by Fit. A resize (panel toggle,
   // tablet rotation, window resize) refits only while this is false —
   // otherwise it keeps the user's zoom and what they were looking at.
@@ -129,7 +131,9 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     const PAD = 4;
     const availW = rect.width - PAD * 2;
     const availH = rect.height - PAD * 2;
-    const zoom = clampZoom(Math.min(availW / imageWidth, availH / imageHeight));
+    // Rotation is about the film's centre, so only the fitted size swaps.
+    const [fitW, fitH] = quarterTurnRef.current ? [imageHeight, imageWidth] : [imageWidth, imageHeight];
+    const zoom = clampZoom(Math.min(availW / fitW, availH / fitH));
     const panX = (rect.width - imageWidth * zoom) / 2;
     const panY = (rect.height - imageHeight * zoom) / 2;
     userAdjustedRef.current = false;
@@ -250,6 +254,7 @@ export function useCanvasViewport({ imageWidth, imageHeight }: UseCanvasViewport
     transform,
     setTransform: restoreTransform,
     containerRef,
+    quarterTurnRef,
     zoomIn,
     zoomOut,
     zoomAtPoint,

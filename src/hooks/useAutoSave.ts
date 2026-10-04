@@ -126,36 +126,34 @@ export function useAutoSave({
     return () => clearInterval(timer);
   }, [saver, interval]);
 
-  // Leaving the page: fire the pending edits with sendBeacon (survives the tab
-  // closing) and ask the browser to confirm while anything is unsaved.
+  // Leaving the page: ask the browser to confirm while anything is unsaved.
+  // The pending edits go out with sendBeacon only on pagehide — when the page
+  // is really going — so choosing "Stay" sends nothing.
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      const request = saver.unloadRequest();
-      if (request) {
-        navigator.sendBeacon(request.url, new Blob([request.body], { type: "application/json" }));
-      }
-      if (request || saver.isSaving) {
+      if (saver.isDirty || saver.isSaving) {
         event.preventDefault();
         event.returnValue = "";
       }
     };
+    const handlePageHide = () => {
+      const request = saver.unloadRequest();
+      if (request) navigator.sendBeacon(request.url, new Blob([request.body], { type: "application/json" }));
+    };
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
   }, [saver]);
 
-  // In-app navigation (router links) unmounts without beforeunload — flush with keepalive.
+  // In-app navigation (router links) unmounts without leaving the document:
+  // finish through the saver's own queue, the one save path, instead of a
+  // second request racing it.
   useEffect(() => {
     return () => {
-      const request = saver.unloadRequest();
-      if (request) {
-        void fetch(request.url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: request.body,
-          keepalive: true,
-        }).catch(() => undefined);
-      }
-      saver.dispose();
+      void saver.flush().finally(() => saver.dispose());
     };
   }, [saver]);
 

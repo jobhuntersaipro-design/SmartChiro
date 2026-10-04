@@ -70,6 +70,13 @@ export class AnnotationSaver {
   private inFlight = 0;
   /** Set on a 409 — don't let an unload beacon overwrite the other copy behind the user's back. */
   private conflicted = false;
+  /**
+   * The annotation id and version each X-ray's last save settled on. Multi-view
+   * switches targets while saves are in flight; a target that was captured
+   * before its save landed (no id yet, or an older version) catches up here, so
+   * it neither creates a second annotation nor trips a false 409.
+   */
+  private readonly settled = new Map<string, { annotationId: string; version: number | null }>();
 
   constructor(
     target: SaveTarget,
@@ -155,6 +162,7 @@ export class AnnotationSaver {
     this.generation++;
     this.conflicted = false;
     this.target = { ...next };
+    this.catchUp(this.target);
     this.revision = 0;
     this.savedRevision = 0;
     this.latest = null;
@@ -179,13 +187,23 @@ export class AnnotationSaver {
   /** Request to fire with sendBeacon when the page is closing, or null when nothing is unsaved. */
   unloadRequest(): { url: string; body: string } | null {
     if (!this.isDirty || !this.latest || this.conflicted) return null;
+    this.catchUp(this.target);
     const { state, adjustments } = this.latest;
     if (!this.target.annotationId && isEmptyAnnotation(state, adjustments)) return null;
+    // A save creating this X-ray's annotation is still in flight: a beacon
+    // would create a second one.
+    if (!this.target.annotationId && this.inFlight > 0) return null;
     const canvasStateSize = byteSize(JSON.stringify(state));
     if (this.target.annotationId) {
       return {
         url: `/api/annotations/${this.target.annotationId}`,
-        body: JSON.stringify({ canvasState: state, canvasStateSize, imageAdjustments: adjustments }),
+        // With baseVersion: a copy saved elsewhere meanwhile is never overwritten.
+        body: JSON.stringify({
+          canvasState: state,
+          canvasStateSize,
+          imageAdjustments: adjustments,
+          baseVersion: this.target.version ?? undefined,
+        }),
       };
     }
     return {
@@ -255,8 +273,20 @@ export class AnnotationSaver {
     }
   }
 
+  /** Bring a target up to the id/version its X-ray's last save settled on. */
+  private catchUp(target: SaveTarget): void {
+    const known = this.settled.get(target.xrayId);
+    if (!known) return;
+    if (target.annotationId && target.annotationId !== known.annotationId) return;
+    if (!target.annotationId || (known.version ?? 0) > (target.version ?? 0)) {
+      target.annotationId = known.annotationId;
+      target.version = known.version;
+    }
+  }
+
   private async persist(job: Job, snapshot: Snapshot, canvasStateSize: number): Promise<void> {
     const { target } = job;
+    this.catchUp(target);
     const payload = {
       canvasState: snapshot.state,
       canvasStateSize,
@@ -275,6 +305,7 @@ export class AnnotationSaver {
       const data = (await res.json()) as { annotation: { id: string; version?: number } };
       target.annotationId = data.annotation.id;
       target.version = data.annotation.version ?? 1;
+      this.settled.set(target.xrayId, { annotationId: target.annotationId, version: target.version });
       return;
     }
 
@@ -287,6 +318,7 @@ export class AnnotationSaver {
     await this.checkResponse(res);
     const data = (await res.json()) as { version?: number };
     if (typeof data.version === "number") target.version = data.version;
+    this.settled.set(target.xrayId, { annotationId: target.annotationId, version: target.version });
   }
 
   private async checkResponse(res: Response): Promise<void> {

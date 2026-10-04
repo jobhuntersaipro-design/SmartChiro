@@ -50,9 +50,40 @@ function isStartOfFrame(marker: number): boolean {
   return marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
 }
 
-/** JPEG: walk the marker segments until a SOFn, which holds height then width. */
+/**
+ * EXIF orientation (1–8) from an APP1 segment's data, or 1. Phone photos are
+ * stored sideways with orientation 6 or 8; browsers draw them upright.
+ */
+function exifOrientation(bytes: Uint8Array, start: number, end: number): number {
+  // "Exif\0\0" then a TIFF header: byte order, 42, offset of the first IFD.
+  if (end - start < 14 || String.fromCharCode(...bytes.subarray(start, start + 4)) !== "Exif") return 1;
+  const tiff = start + 6;
+  const little = bytes[tiff] === 0x49 && bytes[tiff + 1] === 0x49;
+  const u16 = (o: number) => (little ? bytes[o] | (bytes[o + 1] << 8) : uint16(bytes, o));
+  const u32 = (o: number) =>
+    little ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : uint32(bytes, o);
+  const ifd = tiff + u32(tiff + 4);
+  if (ifd + 2 > end) return 1;
+  const count = u16(ifd);
+  for (let i = 0; i < count; i++) {
+    const entry = ifd + 2 + i * 12;
+    if (entry + 12 > end) return 1;
+    if (u16(entry) === 0x0112) {
+      const value = u16(entry + 8);
+      return value >= 1 && value <= 8 ? value : 1;
+    }
+  }
+  return 1;
+}
+
+/**
+ * JPEG: walk the marker segments until a SOFn, which holds height then width.
+ * An EXIF orientation of 5–8 (rotated 90°/270°) swaps them: the size stored is
+ * the upright one the browser shows.
+ */
 function jpegDimensions(bytes: Uint8Array): { width: number | null; height: number | null } {
   const none = { width: null, height: null };
+  let orientation = 1;
   let offset = 2;
   while (offset < bytes.length) {
     if (bytes[offset] !== 0xff) return none;
@@ -68,9 +99,12 @@ function jpegDimensions(bytes: Uint8Array): { width: number | null; height: numb
     if (offset + 2 > bytes.length) return none;
     const length = uint16(bytes, offset);
     if (length < 2) return none;
+    if (marker === 0xe1) orientation = exifOrientation(bytes, offset + 2, Math.min(offset + length, bytes.length));
     if (isStartOfFrame(marker)) {
       if (offset + 7 > bytes.length) return none;
-      return { height: positiveOrNull(uint16(bytes, offset + 3)), width: positiveOrNull(uint16(bytes, offset + 5)) };
+      const height = positiveOrNull(uint16(bytes, offset + 3));
+      const width = positiveOrNull(uint16(bytes, offset + 5));
+      return orientation >= 5 ? { width: height, height: width } : { width, height };
     }
     offset += length;
   }

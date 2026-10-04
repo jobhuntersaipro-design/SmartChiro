@@ -95,3 +95,19 @@ describe('checkUploadedImage', () => {
     expect(checkUploadedImage(png(20000, 2000), 'image/png', declared).ok).toBe(false)
   })
 })
+
+describe('EXIF orientation (phone photos)', () => {
+  it('reports the upright size for a JPEG stored sideways (orientation 6 / 8), as the browser shows it', async () => {
+    const sharp = (await import('sharp')).default
+    const sideways = (orientation: number) =>
+      sharp({ create: { width: 300, height: 200, channels: 3, background: '#808080' } })
+        .jpeg()
+        .withMetadata({ orientation })
+        .toBuffer()
+    for (const o of [6, 8]) {
+      expect(sniffImage(await sideways(o))).toMatchObject({ mimeType: 'image/jpeg', width: 200, height: 300 })
+    }
+    expect(sniffImage(await sideways(1))).toMatchObject({ width: 300, height: 200 })
+    expect(sniffImage(await sideways(3))).toMatchObject({ width: 300, height: 200 })
+  })
+})

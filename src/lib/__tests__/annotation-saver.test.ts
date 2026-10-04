@@ -174,7 +174,8 @@ describe("AnnotationSaver", () => {
     saver.markDirty();
     const req = saver.unloadRequest();
     expect(req?.url).toBe("/api/annotations/ann-1");
-    expect(JSON.parse(req!.body).baseVersion).toBeUndefined();
+    // Never overwrites a copy saved elsewhere meanwhile.
+    expect(JSON.parse(req!.body).baseVersion).toBe(3);
   });
 
   it("adopts a late-loading annotation instead of creating a second one", async () => {
@@ -257,4 +258,57 @@ describe("AnnotationSaver — empty canvases and closing", () => {
     await done;
     expect(saver.isDirty).toBe(false);
   });
+
+  it("switching back to an X-ray whose first save was still in flight reuses the annotation it created", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl, null);
+    saver.update(state("a"), ADJ);
+    saver.markDirty();
+    // Switch away before the debounce: the old X-ray's edits are queued (POST in flight).
+    saver.switchTarget({ xrayId: "xr-2", annotationId: "ann-2", version: 1 });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(f.calls[0]).toMatchObject({ url: "/api/xrays/xr-1/annotations", method: "POST" });
+    // The canvas cached xr-1 with no annotation id yet; switch back to it.
+    saver.switchTarget({ xrayId: "xr-1", annotationId: null, version: null });
+    saver.update(state("b"), ADJ);
+    saver.markDirty();
+    await f.respond(201, { annotation: { id: "ann-new", version: 1 } });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(f.calls[1]).toMatchObject({ url: "/api/annotations/ann-new", method: "PUT" });
+    expect(f.calls[1].body.baseVersion).toBe(1);
+  });
+
+  it("a stale cached version catches up to the save that settled after it was cached", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl);
+    saver.update(state("a"), ADJ);
+    saver.markDirty();
+    saver.switchTarget({ xrayId: "xr-2", annotationId: "ann-2", version: 1 });
+    await vi.advanceTimersByTimeAsync(0);
+    saver.switchTarget({ xrayId: "xr-1", annotationId: "ann-1", version: 3 }); // cached before the save landed
+    await f.respond(200, { version: 4 });
+    saver.update(state("b"), ADJ);
+    saver.markDirty();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(f.calls[1]).toMatchObject({ url: "/api/annotations/ann-1" });
+    expect(f.calls[1].body.baseVersion).toBe(4);
+  });
+
+  it("the unload beacon carries the base version, and isn't built while the annotation is being created", async () => {
+    const f = controlledFetch();
+    const { saver } = makeSaver(f.fetchImpl);
+    saver.update(state("a"), ADJ);
+    saver.markDirty();
+    expect(JSON.parse(saver.unloadRequest()!.body).baseVersion).toBe(3);
+
+    const g = controlledFetch();
+    const fresh = makeSaver(g.fetchImpl, null).saver;
+    fresh.update(state("a"), ADJ);
+    fresh.markDirty();
+    await vi.advanceTimersByTimeAsync(500); // POST in flight
+    fresh.update(state("b"), ADJ);
+    fresh.markDirty();
+    expect(fresh.unloadRequest()).toBeNull();
+  });
 });
+

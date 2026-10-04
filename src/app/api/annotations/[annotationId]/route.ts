@@ -111,7 +111,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { canvasState, canvasStateSize, imageAdjustments, baseVersion } = body;
+    const { canvasState, imageAdjustments, baseVersion } = body;
 
     if (!canvasState) {
       return NextResponse.json(
@@ -120,6 +120,8 @@ export async function PUT(
       );
     }
 
+    // Measured here, not taken from the client.
+    const canvasStateSize = Buffer.byteLength(JSON.stringify(canvasState), "utf8");
     if (canvasStateSize > MAX_CANVAS_STATE_SIZE) {
       return NextResponse.json(
         { error: "Canvas state exceeds maximum size of 10 MB" },
@@ -129,7 +131,7 @@ export async function PUT(
 
     const data = {
       canvasState,
-      canvasStateSize: canvasStateSize ?? 0,
+      canvasStateSize,
       shapeCount: countShapes(canvasState),
       imageAdjustments: imageAdjustments ?? undefined,
       version: { increment: 1 },
