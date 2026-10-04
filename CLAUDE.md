@@ -23,4 +23,11 @@ These override the ask-before-commit/merge rules in `context/ai-interaction.md`.
 - **Merge when confident.** If the build, lint and tests pass and you are confident in the change, merge it to `main` straight away without asking.
 - **Prove it in production.** After the merge deploys, show proof from production, such as a screenshot of the live page.
 
+## Production Test Login
+- **Doctor login on https://smartchiro.org:** `claude-test@claude-test.com` / `claude-test` (Doctor at SmartChiro KLCC). Use it for production screenshots and checks. It is not a super admin, so it can't open `/dashboard/admin`.
+- Headless Chromium in Claude's cloud sandbox doesn't trust the proxy's CA on its own: launch it with `--ignore-certificate-errors-spki-list=<SHA-256 SPKI hashes of every cert in /root/.ccr/ca-bundle.crt>`. That trusts the bundle every other tool uses; never turn certificate checks off.
+
+## Blockers
+- Always tell the user what you need and what is blocking you (missing access, credentials, keys, decisions) as soon as you hit it, instead of quietly working around it or stopping.
+
 
