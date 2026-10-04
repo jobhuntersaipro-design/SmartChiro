@@ -32,6 +32,11 @@ model User {
   aiDailyLimit          Int       @default(10)
   /// Set by a super admin to block sign-in.
   disabledAt            DateTime?
+  /// Login activity for the super admin page (src/lib/login-activity.ts).
+  lastLoginAt           DateTime?
+  loginCount            Int       @default(0)
+  /// Last dashboard visit, written at most once an hour.
+  lastActiveAt          DateTime?
 
   activeBranchId String?
   /// Owner/admin of 2+ branches working across all of them ("All branches" in the sidebar).

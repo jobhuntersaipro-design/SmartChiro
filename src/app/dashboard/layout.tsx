@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { auth } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { PlanView } from "@/components/billing/PlanView";
 import { loadBranchContext } from "@/lib/branch-context";
 import { accountAccess, planViewProps } from "@/lib/subscription";
 import { trialDaysLeft } from "@/lib/plans";
+import { activityStale, recordActivity } from "@/lib/login-activity";
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +24,9 @@ export default async function DashboardLayout({
     accountAccess(session.user.id),
   ]);
   if (!access || access.disabled) redirect(`/api/session/end${access ? "?reason=account_disabled" : ""}`);
+  // "Last active" on the super admin page, written after the response.
+  const userId = session.user.id;
+  if (activityStale(access.lastActiveAt)) after(() => recordActivity(userId));
   // Staff work on their clinic's plan: no countdown of their own.
   const showTrial = access.state === "trial" && !access.superAdmin;
 

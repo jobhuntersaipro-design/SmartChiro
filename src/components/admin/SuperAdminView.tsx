@@ -29,7 +29,14 @@ export interface AdminUserRow {
   subscriptionStatus: string | null;
   subscriptionInterval: string | null;
   renewsLabel: string | null;
+  /** "3 hours ago": last dashboard visit (null: not since activity tracking started). */
+  lastActiveLabel: string | null;
+  activeThisWeek: boolean;
+  lastLoginLabel: string | null;
+  loginCount: number;
   aiToday: number;
+  ai30Days: number;
+  xraysUploaded: number;
   aiDailyLimit: number;
   disabled: boolean;
   clinics: { name: string; role: BranchRole }[];
@@ -53,6 +60,7 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
     return {
       total: rows.length,
       week: rows.filter((r) => r.newThisWeek).length,
+      active: rows.filter((r) => r.activeThisWeek).length,
       trial: rows.filter((r) => r.state === "trial").length,
       subscribed: rows.filter((r) => r.state === "subscribed").length,
       expired: rows.filter((r) => r.state === "expired").length,
@@ -73,15 +81,16 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
       <div>
         <h1 className="font-heading text-[23px] font-medium text-foreground">Super admin</h1>
         <p className="mt-1 text-[14px] text-fg-secondary">
-          Everyone who signed up, their plan, and how much AI analysis they use. Daily AI limits count different X-rays per
-          clinic day.
+          Everyone who signed up: plan, login activity and X-ray use. Daily AI limits count different X-rays per clinic
+          day. Use Manage to extend a free trial, change the AI limit or disable an account.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         {[
           ["Sign-ups", stats.total],
           ["Last 7 days", stats.week],
+          ["Active this week", stats.active],
           ["On trial", stats.trial],
           ["Subscribed", stats.subscribed],
           ["Trial ended", stats.expired],
@@ -132,21 +141,22 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
       </div>
 
       <div className="overflow-x-auto rounded-panel border border-border bg-surface shadow-(--shadow-card)">
-        <table className="w-full min-w-225">
+        <table className="w-full min-w-250">
           <thead>
             <tr className="border-b border-border text-left text-[13px] font-medium uppercase tracking-[0.04em] text-fg-secondary whitespace-nowrap">
               <th className="py-2.5 pl-4 pr-3">User</th>
               <th className="px-3 py-2.5">Clinic</th>
               <th className="px-3 py-2.5">Signed up</th>
+              <th className="px-3 py-2.5">Activity</th>
               <th className="px-3 py-2.5">Plan</th>
-              <th className="px-3 py-2.5 text-right">AI today</th>
+              <th className="px-3 py-2.5 text-right">X-rays</th>
               <th className="px-3 py-2.5"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             {shown.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center">
+                <td colSpan={7} className="px-4 py-12 text-center">
                   <Users className="mx-auto mb-2 size-7 text-border-strong" strokeWidth={1.25} />
                   <p className="text-[15px] text-fg-secondary">No users match.</p>
                 </td>
@@ -176,6 +186,10 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
                         ))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-[13px] text-fg-secondary">{r.signedUp}</td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[13px]">
+                    <p className="text-foreground">{r.lastActiveLabel ? `Active ${r.lastActiveLabel}` : "—"}</p>
+                    <p className="text-[12px] text-fg-muted">{signInsLabel(r)}</p>
+                  </td>
                   <td className="px-3 py-2.5">
                     <span className={cn("rounded-full px-2 py-0.5 text-[12px] font-medium", PLAN_PILL[r.state].className)}>
                       {PLAN_PILL[r.state].label}
@@ -191,9 +205,15 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
                             : "No trial"}
                     </p>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-right text-[14px] tabular-nums">
-                    <span className={r.aiToday >= r.aiDailyLimit ? "text-danger" : "text-foreground"}>{r.aiToday}</span>
-                    <span className="text-fg-muted"> / {r.aiDailyLimit}</span>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
+                    <p className="text-[14px]">
+                      <span className="text-fg-muted">AI today </span>
+                      <span className={r.aiToday >= r.aiDailyLimit ? "text-danger" : "text-foreground"}>{r.aiToday}</span>
+                      <span className="text-fg-muted"> / {r.aiDailyLimit}</span>
+                    </p>
+                    <p className="text-[12px] text-fg-muted">
+                      {r.ai30Days} AI in 30 days · {r.xraysUploaded} uploaded
+                    </p>
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <Button variant="outline" size="sm" onClick={() => setEditing(r)}>
@@ -210,6 +230,11 @@ export function SuperAdminView({ rows }: { rows: AdminUserRow[] }) {
       {editing && <ManageUserDialog key={editing.id} row={editing} onClose={() => setEditing(null)} />}
     </div>
   );
+}
+
+function signInsLabel(r: AdminUserRow): string {
+  if (r.loginCount === 0) return "No sign-ins recorded";
+  return `${r.loginCount} sign-in${r.loginCount === 1 ? "" : "s"} · last ${r.lastLoginLabel}`;
 }
 
 function ManageUserDialog({ row, onClose }: { row: AdminUserRow; onClose: () => void }) {
@@ -254,6 +279,23 @@ function ManageUserDialog({ row, onClose }: { row: AdminUserRow; onClose: () => 
           <DialogTitle>Manage {row.name ?? row.email}</DialogTitle>
           <DialogDescription>{row.email}</DialogDescription>
         </DialogHeader>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-panel bg-surface-subtle p-3 text-[13px]">
+          {(
+            [
+              ["Signed up", row.signedUp],
+              ["Last active", row.lastActiveLabel ?? "—"],
+              ["Sign-ins", signInsLabel(row)],
+              ["Plan", PLAN_PILL[row.state].label + (row.state === "trial" ? ` · ends ${row.trialEndsLabel}` : "")],
+              ["X-rays uploaded", String(row.xraysUploaded)],
+              ["AI analyses", `${row.aiToday} today · ${row.ai30Days} in 30 days`],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-fg-muted">{label}</dt>
+              <dd className="text-foreground">{value}</dd>
+            </div>
+          ))}
+        </dl>
         <form
           className="space-y-4"
           onSubmit={(e) => {

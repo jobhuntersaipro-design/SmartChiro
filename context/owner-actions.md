@@ -114,7 +114,13 @@ and your own clinic never lapses while you are a super admin.
 - [ ] **Super admin.** `SUPER_ADMIN_EMAILS` in Vercel (Production) lists who sees
   **Super admin** in the sidebar (comma-separated sign-in emails). It was set to the
   email on your Claude account on 2026-10-03; change it if you sign in to SmartChiro
-  with a different one (then redeploy).
+  with a different one (then redeploy). To use it: sign in at
+  `https://smartchiro.org/login` with that email (Sign in with Google, or register it
+  first), then open **Super admin** in the sidebar (`/dashboard/admin`). It lists every
+  sign-up with clinic, plan and trial end, login activity (last active, sign-ins) and
+  X-ray use (AI today and last 30 days, uploads); **Manage** extends a trial, changes the
+  daily AI limit or disables an account. Login activity is recorded from 4 Oct 2026, so
+  older accounts show "No sign-ins recorded" until they next sign in.
 - [ ] **Before 30 days are up:** tell existing clinics about the trial and the
   plan, or extend their trials on the Super admin page (Manage → Free trial ends).
 

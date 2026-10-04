@@ -7,6 +7,7 @@ import authConfig from './auth.config'
 import { resolveGoogleUser } from './auth/google'
 import { loadBranchContext } from './branch-context'
 import { cache } from 'react'
+import { recordSignIn } from './login-activity'
 
 const accountStatus = cache((userId: string) =>
   prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true } }),
@@ -177,6 +178,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         user.id = dbUser.id
       }
       return true
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      await recordSignIn(user)
     },
   },
 })

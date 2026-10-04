@@ -39,6 +39,7 @@ export interface AccountAccess {
   coveredBy: { name: string | null; email: string } | null;
   superAdmin: boolean;
   disabled: boolean;
+  lastActiveAt: Date | null;
 }
 
 export async function accountAccess(userId: string, now: Date = new Date()): Promise<AccountAccess | null> {
@@ -52,6 +53,7 @@ export async function accountAccess(userId: string, now: Date = new Date()): Pro
       subscriptionPeriodEnd: true,
       stripeCustomerId: true,
       disabledAt: true,
+      lastActiveAt: true,
       branchMemberships: {
         select: {
           branch: {
@@ -94,6 +96,7 @@ export async function accountAccess(userId: string, now: Date = new Date()): Pro
     coveredBy,
     superAdmin,
     disabled,
+    lastActiveAt: user.lastActiveAt,
   };
 }
 
