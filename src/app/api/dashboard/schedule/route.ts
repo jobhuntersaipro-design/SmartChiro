@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { clinicCalendar } from "@/lib/clinic-time";
+import { dashboardScope } from "@/lib/branch-context";
+import { scopedWhere } from "@/lib/branch-scope";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,37 +14,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const branchId = searchParams.get("branchId");
   const userId = session.user.id;
-  const branchRole = session.user.branchRole;
+  const scope = await dashboardScope(userId, branchId);
+  if (!scope) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
-  const now = new Date();
-  const { dayStart: todayStart, dayEnd: todayEnd } = clinicCalendar(now);
-
-  const where: Record<string, unknown> = {
-    dateTime: { gte: todayStart, lt: todayEnd },
-  };
-
-  if (branchRole === "DOCTOR") {
-    where.doctorId = userId;
-    if (session.user.activeBranchId) {
-      where.branchId = session.user.activeBranchId;
-    }
-  } else {
-    // Owner/Admin
-    if (branchId && branchId !== "all") {
-      const member = await prisma.branchMember.findUnique({
-        where: { userId_branchId: { userId, branchId } },
-        select: { role: true },
-      });
-      if (!member) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
-      where.branchId = branchId;
-    } else {
-      const memberships = await prisma.branchMember.findMany({
-        where: { userId },
-        select: { branchId: true },
-      });
-      where.branchId = { in: memberships.map((m) => m.branchId) };
-    }
-  }
+  const { dayStart: todayStart, dayEnd: todayEnd } = clinicCalendar(new Date());
+  // Doctors see their own appointments in the branches where they're a
+  // doctor, everyone else the whole branch — by the role in each branch.
+  const where = { ...scopedWhere(scope, userId), dateTime: { gte: todayStart, lt: todayEnd } };
 
   const appointments = await prisma.appointment.findMany({
     where,

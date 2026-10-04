@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { getXrayCapability } from '@/lib/auth/xray'
+import { paywall } from '@/lib/paywall'
 
 export async function GET(
   _request: NextRequest,
@@ -38,6 +39,8 @@ export async function POST(
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'UNAUTHORIZED', message: 'Sign-in required.' }, { status: 401 })
   }
+  const blocked = await paywall(session.user.id)
+  if (blocked) return blocked
   // Notes write requires "manage" — same as edit metadata.
   const cap = await getXrayCapability(session.user.id, xrayId)
   if (cap !== 'manage') {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -28,6 +29,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 const Body = z.object({ portalCancelHours: z.number().int().min(0).max(336) }).strict();
 
 export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const denied = await authorise(branchId);
   if (denied) return denied;

@@ -5,6 +5,7 @@ import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { billingAccess } from "@/lib/billing-access";
 import { cancelInvoiceData, createInvoice, parseLineItems, toSen, type AnyInvoiceStatus } from "@/lib/invoices";
 import { invoiceErrorResponse } from "@/lib/invoice-detail";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
@@ -34,6 +35,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const original = await prisma.invoice.findUnique({
     where: { id: invoiceId },

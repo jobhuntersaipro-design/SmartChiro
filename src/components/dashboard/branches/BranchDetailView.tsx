@@ -210,6 +210,7 @@ export function BranchDetailView({ branchId, userId, userName }: BranchDetailVie
       {activeTab === "doctors" && (
         <BranchDoctorsTab
           branchId={branchId}
+          branchName={branch.name}
           members={branch.members}
           userRole={branch.userRole}
           onRefresh={fetchBranch}

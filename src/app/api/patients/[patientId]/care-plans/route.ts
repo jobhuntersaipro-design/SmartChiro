@@ -18,6 +18,7 @@ import {
 } from "@/lib/series-service";
 import { clinicInstantFromInputs } from "@/lib/clinic-time";
 import type { SeriesRule } from "@/lib/series";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ patientId: string }> };
 type Body = z.infer<typeof CreateCarePlanSchema>;
@@ -90,6 +91,8 @@ async function prepare(userId: string, access: PatientAccess, d: Body): Promise<
  * optional `series` books the visits — all in one transaction.
  */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { patientId } = await ctx.params;
   const auth = await authorize(patientId);
   if (!auth.ok) return auth.res;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { branchAccess, toPublicAccount } from "@/lib/whatsapp/account";
 import { connectAccount, connectErrorResponse } from "@/lib/whatsapp/onboarding";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -13,6 +14,8 @@ const Body = z.object({
 
 /** Connects with IDs + a token from Meta's dashboard (test number, BSP, etc.). */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });

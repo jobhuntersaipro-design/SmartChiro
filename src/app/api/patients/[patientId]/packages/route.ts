@@ -10,6 +10,7 @@ import {
   serializePatientPackage,
   userNamesFor,
 } from "@/lib/package-service";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ patientId: string }> };
 
@@ -50,6 +51,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { patientId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized", message: "Sign in required." }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const access = await loadPatientAccess(user.id, patientId);
   if (!access) return notFound();

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireXrayAccess } from '@/lib/auth/xray-guard'
 import { buildXrayKey, headR2Object, readR2ObjectPrefix } from '@/lib/r2'
 import { checkUploadedImage, SNIFF_BYTES } from '@/lib/image-sniff'
+import { paywallCurrentUser } from '@/lib/paywall'
 
 const confirmSchema = z.object({
   width: z.number().int().min(100, 'Image must be at least 100 × 100 pixels.').max(16384, 'Image dimensions exceed the maximum of 16384 × 16384 pixels.'),
@@ -22,6 +23,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ xrayId: string }> }
 ) {
+  const blocked = await paywallCurrentUser()
+  if (blocked) return blocked
   try {
     const { xrayId } = await params
     const guard = await requireXrayAccess(xrayId)

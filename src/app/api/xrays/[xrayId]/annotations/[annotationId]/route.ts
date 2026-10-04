@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { canManageXray } from "@/lib/auth/xray";
 import { countShapes } from "@/lib/annotation-content";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB
 const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -65,6 +66,8 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
 // PUT /api/xrays/{xrayId}/annotations/{annotationId} — update annotation
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { xrayId, annotationId } = await params;
 
   const gate = await authorize(xrayId, annotationId);
@@ -119,6 +122,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/xrays/{xrayId}/annotations/{annotationId} — hard delete
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { xrayId, annotationId } = await params;
 
   const gate = await authorize(xrayId, annotationId);

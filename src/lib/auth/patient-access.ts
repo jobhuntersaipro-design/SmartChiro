@@ -13,7 +13,8 @@ export interface PatientAccess {
 }
 
 /**
- * The patient routes' access rule: the assigned doctor, or a member of the
+ * The patient routes' access rule: the assigned doctor (while still a member
+ * of the patient's branch), or a member of the
  * patient's branch whose role works across every patient (OWNER, ADMIN,
  * FRONT_DESK). FRONT_DESK gets demographics only — `clinical` is false.
  */
@@ -30,9 +31,10 @@ export async function getPatientAccess(userId: string, patientId: string): Promi
   });
   const role = membership?.role ?? null;
 
-  const isAssigned = patient.doctorId === userId;
+  // The assigned doctor only while they still work in the patient's branch:
+  // a removed doctor loses access to the patients they were assigned.
+  const isAssigned = role !== null && patient.doctorId === userId;
   const allowed = isAssigned || can(role, "patient.readAll");
-  // An assigned doctor who has since left the branch keeps access, as before.
-  const clinical = allowed && (role ? can(role, "clinical.read") : isAssigned);
+  const clinical = allowed && can(role, "clinical.read");
   return { patient, role, allowed, clinical };
 }

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
-import type { BranchRole } from "@prisma/client";
+import { managedDoctorBranches } from "@/lib/auth/doctor-access";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ userId: string }> };
 
@@ -19,22 +20,15 @@ const PutBody = z.object({
   slots: z.array(Slot).max(50),
 });
 
-async function authorizeDoctorAccess(callerId: string, doctorId: string): Promise<BranchRole | null> {
-  if (callerId === doctorId) return "DOCTOR";
-  const sharedBranches = await prisma.branchMember.findMany({
-    where: { userId: doctorId },
-    select: { branchId: true },
-  });
-  if (sharedBranches.length === 0) return null;
-  const callerMembership = await prisma.branchMember.findFirst({
-    where: {
-      userId: callerId,
-      branchId: { in: sharedBranches.map((b) => b.branchId) },
-      role: { in: ["OWNER", "ADMIN"] },
-    },
-    select: { role: true },
-  });
-  return callerMembership?.role ?? null;
+/**
+ * Branches whose break times the caller may see and change: all of the
+ * doctor's own branches for the doctor, else the shared branches where the
+ * caller is OWNER/ADMIN. Null when that's none.
+ */
+async function visibleBranches(callerId: string, doctorId: string): Promise<string[] | null> {
+  const { doctor, managed } = await managedDoctorBranches(callerId, doctorId);
+  const ids = callerId === doctorId ? doctor : managed;
+  return ids.length > 0 ? ids : null;
 }
 
 export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
@@ -42,14 +36,14 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   const caller = await getCurrentUser();
   if (!caller) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const role = await authorizeDoctorAccess(caller.id, userId);
-  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const branchIds = await visibleBranches(caller.id, userId);
+  if (!branchIds) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const url = new URL(req.url);
   const branchId = url.searchParams.get("branchId");
 
   const rows = await prisma.doctorBreakTime.findMany({
-    where: { userId, ...(branchId ? { branchId } : {}) },
+    where: { userId, branchId: branchId ? { in: branchIds.filter((id) => id === branchId) } : { in: branchIds } },
     orderBy: [{ branchId: "asc" }, { dayOfWeek: "asc" }, { startMinute: "asc" }],
   });
 
@@ -73,12 +67,11 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
   const { userId } = await ctx.params;
   const caller = await getCurrentUser();
   if (!caller) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(caller.id);
+  if (blocked) return blocked;
 
-  const role = await authorizeDoctorAccess(caller.id, userId);
-  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (role === "DOCTOR" && caller.id !== userId) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const branchIds = await visibleBranches(caller.id, userId);
+  if (!branchIds) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const parsed = PutBody.safeParse(await req.json());
   if (!parsed.success) {
@@ -100,13 +93,9 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
     }
   }
 
-  // Doctor must be a member of this branch
-  const isMember = await prisma.branchMember.findUnique({
-    where: { userId_branchId: { userId, branchId } },
-    select: { userId: true },
-  });
-  if (!isMember) {
-    return NextResponse.json({ error: "doctor_not_in_branch" }, { status: 422 });
+  // The doctor works in this branch and the caller manages it (or is the doctor).
+  if (!branchIds.includes(branchId)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   await prisma.$transaction([

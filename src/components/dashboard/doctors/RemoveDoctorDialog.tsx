@@ -97,7 +97,8 @@ export function RemoveDoctorDialog({
               <p className="text-[13px] text-warning">
                 {doctor.stats.patientCount} patient
                 {doctor.stats.patientCount > 1 ? "s are" : " is"} currently
-                assigned to this doctor and will need to be reassigned.
+                assigned to this doctor. Once removed they can no longer open
+                these records, so reassign the patients to another doctor.
               </p>
             </div>
           )}

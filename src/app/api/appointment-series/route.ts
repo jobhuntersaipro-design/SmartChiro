@@ -16,6 +16,7 @@ import {
   seriesRuleHasEnd,
   splitOccurrences,
 } from "@/lib/series-service";
+import { paywall } from "@/lib/paywall";
 
 const Body = SeriesRuleSchema.extend({
   patientId: z.string().min(1),
@@ -49,6 +50,8 @@ async function linksBelongToPatient(patientId: string, carePlanId?: string, pati
 export async function POST(req: Request): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized", message: "Sign in required." }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {

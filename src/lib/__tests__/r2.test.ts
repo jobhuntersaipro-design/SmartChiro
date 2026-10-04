@@ -8,11 +8,22 @@ vi.stubEnv('R2_BUCKET_NAME', 'test-bucket')
 vi.stubEnv('R2_PUBLIC_URL', 'https://cdn.example.com')
 
 // Mock the S3 SDK so the module can be imported without real credentials
+const send = vi.fn()
 vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: class MockS3Client {},
+  S3Client: class MockS3Client {
+    send = send
+  },
   PutObjectCommand: class MockPutObjectCommand {},
   DeleteObjectCommand: class MockDeleteObjectCommand {},
   GetObjectCommand: class MockGetObjectCommand {},
+  ListObjectsV2Command: class MockList {
+    kind = 'list'
+    constructor(public input: unknown) {}
+  },
+  DeleteObjectsCommand: class MockDelete {
+    kind = 'delete'
+    constructor(public input: unknown) {}
+  },
 }))
 
 vi.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -52,13 +63,40 @@ describe('buildExportKey', () => {
   })
 
   it('builds the correct export key for PNG', () => {
-    const key = buildExportKey('branch-1', 'patient-2', 'xray-3', 'export-abc', 'png')
-    expect(key).toBe('xrays/branch-1/patient-2/xray-3/exports/export-abc.png')
+    const key = buildExportKey('patient-2', 'xray-3', 'export-abc', 'png')
+    expect(key).toBe('exports/patient-2/xray-3/export-abc.png')
   })
 
   it('builds the correct export key for PDF', () => {
-    const key = buildExportKey('c1', 'p2', 'x3', 'exp-123', 'pdf')
-    expect(key).toBe('xrays/c1/p2/x3/exports/exp-123.pdf')
+    const key = buildExportKey('p2', 'x3', 'exp-123', 'pdf')
+    expect(key).toBe('exports/p2/x3/exp-123.pdf')
+  })
+})
+
+describe('patient file cleanup', () => {
+  it('finds each X-ray folder from its URL plus the exports folder; ignores other URLs', async () => {
+    const { patientR2Prefixes } = await import('../r2')
+    expect(
+      patientR2Prefixes('p2', [
+        'https://cdn.example.com/xrays/b1/p2/x1/original.jpg',
+        'https://cdn.example.com/xrays/b0/p2/x2/original.png',
+        'https://elsewhere.example.com/xrays/b1/p2/x9/original.jpg',
+      ]),
+    ).toEqual(['xrays/b1/p2/x1/', 'xrays/b0/p2/x2/', 'exports/p2/'])
+  })
+
+  it('deletes every object under a prefix, page by page', async () => {
+    const { deleteR2Prefix } = await import('../r2')
+    send.mockReset()
+    send
+      .mockResolvedValueOnce({ Contents: [{ Key: 'a/1' }, { Key: 'a/2' }], IsTruncated: true, NextContinuationToken: 't' })
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ Contents: [{ Key: 'a/3' }], IsTruncated: false })
+      .mockResolvedValueOnce({})
+    expect(await deleteR2Prefix('a/')).toBe(3)
+    const deletes = send.mock.calls.map(([c]) => c).filter((c) => c.kind === 'delete')
+    expect(deletes.map((c) => c.input.Delete.Objects)).toEqual([[{ Key: 'a/1' }, { Key: 'a/2' }], [{ Key: 'a/3' }]])
+    expect(send.mock.calls[2][0].input).toMatchObject({ Prefix: 'a/', ContinuationToken: 't' })
   })
 })
 

@@ -252,6 +252,44 @@ export async function sendPasswordResetEmail(
   }
 }
 
+/** "You've been invited to join <branch>" — fail-soft, skipped without RESEND_API_KEY. */
+export async function sendBranchInviteEmail(args: {
+  to: string
+  name: string | null
+  branchName: string
+  inviterName: string | null
+  role: string
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return
+  const role = { OWNER: 'owner', ADMIN: 'admin', DOCTOR: 'doctor', FRONT_DESK: 'front desk' }[args.role] ?? args.role.toLowerCase()
+  const who = args.inviterName ? `${args.inviterName} has` : 'You have been'
+  const lead = args.inviterName
+    ? `${escapeHtml(args.inviterName)} has invited you to join <strong>${escapeHtml(args.branchName)}</strong> as ${role}.`
+    : `You have been invited to join <strong>${escapeHtml(args.branchName)}</strong> as ${role}.`
+  const url = `${APP_URL}/dashboard`
+  try {
+    await resend().emails.send({
+      from: 'SmartChiro <noreply@smartchiro.org>',
+      to: args.to,
+      subject: `Invitation to join ${args.branchName} on SmartChiro`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 20px; color: #0b0b0b;">
+          <p style="margin: 0 0 16px; font-size: 15px;">Hi${args.name ? ` ${escapeHtml(args.name.split(' ')[0])}` : ''},</p>
+          <p style="margin: 0 0 16px; font-size: 15px;">${lead}</p>
+          <p style="margin: 0 0 16px; font-size: 15px;">Sign in to SmartChiro to accept or decline. Nothing changes until you accept.</p>
+          <p style="margin: 24px 0 0;">
+            <a href="${url}" style="background: #7747ff; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-weight: 500; font-size: 14px;">Open SmartChiro</a>
+          </p>
+          <p style="margin: 32px 0 0; font-size: 12px; color: #7d7d7d;">If you don't know this clinic, decline the invitation or ignore this email.</p>
+        </div>
+      `,
+      text: `${who} invited you to join ${args.branchName} as ${role}.\n\nSign in to SmartChiro to accept or decline: ${url}\n\nNothing changes until you accept.`,
+    })
+  } catch (e) {
+    console.error('branch invite email failed', { to: args.to, error: e })
+  }
+}
+
 // ─── Reminder emails ───
 
 export type ReminderEmailResult =

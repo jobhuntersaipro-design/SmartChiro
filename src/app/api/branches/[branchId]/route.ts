@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clearActiveBranch } from "@/lib/branch-context";
 import { normalizeWebsite } from "@/lib/branch-fields";
 import { can } from "@/lib/permissions";
 import { snapshotOf, diffSnapshots } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
+import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ branchId: string }> };
 
@@ -154,6 +156,8 @@ export async function PATCH(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { branchId } = await params;
 
@@ -296,6 +300,8 @@ export async function DELETE(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { branchId } = await params;
 
@@ -324,6 +330,7 @@ export async function DELETE(
   const branchName = branch.name;
 
   await prisma.branch.delete({ where: { id: branchId } });
+  await clearActiveBranch([branchId]);
 
   // Audit (fail-soft — must not block the user action). Note: the audit row
   // intentionally has no FK to Branch, so it survives the delete above.

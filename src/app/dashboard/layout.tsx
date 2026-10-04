@@ -7,6 +7,8 @@ import { loadBranchContext } from "@/lib/branch-context";
 import { accountAccess, planViewProps } from "@/lib/subscription";
 import { trialDaysLeft } from "@/lib/plans";
 import { activityStale, recordActivity } from "@/lib/login-activity";
+import { pendingInvites } from "@/lib/branch-invites";
+import { BranchInvitesBanner } from "@/components/dashboard/BranchInvitesBanner";
 
 export default async function DashboardLayout({
   children,
@@ -19,9 +21,10 @@ export default async function DashboardLayout({
     // disabled or deleted: clear it (redirecting to /login would loop).
     redirect(`/api/session/end${session?.error === "account_disabled" ? "?reason=account_disabled" : ""}`);
   }
-  const [{ branches, activeBranchId, allBranches, canUseAllBranches }, access] = await Promise.all([
+  const [{ branches, activeBranchId, allBranches, canUseAllBranches }, access, invites] = await Promise.all([
     loadBranchContext(session.user.id),
     accountAccess(session.user.id),
+    pendingInvites(session.user.id),
   ]);
   if (!access || access.disabled) redirect(`/api/session/end${access ? "?reason=account_disabled" : ""}`);
   // "Last active" on the super admin page, written after the response.
@@ -33,6 +36,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShell
       blocked={!access.allowed}
+      banner={invites.length > 0 ? <BranchInvitesBanner invites={invites} /> : null}
       user={{
         id: session.user.id,
         name: session.user.name ?? null,

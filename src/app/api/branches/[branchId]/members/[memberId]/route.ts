@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clearActiveBranch } from "@/lib/branch-context";
 import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
+import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ branchId: string; memberId: string }> };
 
@@ -65,6 +67,8 @@ export async function DELETE(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { branchId, memberId } = await params;
 
@@ -92,6 +96,7 @@ export async function DELETE(
 
   try {
     await prisma.branchMember.delete({ where: { id: memberId } });
+    await clearActiveBranch([branchId], [targetMember.userId]);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
@@ -107,6 +112,8 @@ export async function PATCH(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { branchId, memberId } = await params;
 

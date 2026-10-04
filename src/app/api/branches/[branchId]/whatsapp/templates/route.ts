@@ -4,11 +4,14 @@ import { branchAccess, toPublicAccount } from "@/lib/whatsapp/account";
 import { decryptSecret } from "@/lib/whatsapp/crypto";
 import { GraphError } from "@/lib/whatsapp/graph";
 import { ensureWhatsAppTemplates } from "@/lib/whatsapp/templates";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
 /** Creates any missing template language (reminder, recall, review) and refreshes approval status. */
 export async function POST(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });

@@ -12,6 +12,7 @@ import {
   accountCodesOf,
   type BranchAccountColumns,
 } from "@/lib/accounting-export";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -136,6 +137,8 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
   const role = await getUserBranchRole(user.id, branchId);
   if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (role !== "OWNER") return NextResponse.json({ error: "forbidden" }, { status: 403 });

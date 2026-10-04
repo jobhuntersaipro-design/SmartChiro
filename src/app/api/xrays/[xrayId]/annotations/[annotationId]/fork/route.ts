@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { canManageXray } from "@/lib/auth/xray";
 import { countShapes } from "@/lib/annotation-content";
+import { paywall } from "@/lib/paywall";
 
 type RouteParams = { params: Promise<{ xrayId: string; annotationId: string }> };
 
@@ -14,6 +15,8 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
   if (!(await canManageXray(session.user.id, xrayId))) {
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }

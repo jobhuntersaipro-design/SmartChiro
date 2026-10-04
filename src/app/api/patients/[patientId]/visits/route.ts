@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getPatientAccess } from "@/lib/auth/patient-access";
+import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
@@ -118,6 +119,8 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { patientId } = await params;
   const { patient, allowed } = await checkPatientAccess(session.user.id, patientId);

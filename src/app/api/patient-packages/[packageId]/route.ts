@@ -5,6 +5,7 @@ import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { isManagerRole } from "@/lib/package-access";
 import { PATIENT_PACKAGE_INCLUDE, serializePatientPackage, userNamesFor } from "@/lib/package-service";
 import { cancelInvoiceData, type AnyInvoiceStatus } from "@/lib/invoices";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ packageId: string }> };
 
@@ -26,6 +27,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const { packageId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized", message: "Sign in required." }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const pkg = await prisma.patientPackage.findUnique({
     where: { id: packageId },

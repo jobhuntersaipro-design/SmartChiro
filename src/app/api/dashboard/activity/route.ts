@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
+import { dashboardScope } from "@/lib/branch-context";
+import { scopedWhere } from "@/lib/branch-scope";
 import type { ActivityItem } from "@/components/dashboard/shared/ActivityFeed";
 
 export async function GET(req: NextRequest) {
@@ -13,41 +15,28 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const branchId = searchParams.get("branchId");
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "8"), 20);
-  const userId = session.user.id;
-  const branchRole = session.user.branchRole;
-
-  // Determine branch scope
-  let branchIds: string[];
-  if (branchRole === "DOCTOR") {
-    branchIds = session.user.activeBranchId ? [session.user.activeBranchId] : [];
-  } else if (branchId && branchId !== "all") {
-    const member = await prisma.branchMember.findUnique({
-      where: { userId_branchId: { userId, branchId } },
-      select: { role: true },
-    });
-    if (!member) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
-    branchIds = [branchId];
-  } else {
-    const memberships = await prisma.branchMember.findMany({
-      where: { userId },
-      select: { branchId: true },
-    });
-    branchIds = memberships.map((m) => m.branchId);
-  }
-
-  if (branchIds.length === 0) {
+  const scope = await dashboardScope(session.user.id, branchId);
+  if (!scope) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+  if (scope.branchIds.length === 0) {
     return NextResponse.json({ activities: [] });
   }
+  // Doctors see their own patients; X-ray events are clinical, so only from
+  // branches where the role sees clinical stats (never front desk).
+  const patientWhere = scopedWhere(scope, session.user.id);
+  const clinicalScope = {
+    ...scope,
+    branchIds: scope.branchIds.filter((id) => can(scope.roles[id], "dashboard.clinicalStats")),
+  };
+  const clinicalPatientWhere = scopedWhere(clinicalScope, session.user.id);
+  const clinical = clinicalScope.branchIds.length > 0;
 
   // Three independent lookups, run together. Each selects only what the feed
   // shows — the annotation query used to load full canvasState JSON.
   const patientRef = { select: { firstName: true, lastName: true, branch: { select: { name: true } } } } as const;
-  // X-ray and annotation events are clinical — front desk only sees new patients.
-  const clinical = can(branchRole, "dashboard.clinicalStats");
   const [annotations, patients, xrays] = await Promise.all([
     prisma.annotation.findMany({
       // Only annotations with something drawn — an empty row is not "annotated".
-      where: { shapeCount: { gt: 0 }, xray: { patient: { branchId: { in: branchIds } } } },
+      where: { shapeCount: { gt: 0 }, xray: { patient: clinicalPatientWhere } },
       select: {
         id: true,
         updatedAt: true,
@@ -58,13 +47,13 @@ export async function GET(req: NextRequest) {
       take: clinical ? limit : 0,
     }),
     prisma.patient.findMany({
-      where: { branchId: { in: branchIds } },
+      where: patientWhere,
       select: { id: true, firstName: true, lastName: true, createdAt: true, branch: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: limit,
     }),
     prisma.xray.findMany({
-      where: { patient: { branchId: { in: branchIds } }, status: "READY" },
+      where: { patient: clinicalPatientWhere, status: "READY" },
       select: { id: true, createdAt: true, patient: patientRef },
       orderBy: { createdAt: "desc" },
       take: clinical ? limit : 0,

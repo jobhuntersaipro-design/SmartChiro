@@ -4,6 +4,7 @@ import { branchAccess, toPublicAccount } from "@/lib/whatsapp/account";
 import { signupConfig } from "@/lib/whatsapp/config";
 import { decryptSecret } from "@/lib/whatsapp/crypto";
 import { unsubscribeApp } from "@/lib/whatsapp/onboarding";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -21,6 +22,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 }
 
 export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });

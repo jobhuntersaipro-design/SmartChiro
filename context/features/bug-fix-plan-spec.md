@@ -4,17 +4,20 @@ Every bug below was traced end to end in the code by a read-only audit (six area
 access control, appointments and reminders, money, patients/booking/portal, X-ray and
 AI, shell/settings/admin) plus a read-only pass over smartchiro.org with the test
 logins. Several were found independently by two or three reviewers; they appear once.
-Nothing here is fixed yet.
+Phase 1 is fixed (4 Oct 2026); phases 2–5 are not yet.
 
 Fix one phase per branch, in order. Each fix gets a test that fails before it. Ship
 when build, lint and tests pass, then prove it on production (CLAUDE.md).
 
 **Severity:** 🔴 critical · 🟠 high · 🟡 medium · ⚪ low
-**Decision** = needs an answer from the owner before it can be fixed (listed at the end).
+**Decision** = answered by the owner (listed at the end).
 
 ---
 
 ## Phase 1 — Security and privacy
+
+**Done 4 Oct 2026** (all of S1–S12; regression tests in
+`src/app/api/__tests__/security-phase1.test.ts`).
 
 Patient data leaking between clinics or to strangers. Fix first.
 
@@ -287,12 +290,16 @@ Wrong charges, missing revenue in the books, subscriptions.
 
 ---
 
-## Decisions needed from the owner
+## Decisions (owner, 4 Oct 2026)
 
-- **D1 (S2):** adding staff who already have a SmartChiro account: send an invite they accept (recommended), or only allow adding people with no other clinic?
-- **D2 (S9):** when a clinic's trial ends without a plan, should staff still be able to read and export their data through the app (recommended: read-only), or nothing at all?
-- **D3 (M7):** after an ownership transfer, should the new owner's plan cover the branch (recommended: move billing to the new owner), or stay with the creator?
-- **D4 (P2):** patient email unique per branch (recommended) instead of across all clinics?
+- **D1 (S2): invite.** Adding staff who already have a SmartChiro account sends an
+  invite they accept from their dashboard; accounts the owner creates (new email)
+  join straight away.
+- **D2 (S9): read-only.** When a trial ends without a plan, the account can still
+  read and export its data; every create / edit / delete answers 402.
+- **D3 (M7): move billing.** After an ownership transfer the branch is billed to the
+  new owner.
+- **D4 (P2): per branch.** Patient email is unique per branch, not across all clinics.
 
 ## Checked and fine
 

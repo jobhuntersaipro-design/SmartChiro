@@ -3,11 +3,15 @@ import { NextRequest } from 'next/server'
 
 // Mock Prisma
 const mockFindUnique = vi.fn()
+const mockFindRecentToken = vi.fn()
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
       findUnique: (...args: unknown[]) => mockFindUnique(...args),
+    },
+    verificationToken: {
+      findFirst: (...args: unknown[]) => mockFindRecentToken(...args),
     },
   },
 }))
@@ -84,5 +88,18 @@ describe('POST /api/auth/resend-verification', () => {
 
     await POST(createRequest({ email: 'user@test.com' }))
     expect(mockSendVerificationEmail).toHaveBeenCalledWith('user@test.com', 'there')
+  })
+
+  it('sends at most one email a minute per address', async () => {
+    mockFindUnique.mockResolvedValue({ email: 'user@test.com', name: 'Dr. Test', emailVerified: null })
+    mockFindRecentToken.mockResolvedValueOnce({ identifier: 'user@test.com' })
+
+    const res = await POST(createRequest({ email: 'user@test.com' }))
+    expect(res.status).toBe(200)
+    expect(mockSendVerificationEmail).not.toHaveBeenCalled()
+    const where = mockFindRecentToken.mock.calls[0][0].where
+    expect(where.identifier).toBe('user@test.com')
+    // made within the last minute = expires more than 24h − 60s from now
+    expect(where.expires.gt.getTime()).toBeGreaterThan(Date.now() + 24 * 3600_000 - 61_000)
   })
 })

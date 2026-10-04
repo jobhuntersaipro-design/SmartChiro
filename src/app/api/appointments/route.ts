@@ -12,6 +12,7 @@ import { sendDoctorBookingNotification } from "@/lib/email";
 import { treatmentLabelFor } from "@/lib/treatment-colors";
 import type { AppointmentStatus } from "@/types/appointment";
 import { clinicCalendar } from "@/lib/clinic-time";
+import { paywall } from "@/lib/paywall";
 
 const TREATMENT_TYPES = [
   "INITIAL_CONSULT",
@@ -185,6 +186,8 @@ const Body = z.object({
 export async function POST(req: Request): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const parsed = Body.safeParse(await req.json());
   if (!parsed.success) {

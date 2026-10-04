@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { inviteExistingUser } from "@/lib/branch-invites";
 import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
+import { paywall } from "@/lib/paywall";
 
 // GET: List members of a branch
 export async function GET(
@@ -55,6 +57,8 @@ export async function POST(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { branchId } = await params;
 
@@ -106,13 +110,14 @@ export async function POST(
     );
   }
 
-  const member = await prisma.branchMember.create({
-    data: {
-      userId: user.id,
-      branchId,
-      role,
-    },
+  // An existing account joins only once they accept — otherwise any clinic
+  // could attach another clinic's doctor and read their records.
+  await inviteExistingUser({
+    user,
+    branchId,
+    role,
+    invitedBy: { id: session.user.id, name: session.user.name ?? null },
   });
 
-  return NextResponse.json({ member }, { status: 201 });
+  return NextResponse.json({ invited: true }, { status: 202 });
 }

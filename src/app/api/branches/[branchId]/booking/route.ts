@@ -11,6 +11,7 @@ import { hasWorkingSchedule } from "@/lib/reports/utilisation";
 import { TREATMENT_OPTIONS } from "@/lib/treatment-colors";
 import { BOOKING_LIMITS, effectiveTreatments, isValidSlug, suggestSlug } from "@/lib/booking/config";
 import type { BranchBookingSettingsResponse } from "@/types/booking";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -100,6 +101,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 }
 
 export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const auth = await authorize(branchId);
   if (!auth.ok) return auth.response;

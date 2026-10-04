@@ -5,6 +5,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { auth } from '@/lib/auth'
 import { canManagePatientXrays } from '@/lib/auth/xray'
 import { checkUploadedImage } from '@/lib/image-sniff'
+import { paywall } from '@/lib/paywall'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300 MB
@@ -27,6 +28,8 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+    const blocked = await paywall(session.user.id)
+    if (blocked) return blocked
     const uploadedById = session.user.id
 
     const formData = await request.formData()

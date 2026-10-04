@@ -11,6 +11,7 @@ import {
   submitConsolidated,
 } from "@/lib/myinvois/service";
 import type { ConsolidatedPreview } from "@/types/einvoice";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -70,6 +71,8 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
 
 /** Build and submit the consolidated e-invoice for a completed month. OWNER / ADMIN. */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const auth = await authorise(branchId);
   if (auth instanceof Response) return auth;

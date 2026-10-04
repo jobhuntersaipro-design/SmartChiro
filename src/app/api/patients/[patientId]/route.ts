@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteR2Prefix, patientR2Prefixes } from "@/lib/r2";
 import { reminderChannelError } from "@/lib/reminder-channel";
 import { PATIENT_LANGUAGE_VALUES, consentFields } from "@/lib/outreach/consent";
 import { getPatientAccess } from "@/lib/auth/patient-access";
 import { can } from "@/lib/permissions";
 import { isValidMyKad, parseNationality } from "@/lib/invoices";
+import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ patientId: string }> };
 
@@ -209,6 +211,8 @@ export async function PATCH(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { patientId } = await params;
   const {
@@ -482,6 +486,8 @@ export async function DELETE(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { patientId } = await params;
   const { patient, allowed, role } = await getPatientAccess(session.user.id, patientId);
@@ -499,7 +505,18 @@ export async function DELETE(
     return NextResponse.json({ error: "Only the branch owner or an admin can delete patients" }, { status: 403 });
   }
 
+  const xrays = await prisma.xray.findMany({ where: { patientId }, select: { fileUrl: true } });
   await prisma.patient.delete({ where: { id: patientId } });
+
+  // The films and exports are public-URL objects: delete them too, so a
+  // deleted patient's X-rays can't still be opened. Best effort.
+  if (process.env.R2_PUBLIC_URL) {
+    try {
+      await Promise.all(patientR2Prefixes(patientId, xrays.map((x) => x.fileUrl)).map(deleteR2Prefix));
+    } catch (err) {
+      console.error(`[patients] R2 files of deleted patient ${patientId} not removed:`, err);
+    }
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { can } from "@/lib/permissions";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -14,12 +15,16 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   // Look up the appointment to find its branch — needed for cross-branch leak check.
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    select: { branchId: true },
+    select: { branchId: true, doctorId: true },
   });
   if (!appt) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+  // Managers, front desk (they run the schedule) and the appointment's own
+  // doctor — not every doctor in the branch.
   const role = await getUserBranchRole(caller.id, appt.branchId);
-  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const allowed =
+    !!role && (can(role, "audit.read") || can(role, "appointment.manageAll") || appt.doctorId === caller.id);
+  if (!allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const url = new URL(req.url);
   const requestedLimit = Number(url.searchParams.get("limit") ?? 50);

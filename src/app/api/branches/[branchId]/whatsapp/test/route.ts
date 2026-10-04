@@ -3,6 +3,7 @@ import { z } from "zod";
 import { branchAccess } from "@/lib/whatsapp/account";
 import { sendReminderTemplate } from "@/lib/whatsapp/send";
 import { SAMPLE_TEMPLATE_PARAMS } from "@/lib/whatsapp/templates";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -13,6 +14,8 @@ const Body = z.object({
 
 /** Sends the reminder template with sample values so owners can check delivery. */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });

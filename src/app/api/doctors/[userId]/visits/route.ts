@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { can } from "@/lib/permissions";
+import { doctorRecordBranches } from "@/lib/auth/doctor-access";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -15,37 +15,19 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
   const { searchParams } = req.nextUrl;
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "5", 10)));
 
-  // Verify target user exists
-  const targetUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, branchMemberships: { select: { branchId: true } } },
-  });
-
-  if (!targetUser) {
+  // Visits carry SOAP text: only branches where the caller sees every
+  // patient's clinical record (never front desk or a peer doctor), and never
+  // the doctor's visits at another clinic.
+  const branchIds = await doctorRecordBranches(session.user.id, userId, ["patient.readAll", "clinical.read"]);
+  if (!branchIds) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
-  // Caller must share at least one branch with target, in a role that sees
-  // clinical notes (visits carry SOAP text — never front desk).
-  if (session.user.id !== userId) {
-    const callerBranches = await prisma.branchMember.findMany({
-      where: { userId: session.user.id },
-      select: { branchId: true, role: true },
-    });
-    const targetBranchIds = new Set(targetUser.branchMemberships.map((m) => m.branchId));
-    const sharedRoles = callerBranches
-      .filter((m) => targetBranchIds.has(m.branchId))
-      .map((m) => m.role);
-    if (sharedRoles.length === 0) {
-      return NextResponse.json({ error: "Forbidden: no shared branch" }, { status: 403 });
-    }
-    if (!sharedRoles.some((role) => can(role, "clinical.read"))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  if (branchIds.length === 0) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const visits = await prisma.visit.findMany({
-    where: { doctorId: userId },
+    where: { doctorId: userId, patient: { branchId: { in: branchIds } } },
     include: {
       patient: { select: { id: true, firstName: true, lastName: true } },
     },

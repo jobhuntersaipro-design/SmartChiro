@@ -6,6 +6,7 @@ import { can } from "@/lib/permissions";
 import { DEFAULT_TEMPLATES } from "@/lib/reminders/default-templates";
 import { DEFAULT_OUTREACH_SETTINGS } from "@/lib/outreach/rules";
 import type { OutreachSettingsData } from "@/types/outreach";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -60,6 +61,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 }
 
 export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const a = await access(branchId);
   if (!a.ok) return a.res;

@@ -1,4 +1,12 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+} from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!
@@ -130,14 +138,51 @@ export function getR2PublicUrl(key: string): string {
 
 /**
  * Build the R2 storage key for an export file.
- * Structure: /xrays/{branchId}/{patientId}/{xrayId}/exports/{exportId}.{ext}
+ * Structure: exports/{patientId}/{xrayId}/{exportId}.{ext} — one top-level
+ * prefix so a bucket lifecycle rule can expire them (the download link only
+ * lasts 24 hours).
  */
 export function buildExportKey(
-  branchId: string,
   patientId: string,
   xrayId: string,
   exportId: string,
   ext: 'png' | 'pdf'
 ): string {
-  return `xrays/${branchId}/${patientId}/${xrayId}/exports/${exportId}.${ext}`
+  return `exports/${patientId}/${xrayId}/${exportId}.${ext}`
+}
+
+/** The object key behind one of our public R2 URLs (null for any other URL). */
+export function r2KeyFromUrl(url: string): string | null {
+  const base = process.env.R2_PUBLIC_URL
+  return base && url.startsWith(`${base}/`) ? url.slice(base.length + 1) : null
+}
+
+/** Delete every object under `prefix` (1,000 per request). Returns how many. */
+export async function deleteR2Prefix(prefix: string): Promise<number> {
+  let deleted = 0
+  let token: string | undefined
+  do {
+    const list = await r2Client.send(
+      new ListObjectsV2Command({ Bucket: R2_BUCKET_NAME, Prefix: prefix, ContinuationToken: token }),
+    )
+    const objects = (list.Contents ?? []).flatMap((o) => (o.Key ? [{ Key: o.Key }] : []))
+    if (objects.length > 0) {
+      await r2Client.send(new DeleteObjectsCommand({ Bucket: R2_BUCKET_NAME, Delete: { Objects: objects, Quiet: true } }))
+      deleted += objects.length
+    }
+    token = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (token)
+  return deleted
+}
+
+/**
+ * Storage prefixes holding a patient's files: each X-ray's folder (from its
+ * stored URL, so a patient who changed branch is covered) and their exports.
+ */
+export function patientR2Prefixes(patientId: string, xrayFileUrls: string[]): string[] {
+  const folders = xrayFileUrls.flatMap((url) => {
+    const key = r2KeyFromUrl(url)
+    return key && key.includes('/') ? [key.slice(0, key.lastIndexOf('/') + 1)] : []
+  })
+  return [...new Set([...folders, `exports/${patientId}/`])]
 }

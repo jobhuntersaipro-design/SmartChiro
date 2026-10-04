@@ -29,8 +29,11 @@ export function DashboardShell({
   children,
   user,
   blocked = false,
+  banner = null,
 }: {
   children: React.ReactNode;
+  /** Shown above every page except the full-screen X-ray viewer (pending invites). */
+  banner?: React.ReactNode;
   user: SidebarUser;
   /** Access lapsed: `children` is the plan page, shown with the full shell even on X-ray pages. */
   blocked?: boolean;
@@ -82,7 +85,10 @@ export function DashboardShell({
         )}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar onOpenMenu={() => setMobileNavOpen(true)} />
-          <main className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-6">{children}</main>
+          <main className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-6">
+            {banner}
+            {children}
+          </main>
         </div>
       </div>
       {/* One toast host for every dashboard page (the full-screen viewer has its own). */}

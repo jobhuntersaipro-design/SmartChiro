@@ -4,6 +4,7 @@ import { requireXrayAccess } from "@/lib/auth/xray-guard";
 import type { BaseShape } from "@/types/annotation";
 import { extractLandmarkCorrections } from "@/lib/landmark-corrections";
 import { countShapes } from "@/lib/annotation-content";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 const MAX_CANVAS_STATE_SIZE = 10 * 1024 * 1024; // 10 MB hard cap
 const WARN_CANVAS_STATE_SIZE = 5 * 1024 * 1024; // 5 MB warning
@@ -102,6 +103,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ annotationId: string }> }
 ) {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { annotationId } = await params;
   const guard = await guardAnnotation(annotationId);
   if (guard.error) return guard.error;

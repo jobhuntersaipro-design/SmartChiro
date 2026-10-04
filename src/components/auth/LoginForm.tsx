@@ -47,6 +47,10 @@ export function LoginForm({
         setEmailNotVerified(true)
         return
       }
+      if (result.code === 'too_many_attempts') {
+        setError('Too many sign-in attempts. Wait a few minutes and try again, or reset your password.')
+        return
+      }
       if (result.code === 'account_disabled') {
         setError('This account has been disabled. Contact SmartChiro support.')
         return

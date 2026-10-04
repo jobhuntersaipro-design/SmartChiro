@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { UserPlus, Users, ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,12 +15,13 @@ import { plural } from "@/lib/format";
 
 interface BranchDoctorsTabProps {
   branchId: string;
+  branchName: string;
   members: BranchMemberDetail[];
   userRole: string;
   onRefresh: () => Promise<void>;
 }
 
-export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: BranchDoctorsTabProps) {
+export function BranchDoctorsTab({ branchId, branchName, members, userRole, onRefresh }: BranchDoctorsTabProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const canManage = userRole === "OWNER" || userRole === "ADMIN";
 
@@ -46,6 +48,10 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
     if (!res.ok) {
       const err = await res.json();
       return { success: false, error: err.error };
+    }
+    if (res.status === 202) {
+      toast.success(`Invitation sent to ${email}. They join once they accept.`);
+      return { success: true };
     }
     await onRefresh();
     return { success: true };
@@ -184,7 +190,7 @@ export function BranchDoctorsTab({ branchId, members, userRole, onRefresh }: Bra
       <ManageDoctorsSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        branchName=""
+        branchName={branchName}
         branchId={branchId}
         members={sheetMembers}
         onAddDoctor={handleAddDoctor}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
+import { getCurrentUser } from "@/lib/auth-utils";
+import { getPatientAccess } from "@/lib/auth/patient-access";
 import type { AppointmentStatus, InvoiceStatus, Prisma } from "@prisma/client";
 
 type RouteCtx = { params: Promise<{ patientId: string }> };
@@ -58,18 +59,10 @@ export async function GET(req: Request, ctx: RouteCtx): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-    select: { id: true, branchId: true, doctorId: true },
-  });
-  // Branch isolation: if user has no membership at the patient's branch (and is not assigned doctor),
-  // return 404 to avoid leaking existence.
-  if (!patient) {
-    return NextResponse.json({ error: "not_found" }, { status: 404 });
-  }
-  const role = await getUserBranchRole(user.id, patient.branchId);
-  const isAssignedDoctor = patient.doctorId === user.id;
-  if (!role && !isAssignedDoctor) {
+  // Same rule as the patient page: the assigned doctor (still in the branch)
+  // or a role that sees every patient. 404 so existence doesn't leak.
+  const access = await getPatientAccess(user.id, patientId);
+  if (!access.patient || !access.allowed) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 

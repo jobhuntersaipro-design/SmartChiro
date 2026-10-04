@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { isManagerRole } from "@/lib/package-access";
 import { PackageTemplateSchema, roundMoney, serializeTemplate } from "@/lib/package-service";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string; templateId: string }> };
 
@@ -31,6 +32,8 @@ async function guard(branchId: string, templateId: string): Promise<Guard> {
 
 /** Edit a template. Packages already sold keep their snapshot. */
 export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId, templateId } = await ctx.params;
   const g = await guard(branchId, templateId);
   if (!g.ok) return g.res;
@@ -62,6 +65,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 
 /** Soft delete: the template is retired (isActive=false); sold packages are untouched. */
 export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId, templateId } = await ctx.params;
   const g = await guard(branchId, templateId);
   if (!g.ok) return g.res;

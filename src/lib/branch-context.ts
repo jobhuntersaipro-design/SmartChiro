@@ -38,3 +38,28 @@ export async function branchIdsForParam(userId: string, branchId: string): Promi
   if (branchId !== 'all') return [branchId]
   return (await loadBranchContext(userId)).branches.map((b) => b.id)
 }
+
+/**
+ * Forget a remembered active branch the user no longer belongs to (member
+ * removed, branch deleted), so nothing falls back to it. `userIds` omitted
+ * clears it for everyone.
+ */
+export async function clearActiveBranch(branchIds: string[], userIds?: string[]) {
+  await prisma.user.updateMany({
+    where: { activeBranchId: { in: branchIds }, ...(userIds ? { id: { in: userIds } } : {}) },
+    data: { activeBranchId: null },
+  })
+}
+
+/**
+ * The scope for a dashboard widget's `?branchId=`: one member branch, or
+ * every membership for "all" / none. Null when the user isn't a member of
+ * the requested branch. Roles stay per branch (use `scopedWhere`).
+ */
+export async function dashboardScope(userId: string, branchId: string | null): Promise<BranchContext | null> {
+  const ctx = await loadBranchContext(userId)
+  if (branchId && branchId !== 'all') {
+    return ctx.roles[branchId] ? { ...ctx, branchIds: [branchId] } : null
+  }
+  return { ...ctx, branchIds: ctx.branches.map((b) => b.id) }
+}

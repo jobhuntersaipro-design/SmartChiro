@@ -6,6 +6,7 @@ import { connectionInfo } from "@/lib/myinvois/access";
 import { BRANCH_EINVOICE_SELECT, branchStateCode } from "@/lib/myinvois/service";
 import { validateSupplier } from "@/lib/myinvois/validate";
 import type { BranchEInvoiceSettings } from "@/types/einvoice";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 type BranchRow = NonNullable<Awaited<ReturnType<typeof load>>>;
@@ -69,6 +70,8 @@ const Body = z
 
 /** Update MSIC code, business activity and the e-invoicing toggle. OWNER only. */
 export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const auth = await roleFor(branchId);
   if (auth instanceof Response) return auth;

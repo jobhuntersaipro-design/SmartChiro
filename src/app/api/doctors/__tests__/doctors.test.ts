@@ -434,26 +434,25 @@ describe('PATCH /api/doctors/[userId]/status', () => {
     PATCH = mod.PATCH
   })
 
-  it('20. toggles active to inactive', async () => {
+  it('20. an owner of only one of the doctor\'s clinics can\'t change their status', async () => {
     mockAuth.mockResolvedValue({ user: { id: ownerId } })
     const res = await PATCH(
       createRequest('PATCH', `/api/doctors/${doctorId}/status`, { isActive: false }),
       { params: Promise.resolve({ userId: doctorId }) }
     )
-    expect(res.status).toBe(200)
-    const json = await res.json()
-    expect(json.isActive).toBe(false)
+    expect(res.status).toBe(403)
   })
 
-  it('21. toggles inactive to active', async () => {
+  it('21. the owner of every branch the person works in toggles their status', async () => {
     mockAuth.mockResolvedValue({ user: { id: ownerId } })
-    const res = await PATCH(
-      createRequest('PATCH', `/api/doctors/${doctorId}/status`, { isActive: true }),
-      { params: Promise.resolve({ userId: doctorId }) }
-    )
-    expect(res.status).toBe(200)
-    const json = await res.json()
-    expect(json.isActive).toBe(true)
+    for (const isActive of [false, true]) {
+      const res = await PATCH(
+        createRequest('PATCH', `/api/doctors/${adminId}/status`, { isActive }),
+        { params: Promise.resolve({ userId: adminId }) }
+      )
+      expect(res.status).toBe(200)
+      expect((await res.json()).isActive).toBe(isActive)
+    }
   })
 
   it('22. creates profile if none exists with isActive set', async () => {

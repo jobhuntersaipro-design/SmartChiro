@@ -2,7 +2,7 @@
 
 Things only the clinic owner can do: accounts, credentials, production data and
 business decisions. The code for every item is already on `main`. Tick items off here
-as you go. Last updated 2026-10-03, after the Pro price change.
+as you go. Last updated 2026-10-04, after bug-fix Phase 1.
 
 ## 1. Before deploying this merge
 
@@ -78,6 +78,10 @@ Full steps are in `context/features/whatsapp-cloud-api-spec.md` §8 and §11.
 - [ ] Add a CORS rule to the bucket that allows `PUT` from the app origin, so
   X-ray uploads go straight to R2. Until then, uploads fall back to the server,
   which only accepts files up to 4 MB.
+- [ ] Add a lifecycle rule that deletes objects under the `exports/` prefix after
+  1 day (R2 → bucket → Settings → Object lifecycle rules). Annotated PNG/PDF
+  exports are written there and their download link lasts 24 hours. Exports made
+  before 4 Oct 2026 sit under `xrays/…/exports/` and can be deleted by hand.
 
 ## 4a. AI pelvis analysis (Anthropic)
 
@@ -173,6 +177,12 @@ Nothing has been sent to LHDN yet. Details are in the "8.4 owner actions" sectio
   - `cmul4rnmn000004l0k507qdyd`.
 
 ## 8. Decisions
+
+- [x] **Bug-fix plan D1–D4** (answered 2026-10-04, all as recommended): adding an
+  existing account sends an invite; lapsed accounts are read-only; an ownership
+  transfer moves billing to the new owner; patient email unique per branch.
+  Staff who already had an account and were added to your branch before this
+  change stay members; new ones get an invite on their dashboard.
 
 - [x] **Admins who treat patients count as clinicians** (decided 2026-09-29). An
   ADMIN with a doctor profile (filled in on the doctor page) now gets a calendar

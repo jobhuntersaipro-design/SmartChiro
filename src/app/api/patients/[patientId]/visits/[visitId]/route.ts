@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
+import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ patientId: string; visitId: string }> };
 
@@ -43,6 +44,8 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { patientId, visitId } = await params;
   const { visit: visitRef, allowed } = await checkVisitAccess(session.user.id, patientId, visitId);
@@ -194,6 +197,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { patientId, visitId } = await params;
   const { visit, allowed } = await checkVisitAccess(session.user.id, patientId, visitId);

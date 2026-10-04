@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clearActiveBranch } from "@/lib/branch-context";
+import { canManageDoctorEverywhere } from "@/lib/auth/doctor-access";
 import { can } from "@/lib/permissions";
 import type { DoctorDetail, DoctorProfile } from "@/types/doctor";
 import { normalizeWorkingSchedule } from "@/lib/operating-hours";
 import type { BranchRole } from "@prisma/client";
 import { expiryChanged, expiryKey, parseCertificateInput } from "@/lib/certificates";
+import { paywall } from "@/lib/paywall";
 
 /** Certificate fields of the profile JSON. */
 function certificateJson(p: { tcmRegistrationNo: string | null; apcNumber: string | null; apcExpiresAt: Date | null }) {
@@ -149,6 +152,8 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { userId } = await params;
 
@@ -166,26 +171,12 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Authorization: must be self, or OWNER/ADMIN of a shared branch
+  // Authorization: self, or someone who manages every branch the doctor
+  // works in (one clinic can't edit a doctor's profile at another).
   const isSelf = session.user.id === userId;
-  let isOwnerOrAdmin = false;
-
-  if (!isSelf) {
-    const callerMemberships = await prisma.branchMember.findMany({
-      where: { userId: session.user.id },
-      select: { branchId: true, role: true },
-    });
-    const targetBranchIds = new Set(
-      targetUser.branchMemberships.map((m) => m.branchId)
-    );
-    isOwnerOrAdmin = callerMemberships.some(
-      (m) =>
-        targetBranchIds.has(m.branchId) &&
-        (m.role === "OWNER" || m.role === "ADMIN")
-    );
-    if (!isOwnerOrAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  const isOwnerOrAdmin = !isSelf && (await canManageDoctorEverywhere(session.user.id, userId));
+  if (!isSelf && !isOwnerOrAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -483,6 +474,8 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { userId } = await params;
   const { searchParams } = req.nextUrl;
@@ -546,6 +539,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.branchMember.delete({ where: { id: targetMembership.id } });
+    await clearActiveBranch([branchId], [userId]);
 
     return NextResponse.json(
       { success: true, removed: "branch" },
@@ -576,6 +570,10 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     await prisma.branchMember.deleteMany({
       where: { id: { in: membershipIds } },
     });
+    await clearActiveBranch(
+      targetUser.branchMemberships.filter((m) => membershipIds.includes(m.id)).map((m) => m.branchId),
+      [userId],
+    );
 
     return NextResponse.json(
       { success: true, removed: "all" },

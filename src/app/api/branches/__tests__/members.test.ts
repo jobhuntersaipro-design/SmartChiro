@@ -141,8 +141,8 @@ describe('Branch Members', () => {
       POST = mod.POST
     })
 
-    it('adds a new member and persists in Neon DB', async () => {
-      mockAuth.mockResolvedValue({ user: { id: ownerId } })
+    it('invites an existing account; they join only when they accept', async () => {
+      mockAuth.mockResolvedValue({ user: { id: ownerId, name: 'Owner' } })
       const res = await POST(
         createRequest('POST', `/api/branches/${branchId}/members`, {
           email: `${TEST_PREFIX}-doctor2@test.com`,
@@ -150,17 +150,61 @@ describe('Branch Members', () => {
         }),
         { params: Promise.resolve({ branchId }) }
       )
-      expect(res.status).toBe(201)
+      expect(res.status).toBe(202)
+      expect(await res.json()).toEqual({ invited: true })
 
-      // Verify in DB
+      // Not a member yet
+      const before = await prisma.branchMember.findUnique({
+        where: { userId_branchId: { userId: doctor2Id, branchId } },
+      })
+      expect(before).toBeNull()
+
+      // The invitee sees it, and someone else can't answer it
+      const { GET: listInvites } = await import('../../me/invites/route')
+      const { POST: answer } = await import('../../me/invites/[inviteId]/route')
+      mockAuth.mockResolvedValue({ user: { id: doctor2Id } })
+      const { invites } = await (await listInvites()).json()
+      expect(invites).toHaveLength(1)
+      expect(invites[0]).toMatchObject({ role: 'DOCTOR', invitedBy: expect.any(String) })
+      const inviteId = invites[0].id
+      const answerReq = (accept: boolean) =>
+        new NextRequest(`http://localhost:3000/api/me/invites/${inviteId}`, {
+          method: 'POST',
+          body: JSON.stringify({ accept }),
+        })
+      mockAuth.mockResolvedValue({ user: { id: ownerId } })
+      expect((await answer(answerReq(true), { params: Promise.resolve({ inviteId }) })).status).toBe(404)
+
+      // Accepting adds the membership with the invited role and clears the invite
+      mockAuth.mockResolvedValue({ user: { id: doctor2Id } })
+      expect((await answer(answerReq(true), { params: Promise.resolve({ inviteId }) })).status).toBe(200)
       const dbMember = await prisma.branchMember.findUnique({
         where: { userId_branchId: { userId: doctor2Id, branchId } },
       })
-      expect(dbMember).not.toBeNull()
-      expect(dbMember!.role).toBe('DOCTOR')
+      expect(dbMember?.role).toBe('DOCTOR')
+      expect(await prisma.branchInvite.count({ where: { userId: doctor2Id } })).toBe(0)
 
       // Cleanup
       await prisma.branchMember.delete({ where: { id: dbMember!.id } })
+    })
+
+    it('a declined invite adds nothing', async () => {
+      mockAuth.mockResolvedValue({ user: { id: ownerId } })
+      await POST(
+        createRequest('POST', `/api/branches/${branchId}/members`, { email: `${TEST_PREFIX}-doctor2@test.com`, role: 'ADMIN' }),
+        { params: Promise.resolve({ branchId }) }
+      )
+      const invite = await prisma.branchInvite.findFirstOrThrow({ where: { userId: doctor2Id, branchId } })
+      expect(invite.role).toBe('ADMIN')
+      const { POST: answer } = await import('../../me/invites/[inviteId]/route')
+      mockAuth.mockResolvedValue({ user: { id: doctor2Id } })
+      const res = await answer(
+        new NextRequest(`http://localhost:3000/api/me/invites/${invite.id}`, { method: 'POST', body: JSON.stringify({ accept: false }) }),
+        { params: Promise.resolve({ inviteId: invite.id }) }
+      )
+      expect(res.status).toBe(200)
+      expect(await prisma.branchMember.findUnique({ where: { userId_branchId: { userId: doctor2Id, branchId } } })).toBeNull()
+      expect(await prisma.branchInvite.count({ where: { userId: doctor2Id } })).toBe(0)
     })
 
     it('returns 409 for duplicate member', async () => {

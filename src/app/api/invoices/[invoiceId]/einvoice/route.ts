@@ -13,6 +13,7 @@ import {
   type EInvoiceInvoiceRow,
 } from "@/lib/myinvois/service";
 import type { InvoiceEInvoiceState } from "@/types/einvoice";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
@@ -88,6 +89,8 @@ const Body = z
 
 /** Submit the invoice (or a refund note) to LHDN. OWNER / ADMIN. */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { invoiceId } = await ctx.params;
   const auth = await authorise(invoiceId);
   if (auth instanceof Response) return auth;

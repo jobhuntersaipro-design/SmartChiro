@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { materializePending, dispatchDue } from "@/lib/reminders/dispatcher";
 import { expireOverduePackages } from "@/lib/package-service";
@@ -7,12 +8,19 @@ import { refreshPendingEInvoices } from "@/lib/myinvois/service";
 
 export const dynamic = "force-dynamic";
 
+/** Constant-time compare (hashing first makes the lengths equal). */
+function secretMatches(given: string | null, expected: string): boolean {
+  if (given === null) return false;
+  const digest = (v: string) => createHash("sha256").update(v).digest();
+  return timingSafeEqual(digest(given), digest(expected));
+}
+
 async function handler(req: Request): Promise<Response> {
   const expected = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   const headerSecret = req.headers.get("x-cron-secret");
   const ok =
-    expected && (headerSecret === expected || auth === `Bearer ${expected}`);
+    !!expected && (secretMatches(headerSecret, expected) || secretMatches(auth, `Bearer ${expected}`));
   if (!ok) {
     return NextResponse.json(
       { ok: false, error: "unauthorized" },

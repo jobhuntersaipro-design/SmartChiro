@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth-utils";
 import { canAccessCarePlans, loadPatientAccess } from "@/lib/package-access";
 import { CARE_PLAN_INCLUDE, UpdateCarePlanSchema, serializeCarePlans } from "@/lib/care-plan-service";
 import { logAppointmentEvent } from "@/lib/appointment-audit";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ carePlanId: string }> };
 
@@ -16,6 +17,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const { carePlanId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized", message: "Sign in required." }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const plan = await prisma.carePlan.findUnique({ where: { id: carePlanId }, select: { id: true, patientId: true } });
   const access = plan ? await loadPatientAccess(user.id, plan.patientId) : null;

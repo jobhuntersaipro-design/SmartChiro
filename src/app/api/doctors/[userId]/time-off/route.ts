@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
-import type { BranchRole } from "@prisma/client";
+import { canEditDoctorLeave, managedDoctorBranches } from "@/lib/auth/doctor-access";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ userId: string }> };
 
@@ -24,38 +25,20 @@ const PostBody = z.object({
   notes: z.string().max(500).nullable().optional(),
 });
 
-/**
- * RBAC: caller must be the doctor themselves OR an OWNER/ADMIN of any branch the
- * doctor is a member of. Cross-branch peek (caller has no shared membership) → 404.
- */
-async function authorizeDoctorAccess(callerId: string, doctorId: string): Promise<BranchRole | null> {
-  if (callerId === doctorId) return "DOCTOR";
-  const sharedBranches = await prisma.branchMember.findMany({
-    where: { userId: doctorId },
-    select: { branchId: true },
-  });
-  if (sharedBranches.length === 0) return null;
-  const callerMembership = await prisma.branchMember.findFirst({
-    where: {
-      userId: callerId,
-      branchId: { in: sharedBranches.map((b) => b.branchId) },
-      role: { in: ["OWNER", "ADMIN"] },
-    },
-    select: { role: true },
-  });
-  return callerMembership?.role ?? null;
-}
-
 export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { userId } = await ctx.params;
   const caller = await getCurrentUser();
   if (!caller) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const role = await authorizeDoctorAccess(caller.id, userId);
-  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // The doctor sees all their leave; a manager sees leave for the branches
+  // they manage plus leave that covers every branch — never the doctor's
+  // leave at another clinic.
+  const { doctor, managed } = await managedDoctorBranches(caller.id, userId);
+  const branchIds = caller.id === userId ? doctor : managed;
+  if (branchIds.length === 0) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const rows = await prisma.doctorTimeOff.findMany({
-    where: { userId },
+    where: { userId, OR: [{ branchId: null }, { branchId: { in: branchIds } }] },
     orderBy: { startDate: "asc" },
     include: { branch: { select: { id: true, name: true } } },
   });
@@ -77,13 +60,12 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { userId } = await ctx.params;
   const caller = await getCurrentUser();
   if (!caller) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(caller.id);
+  if (blocked) return blocked;
 
-  const role = await authorizeDoctorAccess(caller.id, userId);
-  if (!role) return NextResponse.json({ error: "not_found" }, { status: 404 });
-
-  // DOCTOR can only manage their own leave; OWNER/ADMIN can manage any doctor's leave.
-  if (role === "DOCTOR" && caller.id !== userId) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const { doctor, managed } = await managedDoctorBranches(caller.id, userId);
+  if ((caller.id === userId ? doctor : managed).length === 0) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   const parsed = PostBody.safeParse(await req.json());
@@ -100,15 +82,10 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
     return NextResponse.json({ error: "invalid_range" }, { status: 422 });
   }
 
-  // If branchId is given, ensure the doctor is a member of that branch
-  if (branchId) {
-    const isMember = await prisma.branchMember.findUnique({
-      where: { userId_branchId: { userId, branchId } },
-      select: { userId: true },
-    });
-    if (!isMember) {
-      return NextResponse.json({ error: "doctor_not_in_branch" }, { status: 422 });
-    }
+  // Leave for one branch: the doctor works there and the caller manages it.
+  // Leave for every branch: the caller manages all of the doctor's branches.
+  if (!(await canEditDoctorLeave(caller.id, userId, branchId ?? null))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   const created = await prisma.doctorTimeOff.create({

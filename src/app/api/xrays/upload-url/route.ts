@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getPresignedUploadUrl, buildXrayKey, getR2PublicUrl } from '@/lib/r2'
 import { auth } from '@/lib/auth'
 import { canManagePatientXrays } from '@/lib/auth/xray'
+import { paywall } from '@/lib/paywall'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
 const MAX_FILE_SIZE = 300 * 1024 * 1024 // 300 MB
@@ -16,6 +17,8 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+    const blocked = await paywall(session.user.id)
+    if (blocked) return blocked
     const uploadedById = session.user.id
 
     const body = await request.json()

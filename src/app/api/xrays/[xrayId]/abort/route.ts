@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireXrayAccess } from '@/lib/auth/xray-guard'
 import { buildXrayKey, deleteR2Object } from '@/lib/r2'
+import { paywallCurrentUser } from '@/lib/paywall'
 
 /**
  * A direct upload failed or was cancelled: remove its UPLOADING row (and any
@@ -11,6 +12,8 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ xrayId: string }> }
 ) {
+  const blocked = await paywallCurrentUser()
+  if (blocked) return blocked
   const { xrayId } = await params
   const guard = await requireXrayAccess(xrayId)
   if (guard.error) return guard.error

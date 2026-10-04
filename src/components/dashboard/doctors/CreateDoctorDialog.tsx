@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -117,6 +118,9 @@ export function CreateDoctorDialog({
         return;
       }
 
+      if (res.status === 202) {
+        toast.success(`${email} already has a SmartChiro account. We've sent them an invitation; they join once they accept.`);
+      }
       reset();
       onOpenChange(false);
       onCreated();

@@ -104,7 +104,7 @@ export async function exportXray(
   }
 
   const exportId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const exportKey = buildExportKey(xray.patient.branchId, xray.patientId, xrayId, exportId, format);
+  const exportKey = buildExportKey(xray.patientId, xrayId, exportId, format);
   await uploadToR2(exportKey, outputBuffer, contentType);
 
   // Presigned download URL (24h)

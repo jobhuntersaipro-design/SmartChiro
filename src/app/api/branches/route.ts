@@ -6,6 +6,7 @@ import { cliniciansByBranch } from "@/lib/stats-scope";
 import { snapshotOf } from "@/lib/branch-audit";
 import { clinicCalendar } from "@/lib/clinic-time";
 import { normalizeWebsite } from "@/lib/branch-fields";
+import { paywall } from "@/lib/paywall";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -135,6 +136,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const body = await req.json();
   const {

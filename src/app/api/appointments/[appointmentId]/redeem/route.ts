@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth-utils";
 import { loadRedeemAccess } from "@/lib/package-access";
 import { REDEEM_ERROR_STATUS, redeemAppointment } from "@/lib/package-service";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -16,6 +17,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { appointmentId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized", message: "Sign in required." }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const access = await loadRedeemAccess(user.id, appointmentId);
   if (access !== "ok") return access;

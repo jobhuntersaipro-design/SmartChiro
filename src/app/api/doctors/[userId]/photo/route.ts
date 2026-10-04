@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canManageDoctorEverywhere } from "@/lib/auth/doctor-access";
 import { uploadToR2, getR2PublicUrl, deleteR2Object } from "@/lib/r2";
+import { paywall } from "@/lib/paywall";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -14,37 +16,24 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const { userId } = await params;
 
   // Target must exist
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
-    include: { branchMemberships: { select: { branchId: true } } },
+    select: { image: true },
   });
 
   if (!targetUser) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Authorization: must be self, or OWNER/ADMIN of a shared branch
-  const isSelf = session.user.id === userId;
-  if (!isSelf) {
-    const callerMemberships = await prisma.branchMember.findMany({
-      where: { userId: session.user.id },
-      select: { branchId: true, role: true },
-    });
-    const targetBranchIds = new Set(
-      targetUser.branchMemberships.map((m) => m.branchId)
-    );
-    const isOwnerOrAdmin = callerMemberships.some(
-      (m) =>
-        targetBranchIds.has(m.branchId) &&
-        (m.role === "OWNER" || m.role === "ADMIN")
-    );
-    if (!isOwnerOrAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  // Authorization: self, or someone who manages every branch the doctor works in
+  if (!(await canManageDoctorEverywhere(session.user.id, userId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {

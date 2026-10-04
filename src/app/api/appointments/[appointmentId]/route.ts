@@ -9,6 +9,7 @@ import { outsideHoursSummary } from "@/lib/operating-hours";
 import { activeRedemptionFor, redeemAppointment, reverseRedemption } from "@/lib/package-service";
 import { editFollowing } from "@/lib/series-following";
 import type { RedemptionSummaryJson } from "@/types/packages";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -101,6 +102,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
   const { appointmentId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
@@ -324,6 +327,8 @@ export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
   const { appointmentId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },

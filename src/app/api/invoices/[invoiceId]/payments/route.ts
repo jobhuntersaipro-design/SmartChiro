@@ -11,6 +11,7 @@ import {
   serializeInvoiceDetail,
   serializePayment,
 } from "@/lib/invoice-detail";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ invoiceId: string }> };
 
@@ -39,6 +40,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { invoiceId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId }, select: { branchId: true } });
   if (!invoice) return NextResponse.json({ error: "not_found" }, { status: 404 });

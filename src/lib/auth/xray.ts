@@ -18,10 +18,11 @@ async function canAccessPatientScope(userId: string, patient: PatientScope): Pro
     where: { userId_branchId: { userId, branchId: patient.branchId } },
     select: { role: true },
   })
-  const role = member?.role ?? null
-  if (role && !can(role, 'xray.read')) return false
+  // Only current members of the patient's branch: a removed doctor loses
+  // access to the patients they were assigned.
+  if (!member || !can(member.role, 'xray.read')) return false
   if (patient.doctorId === userId) return true
-  return can(role, 'patient.readAll')
+  return can(member.role, 'patient.readAll')
 }
 
 /**

@@ -114,15 +114,24 @@ export async function editFollowing(args: {
   if (d.dateTime && appt.dateTime.getTime() < now.getTime()) {
     return { status: 422, body: { error: "cannot_reschedule_past", message: "Past appointments can't be moved." } };
   }
+  // Same rules as a single edit: only roles that book for any doctor may
+  // reassign, and only to a clinician in this branch.
+  const managesAll = can(args.role, "appointment.manageAll");
   if (d.doctorId) {
+    if (!managesAll) return { status: 403, body: { error: "forbidden", message: "Only the front desk or a manager can change the doctor." } };
     const member = await prisma.branchMember.findUnique({
       where: { userId_branchId: { userId: d.doctorId, branchId: appt.branchId } },
-      select: { userId: true },
+      select: { role: true },
     });
-    if (!member) return { status: 422, body: { error: "doctor_not_in_branch", message: "The doctor is not a member of this branch." } };
+    if (!member || !can(member.role, "clinical.read")) {
+      return { status: 422, body: { error: "doctor_not_in_branch", message: "The doctor is not a member of this branch." } };
+    }
   }
 
-  const targets = await loadTargets(appt.seriesId, appt.dateTime, now);
+  // A doctor only changes their own occurrences, never a colleague's.
+  const targets = (await loadTargets(appt.seriesId, appt.dateTime, now)).filter(
+    (t) => managesAll || t.doctorId === args.actor.id,
+  );
   if (targets.length === 0) {
     return { status: 422, body: { error: "nothing_to_change", message: "No upcoming booked appointments in this series." } };
   }

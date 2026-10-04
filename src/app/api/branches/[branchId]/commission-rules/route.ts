@@ -9,6 +9,7 @@ import {
   validationError,
 } from "@/lib/commission-rules";
 import type { CommissionRulesResponse } from "@/types/commissions";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -43,6 +44,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
 }
 
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const access = await requireCommissionManager(branchId);
   if (access instanceof NextResponse) return access;

@@ -218,20 +218,37 @@ describe("public booking API", () => {
     expect((await getIcs(get(otherId), ctx(slug))).status).toBe(404);
   });
 
-  it("a second booking with the same phone (any format) reuses the patient and fills empty fields", async () => {
+  it("a second booking with the same phone (any format) and name reuses the patient but never changes their email or IC", async () => {
     const { slug, docA, docB, branch } = await fixture();
     expect((await book(slug, { doctorId: docA.id, dateTime: at("10:00") })).status).toBe(201);
     const email = `${PREFIX}later-${Date.now()}@example.com`;
     const ic = `IC${Date.now()}`;
-    const res = await book(slug, { doctorId: docB.id, dateTime: at("11:00"), phone: "+60 12-345 6789", email, icNumber: ic });
+    const res = await book(slug, { doctorId: docB.id, dateTime: at("11:00"), phone: "+60 12-345 6789", name: "siti  NURHALIZA", email, icNumber: ic });
     expect(res.status).toBe(201);
     const patients = await prisma.patient.findMany({ where: { branchId: branch.id } });
     expect(patients).toHaveLength(1);
-    expect(patients[0].email).toBe(email);
-    expect(patients[0].icNumber).toBe(ic);
+    expect(patients[0].email).toBeNull();
+    expect(patients[0].icNumber).toBeNull();
     expect(patients[0].doctorId).toBe(docA.id); // not reassigned
-    expect(await prisma.appointment.count({ where: { patientId: patients[0].id, source: "ONLINE" } })).toBe(2);
+    const appts = await prisma.appointment.findMany({ where: { patientId: patients[0].id, source: "ONLINE" }, orderBy: { dateTime: "asc" } });
+    expect(appts).toHaveLength(2);
+    expect(appts[1].notes).toContain(`Email given: ${email}`);
+    expect(appts[1].notes).toContain(`IC given: ${ic}`);
     expect(notifyOnlineBooking).toHaveBeenLastCalledWith(expect.objectContaining({ isNewPatient: false }));
+  });
+
+  it("a known phone with a different name books a new patient — the existing patient's email is untouched", async () => {
+    const { slug, docA, branch } = await fixture();
+    const ownEmail = `${PREFIX}owner-${Date.now()}@example.com`;
+    const victim = await prisma.patient.create({ data: { firstName: "Real", lastName: "Patient", phone: "012-345 6789", email: ownEmail, branchId: branch.id, doctorId: docA.id } });
+    const attacker = `${PREFIX}attacker-${Date.now()}@example.com`;
+    const res = await book(slug, { doctorId: docA.id, dateTime: at("10:00"), name: "Someone Else", email: attacker });
+    expect(res.status).toBe(201);
+    expect((await prisma.patient.findUniqueOrThrow({ where: { id: victim.id } })).email).toBe(ownEmail);
+    const created = await prisma.patient.findFirstOrThrow({ where: { branchId: branch.id, NOT: { id: victim.id } } });
+    expect(created).toMatchObject({ firstName: "Someone", lastName: "Else", email: attacker });
+    expect(await prisma.appointment.count({ where: { patientId: victim.id } })).toBe(0);
+    expect(notifyOnlineBooking).toHaveBeenLastCalledWith(expect.objectContaining({ isNewPatient: true }));
   });
 
   it("an email already on another patient isn't stored — it goes in the appointment notes", async () => {

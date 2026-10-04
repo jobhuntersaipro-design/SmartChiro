@@ -8,6 +8,7 @@ import {
   serializeRule,
   validationError,
 } from "@/lib/commission-rules";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string; ruleId: string }> };
 
@@ -15,6 +16,8 @@ const notFound = () => NextResponse.json({ error: "not_found", message: "Rule no
 
 /** Edit a rule (fields omitted stay). OWNER / ADMIN. */
 export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId, ruleId } = await ctx.params;
   const access = await requireCommissionManager(branchId);
   if (access instanceof NextResponse) return access;
@@ -58,6 +61,8 @@ export async function PATCH(req: Request, ctx: RouteCtx): Promise<Response> {
 }
 
 export async function DELETE(_req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId, ruleId } = await ctx.params;
   const access = await requireCommissionManager(branchId);
   if (access instanceof NextResponse) return access;

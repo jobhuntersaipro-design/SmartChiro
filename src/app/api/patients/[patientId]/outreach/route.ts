@@ -8,6 +8,7 @@ import { OUTREACH_LOG_SELECT } from "@/lib/outreach/dispatcher";
 import { sendManualRecall } from "@/lib/outreach/manual";
 import { toLogItems } from "@/lib/outreach/log";
 import type { PatientOutreachHistory } from "@/types/outreach";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ patientId: string }> };
 
@@ -71,6 +72,8 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
  * ADMIN may resend with `force: true`).
  */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { patientId } = await ctx.params;
   const a = await load(patientId);
   if (!a.ok) return a.res;

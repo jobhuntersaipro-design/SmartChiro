@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { doctorRecordBranches } from "@/lib/auth/doctor-access";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -17,33 +18,18 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
 
-  // Verify target user exists
-  const targetUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, branchMemberships: { select: { branchId: true } } },
-  });
-
-  if (!targetUser) {
+  // Only the doctor's patients in branches where the caller sees every
+  // patient — never their patients at another clinic.
+  const branchIds = await doctorRecordBranches(session.user.id, userId, ["patient.readAll"]);
+  if (!branchIds) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
-
-  // Caller must share at least one branch with target
-  if (session.user.id !== userId) {
-    const callerBranches = await prisma.branchMember.findMany({
-      where: { userId: session.user.id },
-      select: { branchId: true },
-    });
-    const callerBranchIds = new Set(callerBranches.map((m) => m.branchId));
-    const shared = targetUser.branchMemberships.some((m) =>
-      callerBranchIds.has(m.branchId)
-    );
-    if (!shared) {
-      return NextResponse.json({ error: "Forbidden: no shared branch" }, { status: 403 });
-    }
+  if (branchIds.length === 0) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // Build where clause
-  const where: Record<string, unknown> = { doctorId: userId };
+  const where: Record<string, unknown> = { doctorId: userId, branchId: { in: branchIds } };
 
   if (status === "active") {
     where.status = "active";

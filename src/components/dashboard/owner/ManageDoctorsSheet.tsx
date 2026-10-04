@@ -92,7 +92,7 @@ export function ManageDoctorsSheet({
                 <Input
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
-                  placeholder="Search by email..."
+                  placeholder="Their SmartChiro sign-in email"
                   className="h-8 pl-8 rounded-control border-border bg-white text-[14px]"
                 />
               </div>
@@ -112,7 +112,7 @@ export function ManageDoctorsSheet({
                   size="sm"
                   className="h-8 px-3 bg-primary hover:bg-primary/90 text-white rounded-control text-[13px] cursor-pointer disabled:opacity-50"
                 >
-                  {addLoading ? "Adding..." : "Add"}
+                  {addLoading ? "Sending..." : "Send invite"}
                 </Button>
                 <Button
                   variant="ghost"

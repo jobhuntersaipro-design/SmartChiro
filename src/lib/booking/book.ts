@@ -68,10 +68,17 @@ async function lock(tx: Tx, key: string) {
   await tx.$queryRaw`SELECT 1 AS ok FROM (SELECT pg_advisory_xact_lock(hashtext(${key}))) AS l`;
 }
 
+const nameKey = (first: string, last: string) => `${first} ${last}`.trim().toLowerCase().replace(/\s+/g, " ");
+
+/**
+ * Reuse an existing patient only when both phone and name match. A phone
+ * number alone isn't proof of identity (family members share one, and anyone
+ * can type it), so otherwise the booking gets a new patient for the clinic to
+ * merge.
+ */
 function pickPatient(matches: PatientMatch[], firstName: string, lastName: string): PatientMatch | null {
-  if (matches.length === 0) return null;
-  const full = `${firstName} ${lastName}`.trim().toLowerCase();
-  return matches.find((m) => `${m.firstName} ${m.lastName}`.trim().toLowerCase() === full) ?? matches[0];
+  const full = nameKey(firstName, lastName);
+  return matches.find((m) => nameKey(m.firstName, m.lastName) === full) ?? null;
 }
 
 /**
@@ -142,15 +149,11 @@ export async function createOnlineBooking(
         let patient = pickPatient(matches, firstName, lastName);
         const isNewPatient = !patient;
         if (patient) {
+          // Never change an existing patient's email or IC from the public
+          // page: the email is their portal sign-in. Staff see it in the notes.
           const fill: Prisma.PatientUpdateInput = {};
-          if (input.email && !patient.email) {
-            if (!emailOwner) fill.email = input.email;
-            else if (emailOwner.id !== patient.id) extraNotes.push(`Email given: ${input.email}`);
-          }
-          if (input.icNumber && !patient.icNumber) {
-            if (!icOwner) fill.icNumber = input.icNumber;
-            else if (icOwner.id !== patient.id) extraNotes.push(`IC given: ${input.icNumber}`);
-          }
+          if (input.email && input.email.toLowerCase() !== patient.email?.toLowerCase()) extraNotes.push(`Email given: ${input.email}`);
+          if (input.icNumber && input.icNumber !== patient.icNumber) extraNotes.push(`IC given: ${input.icNumber}`);
           // Opting in online grants consent; leaving the box unticked never
           // withdraws consent given at the clinic.
           if (input.consentMarketing === true && !patient.marketingConsent) {

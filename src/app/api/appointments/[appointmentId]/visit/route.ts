@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { can } from "@/lib/permissions";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ appointmentId: string }> };
 
@@ -18,6 +19,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
 
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },

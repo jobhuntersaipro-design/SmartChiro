@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { isSuperAdminEmail } from "@/lib/subscription";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { inviteExistingUser } from "@/lib/branch-invites";
 import { hash } from "bcryptjs";
 import type { DoctorListItem } from "@/types/doctor";
 import { ASSIGNABLE_STAFF_ROLES, can } from "@/lib/permissions";
 import { expiryKey } from "@/lib/certificates";
 import { clinicianRoleWhere } from "@/lib/clinician";
+import { paywall } from "@/lib/paywall";
 
 // ─── GET /api/doctors ─── List all doctors across caller's branches
 export async function GET(req: NextRequest) {
@@ -179,6 +181,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const blocked = await paywall(session.user.id);
+  if (blocked) return blocked;
 
   const body = await req.json();
 
@@ -230,18 +234,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Already a member of this branch" }, { status: 409 });
       }
 
-      // Exists but not in branch — add them
-      await prisma.branchMember.create({
-        data: {
-          userId: existingUser.id,
-          branchId: body.branchId,
-          role,
-        },
+      // Exists but not in branch — invite them; they join once they accept
+      // (the password typed here is never applied to their account).
+      await inviteExistingUser({
+        user: existingUser,
+        branchId: body.branchId,
+        role,
+        invitedBy: { id: session.user.id, name: session.user.name ?? null },
       });
-
-      // Return the doctor
-      const doctor = await buildDoctorListItem(existingUser.id);
-      return NextResponse.json({ doctor, existed: true }, { status: 200 });
+      return NextResponse.json({ invited: true, existed: true }, { status: 202 });
     }
 
     // Accounts made here skip email verification, so never for a platform

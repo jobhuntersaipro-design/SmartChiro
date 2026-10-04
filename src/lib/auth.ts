@@ -8,6 +8,7 @@ import { resolveGoogleUser } from './auth/google'
 import { loadBranchContext } from './branch-context'
 import { cache } from 'react'
 import { recordSignIn } from './login-activity'
+import { takeToken } from './booking/rate-limit'
 
 const accountStatus = cache((userId: string) =>
   prisma.user.findUnique({ where: { id: userId }, select: { disabledAt: true } }),
@@ -20,6 +21,13 @@ class EmailNotVerifiedError extends CredentialsSignin {
 class AccountDisabledError extends CredentialsSignin {
   code = 'account_disabled'
 }
+
+class TooManyAttemptsError extends CredentialsSignin {
+  code = 'too_many_attempts'
+}
+
+/** Password guesses per email: 10 at once, then one a minute. */
+const SIGN_IN_LIMIT = { capacity: 10, refillPerSec: 1 / 60 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -43,6 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Registration stores emails in lowercase. Match that here so
           // Jobhunters... and jobhunters... are the same account.
           const email = rawEmail.toLowerCase()
+          if (!takeToken(`sign-in:${email}`, SIGN_IN_LIMIT)) throw new TooManyAttemptsError()
 
           const user = await prisma.user.findUnique({
             where: { email },

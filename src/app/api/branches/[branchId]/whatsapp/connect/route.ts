@@ -3,6 +3,7 @@ import { z } from "zod";
 import { branchAccess, toPublicAccount } from "@/lib/whatsapp/account";
 import { signupConfig } from "@/lib/whatsapp/config";
 import { connectAccount, connectErrorResponse, exchangeCode } from "@/lib/whatsapp/onboarding";
+import { paywallCurrentUser } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -15,6 +16,8 @@ const Body = z.object({
 
 /** Completes Embedded Signup: the browser posts the code + session info. */
 export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
+  const blocked = await paywallCurrentUser();
+  if (blocked) return blocked;
   const { branchId } = await ctx.params;
   const access = await branchAccess(branchId);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });

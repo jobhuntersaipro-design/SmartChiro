@@ -9,6 +9,7 @@ import { billingAccess } from "@/lib/billing-access";
 import { clinicCalendar } from "@/lib/clinic-time";
 import { createInvoice, effectiveInvoiceStatus, fromSen, toSen, type AnyInvoiceStatus } from "@/lib/invoices";
 import { dueDateFromInput, invoiceErrorResponse, loadInvoiceDetail, serializeInvoiceDetail } from "@/lib/invoice-detail";
+import { paywall } from "@/lib/paywall";
 
 const PAGE_SIZE = 20;
 const FILTERS = ["all", "DRAFT", "SENT", "OVERDUE", "PARTIALLY_PAID", "PAID", "CANCELLED"] as const;
@@ -177,6 +178,8 @@ const CreateBody = z.object({
 export async function POST(req: Request): Promise<Response> {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
 
   const parsed = CreateBody.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { countClinicians } from "@/lib/stats-scope";
 import { clinicCalendar } from "@/lib/clinic-time";
 import { can } from "@/lib/permissions";
+import { dashboardScope } from "@/lib/branch-context";
+import { scopedWhere, scopeRole } from "@/lib/branch-scope";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -14,7 +16,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const branchId = searchParams.get("branchId");
   const userId = session.user.id;
-  const branchRole = session.user.branchRole;
+  const scope = await dashboardScope(userId, branchId);
+  if (!scope) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
   const now = new Date();
   const cal = clinicCalendar(now);
@@ -26,28 +29,21 @@ export async function GET(req: NextRequest) {
   const lastMonthStart = cal.lastMonthStart;
   const lastMonthEnd = new Date(cal.monthStart.getTime() - 1);
 
-  if (branchRole === "DOCTOR") {
-    const activeBranchId = session.user.activeBranchId;
-    if (!activeBranchId) {
-      return NextResponse.json({
-        myPatients: 0,
-        todayAppointments: 0,
-        remainingAppointments: 0,
-        xraysThisMonth: 0,
-        xraysLastMonth: 0,
-        pendingAnnotations: 0,
-      });
-    }
-
+  // The doctor view (the dashboard page picks it with the same rule): one
+  // branch where the user is a DOCTOR, or "all" when they manage none.
+  const doctorView =
+    branchId && branchId !== "all" ? scope.roles[branchId] === "DOCTOR" : scopeRole(scope) === "DOCTOR";
+  if (doctorView) {
+    const doctorBranchIds = scope.branchIds.filter((id) => scope.roles[id] === "DOCTOR");
     const [myPatients, todayAppts, xraysThisMonth, xraysLastMonth, pendingAnnotations] =
       await Promise.all([
         prisma.patient.count({
-          where: { doctorId: userId, branchId: activeBranchId },
+          where: { doctorId: userId, branchId: { in: doctorBranchIds } },
         }),
         prisma.appointment.findMany({
           where: {
             doctorId: userId,
-            branchId: activeBranchId,
+            branchId: { in: doctorBranchIds },
             dateTime: { gte: todayStart, lt: todayEnd },
           },
           select: { status: true },
@@ -87,24 +83,15 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Owner/Admin — optionally filtered by branchId
-  // Get user's branch IDs for scoping
-  const memberships = await prisma.branchMember.findMany({
-    where: { userId },
-    select: { branchId: true },
-  });
-  const userBranchIds = memberships.map((m) => m.branchId);
-  if (branchId && branchId !== "all" && !userBranchIds.includes(branchId)) {
-    return NextResponse.json({ error: "Branch not found" }, { status: 404 });
-  }
-
-  const scopedBranchFilter =
-    branchId && branchId !== "all"
-      ? { branchId }
-      : { branchId: { in: userBranchIds } };
-
-  // X-ray counts are clinical stats — front desk gets zeros.
-  const clinical = can(branchRole, "dashboard.clinicalStats");
+  // Owner/Admin/front desk: by the role in each branch (a DOCTOR branch in
+  // "all" counts only their own patients). X-ray counts are clinical stats,
+  // so only from branches whose role sees them — front desk gets zeros.
+  const scopedBranchFilter = scopedWhere(scope, userId);
+  const clinicalBranchFilter = scopedWhere(
+    { ...scope, branchIds: scope.branchIds.filter((id) => can(scope.roles[id], "dashboard.clinicalStats")) },
+    userId,
+  );
+  const clinical = scope.branchIds.some((id) => can(scope.roles[id], "dashboard.clinicalStats"));
   const [totalPatients, todayAppts, xraysThisWeek, xraysLastWeek, activeDoctors] =
     await Promise.all([
       prisma.patient.count({ where: scopedBranchFilter }),
@@ -118,7 +105,7 @@ export async function GET(req: NextRequest) {
       clinical
         ? prisma.xray.count({
             where: {
-              patient: scopedBranchFilter,
+              patient: clinicalBranchFilter,
               createdAt: { gte: weekStart },
             },
           })
@@ -126,12 +113,12 @@ export async function GET(req: NextRequest) {
       clinical
         ? prisma.xray.count({
             where: {
-              patient: scopedBranchFilter,
+              patient: clinicalBranchFilter,
               createdAt: { gte: lastWeekStart, lt: weekStart },
             },
           })
         : 0,
-      countClinicians(branchId && branchId !== "all" ? [branchId] : userBranchIds),
+      countClinicians(scope.branchIds),
     ]);
 
   const completed = todayAppts.filter((a) => a.status === "COMPLETED").length;
@@ -147,6 +134,6 @@ export async function GET(req: NextRequest) {
     xraysThisWeek,
     xraysLastWeek,
     activeDoctors,
-    totalBranches: branchId && branchId !== "all" ? 1 : userBranchIds.length,
+    totalBranches: scope.branchIds.length,
   });
 }

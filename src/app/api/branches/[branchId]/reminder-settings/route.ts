@@ -6,6 +6,7 @@ import { can } from "@/lib/permissions";
 import { ALLOWED_OFFSETS_MIN, type Templates } from "@/types/reminder";
 import { DEFAULT_TEMPLATES } from "@/lib/reminders/default-templates";
 import { validateTemplate } from "@/lib/reminders/templates";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ branchId: string }> };
 
@@ -61,6 +62,8 @@ export async function PUT(req: Request, ctx: RouteCtx): Promise<Response> {
   const { branchId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
   const role = await getUserBranchRole(user.id, branchId);
   if (!can(role, "reminders.manage")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });

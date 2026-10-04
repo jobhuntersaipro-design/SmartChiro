@@ -8,6 +8,7 @@ import { defaultReminderChannel, reminderChannelError } from '@/lib/reminder-cha
 import { PATIENT_LANGUAGE_VALUES, consentFields } from '@/lib/outreach/consent'
 import { can, redactClinicalFields } from '@/lib/permissions'
 import { isMalaysianPatient, isValidMyKad, parseNationality } from '@/lib/invoices'
+import { paywall } from '@/lib/paywall'
 
 const VALID_BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
 const VALID_MARITAL_STATUSES = ['Single', 'Married', 'Divorced', 'Widowed']
@@ -233,6 +234,8 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const blocked = await paywall(session.user.id)
+    if (blocked) return blocked
 
     const body = await request.json()
     const {
@@ -315,22 +318,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user's active branch + ALL memberships (so we can resolve the role
-    // for the branch this patient will actually be created in, not the
-    // arbitrary first membership).
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        activeBranchId: true,
-        branchMemberships: {
-          select: { branchId: true, role: true },
-        },
-      },
-    })
+    // The branch the user is working in now, validated against their current
+    // memberships (a stored activeBranchId can point at a branch they left).
+    const ctx = await loadBranchContext(session.user.id)
+    let branchId = ctx.activeBranchId
+    let callerRole = ctx.branchRole
 
-    let branchId = user?.activeBranchId ?? user?.branchMemberships[0]?.branchId ?? null
-
-    // If user has no branch at all, create a default one
+    // A brand-new account with no branch at all gets a default one.
     if (!branchId) {
       const branch = await prisma.branch.create({
         data: { name: 'My Branch', billingUserId: session.user.id },
@@ -343,17 +337,11 @@ export async function POST(request: NextRequest) {
         data: { activeBranchId: branch.id },
       })
       branchId = branch.id
-    } else if (!user?.activeBranchId) {
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { activeBranchId: branchId },
-      })
+      callerRole = 'OWNER'
     }
-
-    // Resolve the caller's role within THIS branch (not branchMemberships[0]).
-    const membershipInBranch = user?.branchMemberships.find((m) => m.branchId === branchId)
-    // A brand-new branch was just created with the caller as OWNER.
-    const callerRole = membershipInBranch?.role ?? 'OWNER'
+    if (!can(callerRole, 'patient.write')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
     const clinical = can(callerRole, 'clinical.read')
 
     // Resolve assigned doctor. Front desk doesn't treat patients, so they must

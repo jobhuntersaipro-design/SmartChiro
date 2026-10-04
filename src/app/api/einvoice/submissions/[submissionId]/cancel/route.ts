@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, getUserBranchRole } from "@/lib/auth-utils";
 import { einvoiceAccess, einvoiceErrorResponse } from "@/lib/myinvois/access";
 import { cancelSubmission, serializeSubmission } from "@/lib/myinvois/service";
+import { paywall } from "@/lib/paywall";
 
 type RouteCtx = { params: Promise<{ submissionId: string }> };
 
@@ -18,6 +19,8 @@ export async function POST(req: Request, ctx: RouteCtx): Promise<Response> {
   const { submissionId } = await ctx.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const blocked = await paywall(user.id);
+  if (blocked) return blocked;
   const row = await prisma.eInvoiceSubmission.findUnique({ where: { id: submissionId }, select: { branchId: true } });
   if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const role = await getUserBranchRole(user.id, row.branchId);

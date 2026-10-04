@@ -66,6 +66,7 @@ model User {
   einvoiceSubmissions EInvoiceSubmission[]   @relation("EInvoiceSubmittedBy")
   aiUsage             AiUsage[]
   billingBranches     Branch[]               @relation("BranchBillingUser")
+  branchInvites       BranchInvite[]         @relation("BranchInviteUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -285,6 +286,7 @@ model Branch {
   einvoiceEnabled  Boolean          @default(false)
 
   members      BranchMember[]
+  invites      BranchInvite[]
 
   /// The account whose SmartChiro plan pays for this branch: whoever created it.
   /// Ownership transfers don't move it, so nobody can hand their bill to someone else.
@@ -313,6 +315,21 @@ model Branch {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Adding an existing account to a branch: they join only when they accept,
+/// so one clinic can't attach another clinic's doctor and read their records.
+model BranchInvite {
+  id          String     @id @default(cuid())
+  role        BranchRole
+  userId      String
+  user        User       @relation("BranchInviteUser", fields: [userId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  invitedById String?
+  createdAt   DateTime   @default(now())
+
+  @@unique([userId, branchId])
 }
 
 model BranchMember {
