@@ -13,14 +13,18 @@ import { clinicDateLabel } from "@/lib/clinic-time";
  * adding fresh accounts every month.
  */
 
-/** Emails in SUPER_ADMIN_EMAILS (comma separated, any case) run the platform. */
-export function isSuperAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const list = (process.env.SUPER_ADMIN_EMAILS ?? "")
+/** Emails in SUPER_ADMIN_EMAILS (comma separated, any case), lowercased. */
+export function superAdminEmails(): string[] {
+  return (process.env.SUPER_ADMIN_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  return list.includes(email.toLowerCase());
+}
+
+/** Emails in SUPER_ADMIN_EMAILS run the platform. */
+export function isSuperAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return superAdminEmails().includes(email.toLowerCase());
 }
 
 export interface AccountAccess {

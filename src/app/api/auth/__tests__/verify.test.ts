@@ -23,8 +23,10 @@ vi.mock('@/lib/prisma', () => ({
 }))
 
 const mockSendWelcome = vi.fn().mockResolvedValue(undefined)
+const mockSignupAlert = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/lib/email', () => ({
   sendWelcomeEmail: (...args: unknown[]) => mockSendWelcome(...args),
+  sendNewSignupAlert: (...args: unknown[]) => mockSignupAlert(...args),
 }))
 
 function createRequest(token?: string): NextRequest {
@@ -114,6 +116,7 @@ describe('GET /api/auth/verify', () => {
     expect(mockTransaction).toHaveBeenCalledTimes(1)
     expect(mockSendWelcome).toHaveBeenCalledTimes(1)
     expect(mockSendWelcome).toHaveBeenCalledWith(expect.objectContaining({ email: 'user@test.com' }))
+    expect(mockSignupAlert).toHaveBeenCalledWith(expect.objectContaining({ email: 'user@test.com' }), 'email')
   })
 
   it('still verifies when the welcome email fails', async () => {
@@ -125,6 +128,7 @@ describe('GET /api/auth/verify', () => {
     mockFindUniqueUser.mockResolvedValue({ email: 'user@test.com', emailVerified: null })
     mockTransaction.mockResolvedValue([])
     mockSendWelcome.mockRejectedValueOnce(new Error('Resend down'))
+    mockSignupAlert.mockRejectedValueOnce(new Error('Resend down'))
     const res = await GET(createRequest('valid-token'))
     expect(res.headers.get('location')).toContain('/verify-email?status=success')
   })

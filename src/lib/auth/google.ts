@@ -1,6 +1,6 @@
 import type { User } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { sendWelcomeEmail } from '@/lib/email'
+import { sendNewSignupAlert, sendWelcomeEmail } from '@/lib/email'
 
 export interface GoogleProfile {
   email: string
@@ -29,7 +29,7 @@ export interface GoogleAccount {
  * the real owner. A verified account just gets Google linked; one whose
  * password an owner typed when creating it loses that password too (the owner
  * knows it). Accounts
- * that become verified here get the welcome email.
+ * that become verified here get the welcome email, and the super admins hear about them.
  */
 export async function resolveGoogleUser(profile: GoogleProfile, account: GoogleAccount): Promise<User> {
   // Registration stores emails in lowercase.
@@ -73,7 +73,10 @@ export async function resolveGoogleUser(profile: GoogleProfile, account: GoogleA
   })
 
   if (welcome) {
-    await sendWelcomeEmail(user).catch((err) => console.error('[auth] welcome email failed:', err))
+    await Promise.all([
+      sendWelcomeEmail(user).catch((err) => console.error('[auth] welcome email failed:', err)),
+      sendNewSignupAlert(user, 'google').catch((err) => console.error('[auth] sign-up alert failed:', err)),
+    ])
   }
   return user
 }

@@ -137,6 +137,8 @@ and your own clinic never lapses while you are a super admin.
   X-ray use (AI today and last 30 days, uploads); **Manage** extends a trial, changes the
   daily AI limit or disables an account. Login activity is recorded from 4 Oct 2026, so
   older accounts show "No sign-ins recorded" until they next sign in.
+  Everyone on `SUPER_ADMIN_EMAILS` also gets an email for each new sign-up (from
+  4 Oct 2026), once the new account has verified its email (Google sign-ups at once).
 - [ ] **Before 30 days are up:** tell existing clinics about the trial and the
   plan, or extend their trials on the Super admin page (Manage → Free trial ends).
 

@@ -1,8 +1,9 @@
 import { Resend } from 'resend'
 import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
-import { CLINIC_TIME_ZONE, clinicDateLabel } from '@/lib/clinic-time'
+import { CLINIC_TIME_ZONE, clinicDateLabel, clinicTimeLabel } from '@/lib/clinic-time'
 import { PLANS, TRIAL_DAYS } from '@/lib/plans'
+import { superAdminEmails } from '@/lib/subscription'
 
 // Created on first use: constructing Resend without a key throws, which used
 // to crash any route importing this module (e.g. /login, build page-data
@@ -179,6 +180,62 @@ export async function sendWelcomeEmail(user: { email: string; name: string | nul
 
   if (error) {
     throw new Error(`Failed to send welcome email: ${error.message}`)
+  }
+}
+
+// ─── New sign-up alert (super admins) ───
+
+/**
+ * Tells the super admins (SUPER_ADMIN_EMAILS) about a new account, sent at the
+ * same moment as the welcome email: once the account is verified. Skipped when
+ * no super admin is set, and never sent to the new user themself. Callers
+ * treat it as best effort.
+ */
+export async function sendNewSignupAlert(
+  user: { email: string; name: string | null; trialEndsAt: Date | null; createdAt: Date },
+  method: 'email' | 'google',
+) {
+  const to = superAdminEmails().filter((e) => e !== user.email.toLowerCase())
+  if (to.length === 0) return
+
+  const name = user.name?.trim() || '(no name)'
+  const rows: [string, string][] = [
+    ['Name', name],
+    ['Email', user.email],
+    ['Signed up with', method === 'google' ? 'Google' : 'Email and password'],
+    ['Account created', `${clinicDateLabel(user.createdAt, 'day')}, ${clinicTimeLabel(user.createdAt)} (Malaysia time)`],
+    ['Trial ends', user.trialEndsAt ? clinicDateLabel(user.trialEndsAt) : 'No trial'],
+  ]
+  const adminUrl = `${APP_URL}/dashboard/admin`
+
+  const { error } = await resend().emails.send({
+    from: 'SmartChiro <noreply@smartchiro.org>',
+    to,
+    subject: `New SmartChiro sign-up: ${name} (${user.email})`,
+    text: ['A new account just signed up for SmartChiro.', '', ...rows.map(([k, v]) => `${k}: ${v}`), '', `Super admin: ${adminUrl}`].join('\n'),
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="color: #0b0b0b; font-size: 20px; font-weight: 600; margin-bottom: 16px;">New sign-up</h1>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 24px; font-size: 15px;">
+          ${rows
+            .map(
+              ([k, v]) => `
+          <tr>
+            <td style="color: #585858; padding: 6px 16px 6px 0; white-space: nowrap; vertical-align: top;">${k}</td>
+            <td style="color: #0b0b0b; padding: 6px 0;">${escapeHtml(v)}</td>
+          </tr>`,
+            )
+            .join('')}
+        </table>
+        <a href="${adminUrl}" style="display: inline-block; background: #0b0b0b; color: white; font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 24px; border-radius: 999px;">
+          Open Super admin
+        </a>
+      </div>
+    `,
+  })
+
+  if (error) {
+    throw new Error(`Failed to send sign-up alert: ${error.message}`)
   }
 }
 
