@@ -25,6 +25,7 @@ These override the ask-before-commit/merge rules in `context/ai-interaction.md`.
 
 ## Production Test Login
 - **Doctor login on https://smartchiro.org:** `claude-test@claude-test.com` / `claude-test` (Doctor at SmartChiro KLCC). Use it for production screenshots and checks. It is not a super admin, so it can't open `/dashboard/admin`.
+- **Owner login on https://smartchiro.org:** `norbertasandrine@gmail.com` / `claude-owner` (name "claude-owner", its own clinic, 30-day trial from 4 Oct 2026). Use it for owner pages: branch settings, Billing & tax, invoices, reports, staff, Plan & billing. Keep its test data in its own test clinic, never in a real clinic.
 - Headless Chromium in Claude's cloud sandbox doesn't trust the proxy's CA on its own: launch it with `--ignore-certificate-errors-spki-list=<SHA-256 SPKI hashes of every cert in /root/.ccr/ca-bundle.crt>`. That trusts the bundle every other tool uses; never turn certificate checks off.
 
 ## Blockers
