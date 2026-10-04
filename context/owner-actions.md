@@ -2,7 +2,7 @@
 
 Things only the clinic owner can do: accounts, credentials, production data and
 business decisions. The code for every item is already on `main`. Tick items off here
-as you go. Last updated 2026-10-04, after bug-fix Phase 1.
+as you go. Last updated 2026-10-04, after the second site-wide bug scan.
 
 ## 1. Before deploying this merge
 
@@ -12,7 +12,7 @@ as you go. Last updated 2026-10-04, after bug-fix Phase 1.
 - [ ] **Vercel region matches Neon.** `vercel.json` pins `regions: ["sin1"]`
   (Singapore). Confirm the Neon project is in Singapore (`aws-ap-southeast-1`),
   or change the region to match.
-- [ ] **Vercel Pro (or an external scheduler).** `/api/reminders/dispatch` runs every
+- [x] **Vercel Pro (or an external scheduler).** `/api/reminders/dispatch` runs every
   5 minutes. That one job runs reminders, recall/review messages, package expiry,
   certificate alerts and the e-invoice status check. Vercel Hobby only runs it once
   a day. The other option is an external cron that POSTs with the header
@@ -47,10 +47,11 @@ from `noreply@smartchiro.org`) once its email is verified.
   recall/review emails. Unset, they come from `reminders@smartchiro.org`. To show a
   name, set it to e.g. `SmartChiro Reminders <reminders@smartchiro.org>`; the address
   must be on the domain verified in Resend (smartchiro.org), no mailbox needed.
-- [ ] `CRON_SECRET` in Vercel Production (any long random string, e.g.
+- [x] `CRON_SECRET` in Vercel Production (any long random string, e.g.
   `openssl rand -hex 32`), then redeploy. Without it every scheduled run of
   `/api/reminders/dispatch` is refused (401), so no reminder, recall, review or
-  alert is sent, by email or WhatsApp. Not set as of 4 Oct 2026.
+  alert is sent, by email or WhatsApp. Done 4 Oct 2026: the production logs show
+  the job answering 200 every 5 minutes.
 
 ## 3. WhatsApp (Meta Cloud API)
 
