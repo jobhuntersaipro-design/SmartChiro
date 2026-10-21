@@ -1,11 +1,5 @@
 {
   "regions": [
     "sin1"
-  ],
-  "crons": [
-    {
-      "path": "/api/reminders/dispatch",
-      "schedule": "*/5 * * * *"
-    }
   ]
 }

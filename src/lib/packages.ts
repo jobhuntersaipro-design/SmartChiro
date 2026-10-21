@@ -26,8 +26,8 @@ export function sessionsLeft(pkg: Pick<PackageLike, "sessionsTotal" | "sessionsU
 
 /**
  * Status as the user should see it: a stored ACTIVE package is EXPIRED once
- * `expiresAt` has passed and COMPLETED once every session is used. The cron
- * sweep (src/app/api/reminders/dispatch) catches up the stored value.
+ * `expiresAt` has passed and COMPLETED once every session is used. The stored
+ * value is only caught up when src/app/api/reminders/dispatch is called (no cron).
  */
 export function effectiveStatus(
   pkg: Pick<PackageLike, "status" | "sessionsTotal" | "sessionsUsed" | "expiresAt">,
