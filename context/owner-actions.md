@@ -12,11 +12,11 @@ as you go. Last updated 2026-10-04, after the second site-wide bug scan.
 - [ ] **Vercel region matches Neon.** `vercel.json` pins `regions: ["sin1"]`
   (Singapore). Confirm the Neon project is in Singapore (`aws-ap-southeast-1`),
   or change the region to match.
-- [x] **Vercel Pro (or an external scheduler).** `/api/reminders/dispatch` runs every
-  5 minutes. That one job runs reminders, recall/review messages, package expiry,
-  certificate alerts and the e-invoice status check. Vercel Hobby only runs it once
-  a day. The other option is an external cron that POSTs with the header
-  `x-cron-secret: $CRON_SECRET`.
+- [x] **Reminder cron removed (21 Oct 2026, Chris).** The `*/5` Vercel cron on
+  `/api/reminders/dispatch` kept the Neon compute awake ~20 h/day, so it was taken
+  out of `vercel.json`. Reminders, recall/review messages, package-expiry catch-up,
+  certificate alerts and the e-invoice status check no longer run on their own.
+  The route still works if called by hand with `x-cron-secret: $CRON_SECRET`.
 - [ ] **Env vars already needed:** `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`,
   `NEXT_PUBLIC_APP_URL`, and the `R2_*` settings.
 
