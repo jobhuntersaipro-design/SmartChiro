@@ -10,7 +10,8 @@
 !.yarn/releases
 !.yarn/versions
 
-.claude
+.claude/*
+!.claude/settings.json
 
 # testing
 /coverage
